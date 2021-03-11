@@ -91,8 +91,6 @@ class IdEstimation(Base):
     def set_id(self, id):
         self.id_selected = id
 
-
-
 if __name__ == '__main__':
     X = np.random.uniform(size = (100, 2))
 
