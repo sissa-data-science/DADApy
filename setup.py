@@ -26,7 +26,7 @@ setup(name='duly', packages=['duly'],
       cmdclass=cmdclass,
       ext_modules=ext_modules)
 
-### COMPILE FROM CYTHON ###
+### COMPILE FROM CYTHON ### NOT WORKING
 
 
 # exts = [Extension(name='duly.cython_functions',

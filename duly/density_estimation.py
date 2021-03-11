@@ -12,6 +12,14 @@ class DensityEstimation(IdEstimation):
                          njobs=njobs)
 
     def compute_density_kNN(self, k=3):
+        """Compute the density of of each point using a simple kNN estimator
+
+        Args:
+            k: number of neighbours used to compute the density
+
+        Returns:
+
+        """
         assert (self.id_selected is not None)
 
         if self.verb: print('k-NN density estimation started (k={})'.format(k))
@@ -45,6 +53,15 @@ class DensityEstimation(IdEstimation):
         if self.verb: print('k-NN density estimation finished')
 
     def compute_kstar(self, Dthr=23.92):
+        """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
+
+        Args:
+            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+            to a p-value of 1e-6.
+
+        Returns:
+
+        """
         if self.id_selected is None: self.compute_id()
 
         if self.verb: print('kstar estimation started, Dthr = {}'.format(Dthr))
@@ -187,6 +204,7 @@ class DensityEstimation(IdEstimation):
         """
         finds the minimum of the
         """
+        from mlmax_pytorch import maximise
         # Fij_types: 'grad', 'zero', 'PAk'
         # TODO: we need to implement a gCorr term with the deltaFijs equal to zero
 

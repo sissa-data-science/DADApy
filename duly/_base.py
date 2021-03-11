@@ -44,7 +44,18 @@ class Base:
         self.njobs = njobs
 
     def compute_distances(self, maxk, njobs=1, metric='minkowski', p=2, algo='auto'):
+        """Compute distances between points up to the maxk nearest neighbour
 
+        Args:
+            maxk: maximum number of neighbours for which distance is computed and stored
+            njobs: number of processes
+            metric: type of metric
+            p: type of metric
+            algo: type of algorithm used
+
+        Returns:
+
+        """
         if self.maxk is None:
             self.maxk = maxk
         else:
