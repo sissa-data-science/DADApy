@@ -1,9 +1,7 @@
-import setuptools 
+#import setuptools
 
+# import numpy
 from numpy.distutils.core import setup
-from numpy.distutils.extension import Extension
-
-import numpy
 from numpy.distutils.core import Extension
 
 cmdclass = {}
@@ -19,8 +17,8 @@ ext_modules = []
 
 from Cython.Distutils import build_ext
 
-ext_modules += [Extension("cython_.cython_functions", ["cython_/cython_functions.pyx"],
-                            include_dirs=[numpy.get_include()])]
+# ext_modules += [Extension("cython_.cython_functions", ["cython_/cython_functions.c"],
+#                             include_dirs=[numpy.get_include()])]
 
 cmdclass.update({'build_ext': build_ext})
 
@@ -30,6 +28,8 @@ except ImportError:
     use_cython = False
 else:
     use_cython = True
+
+print(use_cython)
 
 if use_cython:
     ext_modules += [
