@@ -1,5 +1,6 @@
 from duly.density_estimation import *
 
+
 class Clustering(DensityEstimation):
 
     def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
@@ -7,6 +8,7 @@ class Clustering(DensityEstimation):
                          njobs=njobs)
 
     def compute_clustering_optimised(self, Z=1.65, halo=False):
+        from cython_ import cython_functions as cf
         assert (self.Rho is not None)
         if self.verb: print('Clustering started')
 
@@ -244,11 +246,11 @@ class Clustering(DensityEstimation):
 
 
 if __name__ == '__main__':
-    X = np.random.uniform(size = (100, 2))
+    X = np.random.uniform(size=(50, 2))
 
     cl = Clustering(coordinates=X)
 
-    cl.compute_distances(maxk = 10)
+    cl.compute_distances(maxk=25)
 
     cl.compute_id()
 

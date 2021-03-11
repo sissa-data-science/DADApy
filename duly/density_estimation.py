@@ -2,7 +2,6 @@ import time
 
 from scipy.special import gammaln
 
-from cython_ import cython_functions as cf
 from duly.id_estimation import *
 
 
@@ -115,6 +114,8 @@ class DensityEstimation(IdEstimation):
         if self.verb: print('k-NN density estimation finished')
 
     def compute_density_PAk(self, method='NR'):
+        from cython_ import cython_functions as cf
+
         # options for method:
         #   - "NR"=Newton-Raphson implemented in cython
         #   - "NM"=Nelder-Mead scipy built-in
@@ -156,6 +157,7 @@ class DensityEstimation(IdEstimation):
                 if (method == 'NR'):
                     Rho[i] = cf._nrmaxl(rr, kstar[i], vi, self.maxk)
                 elif (method == 'NM'):
+                    from mlmax import MLmax
                     Rho[i] = MLmax(rr, kstar[i], vi)
                 else:
                     raise ValueError("Please choose a valid method")
@@ -234,6 +236,7 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
 
     def compute_density_PAk_gCorr(self, alpha=1.):
+        from mlmax_pytorch import maximise_wPAk
         """
         finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
         computed using the gradients
@@ -276,6 +279,7 @@ class DensityEstimation(IdEstimation):
         self.Rho -= np.log(self.Nele)
 
     def compute_density_gPAk(self, mode='standard'):
+        from mlmax import MLmax_gPAk, MLmax_gpPAk
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
         kstar = self.kstar
@@ -476,6 +480,7 @@ class DensityEstimation(IdEstimation):
         return grads
 
     def compute_deltaFs_grad(self):
+        from cython_ import cython_functions as cf
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
 
@@ -551,11 +556,11 @@ class DensityEstimation(IdEstimation):
 
 
 if __name__ == '__main__':
-    X = np.random.uniform(size = (100, 2))
+    X = np.random.uniform(size=(50, 2))
 
     de = DensityEstimation(coordinates=X)
 
-    de.compute_distances(maxk = 10)
+    de.compute_distances(maxk=25)
 
     de.compute_id()
 

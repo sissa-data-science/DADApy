@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 from Cython.Build import cythonize
 
 
-#import setuptools
+import setuptools
 
 import numpy
 from numpy.distutils.core import setup, Extension

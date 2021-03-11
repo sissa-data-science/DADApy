@@ -1,39 +1,8 @@
 import numpy as np
-# TODO: compute gradient of ML to speedup optimization!
-# from autograd import grad
-# import autograd.numpy as anp
 
 from scipy.optimize import minimize
 
 import duly.utils as ut
-
-
-def ML_fun_kNN_corr(Fis, args):
-    kopts = args[0]
-    Vis = args[1]
-    dist_indices = args[2]
-    Fij_list = args[3]
-    Fij_var_list = args[4]
-    alpha = args[5]
-
-    L = 0.
-
-    for i, (Fijs, Fijs_var) in enumerate(zip(Fij_list, Fij_var_list)):
-        Fi = Fis[i]
-        k = kopts[i]
-        Li = k * Fi - Vis[i] * anp.exp(Fi)
-
-        for nneigh in range(k):
-            j = dist_indices[i, nneigh + 1]
-
-            Li -= alpha * ((Fis[j] - Fi) - Fijs[nneigh]) ** 2 / (2 * Fijs_var[nneigh])
-
-        L += Li
-
-    return - L
-
-
-# ML_fun_grad = grad(ML_fun_kNN_corr)
 
 
 def ML_fun_gPAk(params, args):
