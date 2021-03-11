@@ -33,12 +33,12 @@ else:
 
 if use_cython:
     ext_modules += [
-        Extension("adpy.cython_functions", ["cython_/cython_functions.pyx"]),
+        Extension("duly.cython_functions", ["cython_/cython_functions.pyx"]),
     ]
     cmdclass.update({'build_ext': build_ext})
 else:
     ext_modules += [
-        Extension("adpy.cython_functions", ["cython_/cython_functions.c"]),
+        Extension("duly.cython_functions", ["cython_/cython_functions.c"]),
     ]
 
 

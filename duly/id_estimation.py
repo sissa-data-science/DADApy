@@ -1,6 +1,11 @@
-from duly._base import *
+from duly._base import Base
+
+import numpy as np
 from scipy.optimize import curve_fit
 import duly.utils as ut
+
+import multiprocessing
+cores = multiprocessing.cpu_count()
 
 class IdEstimation(Base):
 
@@ -85,3 +90,16 @@ class IdEstimation(Base):
 
     def set_id(self, id):
         self.id_selected = id
+
+
+
+if __name__ == '__main__':
+    X = np.random.uniform(size = (100, 2))
+
+    ide = IdEstimation(coordinates=X)
+
+    ide.compute_distances(maxk = 10)
+
+    ide.compute_id()
+
+    print(ide.id_selected)

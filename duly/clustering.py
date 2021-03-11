@@ -242,3 +242,18 @@ class Clustering(DensityEstimation):
         self.Rho_bord_err_m = Rho_bord_err_m
         if self.verb: print('Clustering finished, {} clusters found'.format(self.Nclus_m))
 
+
+if __name__ == '__main__':
+    X = np.random.uniform(size = (100, 2))
+
+    cl = Clustering(coordinates=X)
+
+    cl.compute_distances(maxk = 10)
+
+    cl.compute_id()
+
+    cl.compute_density_kNN(10)
+
+    cl.compute_clustering()
+
+    print(cl.Nclus_m)

@@ -1,10 +1,11 @@
-import autograd.numpy as anp
 import numpy as np
 # TODO: compute gradient of ML to speedup optimization!
-from autograd import grad
+# from autograd import grad
+# import autograd.numpy as anp
+
 from scipy.optimize import minimize
 
-import adpy.utils as ut
+import duly.utils as ut
 
 
 def ML_fun_kNN_corr(Fis, args):
@@ -32,7 +33,7 @@ def ML_fun_kNN_corr(Fis, args):
     return - L
 
 
-ML_fun_grad = grad(ML_fun_kNN_corr)
+# ML_fun_grad = grad(ML_fun_kNN_corr)
 
 
 def ML_fun_gPAk(params, args):
