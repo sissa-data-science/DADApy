@@ -56,7 +56,7 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
 
             Fij = Fij / kifloat * dp2/rk_sq
 
-            Fij_sq = Fij_sq / kifloat * (dp2/rk_sq)**2 - Fij**2
+            Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq) * (dp2/rk_sq) - Fij**2 / kifloat
 
             delta_Fijs[i, j] = Fij
             delta_Fijs_var[i, j] = Fij_sq
@@ -77,6 +77,7 @@ def compute_grads_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
     cdef int dims = X.shape[1]
     cdef int kstar_max = np.max(kstar)
     cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
     cdef int i, j, dim, ki
     cdef int ind_j, ind_ki
     cdef floatTYPE_t rk_sq, kifloat
@@ -93,13 +94,17 @@ def compute_grads_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
         for dim in range(dims):
             rk_sq += (X[ind_ki, dim] - X[i, dim])**2
 
-        for j in range(ki):
-            ind_j = dist_indices[i, j+1]
+        for dim in range(dims):
+            for j in range(ki):
+                ind_j = dist_indices[i, j+1]
+        
+                grads[i, dim] += (X[ind_j, dim] - X[i, dim])
+                grads_var[i, dim] += (X[ind_j, dim] - X[i, dim]) * (X[ind_j, dim] - X[i, dim])
 
-            for dim in range(dims):
-                grads[i, dim] += (X[ind_j, dim] - X[i, dim]) / kifloat * dp2/rk_sq
+            grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                              - grads[i, dim]*grads[i, dim] / kifloat / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq
 
-    return grads
+    return grads, grads_var
 
 
 import time
