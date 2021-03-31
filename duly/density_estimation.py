@@ -3,6 +3,7 @@ import time
 from scipy.special import gammaln
 
 from duly.id_estimation import *
+from duly.mlmax import MLmax_gPAk, MLmax_gpPAk
 
 
 class DensityEstimation(IdEstimation):
@@ -297,7 +298,6 @@ class DensityEstimation(IdEstimation):
         self.Rho -= np.log(self.Nele)
 
     def compute_density_gPAk(self, mode='standard'):
-        from mlmax import MLmax_gPAk, MLmax_gpPAk
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
         kstar = self.kstar

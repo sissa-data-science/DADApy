@@ -56,7 +56,7 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
 
             Fij = Fij / kifloat * dp2/rk_sq
 
-            Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq) * (dp2/rk_sq) - Fij**2 / kifloat
+            Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq)  - Fij**2 / kifloat
 
             delta_Fijs[i, j] = Fij
             delta_Fijs_var[i, j] = Fij_sq
