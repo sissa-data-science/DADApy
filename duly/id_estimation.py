@@ -10,7 +10,9 @@ rng = np.random.default_rng()
 
 class IdEstimation(Base):
 
-	"""Base class containig data and distances
+	"""Estimates the intrinsic dimension of a dataset choosing among various routines.
+
+    Inherits from class Base
 
 	Attributes:
 		id_selected (int): (rounded) selected intrinsic dimension after each estimate. Parameter used for density estimation

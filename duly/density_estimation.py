@@ -8,6 +8,29 @@ from duly.mlmax import MLmax_gPAk, MLmax_gpPAk
 
 class DensityEstimation(IdEstimation):
 
+    """Computes the log-density and its error at each point and other properties.
+
+        Inherits from class IdEstimation. Can estimate the optimal number k* of neighbors for each points. \
+        Can compute the log-density and its error at each point choosing among various kNN-based methods. \
+        Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component. \
+        Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component. \
+
+
+        Attributes:
+        
+        kstar (numpy array of float): array containing the chosen number k* of neighbors for each of the Nele points
+        dc (numpy array of float): array containing the distance of the k*th neighbor from each of the Nele points
+        Rho (numpy array of float, optional): array containing the Nele log-densities
+        Rho_err (numpy array of float, optional): array containing the Nele errors on the Rho
+        Fij_list
+        Fij_var_list
+        grads (to be implemented)
+        grads_var (to be implemented)
+
+
+
+    """    
+
     def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
