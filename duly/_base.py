@@ -57,7 +57,7 @@ class Base:
 		self.verb = verbose
 		self.njobs = njobs
 
-	#---------------------------------------------------------------------------------------------- 
+	#----------------------------------------------------------------------------------------------
 
 	def compute_distances(self, maxk, njobs=1, metric='minkowski', p=2, algo='auto'):
 		"""Compute distances between points up to the maxk nearest neighbour
@@ -77,7 +77,7 @@ class Base:
 
 		self.p = p
 
-		if self.verb: print('Computation of the distances up to {} NNs started'.format(self.maxk))
+		if self.verb: print(f'Computation of the distances up to {self.maxk} NNs started')
 
 		nbrs = NearestNeighbors(n_neighbors=self.maxk, algorithm=algo, metric=metric, p=p,
 								n_jobs=njobs).fit(self.X)
