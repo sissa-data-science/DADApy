@@ -7,10 +7,11 @@ rng = np.random.default_rng()
 
 class Base:
 
-	"""Base class containig data and distances
+	"""Base class containig data and distances.
 
 	Attributes:
-		X (float[:,:]): the data points loaded into the object
+		Nele (int): number of data points
+		X (numpy ndarray of float): the data points loaded into the object, of shape (Nele , dimension of embedding space)
 		maxk (int): maximum number of neighbours to be calculated
 		distances (float[:,:]): distances between points saved in X
 		dist_indeces (int[:,:]): ordering of neighbours according to the ditances
