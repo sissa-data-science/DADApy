@@ -25,47 +25,76 @@ class IdEstimation(Base):
 		super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
 						 njobs=njobs)
 
-	#---------------------------------------------------------------------------------------------- 
+	#----------------------------------------------------------------------------------------------
 
-	def compute_id_diego(self, nneigh=1, fraction=0.95, d0=0.1, d1=1000):
+    def compute_id_r2n_dec(self, return_ids = False, maxk = 30, d0=0.001, d1=1000, save_mus = False):
 
-		"""Compute intrinsic dimension through..?
+        maxk = maxk if self.maxk is None else self.maxk
+        range_r2 = min(1024, self.Nele)-1
+        max_step = int(math.log(range_r2, 2))
+        steps = np.array([2**i for i in range(max_step)])
 
-		Args:
-			nneigh: number of neighbours to be used for he estimate
-			fraction: fraction of mus that will be considered for the estimate (discard highest mus)
-			d0: lower estimate??
-			d1: higher estimate??
+        distances, dist_indices, mus, r2s = self.kneighbors(X=self.X, maxk= maxk,
+                            compute_mus = True, range_mus_r2n=range_r2)
 
-		Returns:
+        if self.distances is None:
+            self.distances = distances
+            self.dist_indices = dist_indices
+            self.Nele = distances.shape[0]
 
-		"""
+        self.r2s_r2n_dec = np.mean(r2s, axis = 0).T
+        self.ids_r2n_dec = np.empty(mus.shape[1])
+        self.ids_r2n_dec_std = np.empty(mus.shape[1])
 
-		assert (self.distances is not None)
-		if self.verb: print('ID estimation started, using nneigh = {}'.format(nneigh))
+        for i in range(mus.shape[1]):
+            n1= 2**i
+            id = self._max_lik_r2n(d0, d1, mus[:, i], n1, 2*n1, self.Nele, eps = 1.e-7)
+            self.ids_r2n_dec[i] = id
+            self.ids_r2n_dec_std[i] = (1/self._fisher_info_r2n(id, mus[:, i], n1, 2*n1))**0.5
 
-		# remove the 5% highest value of mu
-		mu_full = self.distances[:, 2 * nneigh] / self.distances[:, 1 * nneigh]
-		mu_full.sort()
-		Nele_eff = int( len(mu_full) * fraction )
-		mu = mu_full[:Nele_eff]
+        if save_mus: self.mus_r2n_dec = mus
+        if return_ids:
+            return self.ids_r2n_dec, self.ids_r2n_dec_std, self.r2s_r2n_dec 
 
-		f1 = ut._f(d1, mu, nneigh, Nele_eff)
-		while (abs(d0 - d1) > 1.e-5):
-			d2 = (d0 + d1) / 2.
-			f2 = ut._f(d2, mu, nneigh, Nele_eff)
-			if f2 * f1 > 0:
-				d1 = d2
-			else:
-				d0 = d2
+	# def compute_id_diego(self, nneigh=1, fraction=0.95, d0=0.1, d1=1000):
+	#
+	# 	"""Compute intrinsic dimension through..?
+	#
+	# 	Args:
+	# 		nneigh: number of neighbours to be used for he estimate
+	# 		fraction: fraction of mus that will be considered for the estimate (discard highest mus)
+	# 		d0: lower estimate??
+	# 		d1: higher estimate??
+	#
+	# 	Returns:
+	#
+	# 	"""
+	#
+	# 	assert (self.distances is not None)
+	# 	if self.verb: print('ID estimation started, using nneigh = {}'.format(nneigh))
+	#
+	# 	# remove the 5% highest value of mu
+	# 	mu_full = self.distances[:, 2 * nneigh] / self.distances[:, 1 * nneigh]
+	# 	mu_full.sort()
+	# 	Nele_eff = int( len(mu_full) * fraction )
+	# 	mu = mu_full[:Nele_eff]
+	#
+	# 	f1 = ut._f(d1, mu, nneigh, Nele_eff)
+	# 	while (abs(d0 - d1) > 1.e-5):
+	# 		d2 = (d0 + d1) / 2.
+	# 		f2 = ut._f(d2, mu, nneigh, Nele_eff)
+	# 		if f2 * f1 > 0:
+	# 			d1 = d2
+	# 		else:
+	# 			d0 = d2
+	#
+	# 	d = (d0 + d1) / 2.
+	#
+	# 	self.id_estimated_D = d
+	# 	self.id_selected = np.rint(d)
+	# 	if self.verb: print('ID estimation finished, id selected = {}'.format(self.id_selected))
 
-		d = (d0 + d1) / 2.
-
-		self.id_estimated_D = d
-		self.id_selected = np.rint(d)
-		if self.verb: print('ID estimation finished, id selected = {}'.format(self.id_selected))
-
-	#---------------------------------------------------------------------------------------------- 
+	#----------------------------------------------------------------------------------------------
 
 	def compute_id_2NN(self, decimation=1, fraction=0.9, algorithm='base'):
 
@@ -87,12 +116,12 @@ class IdEstimation(Base):
 		dist_used = self.decimate(decimation,maxk=self.maxk)
 
 		mus = np.log( dist_used[:, 2] / dist_used[:, 1] )
-		
+
 		Nele = dist_used.shape[0]
 		Nele_eff = int(Nele * fraction)
 		y = -np.log(1 - np.arange(1,Nele_eff+1)/Nele)
 		mus_reduced = np.sort(mus)[:Nele_eff]
-		
+
 		#Nele_eff_dec = int(np.around(decimation * Nele_eff, decimals=0))
 		#idxs = np.arange(Nele_eff)
 		#idxs = np.random.choice(idxs, size=Nele_eff_dec, replace=False, p=None)
@@ -118,7 +147,7 @@ class IdEstimation(Base):
 			# print(f'Selecting ID of {self.id_selected}')
 			print(f'ID estimation finished: selecting ID of {self.id_selected}')
 
-	#---------------------------------------------------------------------------------------------- 
+	#----------------------------------------------------------------------------------------------
 
 	def compute_id_gammaprior(self, alpha=2, beta=5):
 		if self.distances is None: self.compute_distances()
@@ -144,12 +173,12 @@ class IdEstimation(Base):
 		self.id_estimated_map = mode_post
 		self.id_selected = int(np.around(self.id_estimated_mp, decimals=0))
 
-	#---------------------------------------------------------------------------------------------- 
+	#----------------------------------------------------------------------------------------------
 
 	def set_id(self, id):
 		self.id_selected = id
 
-	#---------------------------------------------------------------------------------------------- 
+	#----------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
 	X = rng.uniform(size = (1000, 2))
