@@ -22,7 +22,7 @@ ext_modules += [Extension("cython_/cython_functions", sources=["cython_/cython_f
 
 
 setup(name='duly', packages=['duly'],
-      install_requires=['numpy', 'scipy', 'scikit-learn'],
+      install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython'],
       cmdclass=cmdclass,
       ext_modules=ext_modules)
 
