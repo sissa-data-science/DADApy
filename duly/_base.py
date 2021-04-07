@@ -109,19 +109,19 @@ class Base:
 
 		return distances
 
-	def remove_zero_dists(self):
-		# TODO remove all the degenerate distances
-
-		assert (self.distances is not None)
-
-		# find all points with any zero distance
-		indx = np.nonzero(self.distances[:, 1] < np.finfo(float).eps)
-
-		# set nearest distance to eps:
-		self.distances[indx, 1] = np.finfo(float).eps
-
-		print(f'{len(indx)} couple of points where at 0 distance: \
-					their distance have been set to eps: {np.finfo(float).eps}')
+	# def remove_zero_dists(self):
+	# 	# TODO remove all the degenerate distances
+	#
+	# 	assert (self.distances is not None)
+	#
+	# 	# find all points with any zero distance
+	# 	indx = np.nonzero(self.distances[:, 1] < np.finfo(float).eps)
+	#
+	# 	# set nearest distance to eps:
+	# 	self.distances[indx, 1] = np.finfo(float).eps
+	#
+	# 	print(f'{len(indx)} couple of points where at 0 distance: \
+	# 				their distance have been set to eps: {np.finfo(float).eps}')
 
 	#----------------------------------------------------------------------------------------------
 
@@ -155,9 +155,8 @@ class Base:
 
 	#---------------------------------------------------------------------------
 
-	#hadapted from kneighbors function of sklearn
+	#adapted from kneighbors function of sklearn
 	# https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
-
 	def _mus_scaling_reduce_func(self, dist, start, range_mus_scaling=None):
 
 		n_neighbors = max(self.maxk, range_mus_scaling)
