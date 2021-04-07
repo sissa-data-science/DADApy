@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import pairwise_distances_chunked
 
 import multiprocessing
 cores = multiprocessing.cpu_count()
@@ -85,6 +86,8 @@ class Base:
 
 		self.distances, self.dist_indices = nbrs.kneighbors(self.X)
 
+		self.remove_zero_dists()
+		
 		if self.verb: print('Computation of the distances finished')
 
 	#----------------------------------------------------------------------------------------------
@@ -100,9 +103,8 @@ class Base:
 		# set nearest distance to eps:
 		self.distances[indx, 1] = np.finfo(float).eps
 
-		print(
-			'{} couple of points where at 0 distance: their distance have been set to eps: {}'.format(
-				len(indx), np.finfo(float).eps))
+		print(f'{len(indx)} couple of points where at 0 distance: \
+					their distance have been set to eps: {np.finfo(float).eps}')
 
 	#----------------------------------------------------------------------------------------------
 
@@ -134,8 +136,42 @@ class Base:
 			self.dist_dec, self.ind_dec = nbrs.kneighbors(X_temp)
 			return self.dist_dec
 
-	#----------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------
 
+	def _mus_r2n_reduce_func(self, dist, start, range_mus_r2n=None):
+
+		n_neighbors = max(sel.maxk, range_mus_r2n)
+		max_step = int(math.log(n_neighbors, 2))
+		steps = np.array([2**i for i in range(max_step)])
+
+		sample_range = np.arange(dist.shape[0])[:, None]
+		neigh_ind = np.argpartition(dist, n_neighbors - 1, axis=1)
+		neigh_ind = neigh_ind[:, :n_neighbors]
+		# argpartition doesn't guarantee sorted order, so we sort again
+		neigh_ind = neigh_ind[
+						sample_range, np.argsort(dist[sample_range, neigh_ind])]
+
+		dist = np.sqrt(dist[sample_range, neigh_ind])
+
+		dist, neigh_ind = self._remove_zero_dists_online(dist, neigh_ind)
+		mus = dist[:, steps[1:]]/dist[:, steps[:-1]]
+		rs = dist[:, np.array([steps[:-1], steps[1:]])]
+
+		return dist[:, :self.maxk+1], neigh_ind[:, :self.maxk+1], mus, rs
+
+
+	def _get_mus_r2n(self, range_mus_r2n=None):
+
+		reduce_func = partial(self._mus_r2n_reduce_func, range_mus_r2n=range_mus_r2n)
+
+        kwds = {'squared': True}
+        chunked_results = list(pairwise_distances_chunked(self.X, self.X, reduce_func=reduce_func,
+                        metric='euclidean', n_jobs=1, working_memory = self.working_memory, **kwds))
+
+		neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
+        return np.vstack(neigh_dist), np.vstack(neigh_ind), np.vstack(mus), np.vstack(rs)
+
+	#---------------------------------------------------------------------------
 
 if __name__ == '__main__':
 	X = rng.uniform(size = (100, 2))

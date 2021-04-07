@@ -25,36 +25,70 @@ class IdEstimation(Base):
 		super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
 						 njobs=njobs)
 
-	#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+	def _likelihood_r2n(self, d, mus,  n1, n2, N):
+		one_m_mus_d = 1. - mus ** (-d)
+		sum = np.sum(  ((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus)   )
+		return sum - N / d
 
-    def compute_id_r2n_dec(self, return_ids = False, maxk = 30, d0=0.001, d1=1000, save_mus = False):
+    def _max_lik_r2n(self, d0, d1, mus, n1, n2, N, eps = 1.e-7):
+		# mu can't be == 1 add some noise
+		indx = np.nonzero(mus == 1)
+		mus[indx] += np.finfo(self.dtype).eps
 
-        maxk = maxk if self.maxk is None else self.maxk
-        range_r2 = min(1024, self.Nele)-1
-        max_step = int(math.log(range_r2, 2))
-        steps = np.array([2**i for i in range(max_step)])
+		l1 = self._likelihood_r2n(d1, mus,  n1, n2, N)
+		while (abs(d0 - d1) > eps):
+			d2 = (d0 + d1) / 2.
+			l2 = self._likelihood_r2n(d2, mus,  n1, n2, N)
+			if l2 * l1 > 0: d1 = d2
+			else:d0 = d2
+		d = (d0 + d1) / 2.
 
-        distances, dist_indices, mus, r2s = self.kneighbors(X=self.X, maxk= maxk,
-                            compute_mus = True, range_mus_r2n=range_r2)
+		return d
 
-        if self.distances is None:
-            self.distances = distances
-            self.dist_indices = dist_indices
-            self.Nele = distances.shape[0]
+	def _fisher_info_r2n(self, id_ml, mus, n1, n2):
 
-        self.r2s_r2n_dec = np.mean(r2s, axis = 0).T
-        self.ids_r2n_dec = np.empty(mus.shape[1])
-        self.ids_r2n_dec_std = np.empty(mus.shape[1])
+		N = len(mus)
+		one_m_mus_d = 1. - mus ** (-id_ml)
+		log_mu = np.log(mus)
 
-        for i in range(mus.shape[1]):
-            n1= 2**i
-            id = self._max_lik_r2n(d0, d1, mus[:, i], n1, 2*n1, self.Nele, eps = 1.e-7)
-            self.ids_r2n_dec[i] = id
-            self.ids_r2n_dec_std[i] = (1/self._fisher_info_r2n(id, mus[:, i], n1, 2*n1))**0.5
+		j0 = N/id_ml**2
 
-        if save_mus: self.mus_r2n_dec = mus
-        if return_ids:
-            return self.ids_r2n_dec, self.ids_r2n_dec_std, self.r2s_r2n_dec 
+		factor1 = np.divide(log_mu, one_m_mus_d)
+		factor2 = mus**(-id_ml)
+		tmp = np.multiply(factor1**2, factor2)
+		j1 = (n2-n1-1)*np.sum(tmp)
+
+		return j0+j1
+
+	def compute_id_r2n_dec(self, return_ids = False, range_r2_max=1024, maxk = 30, d0=0.001, d1=1000, save_mus = False):
+
+		maxk = maxk if self.maxk is None else self.maxk
+		range_r2 = min(range_r2_max, self.Nele)-1
+		max_step = int(math.log(range_r2, 2))
+		steps = np.array([2**i for i in range(max_step)])
+
+		distances, dist_indices, mus, r2s = self._get_mus_r2n(X=self.X, maxk= maxk,
+										 					range_mus_r2n=range_r2)
+
+		if self.distances is None:
+			self.distances = distances
+			self.dist_indices = dist_indices
+			self.Nele = distances.shape[0]
+
+		self.r2s_r2n_dec = np.mean(r2s, axis = 0).T
+		self.ids_r2n_dec = np.empty(mus.shape[1])
+		self.ids_r2n_dec_std = np.empty(mus.shape[1])
+
+		for i in range(mus.shape[1]):
+			n1= 2**i
+			id = self._max_lik_r2n(d0, d1, mus[:, i], n1, 2*n1, self.Nele, eps = 1.e-7)
+			self.ids_r2n_dec[i] = id
+			self.ids_r2n_dec_std[i] = (1/self._fisher_info_r2n(id, mus[:, i], n1, 2*n1))**0.5
+
+		if save_mus: self.mus_r2n_dec = mus
+		if return_ids:
+			return self.ids_r2n_dec, self.ids_r2n_dec_std, self.r2s_r2n_dec
 
 	# def compute_id_diego(self, nneigh=1, fraction=0.95, d0=0.1, d1=1000):
 	#
