@@ -4,6 +4,7 @@ from scipy.special import gammaln
 
 from duly.id_estimation import *
 from duly.mlmax import MLmax_gPAk, MLmax_gpPAk
+from cython_ import cython_functions as cf
 
 
 class DensityEstimation(IdEstimation):
@@ -18,22 +19,21 @@ class DensityEstimation(IdEstimation):
 
         Attributes:
         
-        kstar (numpy array of float): array containing the chosen number k* of neighbors for each of the Nele points
-        dc (numpy array of float): array containing the distance of the k*th neighbor from each of the Nele points
-        Rho (numpy array of float, optional): array containing the Nele log-densities
-        Rho_err (numpy array of float, optional): array containing the Nele errors on the Rho
-        Fij_list
-        Fij_var_list
-        grads (to be implemented)
-        grads_var (to be implemented)
-
-
+        kstar (np.array(float)): array containing the chosen number k* of neighbors for each of the Nele points
+        dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the Nele points
+        Rho (np.array(float), optional): array containing the Nele log-densities
+        Rho_err (np.array(float), optional): array containing the Nele errors on the Rho
+        Fij_list (list(np.array(float)), optional): list of Nele arrays containing for each i the k* estimates of deltaF_ij computed from point i
+        Fij_var_list (list(np.array(float)), optional): list of Nele arrays containing the squared errors on the deltaF_ij's
+        grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i 
+        grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
 
     """    
 
     def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
+
 
     def compute_density_kNN(self, k=3):
         """Compute the density of of each point using a simple kNN estimator
@@ -76,6 +76,7 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation finished')
 
+
     def compute_kstar(self, Dthr=23.92):
         """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
 
@@ -116,6 +117,7 @@ class DensityEstimation(IdEstimation):
 
         self.kstar = kstar
 
+
     def compute_density_kstarNN(self):
         if self.kstar is None: self.compute_kstar()
         kstar = self.kstar
@@ -154,8 +156,8 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation finished')
 
+
     def compute_density_PAk(self, method='NR'):
-        from cython_ import cython_functions as cf
 
         # options for method:
         #   - "NR"=Newton-Raphson implemented in cython
@@ -224,6 +226,7 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('PAk density estimation finished')
 
+
     def compute_density_kstarNN_gCorr(self, alpha=1., gauss_approx=False, Fij_type='grad'):
         """
         finds the minimum of the
@@ -277,6 +280,7 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
 
+
     def compute_density_PAk_gCorr(self, alpha=1.):
         from mlmax_pytorch import maximise_wPAk
         """
@@ -319,6 +323,7 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
         self.Rho -= np.log(self.Nele)
+
 
     def compute_density_gPAk(self, mode='standard'):
         # compute optimal k
@@ -441,6 +446,7 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation finished')
 
+
     def compute_density_gCorr(self, use_variance=True):
         # TODO: matrix A should be in sparse format!
 
@@ -491,7 +497,19 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
 
+
     def return_grads(self):
+        """[OBSOLETE] Returns the gradient of the log density each point using k* nearest neighbors. The gradient is estimated via a linear expansion of the density propagated to the log-density.
+
+        Args:
+            k: number of neighbours used to compute the density
+
+        Returns:
+            grads (np.ndarray(float)): for each line i contains the gradient components estimated from from point i 
+
+
+        """
+        # compute optimal k
         assert (self.X is not None)
 
         # compute optimal k
@@ -520,8 +538,39 @@ class DensityEstimation(IdEstimation):
 
         return grads
 
+
+    def compute_grads(self):
+        """Compute the gradient of the log density each point using k* nearest neighbors. The gradient is estimated via a linear expansion of the density propagated to the log-density.
+
+        Args:
+            k: number of neighbours used to compute the density
+
+        Returns:
+
+        """
+        # compute optimal k
+        if self.kstar is None: self.compute_kstar()
+
+        if self.verb: print('Estimation of the density gradient started')
+
+        sec = time.time()
+        self.grads, self.grads_var = cf.compute_grads_from_coords(self.X, self.dist_indices,
+                                                                    self.kstar, self.id_selected)
+
+        sec2 = time.time()
+        if self.verb: print(
+            "{0:0.2f} seconds computing gradients".format(sec2 - sec))
+
+
     def compute_deltaFs_grad(self):
-        from cython_ import cython_functions as cf
+        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using a linear expansion (see ` compute_grads`).
+
+        Args:
+            k: number of neighbours used to compute the density
+
+        Returns:
+
+        """
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
 
