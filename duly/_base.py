@@ -22,10 +22,11 @@ class Base:
 
 	"""
 
-	def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
+	def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores, working_memory = 1024):
 
 		self.X = coordinates
 		self.maxk = maxk
+		self.working_memory = working_memory
 
 		if coordinates is not None:
 			self.Nele = coordinates.shape[0]
@@ -86,11 +87,27 @@ class Base:
 
 		self.distances, self.dist_indices = nbrs.kneighbors(self.X)
 
-		self.remove_zero_dists()
-		
+		self._remove_zero_dists(self.distances)
+
 		if self.verb: print('Computation of the distances finished')
 
-	#----------------------------------------------------------------------------------------------
+	#---------------------------------------------------------------------------
+
+	def _remove_zero_dists(self, distances):
+
+		#TO IMPROVE/CHANGE
+		# to_remove = distances[:, 2] < np.finfo(self.dtype).eps
+		# distances = distances[~to_remove]
+		# indices = indices[~to_remove]
+
+		#TO TEST
+
+		# find all points with any zero distance
+		indx_ = np.nonzero(distances[:,1] < np.finfo(self.dtype).eps)[0]
+		# set nearest distance to eps:
+		distances[indx_, 1] = np.finfo(self.dtype).eps
+
+		return distances
 
 	def remove_zero_dists(self):
 		# TODO remove all the degenerate distances
@@ -115,7 +132,7 @@ class Base:
 			decimation (float): fraction of points to use
 
 		Returns:
-			distences of decimated dataset
+			distances of decimated dataset
 
 		"""
 
@@ -138,31 +155,35 @@ class Base:
 
 	#---------------------------------------------------------------------------
 
-	def _mus_r2n_reduce_func(self, dist, start, range_mus_r2n=None):
+	#hadapted from kneighbors function of sklearn
+	# https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
 
-		n_neighbors = max(sel.maxk, range_mus_r2n)
+	def _mus_scaling_reduce_func(self, dist, start, range_mus_scaling=None):
+
+		n_neighbors = max(self.maxk, range_mus_scaling)
 		max_step = int(math.log(n_neighbors, 2))
 		steps = np.array([2**i for i in range(max_step)])
 
 		sample_range = np.arange(dist.shape[0])[:, None]
 		neigh_ind = np.argpartition(dist, n_neighbors - 1, axis=1)
 		neigh_ind = neigh_ind[:, :n_neighbors]
+
 		# argpartition doesn't guarantee sorted order, so we sort again
 		neigh_ind = neigh_ind[
 						sample_range, np.argsort(dist[sample_range, neigh_ind])]
 
 		dist = np.sqrt(dist[sample_range, neigh_ind])
 
-		dist, neigh_ind = self._remove_zero_dists_online(dist, neigh_ind)
+		dist = self._remove_zero_dists(dist)
 		mus = dist[:, steps[1:]]/dist[:, steps[:-1]]
 		rs = dist[:, np.array([steps[:-1], steps[1:]])]
 
 		return dist[:, :self.maxk+1], neigh_ind[:, :self.maxk+1], mus, rs
 
 
-	def _get_mus_r2n(self, range_mus_r2n=None):
+	def _get_mus_scaling(self, range_mus_scaling=None):
 
-		reduce_func = partial(self._mus_r2n_reduce_func, range_mus_r2n=range_mus_r2n)
+		reduce_func = partial(self._mus_scaling_reduce_func, range_mus_scaling=range_mus_scaling)
 
         kwds = {'squared': True}
         chunked_results = list(pairwise_distances_chunked(self.X, self.X, reduce_func=reduce_func,

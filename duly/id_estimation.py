@@ -1,7 +1,7 @@
 from duly._base import Base
 
 import numpy as np
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, minimize
 import duly.utils as ut
 
 import multiprocessing
@@ -21,32 +21,49 @@ class IdEstimation(Base):
 
 	"""
 
-	def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
+	def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores, working_memory=1024):
 		super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
-						 njobs=njobs)
+						 njobs=njobs, working_memory=working_memory)
 
 #----------------------------------------------------------------------------------------------
-	def _likelihood_r2n(self, d, mus,  n1, n2, N):
+	def _log_likelihood(self, d, mus, n1, n2, N):
+
+		A = np.log(d)
+		B = (n2-n1-1)*np.sum(mus**-d - 1.)
+		C = ((n2-1)*d+1)*np.sum(np.log(mus))
+
+		return A+B-C
+
+	def _argmax_lik(self, d0, mus, n1, n2, N, eps = 1.e-7):
+
+		indx = np.nonzero(mus == 1)
+		mus[indx] += np.finfo(self.dtype).eps
+		max_log_lik = minimize(-self._log_likelihood, x0 = d0, args = (mus, n1, n2, N),
+								method='Nelder-Mead', xatol = 1.e-7)
+		return max_log_lik.x
+
+
+	def _likelihood_scaling(self, d, mus,  n1, n2, N):
 		one_m_mus_d = 1. - mus ** (-d)
-		sum = np.sum(  ((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus)   )
+		sum = np.sum(  ((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))
 		return sum - N / d
 
-    def _max_lik_r2n(self, d0, d1, mus, n1, n2, N, eps = 1.e-7):
+    def _max_lik_scaling(self, d0, d1, mus, n1, n2, N, eps = 1.e-7):
 		# mu can't be == 1 add some noise
 		indx = np.nonzero(mus == 1)
 		mus[indx] += np.finfo(self.dtype).eps
 
-		l1 = self._likelihood_r2n(d1, mus,  n1, n2, N)
+		l1 = self._likelihood_scaling(d1, mus,  n1, n2, N)
 		while (abs(d0 - d1) > eps):
 			d2 = (d0 + d1) / 2.
-			l2 = self._likelihood_r2n(d2, mus,  n1, n2, N)
+			l2 = self._likelihood_scaling(d2, mus,  n1, n2, N)
 			if l2 * l1 > 0: d1 = d2
 			else:d0 = d2
 		d = (d0 + d1) / 2.
 
 		return d
 
-	def _fisher_info_r2n(self, id_ml, mus, n1, n2):
+	def _fisher_info_scaling(self, id_ml, mus, n1, n2):
 
 		N = len(mus)
 		one_m_mus_d = 1. - mus ** (-id_ml)
@@ -61,34 +78,41 @@ class IdEstimation(Base):
 
 		return j0+j1
 
-	def compute_id_r2n_dec(self, return_ids = False, range_r2_max=1024, maxk = 30, d0=0.001, d1=1000, save_mus = False):
+	def compute_id_scaling(self, return_ids = False, range_r2_max=1024, maxk = 30,
+												d0=0.001, d1=1000, save_mus = False):
 
 		maxk = maxk if self.maxk is None else self.maxk
-		range_r2 = min(range_r2_max, self.Nele)-1
+		range_r2 = min(range_r2_max, self.Nele-1)
 		max_step = int(math.log(range_r2, 2))
 		steps = np.array([2**i for i in range(max_step)])
 
-		distances, dist_indices, mus, r2s = self._get_mus_r2n(X=self.X, maxk= maxk,
-										 					range_mus_r2n=range_r2)
+		distances, dist_indices, mus, r2s = self._get_mus_scaling(maxk= maxk, range_mus_scaling=range_r2)
 
+		#if distances have not been computed save them
 		if self.distances is None:
 			self.distances = distances
 			self.dist_indices = dist_indices
 			self.Nele = distances.shape[0]
 
-		self.r2s_r2n_dec = np.mean(r2s, axis = 0).T
-		self.ids_r2n_dec = np.empty(mus.shape[1])
-		self.ids_r2n_dec_std = np.empty(mus.shape[1])
+		#array of ids (as a function of the average distange to a point)
+		self.ids_scaling = np.empty(mus.shape[1])
+		#array of error estimates (via fisher information)
+		self.ids_scaling_std = np.empty(mus.shape[1])
+		#array of 'first' and 'second' neighbor distances, relative to each id estimate
+		self.r2s_scaling = np.mean(r2s, axis = 0).T
 
+		#compute IDs via maximum likelihood (and their error) for all the scales up to range_r2_max
 		for i in range(mus.shape[1]):
 			n1= 2**i
-			id = self._max_lik_r2n(d0, d1, mus[:, i], n1, 2*n1, self.Nele, eps = 1.e-7)
-			self.ids_r2n_dec[i] = id
-			self.ids_r2n_dec_std[i] = (1/self._fisher_info_r2n(id, mus[:, i], n1, 2*n1))**0.5
+			id = self._max_lik_scaling(d0, d1, mus[:, i], n1, 2*n1, self.Nele, eps = 1.e-7)
+			self.ids_scaling[i] = id
+			self.ids_scaling_std[i] = (1/self._fisher_info_scaling(id, mus[:, i], n1, 2*n1))**0.5
 
-		if save_mus: self.mus_r2n_dec = mus
+		#should we leave on option for saving mus? (can be useful especially for 'debugging' twoNN)
+		if save_mus: self.mus_scaling = mus
+
 		if return_ids:
-			return self.ids_r2n_dec, self.ids_r2n_dec_std, self.r2s_r2n_dec
+			return self.ids_scaling, self.ids_scaling_std, self.r2s_scaling
 
 	# def compute_id_diego(self, nneigh=1, fraction=0.95, d0=0.1, d1=1000):
 	#
