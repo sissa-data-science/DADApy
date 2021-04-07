@@ -4,7 +4,7 @@ from scipy.special import gammaln
 
 from duly.id_estimation import *
 from duly.mlmax import MLmax_gPAk, MLmax_gpPAk
-from cython_ import cython_functions as cf
+import cython_functions as cf
 
 
 class DensityEstimation(IdEstimation):
@@ -652,8 +652,10 @@ if __name__ == '__main__':
 
     de.compute_distances(maxk=25)
 
-    de.compute_id()
+    de.compute_id_2NN(decimation=1)
 
     de.compute_density_kNN(10)
+
+    de.compute_grads()
 
     print(de.Rho)

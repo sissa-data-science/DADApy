@@ -4,7 +4,7 @@ import pytest
 from duly.density_estimation import DensityEstimation
 
 
-def test_clustering_basics():
+def test_density_estimation_basics():
     """Test the density estimation operations work correctly"""
     X = np.random.uniform(size=(50, 2))
 
