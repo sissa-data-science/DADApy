@@ -12,7 +12,7 @@ class Base:
 
 	Attributes:
 		Nele (int): number of data points
-		X (numpy ndarray of float): the data points loaded into the object, of shape (Nele , dimension of embedding space)
+		X (np.ndarray(float)): the data points loaded into the object, of shape (Nele , dimension of embedding space)
 		maxk (int): maximum number of neighbours to be calculated
 		distances (float[:,:]): distances between points saved in X
 		dist_indeces (int[:,:]): ordering of neighbours according to the ditances
