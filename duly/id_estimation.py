@@ -1,7 +1,8 @@
 from duly._base import Base
 
 import numpy as np
-from scipy.optimize import curve_fit, minimize
+import math
+from scipy.optimize import curve_fit
 import duly.utils as ut
 
 import multiprocessing
@@ -21,72 +22,19 @@ class IdEstimation(Base):
 
 	"""
 
-	def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores, working_memory=1024):
+	def __init__(self, coordinates=None, distances=None, maxk=30, verbose=False, njobs=cores, working_memory=1024):
 		super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
 						 njobs=njobs, working_memory=working_memory)
 
 #----------------------------------------------------------------------------------------------
-	def _log_likelihood(self, d, mus, n1, n2, N):
+	#'better' way to perform scaling study of id
+	def compute_id_scaling(self, range_max=1024, d0=0.001, d1=1000, return_ids = False, save_mus = False):
 
-		A = np.log(d)
-		B = (n2-n1-1)*np.sum(mus**-d - 1.)
-		C = ((n2-1)*d+1)*np.sum(np.log(mus))
-
-		return A+B-C
-
-	def _argmax_lik(self, d0, mus, n1, n2, N, eps = 1.e-7):
-
-		indx = np.nonzero(mus == 1)
-		mus[indx] += np.finfo(self.dtype).eps
-		max_log_lik = minimize(-self._log_likelihood, x0 = d0, args = (mus, n1, n2, N),
-								method='Nelder-Mead', xatol = 1.e-7)
-		return max_log_lik.x
-
-
-	def _likelihood_scaling(self, d, mus,  n1, n2, N):
-		one_m_mus_d = 1. - mus ** (-d)
-		sum = np.sum(  ((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))
-		return sum - N / d
-
-    def _max_lik_scaling(self, d0, d1, mus, n1, n2, N, eps = 1.e-7):
-		# mu can't be == 1 add some noise
-		indx = np.nonzero(mus == 1)
-		mus[indx] += np.finfo(self.dtype).eps
-
-		l1 = self._likelihood_scaling(d1, mus,  n1, n2, N)
-		while (abs(d0 - d1) > eps):
-			d2 = (d0 + d1) / 2.
-			l2 = self._likelihood_scaling(d2, mus,  n1, n2, N)
-			if l2 * l1 > 0: d1 = d2
-			else:d0 = d2
-		d = (d0 + d1) / 2.
-
-		return d
-
-	def _fisher_info_scaling(self, id_ml, mus, n1, n2):
-
-		N = len(mus)
-		one_m_mus_d = 1. - mus ** (-id_ml)
-		log_mu = np.log(mus)
-
-		j0 = N/id_ml**2
-
-		factor1 = np.divide(log_mu, one_m_mus_d)
-		factor2 = mus**(-id_ml)
-		tmp = np.multiply(factor1**2, factor2)
-		j1 = (n2-n1-1)*np.sum(tmp)
-
-		return j0+j1
-
-	def compute_id_scaling(self, return_ids = False, range_r2_max=1024, maxk = 30,
-												d0=0.001, d1=1000, save_mus = False):
-
-		maxk = maxk if self.maxk is None else self.maxk
-		range_r2 = min(range_r2_max, self.Nele-1)
+		range_r2 = min(range_max, self.Nele-1)
 		max_step = int(math.log(range_r2, 2))
 		steps = np.array([2**i for i in range(max_step)])
 
-		distances, dist_indices, mus, r2s = self._get_mus_scaling(maxk= maxk, range_mus_scaling=range_r2)
+		distances, dist_indices, mus, r2s = self._get_mus_scaling(range_scaling=range_r2)
 
 		#if distances have not been computed save them
 		if self.distances is None:
@@ -98,59 +46,23 @@ class IdEstimation(Base):
 		self.ids_scaling = np.empty(mus.shape[1])
 		#array of error estimates (via fisher information)
 		self.ids_scaling_std = np.empty(mus.shape[1])
-		#array of 'first' and 'second' neighbor distances, relative to each id estimate
-		self.r2s_scaling = np.mean(r2s, axis = 0).T
+		#array of average 'first' and 'second' neighbor distances, relative to each id estimate
+		self.r2s_scaling = np.mean(r2s, axis = 0)
 
-		#compute IDs via maximum likelihood (and their error) for all the scales up to range_r2_max
+		#compute IDs via maximum likelihood (and their error) for all the scales up to range_scaling
 		for i in range(mus.shape[1]):
 			n1= 2**i
-			id = self._max_lik_scaling(d0, d1, mus[:, i], n1, 2*n1, self.Nele, eps = 1.e-7)
+			id = ut._argmax_loglik(self.dtype, d0, d1, mus[:, i], n1, 2*n1, self.Nele, eps = 1.e-7)
 			self.ids_scaling[i] = id
-			self.ids_scaling_std[i] = (1/self._fisher_info_scaling(id, mus[:, i], n1, 2*n1))**0.5
+			self.ids_scaling_std[i] = (1/ut._fisher_info_scaling(id, mus[:, i], n1, 2*n1))**0.5
 
 		#should we leave on option for saving mus? (can be useful especially for 'debugging' twoNN)
 		if save_mus: self.mus_scaling = mus
 
+		#shoud we leave an option to get the IdS?
+		#The scale study should be done to do a quick plot and set the right id...
 		if return_ids:
 			return self.ids_scaling, self.ids_scaling_std, self.r2s_scaling
-
-	# def compute_id_diego(self, nneigh=1, fraction=0.95, d0=0.1, d1=1000):
-	#
-	# 	"""Compute intrinsic dimension through..?
-	#
-	# 	Args:
-	# 		nneigh: number of neighbours to be used for he estimate
-	# 		fraction: fraction of mus that will be considered for the estimate (discard highest mus)
-	# 		d0: lower estimate??
-	# 		d1: higher estimate??
-	#
-	# 	Returns:
-	#
-	# 	"""
-	#
-	# 	assert (self.distances is not None)
-	# 	if self.verb: print('ID estimation started, using nneigh = {}'.format(nneigh))
-	#
-	# 	# remove the 5% highest value of mu
-	# 	mu_full = self.distances[:, 2 * nneigh] / self.distances[:, 1 * nneigh]
-	# 	mu_full.sort()
-	# 	Nele_eff = int( len(mu_full) * fraction )
-	# 	mu = mu_full[:Nele_eff]
-	#
-	# 	f1 = ut._f(d1, mu, nneigh, Nele_eff)
-	# 	while (abs(d0 - d1) > 1.e-5):
-	# 		d2 = (d0 + d1) / 2.
-	# 		f2 = ut._f(d2, mu, nneigh, Nele_eff)
-	# 		if f2 * f1 > 0:
-	# 			d1 = d2
-	# 		else:
-	# 			d0 = d2
-	#
-	# 	d = (d0 + d1) / 2.
-	#
-	# 	self.id_estimated_D = d
-	# 	self.id_selected = np.rint(d)
-	# 	if self.verb: print('ID estimation finished, id selected = {}'.format(self.id_selected))
 
 	#----------------------------------------------------------------------------------------------
 

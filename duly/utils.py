@@ -12,16 +12,71 @@ def compute_all_distances(X, n_jobs=cores):
 
     return dists
 
-
 # helper function of compute_id_diego
-def _f(d, mu, n, N):
-    # mu can't be == 1 add some noise
-    indx = np.nonzero(mu == 1)
-    mu[indx] += np.finfo(np.float32).eps
 
-    one_m_mus_d = 1. - mu ** (-d)
-    sum = np.sum(((1 - n) / one_m_mus_d + 2. * n - 1.) * np.log(mu))
-    return sum - N / d
+#TODO ADD AUTOMATIC ROOT FINDER
+# def _negative_log_likelihood(self, d, mus, n1, n2, N):
+#
+# 	A = math.log(d)
+# 	B = (n2-n1-1)*np.sum(mus**-d - 1.)
+# 	C = ((n2-1)*d+1)*np.sum(np.log(mus))
+#
+# 	return -(A+B-C)
+#
+# def _argmax_lik(self, d0, mus, n1, n2, N, eps = 1.e-7):
+#
+# 	indx = np.nonzero(mus == 1)
+# 	mus[indx] += np.finfo(self.dtype).eps
+# 	max_log_lik = minimize(self._negative_log_likelihood, x0 = d0, args = (mus, n1, n2, N),
+# 							method='L-BFGS-B', tol = 1.e-7, bounds = (0, 1000))
+# 	return max_log_lik.x
+
+def _loglik(d, mus,  n1, n2, N):
+	one_m_mus_d = 1. - mus ** (-d)
+	sum = np.sum(  ((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))
+	return sum - N / d
+
+def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps = 1.e-7):
+	# mu can't be == 1 add some noise
+	indx = np.nonzero(mus == 1)
+	mus[indx] += np.finfo(dtype).eps
+
+	l1 = _loglik(d1, mus,  n1, n2, N)
+	while (abs(d0 - d1) > eps):
+		d2 = (d0 + d1) / 2.
+		l2 = _loglik(d2, mus,  n1, n2, N)
+		if l2 * l1 > 0: d1 = d2
+		else:d0 = d2
+	d = (d0 + d1) / 2.
+
+	return d
+
+def _fisher_info_scaling(id_ml, mus, n1, n2):
+
+	N = len(mus)
+	one_m_mus_d = 1. - mus ** (-id_ml)
+	log_mu = np.log(mus)
+
+	j0 = N/id_ml**2
+
+	factor1 = np.divide(log_mu, one_m_mus_d)
+	factor2 = mus**(-id_ml)
+	tmp = np.multiply(factor1**2, factor2)
+	j1 = (n2-n1-1)*np.sum(tmp)
+
+	return j0+j1
+
+
+
+
+# def _f(d, mu, n, N):
+#     # mu can't be == 1 add some noise
+#     indx = np.nonzero(mu == 1)
+#     mu[indx] += np.finfo(np.float32).eps
+#
+#     one_m_mus_d = 1. - mu ** (-d)
+#     sum = np.sum(((1 - n) / one_m_mus_d + 2. * n - 1.) * np.log(mu))
+#     return sum - N / d
 
 
 def _return_ranks(dist_indices_1, dist_indices_2, maxk_2, k=1):
