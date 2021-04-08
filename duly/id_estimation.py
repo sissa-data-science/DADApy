@@ -150,13 +150,13 @@ class IdEstimation(Base):
 
 	#----------------------------------------------------------------------------------------------
 
-if __name__ == '__main__':
-	X = rng.uniform(size = (1000, 2))
-
-	ide = IdEstimation(coordinates=X)
-
-	ide.compute_distances(maxk = 10)
-
-	ide.compute_id_2NN(decimation=1)
-
-	print(ide.id_estimated_2NN,ide.id_selected)
+# if __name__ == '__main__':
+#     X = rng.uniform(size = (1000, 2))
+#
+#     ide = IdEstimation(coordinates=X)
+#
+#     ide.compute_distances(maxk = 10)
+#
+#     ide.compute_id_2NN(decimation=1)
+#
+#     print(ide.id_estimated_2NN,ide.id_selected)
