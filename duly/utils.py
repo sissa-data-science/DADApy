@@ -12,9 +12,10 @@ def compute_all_distances(X, n_jobs=cores):
 
     return dists
 
+
 # helper function of compute_id_diego
 
-#TODO ADD AUTOMATIC ROOT FINDER
+# TODO ADD AUTOMATIC ROOT FINDER
 # def _negative_log_likelihood(self, d, mus, n1, n2, N):
 #
 # 	A = math.log(d)
@@ -31,42 +32,43 @@ def compute_all_distances(X, n_jobs=cores):
 # 							method='L-BFGS-B', tol = 1.e-7, bounds = (0, 1000))
 # 	return max_log_lik.x
 
-def _loglik(d, mus,  n1, n2, N):
-	one_m_mus_d = 1. - mus ** (-d)
-	sum = np.sum(  ((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))
-	return sum - N / d
+def _loglik(d, mus, n1, n2, N):
+    one_m_mus_d = 1. - mus ** (-d)
+    sum = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))
+    return sum - N / d
 
-def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps = 1.e-7):
-	# mu can't be == 1 add some noise
-	indx = np.nonzero(mus == 1)
-	mus[indx] += np.finfo(dtype).eps
 
-	l1 = _loglik(d1, mus,  n1, n2, N)
-	while (abs(d0 - d1) > eps):
-		d2 = (d0 + d1) / 2.
-		l2 = _loglik(d2, mus,  n1, n2, N)
-		if l2 * l1 > 0: d1 = d2
-		else:d0 = d2
-	d = (d0 + d1) / 2.
+def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.e-7):
+    # mu can't be == 1 add some noise
+    indx = np.nonzero(mus == 1)
+    mus[indx] += np.finfo(dtype).eps
 
-	return d
+    l1 = _loglik(d1, mus, n1, n2, N)
+    while (abs(d0 - d1) > eps):
+        d2 = (d0 + d1) / 2.
+        l2 = _loglik(d2, mus, n1, n2, N)
+        if l2 * l1 > 0:
+            d1 = d2
+        else:
+            d0 = d2
+    d = (d0 + d1) / 2.
+
+    return d
+
 
 def _fisher_info_scaling(id_ml, mus, n1, n2):
+    N = len(mus)
+    one_m_mus_d = 1. - mus ** (-id_ml)
+    log_mu = np.log(mus)
 
-	N = len(mus)
-	one_m_mus_d = 1. - mus ** (-id_ml)
-	log_mu = np.log(mus)
+    j0 = N / id_ml ** 2
 
-	j0 = N/id_ml**2
+    factor1 = np.divide(log_mu, one_m_mus_d)
+    factor2 = mus ** (-id_ml)
+    tmp = np.multiply(factor1 ** 2, factor2)
+    j1 = (n2 - n1 - 1) * np.sum(tmp)
 
-	factor1 = np.divide(log_mu, one_m_mus_d)
-	factor2 = mus**(-id_ml)
-	tmp = np.multiply(factor1**2, factor2)
-	j1 = (n2-n1-1)*np.sum(tmp)
-
-	return j0+j1
-
-
+    return j0 + j1
 
 
 # def _f(d, mu, n, N):
@@ -144,23 +146,21 @@ def _return_ranks_wdegeneracy(distances_1, distances_2):
     return losses
 
 
-def _return_loss(dist_indices_1, dist_indices_2, maxk_2, k=1, ltype='mean'):
+def _return_imbalance(dist_indices_1, dist_indices_2, maxk_2, k=1, dtype='mean'):
     assert (dist_indices_1.shape[0] == dist_indices_2.shape[0])
 
     N = dist_indices_1.shape[0]
 
     ranks = _return_ranks(dist_indices_1, dist_indices_2, maxk_2, k=k)
 
-    if ltype == 'mean':
-        loss = (np.mean(ranks) - k) / (N / 2. - k)
-    elif ltype == 'log_mean':
-        loss = (np.log(np.mean(ranks)) - np.log(k)) / (np.log(N / 2.) - np.log(k))
-    elif ltype == 'binned':
-
+    if dtype == 'mean':
+        imb = np.mean(ranks) / (N / 2.)
+    elif dtype == 'log_mean':
+        imb = np.log(np.mean(ranks) / (N / 2.))
+    elif dtype == 'binned':
         nbins = int(round(N / k))
         # print(nbins)
         Hmax = np.log(nbins)
-        Hmin = 0.
 
         cs = ranks / N
         freqs, bins = np.histogram(cs, nbins, range=(0, 1.))
@@ -170,17 +170,37 @@ def _return_loss(dist_indices_1, dist_indices_2, maxk_2, k=1, ltype='mean'):
         ps = ps[nonzero]
         H = - np.dot(ps, np.log(ps))
 
-        loss = (H - Hmin) / (Hmax - Hmin)
-        # print(cs,freqs, H, loss)
-
+        imb = H / Hmax
+        # print(cs,freqs, H, imb)
 
     else:
-        raise ValueError("Choose a valid loss type")
+        raise ValueError("Choose a valid imb type")
+    return imb
 
-    return loss
+
+def _return_imb_ij(i, j, maxk, X, k, dtype):
+    X_ = X[:, [i]]
+
+    nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
+                            p=2, n_jobs=1).fit(X_)
+
+    _, dist_indices_i = nbrs.kneighbors(X_)
+
+    X_ = X[:, [j]]
+
+    nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
+                            p=2, n_jobs=1).fit(X_)
+
+    _, dist_indices_j = nbrs.kneighbors(X_)
+
+    nij = _return_imbalance(dist_indices_i, dist_indices_j, maxk, k=k, dtype=dtype)
+    nji = _return_imbalance(dist_indices_j, dist_indices_i, maxk, k=k, dtype=dtype)
+
+    print('computing loss with coord number ', i)
+    return nij, nji
 
 
-def _get_loss_with_coords(X, coords, dist_indices, maxk, k, ltype='mean'):
+def _return_imb_with_coords(X, coords, dist_indices, maxk, k, ltype='mean'):
     X_ = X[:, coords]
 
     nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
@@ -188,8 +208,8 @@ def _get_loss_with_coords(X, coords, dist_indices, maxk, k, ltype='mean'):
 
     _, dist_indices_i = nbrs.kneighbors(X_)
 
-    ni0 = _return_loss(dist_indices_i, dist_indices, maxk, k=k, ltype=ltype)
-    n0i = _return_loss(dist_indices, dist_indices_i, maxk, k=k, ltype=ltype)
+    ni0 = _return_imbalance(dist_indices_i, dist_indices, maxk, k=k, dtype=ltype)
+    n0i = _return_imbalance(dist_indices, dist_indices_i, maxk, k=k, dtype=ltype)
     print('computing loss with coords ', coords)
     return n0i, ni0
 
@@ -205,8 +225,8 @@ def _get_loss_between_two(X, Xp, maxk, k, ltype='mean'):
 
     _, dist_indices_X = nbrsX.kneighbors(X)
 
-    nXp_X = _return_loss(dist_indices_Xp, dist_indices_X, maxk, k=k, ltype=ltype)
-    nX_Xp = _return_loss(dist_indices_X, dist_indices_Xp, maxk, k=k, ltype=ltype)
+    nXp_X = _return_imbalance(dist_indices_Xp, dist_indices_X, maxk, k=k, dtype=ltype)
+    nX_Xp = _return_imbalance(dist_indices_X, dist_indices_Xp, maxk, k=k, dtype=ltype)
 
     return nX_Xp, nXp_X
 
@@ -235,8 +255,8 @@ def _get_loss_linear_comb_two_dists(dist_indices_Y, d1, d2, a1, maxk, k=1,
 
     dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0:maxk + 1])
 
-    nX_Y = _return_loss(dist_indices_X, dist_indices_Y, maxk, k=k, ltype=ltype)
-    nY_X = _return_loss(dist_indices_Y, dist_indices_X, maxk, k=k, ltype=ltype)
+    nX_Y = _return_imbalance(dist_indices_X, dist_indices_Y, maxk, k=k, dtype=ltype)
+    nY_X = _return_imbalance(dist_indices_Y, dist_indices_X, maxk, k=k, dtype=ltype)
 
     return nX_Y, nY_X
 
@@ -247,8 +267,8 @@ def _get_loss_linear_comb_three_dists(dist_indices_Y, d1, d2, d3, a1, a2, maxk, 
 
     dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0:maxk + 1])
 
-    nX_Y = _return_loss(dist_indices_X, dist_indices_Y, maxk, k=k, ltype=ltype)
-    nY_X = _return_loss(dist_indices_Y, dist_indices_X, maxk, k=k, ltype=ltype)
+    nX_Y = _return_imbalance(dist_indices_X, dist_indices_Y, maxk, k=k, dtype=ltype)
+    nY_X = _return_imbalance(dist_indices_Y, dist_indices_X, maxk, k=k, dtype=ltype)
 
     return nX_Y, nY_X
 
@@ -259,8 +279,8 @@ def _get_loss_between_two_one_fixed(X, dist_indices_Xp, maxk, k, ltype='mean'):
 
     _, dist_indices_X = nbrsX.kneighbors(X)
 
-    nXp_X = _return_loss(dist_indices_Xp, dist_indices_X, maxk, k=k, ltype=ltype)
-    nX_Xp = _return_loss(dist_indices_X, dist_indices_Xp, maxk, k=k, ltype=ltype)
+    nXp_X = _return_imbalance(dist_indices_Xp, dist_indices_X, maxk, k=k, dtype=ltype)
+    nX_Xp = _return_imbalance(dist_indices_X, dist_indices_Xp, maxk, k=k, dtype=ltype)
 
     return nX_Xp, nXp_X
 

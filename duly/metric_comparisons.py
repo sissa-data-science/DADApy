@@ -7,38 +7,33 @@ from duly._base import *
 
 
 class MetricComparisons(Base):
+    """This class contains several methods to compare metric spaces obtained using subsets of the data features.
+    Using these methods one can assess whether two spaces are equivalent, completely independent, or whether one
+    space is more informative than the other.
+
+    Attributes:
+
+    """
+
     def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
 
-    def return_neigh_loss_of_coords(self, k=1, ltype='mean'):
+    def return_inf_imb_of_coords(self, k=1, dtype='mean'):
+        """Compute the information imbalances between all pairs of D features of the data
+
+        Args:
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+
+        Returns:
+            n_mat (np.array(float)): a DxD matrix containing all the information imbalances
+        """
         assert (self.X is not None)
 
         ncoords = self.X.shape[1]
 
         n_mat = np.zeros((ncoords, ncoords))
-
-        def get_loss_ij(i, j, maxk):
-
-            X_ = self.X[:, [i]]
-
-            nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-                                    p=2, n_jobs=1).fit(X_)
-
-            _, dist_indices_i = nbrs.kneighbors(X_)
-
-            X_ = self.X[:, [j]]
-
-            nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-                                    p=2, n_jobs=1).fit(X_)
-
-            _, dist_indices_j = nbrs.kneighbors(X_)
-
-            nij = ut._return_loss(dist_indices_i, dist_indices_j, self.maxk, k=k, ltype=ltype)
-            nji = ut._return_loss(dist_indices_j, dist_indices_i, self.maxk, k=k, ltype=ltype)
-
-            print('computing loss with coord number ', i)
-            return nij, nji
 
         if self.njobs == 1:
 
@@ -46,16 +41,16 @@ class MetricComparisons(Base):
                 for j in range(i):
                     if self.verb == True: print('computing loss between coords ', i, j)
 
-                    nij, nji = get_loss_ij(i, j, self.maxk)
+                    nij, nji = ut._return_imb_ij(i, j, self.maxk, self.X, k, dtype)
                     n_mat[i, j] = nij
                     n_mat[j, i] = nji
 
         elif self.njobs > 1:
             if self.verb is True: print(
-                'computing loss with coord number on {} processors'.format(self.njobs))
+                'computing imbalances with coord number on {} processors'.format(self.njobs))
 
             nmats = Parallel(n_jobs=self.njobs)(
-                delayed(get_loss_ij)(i, j, self.maxk) for i in range(ncoords) for j in range(i))
+                delayed(ut._return_imb_ij)(i, j, self.maxk, self.X, k, dtype) for i in range(ncoords) for j in range(i))
 
             indices = [(i, j) for i in range(ncoords) for j in range(i)]
 
@@ -65,7 +60,18 @@ class MetricComparisons(Base):
 
         return n_mat
 
-    def return_neigh_loss_with_all_coords(self, k=1, ltype='mean'):
+    def return_inf_imb_with_all_coords(self, k=1, dtype='mean'):
+        """Compute the information imbalances between the original space and each one of its D features
+
+        Args:
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+
+        Returns:
+            (np.array(float)): a 2xD matrix containing the information imbalances between
+            the original space and each of its D features.
+
+        """
         assert (self.X is not None)
 
         ncoords = self.X.shape[1]
@@ -76,23 +82,37 @@ class MetricComparisons(Base):
             for i in range(ncoords):
                 if self.verb is True: print('computing loss with coord number ', i)
 
-                n0i, ni0 = ut._get_loss_with_coords(self.X, [i], self.dist_indices, self.maxk, k,
-                                                    ltype)
+                n0i, ni0 = ut._return_imb_with_coords(self.X, [i], self.dist_indices, self.maxk, k,
+                                                      dtype)
                 n1s_n2s.append((n0i, ni0))
 
         elif self.njobs > 1:
             if self.verb == True: print(
                 'computing loss with coord number on {} processors'.format(self.njobs))
             n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(ut._get_loss_with_coords)(self.X, [i], self.dist_indices, self.maxk, k,
-                                                  ltype) for
+                delayed(ut._return_imb_with_coords)(self.X, [i], self.dist_indices, self.maxk, k,
+                                                    dtype) for
                 i in range(ncoords))
         else:
             raise ValueError("njobs cannot be negative")
 
         return np.array(n1s_n2s).T
 
-    def return_neigh_loss_with_selected_coords(self, coord_list, k=1, ltype='mean'):
+    def return_inf_imb_with_selected_coords(self, coord_list, k=1, dtype='mean'):
+        """Compute the information imbalances between the original space and a selection of features
+
+        Args:
+            coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
+            sub-list defines a set of coordinates for which the information imbalance should be
+            computed.
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+
+        Returns:
+            (np.array(float)): a 2xL matrix containing the information imbalances between
+            the original space and each one of the L subspaces defined in coord_list
+
+        """
         assert (self.X is not None)
 
         print('total number of computations is: ', len(coord_list))
@@ -103,16 +123,16 @@ class MetricComparisons(Base):
             for coords in coord_list:
                 if self.verb == True: print('computing loss with coord selection')
 
-                n0i, ni0 = ut._get_loss_with_coords(self.X, coords, self.dist_indices, self.maxk, k,
-                                                    ltype)
+                n0i, ni0 = ut._return_imb_with_coords(self.X, coords, self.dist_indices, self.maxk, k,
+                                                      dtype)
                 n1s_n2s.append((n0i, ni0))
 
         elif self.njobs > 1:
             if self.verb is True: print(
                 'computing loss with coord number on {} processors'.format(self.njobs))
             n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(ut._get_loss_with_coords)(self.X, coords, self.dist_indices, self.maxk, k,
-                                                  ltype)
+                delayed(ut._return_imb_with_coords)(self.X, coords, self.dist_indices, self.maxk, k,
+                                                    dtype)
                 for coords in coord_list)
         else:
             raise ValueError("njobs cannot be negative")
@@ -148,7 +168,7 @@ class MetricComparisons(Base):
         D = self.X.shape[1]
 
         # select initial coordinate as the most informative
-        losses = self.return_neigh_loss_with_all_coords(k=k, ltype=ltype)
+        losses = self.return_inf_imb_with_all_coords(k=k, dtype=ltype)
         proj = np.dot(losses.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
 
         selected_coord = np.argmin(proj)
@@ -169,7 +189,7 @@ class MetricComparisons(Base):
         for i in range(n_coords):
             coord_list = [selected_coords + [oc] for oc in other_coords]
 
-            losses_ = self.return_neigh_loss_with_selected_coords(coord_list, k=k, ltype=ltype)
+            losses_ = self.return_inf_imb_with_selected_coords(coord_list, k=k, dtype=ltype)
             losses = np.empty((2, D))
             losses[:, :] = None
             losses[:, other_coords] = losses_
@@ -269,7 +289,7 @@ class MetricComparisons(Base):
             sym_coord = [i + j * ncoords for j in range(nsym)]
             coord_list.append(sym_coord)
 
-        losses = self.return_neigh_loss_with_selected_coords(coord_list, k=k)
+        losses = self.return_inf_imb_with_selected_coords(coord_list, k=k)
 
         proj = np.dot(losses.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
 
@@ -302,7 +322,7 @@ class MetricComparisons(Base):
 
                 coord_list.append(sym_coords)
 
-            losses = self.return_neigh_loss_with_selected_coords(coord_list, k=k)
+            losses = self.return_inf_imb_with_selected_coords(coord_list, k=k)
 
             proj = np.dot(losses.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
 
