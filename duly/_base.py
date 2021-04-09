@@ -36,6 +36,7 @@ class Base:
 
 			self.Nele = coordinates.shape[0]
 			self.distances = None
+			
 			#BUG to be solved: the next line
 			if self.maxk is None: self.maxk = self.Nele - 1
 
