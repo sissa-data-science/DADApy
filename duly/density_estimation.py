@@ -8,17 +8,14 @@ import cython_functions as cf
 
 
 class DensityEstimation(IdEstimation):
-
     """Computes the log-density and its error at each point and other properties.
 
-        Inherits from class IdEstimation. Can estimate the optimal number k* of neighbors for each points. \
-        Can compute the log-density and its error at each point choosing among various kNN-based methods. \
-        Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component. \
-        Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component. \
+    Inherits from class IdEstimation. Can estimate the optimal number k* of neighbors for each points. \
+    Can compute the log-density and its error at each point choosing among various kNN-based methods. \
+    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component. \
+    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component. \
 
-
-        Attributes:
-        
+    Attributes:
         kstar (np.array(float)): array containing the chosen number k* of neighbors for each of the Nele points
         dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the Nele points
         Rho (np.array(float), optional): array containing the Nele log-densities
@@ -28,12 +25,11 @@ class DensityEstimation(IdEstimation):
         grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i 
         grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
 
-    """    
+    """
 
     def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
-
 
     def compute_density_kNN(self, k=3):
         """Compute the density of of each point using a simple kNN estimator
@@ -76,7 +72,6 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation finished')
 
-
     def compute_kstar(self, Dthr=23.92):
         """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
 
@@ -87,7 +82,7 @@ class DensityEstimation(IdEstimation):
         Returns:
 
         """
-        if self.id_selected is None: self.compute_id()
+        if self.id_selected is None: self.compute_id_2NN()
 
         if self.verb: print('kstar estimation started, Dthr = {}'.format(Dthr))
 
@@ -116,7 +111,6 @@ class DensityEstimation(IdEstimation):
             "{0:0.2f} seconds finding the optimal k for all the points".format(sec2 - sec))
 
         self.kstar = kstar
-
 
     def compute_density_kstarNN(self):
         if self.kstar is None: self.compute_kstar()
@@ -155,7 +149,6 @@ class DensityEstimation(IdEstimation):
         self.dc = dc
 
         if self.verb: print('k-NN density estimation finished')
-
 
     def compute_density_PAk(self, method='NR'):
 
@@ -226,7 +219,6 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('PAk density estimation finished')
 
-
     def compute_density_kstarNN_gCorr(self, alpha=1., gauss_approx=False, Fij_type='grad'):
         """
         finds the minimum of the
@@ -280,7 +272,6 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
 
-
     def compute_density_PAk_gCorr(self, alpha=1.):
         from mlmax_pytorch import maximise_wPAk
         """
@@ -323,7 +314,6 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
         self.Rho -= np.log(self.Nele)
-
 
     def compute_density_gPAk(self, mode='standard'):
         # compute optimal k
@@ -446,7 +436,6 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation finished')
 
-
     def compute_density_gCorr(self, use_variance=True):
         # TODO: matrix A should be in sparse format!
 
@@ -497,7 +486,6 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
 
-
     def return_grads(self):
         """[OBSOLETE] Returns the gradient of the log density each point using k* nearest neighbors. The gradient is estimated via a linear expansion of the density propagated to the log-density.
 
@@ -538,7 +526,6 @@ class DensityEstimation(IdEstimation):
 
         return grads
 
-
     def compute_grads(self):
         """Compute the gradient of the log density each point using k* nearest neighbors. The gradient is estimated via a linear expansion of the density propagated to the log-density.
 
@@ -555,12 +542,11 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
         self.grads, self.grads_var = cf.compute_grads_from_coords(self.X, self.dist_indices,
-                                                                    self.kstar, self.id_selected)
+                                                                  self.kstar, self.id_selected)
 
         sec2 = time.time()
         if self.verb: print(
             "{0:0.2f} seconds computing gradients".format(sec2 - sec))
-
 
     def compute_deltaFs_grad(self):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using a linear expansion (see ` compute_grads`).
@@ -644,18 +630,17 @@ class DensityEstimation(IdEstimation):
 
         return H
 
-
-if __name__ == '__main__':
-    X = np.random.uniform(size=(50, 2))
-
-    de = DensityEstimation(coordinates=X)
-
-    de.compute_distances(maxk=25)
-
-    de.compute_id_2NN(decimation=1)
-
-    de.compute_density_kNN(10)
-
-    de.compute_grads()
-
-    print(de.Rho)
+# if __name__ == '__main__':
+#     X = np.random.uniform(size=(50, 2))
+#
+#     de = DensityEstimation(coordinates=X)
+#
+#     de.compute_distances(maxk=25)
+#
+#     de.compute_id_2NN(decimation=1)
+#
+#     de.compute_density_kNN(10)
+#
+#     de.compute_grads()
+#
+#     print(de.Rho)
