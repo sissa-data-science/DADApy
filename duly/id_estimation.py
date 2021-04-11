@@ -32,17 +32,28 @@ class IdEstimation(Base):
     # 'better' way to perform scaling study of id
     def compute_id_scaling(self, range_max=1024, d0=0.001, d1=1000, return_ids=False, save_mus=False):
 
-        range_r2 = min(range_max, self.Nele - 1)
-        max_step = int(math.log(range_r2, 2))
-        steps = np.array([2 ** i for i in range(max_step)])
+        def get_steps(upper_bound, range_max = range_max):
+            range_r2 = min(range_max, upper_bound)
+            max_step = int(math.log(range_r2, 2))
+            return np.array([2**i for i in range(max_step)]), range_r2
 
-        distances, dist_indices, mus, r2s = self._get_mus_scaling(range_scaling=range_r2)
+        if self.X is None and self.distances is not None:
 
-        # if distances have not been computed save them
-        if self.distances is None:
-            self.distances = distances
-            self.dist_indices = dist_indices
-            self.Nele = distances.shape[0]
+            steps, _ = get_steps(upper_bound = self.maxk)
+            mus = self.distances[:, steps[1:]]/self.distances[:, steps[:-1]]
+            r2s = self.distances[:, np.array([steps[:-1], steps[1:]])]
+
+        elif self.X is not None:
+            maxk = maxk if self.maxk is None else self.maxk
+            steps, range_r2 = get_steps(upper_bound = self.Nele -1)
+            distances, dist_indices, mus, r2s = self._get_mus_scaling(X=self.X, maxk= maxk,
+                                compute_mus = True, range_mus_r2n=range_r2)
+
+            # if distances have not been computed save them
+            if self.distances is None:
+                self.distances = distances
+                self.dist_indices = dist_indices
+                self.Nele = distances.shape[0]
 
         # array of ids (as a function of the average distange to a point)
         self.ids_scaling = np.empty(mus.shape[1])
