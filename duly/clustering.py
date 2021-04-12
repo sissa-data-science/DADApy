@@ -2,10 +2,36 @@ from duly.density_estimation import *
 
 
 class Clustering(DensityEstimation):
+    """This class contains various density-based clustering algorithms.
+
+    Inherits from the DensityEstimation class.
+
+    Attributes:
+
+        Nclus_m (int) : number of clusters found
+        labels (list(int)): cluster assignment. A list of length Nele containg the cluster assignment of each point
+        as an integer from 0 to Nclus_m-1.
+        centers_m (int): Indices of the centroids of each cluster (density peak)
+        clstruct_m (list(list(int))): a list of lists. Each sublist contains the indices belonging to the
+        corresponding cluster.
+        out_bord (array(float)): an array of dimensions Nclus_m x Nclus_m containg the estimated log density of the
+        the saddle point between each couple of peaks.
+        Rho_bord_err_m (array(float)): an array of dimensions Nclus_m x Nclus_m containg the estimated error on the
+        log density of the saddle point between each couple of peaks.
+
+    """
+
 
     def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
+
+        self.clstruct_m = None
+        self.Nclus_m = None
+        self.labels = None
+        self.centers_m = None
+        self.Rho_bord_err_m = None
+        self.out_bord = None
 
     def compute_clustering_optimised(self, Z=1.65, halo=False):
         from cython_ import cython_functions as cf
@@ -54,7 +80,7 @@ class Clustering(DensityEstimation):
         Rho_c = self.Rho + np.log(self.Nele)
         Rho_c = Rho_c - Rho_min + 1
 
-        # Putative modes of the PDF as preliminar clusters
+        # Putative modes of the PDF as preliminary clusters
         sec = time.time()
         Nele = self.distances.shape[0]
         g = Rho_c - self.Rho_err
@@ -245,17 +271,17 @@ class Clustering(DensityEstimation):
         if self.verb: print('Clustering finished, {} clusters found'.format(self.Nclus_m))
 
 
-if __name__ == '__main__':
-    X = np.random.uniform(size=(50, 2))
-
-    cl = Clustering(coordinates=X)
-
-    cl.compute_distances(maxk=25)
-
-    cl.compute_id()
-
-    cl.compute_density_kNN(10)
-
-    cl.compute_clustering()
-
-    print(cl.Nclus_m)
+# if __name__ == '__main__':
+#     X = np.random.uniform(size=(50, 2))
+#
+#     cl = Clustering(coordinates=X)
+#
+#     cl.compute_distances(maxk=25)
+#
+#     cl.compute_id_2NN()
+#
+#     cl.compute_density_kNN(10)
+#
+#     cl.compute_clustering()
+#
+#     print(cl.Nclus_m)

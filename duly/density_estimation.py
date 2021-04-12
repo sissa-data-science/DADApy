@@ -487,14 +487,11 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
 
     def return_grads(self):
-        """[OBSOLETE] Returns the gradient of the log density each point using k* nearest neighbors. The gradient is estimated via a linear expansion of the density propagated to the log-density.
-
-        Args:
-            k: number of neighbours used to compute the density
+        """[OBSOLETE] Returns the gradient of the log density each point using k* nearest neighbors.
+        The gradient is estimated via a linear expansion of the density propagated to the log-density.
 
         Returns:
             grads (np.ndarray(float)): for each line i contains the gradient components estimated from from point i 
-
 
         """
         # compute optimal k
@@ -527,7 +524,8 @@ class DensityEstimation(IdEstimation):
         return grads
 
     def compute_grads(self):
-        """Compute the gradient of the log density each point using k* nearest neighbors. The gradient is estimated via a linear expansion of the density propagated to the log-density.
+        """Compute the gradient of the log density each point using k* nearest neighbors.
+        The gradient is estimated via a linear expansion of the density propagated to the log-density.
 
         Args:
             k: number of neighbours used to compute the density
@@ -549,10 +547,8 @@ class DensityEstimation(IdEstimation):
             "{0:0.2f} seconds computing gradients".format(sec2 - sec))
 
     def compute_deltaFs_grad(self):
-        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using a linear expansion (see ` compute_grads`).
-
-        Args:
-            k: number of neighbours used to compute the density
+        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
+        a linear expansion (see `compute_grads`).
 
         Returns:
 
@@ -624,6 +620,13 @@ class DensityEstimation(IdEstimation):
             "{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
 
     def return_entropy(self):
+        """Compute a very rough estimate of the entropy of the data distribution
+        as the average negative log probability.
+
+        Returns:
+            H (float): the estimate entropy of the distribution
+
+        """
         assert (self.Rho is not None)
 
         H = - np.mean(self.Rho)

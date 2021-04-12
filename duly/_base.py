@@ -10,14 +10,14 @@ cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
 class Base:
-    """Base class containig data and distances.
+    """Base class. A simple container of coordinates and/or distances and of basic methods.
 
     Attributes:
         Nele (int): number of data points
         X (np.ndarray(float)): the data points loaded into the object, of shape (Nele , dimension of embedding space)
-        maxk (int): maximum number of neighbours to be calculated
-        distances (float[:,:]): distances between points saved in X
-        dist_indeces (int[:,:]): ordering of neighbours according to the ditances
+        maxk (int): maximum number of neighbours to be considered for the calculation of distances
+        distances (float[:,:]): A matrix of dimension Nele x mask containing distances between points
+        dist_indeces (int[:,:]): A matrix of dimension Nele x mask containing the indices of the nearest neighbours
         verb (bool): whether you want the code to speak or shut up
         njobs (int): number of cores to be used
         p (int): metric used to compute distances
@@ -136,7 +136,7 @@ class Base:
 
     # adapted from kneighbors function of sklearn
     # https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
-    def _mus_scaling_reduce_func(self, dist, start, range_scaling):
+    def _mus_scaling_reduce_func(self, dist, range_scaling):
 
         max_step = int(math.log(range_scaling, 2))
         steps = np.array([2 ** i for i in range(max_step)])
@@ -163,7 +163,7 @@ class Base:
 
         kwds = {'squared': True}
         chunked_results = list(pairwise_distances_chunked(self.X, self.X, reduce_func=reduce_func,
-                                                          metric='euclidean', n_jobs=1,
+                                                          metric='euclidean', n_jobs=self.njobs,
                                                           working_memory=1024, **kwds))
 
         neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
@@ -181,6 +181,7 @@ class Base:
             distances of decimated dataset
 
         """
+        # TODO: do we really need to save self.dist_dec, self.ind_dec in the class?
 
         assert (0. < decimation and decimation <= 1.)
 
@@ -191,26 +192,10 @@ class Base:
             if maxk is None:
                 maxk = self.maxk
 
-            Nele_dec = int(self.Nele * decimation)
+            Nele_dec = np.rint(self.Nele * decimation)
             idxs = rng.choice(self.Nele, Nele_dec, replace=False)
             X_temp = self.X[idxs]
             nbrs = NearestNeighbors(n_neighbors=maxk, p=self.p,
                                     n_jobs=self.njobs).fit(X_temp)
             self.dist_dec, self.ind_dec = nbrs.kneighbors(X_temp)
             return self.dist_dec
-
-# ---------------------------------------------------------------------------
-
-# if __name__ == '__main__':
-# 	X = rng.uniform(size = (100, 2))
-#
-# 	base = Base(coordinates=X)
-#
-# 	base.compute_distances(maxk = 10)
-# 	print(base.distances.shape)
-# 	print(base.distances[0])
-#
-# 	dist_dec = base.decimate(0.5,10)
-#
-# 	print(dist_dec[0])
-# 	print(dist_dec.shape)
