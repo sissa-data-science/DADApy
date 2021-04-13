@@ -20,16 +20,27 @@ class DensityEstimation(IdEstimation):
         dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the Nele points
         Rho (np.array(float), optional): array containing the Nele log-densities
         Rho_err (np.array(float), optional): array containing the Nele errors on the Rho
-        Fij_list (list(np.array(float)), optional): list of Nele arrays containing for each i the k* estimates of deltaF_ij computed from point i
-        Fij_var_list (list(np.array(float)), optional): list of Nele arrays containing the squared errors on the deltaF_ij's
         grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i 
         grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
+        Fij_list (list(np.array(float)), optional): list of Nele arrays containing for each i the k* estimates of deltaF_ij computed from point i
+        Fij_var_list (list(np.array(float)), optional): list of Nele arrays containing the squared errors on the deltaF_ij's
+
 
     """
 
     def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
+
+        self.kstar=None
+        self.dc=None
+        self.Rho=None
+        self.Rho_err=None
+        self.grads=None
+        self.grads_var=None
+        self.Fij_list=None
+        self.Fij_var_list=None
+
 
     def compute_density_kNN(self, k=3):
         """Compute the density of of each point using a simple kNN estimator
