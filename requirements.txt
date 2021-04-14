@@ -1,2 +1,3 @@
 # reqirements needed for Sphinx documentation
 nbsphinx
+nbsphinx_link
