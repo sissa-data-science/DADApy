@@ -1,0 +1,2 @@
+# reqirements needed for Sphinx documentation
+nbsphinx
