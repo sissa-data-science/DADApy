@@ -104,7 +104,7 @@ def compute_grads_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
             grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq 
             
             grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
-                              - grads[i, dim]*grads[i, dim] / kifloat / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq
+                              - grads[i, dim]*grads[i, dim] / kifloat
 
     return grads, grads_var
 

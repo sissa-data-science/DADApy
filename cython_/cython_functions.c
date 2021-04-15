@@ -3563,7 +3563,7 @@ static PyObject *__pyx_pf_7cython__16cython_functions_2compute_grads_from_coords
  *             grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
  * 
  *             grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \             # <<<<<<<<<<<<<<
- *                               - grads[i, dim]*grads[i, dim] / kifloat / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq
+ *                               - grads[i, dim]*grads[i, dim] / kifloat
  * 
  */
       __pyx_t_23 = __pyx_v_i;
@@ -3574,7 +3574,7 @@ static PyObject *__pyx_pf_7cython__16cython_functions_2compute_grads_from_coords
       /* "cython_/cython_functions.pyx":107
  * 
  *             grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
- *                               - grads[i, dim]*grads[i, dim] / kifloat / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq             # <<<<<<<<<<<<<<
+ *                               - grads[i, dim]*grads[i, dim] / kifloat             # <<<<<<<<<<<<<<
  * 
  *     return grads, grads_var
  */
@@ -3591,19 +3591,19 @@ static PyObject *__pyx_pf_7cython__16cython_functions_2compute_grads_from_coords
  *             grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
  * 
  *             grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \             # <<<<<<<<<<<<<<
- *                               - grads[i, dim]*grads[i, dim] / kifloat / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq
+ *                               - grads[i, dim]*grads[i, dim] / kifloat
  * 
  */
       __pyx_t_11 = __pyx_v_i;
       __pyx_t_12 = __pyx_v_dim;
       if (__pyx_t_11 < 0) __pyx_t_11 += __pyx_pybuffernd_grads_var.diminfo[0].shape;
       if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_grads_var.diminfo[1].shape;
-      *__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_grads_var.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_grads_var.diminfo[1].strides) = ((((((((*__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_grads_var.diminfo[0].strides, __pyx_t_24, __pyx_pybuffernd_grads_var.diminfo[1].strides)) / __pyx_v_kifloat) / __pyx_v_kifloat) * __pyx_v_dp2) / __pyx_v_rk_sq) * __pyx_v_dp2) / __pyx_v_rk_sq) - (((((((((*__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_grads.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_grads.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_grads.diminfo[0].strides, __pyx_t_17, __pyx_pybuffernd_grads.diminfo[1].strides))) / __pyx_v_kifloat) / __pyx_v_kifloat) / __pyx_v_kifloat) * __pyx_v_dp2) / __pyx_v_rk_sq) * __pyx_v_dp2) / __pyx_v_rk_sq));
+      *__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_grads_var.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_grads_var.diminfo[1].strides) = ((((((((*__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_grads_var.diminfo[0].strides, __pyx_t_24, __pyx_pybuffernd_grads_var.diminfo[1].strides)) / __pyx_v_kifloat) / __pyx_v_kifloat) * __pyx_v_dp2) / __pyx_v_rk_sq) * __pyx_v_dp2) / __pyx_v_rk_sq) - (((*__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_grads.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_grads.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_7cython__16cython_functions_floatTYPE_t *, __pyx_pybuffernd_grads.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_grads.diminfo[0].strides, __pyx_t_17, __pyx_pybuffernd_grads.diminfo[1].strides))) / __pyx_v_kifloat));
     }
   }
 
   /* "cython_/cython_functions.pyx":109
- *                               - grads[i, dim]*grads[i, dim] / kifloat / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq
+ *                               - grads[i, dim]*grads[i, dim] / kifloat
  * 
  *     return grads, grads_var             # <<<<<<<<<<<<<<
  * 
