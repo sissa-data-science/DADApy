@@ -302,21 +302,21 @@ def load_coords_and_losses(coords_file='selected_coords.txt',
     return coords, losses
 
 
-def _align_arrays(set1, err1, set2, err2=None)
-"""Computes the constant offset between two sets of error-affected measures and returns the first array aligned to the second, shifted by such offset.
+def _align_arrays(set1, err1, set2, err2=None):
+    """Computes the constant offset between two sets of error-affected measures and returns the first array aligned to the second, shifted by such offset.
 
-The offset is computed by inverse-variance weighting least square linear regression of a constant law on the differences between the two sets.
+    The offset is computed by inverse-variance weighting least square linear regression of a constant law on the differences between the two sets.
 
-Args:
-    set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
-    err1 (np.array(float)): array containing the statistical errors on the values set1.
-    set2 (np.array(float)): array containing the reference set of values, to which set1 will be aligned.
-    err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given, set2 is assumed to contain errorless measures
+    Args:
+        set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
+        err1 (np.array(float)): array containing the statistical errors on the values set1.
+        set2 (np.array(float)): array containing the reference set of values, to which set1 will be aligned.
+        err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given, set2 is assumed to contain errorless measures
 
-    Returns:
-        new_set2 (np.array(float)): set1 - offset
-        offset (float): constant offset between the two sets
-"""
+        Returns:
+            new_set2 (np.array(float)): set1 - offset
+            offset (float): constant offset between the two sets
+    """
 
     if (err2 is None):
         assert(set1.shape == set2.shape == err1.shape)
@@ -332,21 +332,21 @@ Args:
     return offset, set1-offset
 
 
-def _compute_pull_variables(set1, err1, set2, err2=None)
-"""Computes the pull distribution between two sets of error-affected measures.
+def _compute_pull_variables(set1, err1, set2, err2=None):
+    """Computes the pull distribution between two sets of error-affected measures.
 
-For each value i he pull vairable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
-If err2 is not given, set2 is assumed to contain errorless measures.
+    For each value i he pull vairable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
+    If err2 is not given, set2 is assumed to contain errorless measures.
 
-Args:
-    set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
-    err1 (np.array(float)): array containing the statistical errors on the values set1.
-    set2 (np.array(float)): array containing the reference set of values.
-    err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given, set2 is assumed to contain errorless measures
+    Args:
+        set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
+        err1 (np.array(float)): array containing the statistical errors on the values set1.
+        set2 (np.array(float)): array containing the reference set of values.
+        err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given, set2 is assumed to contain errorless measures
 
-    Returns:
-        pull (np.array(float)): array of the pull variables
-"""
+        Returns:
+            pull (np.array(float)): array of the pull variables
+    """
 
     if (err2 is None):
         assert(set1.shape == set2.shape == err1.shape)
