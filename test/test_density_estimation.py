@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from duly.density_estimation import DensityEstimation
+from duly import DensityEstimation
 
 
 def test_density_estimation_basics():
