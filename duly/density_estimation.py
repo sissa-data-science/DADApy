@@ -4,7 +4,7 @@ from scipy.special import gammaln
 
 from duly.id_estimation import *
 from duly.mlmax import MLmax_gPAk, MLmax_gpPAk
-import cython_.cython_functions as cf
+from duly.cython_ import cython_functions as cf
 
 
 class DensityEstimation(IdEstimation):
