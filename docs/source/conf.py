@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../duly'))
 sys.path.insert(0, os.path.abspath('../../duly'))
 
 sys.path.insert(0, os.path.abspath('../cython_'))
-sys.path.insert(0, os.path.abspath('../../cython_'))
+sys.path.insert(0, os.path.abspath('../../duly/cython_'))
 
 sys.path.insert(0, os.path.abspath('../examples'))
 sys.path.insert(0, os.path.abspath('../../examples'))

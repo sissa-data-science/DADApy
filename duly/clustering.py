@@ -34,7 +34,7 @@ class Clustering(DensityEstimation):
         self.out_bord = None
 
     def compute_clustering_optimised(self, Z=1.65, halo=False):
-        from cython_ import cython_functions as cf
+        from duly.cython_ import cython_functions as cf
         assert (self.Rho is not None)
         if self.verb: print('Clustering started')
 
