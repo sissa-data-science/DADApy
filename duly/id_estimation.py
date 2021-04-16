@@ -111,7 +111,7 @@ class IdEstimation(Base):
         # mus_reduced = mus[idxs]
 
         if algorithm == 'ml':
-            id = Nele_eff / np.sum(mus_reduced)
+            id = Nele/np.sum(mus)
 
         elif algorithm == 'base':
 
