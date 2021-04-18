@@ -136,7 +136,7 @@ class Base:
 
     # adapted from kneighbors function of sklearn
     # https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
-    def _mus_scaling_reduce_func(self, dist, range_scaling):
+    def _mus_scaling_reduce_func(self, dist, start, range_scaling=None):
 
         max_step = int(math.log(range_scaling, 2))
         steps = np.array([2 ** i for i in range(max_step)])

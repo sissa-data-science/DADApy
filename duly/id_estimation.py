@@ -38,16 +38,14 @@ class IdEstimation(Base):
             return np.array([2**i for i in range(max_step)]), range_r2
 
         if self.X is None and self.distances is not None:
-
             steps, _ = get_steps(upper_bound = self.maxk)
             mus = self.distances[:, steps[1:]]/self.distances[:, steps[:-1]]
             r2s = self.distances[:, np.array([steps[:-1], steps[1:]])]
 
         elif self.X is not None:
-            maxk = maxk if self.maxk is None else self.maxk
-            steps, range_r2 = get_steps(upper_bound = self.Nele -1)
-            distances, dist_indices, mus, r2s = self._get_mus_scaling(X=self.X, maxk= maxk,
-                                compute_mus = True, range_mus_r2n=range_r2)
+            steps, range_r2 = get_steps(upper_bound = self.Nele - 1)
+            print(range_r2)
+            distances, dist_indices, mus, r2s = self._get_mus_scaling(range_scaling=range_r2)
 
             # if distances have not been computed save them
             if self.distances is None:
