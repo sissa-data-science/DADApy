@@ -1,14 +1,12 @@
 import multiprocessing
 import os
-
 import numpy as np
+
 from duly.metric_comparisons import MetricComparisons
 from duly.clustering import Clustering
 
 cores = multiprocessing.cpu_count()
-
 np.set_printoptions(precision=2)
-
 os.getcwd()
 
 
@@ -23,4 +21,3 @@ class Data(Clustering, MetricComparisons):
 
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
-

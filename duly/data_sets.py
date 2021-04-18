@@ -1,6 +1,4 @@
-
 from duly.data import Data
-
 
 class Data_sets:
 
@@ -67,6 +65,24 @@ class Data_sets:
 
         for d in self.data_sets:
             d.gt_labels = labels
+
+    def compute_id_2NN(self, decimation= 1, fraction=0.9, n_reps = 1):
+
+        print('computing id: fraction = {}, decimation = {}, repetitions = {}, range = {}'.format(fraction, decimation, n_reps, 2))
+        for i, d in enumerate(self.data_sets):
+            print('computing id of dataset ', i)
+            d.compute_id_2NN(decimation=decimation, fraction=fraction)
+            print('id computation finished')
+
+        self.ids = [d.id_selected for d in self.data_sets]
+
+    def compute_id_scaling(self, range_max=1024, d0=0.001, d1=1000, return_ids=False, save_mus=False):
+
+        for i, d in enumerate(self.data_sets):
+            print('computing id of layer ', i)
+            d.compute_id_scaling(range_max=range_max, d0=d0, d1=d1, return_ids=return_ids, save_mus=save_mus)
+
+        self.ids = [d.ids_scaling[0] for d in self.data_sets]
 
 
 

@@ -67,7 +67,7 @@ class Base:
 
             self.dtype = self.distances.dtype
 
-    # ----------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------
 
     def compute_distances(self, maxk, njobs=1, metric='minkowski', p=2, algo='auto'):
         """Compute distances between points up to the maxk nearest neighbour
