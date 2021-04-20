@@ -1,10 +1,13 @@
+import multiprocessing
+
+import numpy as np
 from joblib import Parallel, delayed
 
 import duly.utils_.mlmax as mlmax
 import duly.utils_.utils as ut
+from duly._base import Base
 
-from duly._base import *
-
+cores = multiprocessing.cpu_count()
 
 class MetricComparisons(Base):
     """This class contains several methods to compare metric spaces obtained using subsets of the data features.

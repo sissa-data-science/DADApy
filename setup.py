@@ -30,7 +30,7 @@ class get_numpy_include(object):
 ext_modules += [Extension("duly.cython_.cython_functions", sources=["duly/cython_/cython_functions.c"],
                           include_dirs=[get_numpy_include()])]
 
-setup(name='duly', packages=['duly'],
+setup(name='duly', packages=['duly', 'duly.utils_'],
       install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'pytest'],
       cmdclass=cmdclass,
       ext_modules=ext_modules)
