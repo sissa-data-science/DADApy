@@ -3,3 +3,6 @@ nbsphinx
 nbsphinx_link
 sphinx_rtd_theme
 numpy
+scipy
+scikit-learn
+joblib
