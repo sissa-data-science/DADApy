@@ -60,3 +60,6 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+autodoc_mock_imports = ["duly.cython_.cython_functions", "cython_", "cython_functions"]
