@@ -1,4 +1,5 @@
-# reqirements needed for Sphinx documentation
+# requirements needed for Sphinx documentation
 nbsphinx
 nbsphinx_link
 sphinx_rtd_theme
+numpy

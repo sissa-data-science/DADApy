@@ -1,5 +1,11 @@
-from duly.density_estimation import *
+import time
+import multiprocessing
 
+import numpy as np
+
+from duly.density_estimation import DensityEstimation
+
+cores = multiprocessing.cpu_count()
 
 class Clustering(DensityEstimation):
     """This class contains various density-based clustering algorithms.

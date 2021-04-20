@@ -1,11 +1,14 @@
 import time
+import multiprocessing
 
+import numpy as np
 from scipy.special import gammaln
 
-from duly.id_estimation import *
+from duly.id_estimation import IdEstimation
 from duly.utils.mlmax import MLmax_gPAk, MLmax_gpPAk
 from duly.cython_ import cython_functions as cf
 
+cores = multiprocessing.cpu_count()
 
 class DensityEstimation(IdEstimation):
     """Computes the log-density and its error at each point and other properties.
