@@ -5,9 +5,57 @@ from libc.math cimport exp
 
 DTYPE = np.int
 floatTYPE = np.float
+boolTYPE = np.bool
 
 ctypedef np.int_t DTYPE_t
 ctypedef np.float64_t floatTYPE_t
+
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,
+                                np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                np.ndarray[DTYPE_t, ndim = 2] grads,
+                                np.ndarray[DTYPE_t, ndim = 2] grads_var):
+    # TODO: function should be checked! It should take the gradients and compute the deltaFs and the errors
+    cdef int N = X.shape[0]
+    cdef int dims = X.shape[1]
+    cdef int kstar_max = np.max(kstar)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] delta_Fijs = np.zeros((N, kstar_max))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] delta_Fijs_var = np.zeros((N, kstar_max))
+    cdef int i, j, k, dim, ki, dim2
+    cdef int ind_j, ind_ki
+    cdef floatTYPE_t Fij,Fij_sq, rk_sq
+
+    for i in range(N):
+        ki = kstar[i]
+        ind_ki = dist_indices[i, ki]
+
+        for j in range(ki):
+            ind_j = dist_indices[i, j+1]
+
+            # deltaFij and its estimated variance
+            Fij = 0.
+            Fij_sq = 0.
+
+            # simple contraction of gradient with deltaXij
+            for dim in range(dims):
+                Fij += grads[i, dim] * (X[ind_j, dim] - X[i, dim])
+
+            # contraction deltaXij * covariance * deltaXij
+            for dim in range(dims):
+                for dim2 in range(dims):
+                    Fij_sq += (X[ind_j, dim] - X[i, dim])*grads_var[i, dim, dim2] *(X[ind_j, dim2] - X[i, dim2])
+
+
+            delta_Fijs[i, j] = Fij
+            delta_Fijs_var[i, j] = Fij_sq
+
+    delta_Fijs_list = [delta_Fijs[i, :kstar[i]] for i in range(N)]
+    delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]] for i in range(N)]
+
+    return delta_Fijs_list, delta_Fijs_var_list
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
@@ -71,14 +119,20 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
 @cython.cdivision(True)
 def compute_grads_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
-                                np.ndarray[DTYPE_t, ndim = 1] kstar, floatTYPE_t id_selected):
+                                np.ndarray[DTYPE_t, ndim = 1] kstar, floatTYPE_t id_selected,
+                              boolTYPE compute_var_mat):
 
     cdef int N = X.shape[0]
     cdef int dims = X.shape[1]
     cdef int kstar_max = np.max(kstar)
     cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
-    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
-    cdef int i, j, dim, ki
+
+    if not compute_var_mat:
+        cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
+    else:
+        cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims, dims))
+
+    cdef int i, j, dim, ki, dim2
     cdef int ind_j, ind_ki
     cdef floatTYPE_t rk_sq, kifloat
     cdef floatTYPE_t dp2 = id_selected + 2.
@@ -94,19 +148,43 @@ def compute_grads_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
         for dim in range(dims):
             rk_sq += (X[ind_ki, dim] - X[i, dim])**2
 
-        for dim in range(dims):
-            for j in range(ki):
-                ind_j = dist_indices[i, j+1]
-        
-                grads[i, dim] += (X[ind_j, dim] - X[i, dim])
-                grads_var[i, dim] += (X[ind_j, dim] - X[i, dim]) * (X[ind_j, dim] - X[i, dim])
+        if not compute_var_mat:
+            # compute gradients and variance of gradients together
+            for dim in range(dims):
+                for j in range(ki):
+                    ind_j = dist_indices[i, j+1]
 
-            grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq 
-            
-            grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
-                              - grads[i, dim]*grads[i, dim] / kifloat
+                    grads[i, dim] += (X[ind_j, dim] - X[i, dim])
+                    grads_var[i, dim] += (X[ind_j, dim] - X[i, dim]) * (X[ind_j, dim] - X[i, dim])
+
+                grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+                grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                                  - grads[i, dim]*grads[i, dim] / kifloat
+
+        else:
+            # compute gradients
+            for dim in range(dims):
+                for j in range(ki):
+                    ind_j = dist_indices[i, j+1]
+
+                    grads[i, dim] += (X[ind_j, dim] - X[i, dim])
+
+                grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+            # compute covariance matrix of gradients
+            for dim in range(dims):
+                for dim2 in range(dims):
+                    for j in range(ki):
+                        ind_j = dist_indices[i, j+1]
+
+                        grads_var[i, dim, dim2] += (X[ind_j, dim] - X[i, dim]) * (X[ind_j, dim2] - X[i, dim2])
+
+                    grads_var[i, dim, dim2] = grads_var[i, dim, dim2] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                                      - grads[i, dim]*grads[i, dim2] / kifloat
 
     return grads, grads_var
+
 
 
 import time
