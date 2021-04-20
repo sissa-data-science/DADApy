@@ -5,7 +5,7 @@ import numpy as np
 from scipy.special import gammaln
 
 from duly.id_estimation import IdEstimation
-from duly.utils.mlmax import MLmax_gPAk, MLmax_gpPAk
+from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
 from duly.cython_ import cython_functions as cf
 
 cores = multiprocessing.cpu_count()
@@ -207,7 +207,7 @@ class DensityEstimation(IdEstimation):
                 if (method == 'NR'):
                     Rho[i] = cf._nrmaxl(rr, kstar[i], vi, self.maxk)
                 elif (method == 'NM'):
-                    from duly.utils.mlmax import MLmax
+                    from duly.utils_.mlmax import MLmax
                     Rho[i] = MLmax(rr, kstar[i], vi)
                 else:
                     raise ValueError("Please choose a valid method")
@@ -237,7 +237,7 @@ class DensityEstimation(IdEstimation):
         """
         finds the minimum of the
         """
-        from duly.utils.mlmax_pytorch import maximise
+        from duly.utils_.mlmax_pytorch import maximise
         # Fij_types: 'grad', 'zero', 'PAk'
         # TODO: we need to implement a gCorr term with the deltaFijs equal to zero
 
@@ -287,7 +287,7 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
 
     def compute_density_PAk_gCorr(self, alpha=1.):
-        from duly.utils.mlmax_pytorch import maximise_wPAk
+        from duly.utils_.mlmax_pytorch import maximise_wPAk
         """
         finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
         computed using the gradients

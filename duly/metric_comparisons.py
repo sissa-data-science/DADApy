@@ -1,7 +1,7 @@
 from joblib import Parallel, delayed
 
-import duly.utils.mlmax as mlmax
-import duly.utils.utils as ut
+import duly.utils_.mlmax as mlmax
+import duly.utils_.utils as ut
 
 from duly._base import *
 

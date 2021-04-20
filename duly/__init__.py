@@ -3,4 +3,4 @@ from .density_estimation import *
 from .clustering import *
 from .data import *
 from .data_sets import *
-from duly.utils.utils import *
+from duly.utils_.utils import *

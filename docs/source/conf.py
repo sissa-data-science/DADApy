@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.abspath('../../examples'))
 
 project = 'duly'
 copyright = '2021, authors'
-author = 'authors'
+author = "Aldo Glielmo, Matteo Carli, Diego Doimo, Iuri Macocco, Maria D'Errico, Alex Rodrriguez, Alessandro Laio"
 
 # The full version, including alpha/beta/rc tags
 release = '0.1'

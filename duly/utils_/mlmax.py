@@ -2,7 +2,7 @@ import numpy as np
 
 from scipy.optimize import minimize
 
-import duly.utils.utils as ut
+import duly.utils_.utils as ut
 
 
 def ML_fun_gPAk(params, args):
