@@ -3,12 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to duly's documentation!
-=================================
+Duly a package for Distance-based Unsupervised Learning in pYthon
+===================================================================
 
-Duly is a Python package for Distance-basded Unsupervised Learning in pYthon.
+DULY is a Python package for "Distance-based Unsupervised Learning in pYthon".
 
-The code can be found on GitHub at ... .
+The code can be found on GitHub at https://github.com/sissa-data-science/DULY.
 
 .. toctree::
    :maxdepth: 2
