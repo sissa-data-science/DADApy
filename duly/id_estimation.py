@@ -3,7 +3,7 @@ from duly._base import Base
 import numpy as np
 import math
 from scipy.optimize import curve_fit
-import duly.utils as ut
+import duly.utils.utils as ut
 
 import multiprocessing
 
