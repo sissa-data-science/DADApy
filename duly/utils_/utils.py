@@ -335,7 +335,7 @@ def _align_arrays(set1, err1, set2, err2=None):
 def _compute_pull_variables(set1, err1, set2, err2=None):
     """Computes the pull distribution between two sets of error-affected measures.
 
-    For each value i he pull vairable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
+    For each value i the pull vairable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
     If err2 is not given, set2 is assumed to contain errorless measures.
 
     Args:

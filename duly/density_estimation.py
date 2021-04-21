@@ -10,6 +10,7 @@ from duly.cython_ import cython_functions as cf
 
 cores = multiprocessing.cpu_count()
 
+
 class DensityEstimation(IdEstimation):
     """Computes the log-density and its error at each point and other properties.
 
@@ -44,6 +45,7 @@ class DensityEstimation(IdEstimation):
         self.Fij_list=None
         self.Fij_var_list=None
 
+    # ----------------------------------------------------------------------------------------------
 
     def compute_density_kNN(self, k=3):
         """Compute the density of of each point using a simple kNN estimator
@@ -86,6 +88,8 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation finished')
 
+    # ----------------------------------------------------------------------------------------------
+
     def compute_kstar(self, Dthr=23.92):
         """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
 
@@ -126,6 +130,8 @@ class DensityEstimation(IdEstimation):
 
         self.kstar = kstar
 
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_kstarNN(self):
         if self.kstar is None: self.compute_kstar()
         kstar = self.kstar
@@ -163,6 +169,8 @@ class DensityEstimation(IdEstimation):
         self.dc = dc
 
         if self.verb: print('k-NN density estimation finished')
+
+    # ----------------------------------------------------------------------------------------------
 
     def compute_density_PAk(self, method='NR'):
 
@@ -233,6 +241,8 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('PAk density estimation finished')
 
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_kstarNN_gCorr(self, alpha=1., gauss_approx=False, Fij_type='grad'):
         """
         finds the minimum of the
@@ -286,6 +296,8 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
 
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_PAk_gCorr(self, alpha=1.):
         from duly.utils_.mlmax_pytorch import maximise_wPAk
         """
@@ -328,6 +340,8 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
         self.Rho -= np.log(self.Nele)
+
+    # ----------------------------------------------------------------------------------------------
 
     def compute_density_gPAk(self, mode='standard'):
         # compute optimal k
@@ -450,6 +464,8 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation finished')
 
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_gCorr(self, use_variance=True):
         # TODO: matrix A should be in sparse format!
 
@@ -500,6 +516,8 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
 
+    # ----------------------------------------------------------------------------------------------
+
     def return_grads(self):
         """[OBSOLETE] Returns the gradient of the log density each point using k* nearest neighbors.
         The gradient is estimated via a linear expansion of the density propagated to the log-density.
@@ -537,7 +555,9 @@ class DensityEstimation(IdEstimation):
 
         return grads
 
-    def compute_grads(self):
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_grads(self, comp_covmat=False):
         """Compute the gradient of the log density each point using k* nearest neighbors.
         The gradient is estimated via a linear expansion of the density propagated to the log-density.
 
@@ -546,6 +566,11 @@ class DensityEstimation(IdEstimation):
 
         Returns:
 
+
+        MODIFICARE QUI E ANCHE NEGLI ATTRIBUTI
+
+
+
         """
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
@@ -553,12 +578,17 @@ class DensityEstimation(IdEstimation):
         if self.verb: print('Estimation of the density gradient started')
 
         sec = time.time()
-        self.grads, self.grads_var = cf.compute_grads_from_coords(self.X, self.dist_indices,
+        if comp_covmat is False:
+            self.grads, self.grads_var = cf.compute_grads_and_var_from_coords(self.X, self.dist_indices,
                                                                   self.kstar, self.id_selected)
-
+        else:
+            self.grads, self.grads_var = cf.compute_grads_and_covmat_from_coords(self.X, self.dist_indices,
+                                                                  self.kstar, self.id_selected)
         sec2 = time.time()
         if self.verb: print(
             "{0:0.2f} seconds computing gradients".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
 
     def compute_deltaFs_grad(self):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
@@ -632,6 +662,8 @@ class DensityEstimation(IdEstimation):
         sec2 = time.time()
         if self.verb: print(
             "{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
 
     def return_entropy(self):
         """Compute a very rough estimate of the entropy of the data distribution
