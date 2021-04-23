@@ -2257,8 +2257,8 @@ static PyObject *__pyx_codeobj__20;
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                     np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                     np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
 
 /* Python wrapper */
@@ -2487,7 +2487,7 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
   __pyx_pybuffernd_grads_var.diminfo[0].strides = __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_grads_var.diminfo[0].shape = __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_grads_var.diminfo[1].strides = __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_grads_var.diminfo[1].shape = __pyx_pybuffernd_grads_var.rcbuffer->pybuffer.shape[1];
 
   /* "duly/cython_/cython_functions.pyx":24
- *                                 np.ndarray[DTYPE_t, ndim = 2] grads_var):
+ *                                     np.ndarray[DTYPE_t, ndim = 2] grads_var):
  *     # TODO: function should be checked! It should take the gradients and compute the deltaFs and the errors
  *     cdef int N = X.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int dims = X.shape[1]
@@ -2977,8 +2977,8 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                     np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                     np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
 
   /* function exit code */
@@ -3614,21 +3614,21 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
  * 
  *             Fij = Fij / kifloat * dp2/rk_sq             # <<<<<<<<<<<<<<
  * 
- *             Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq)  - Fij**2 / kifloat
+ *             Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq) * (dp2/rk_sq) - Fij**2 / kifloat
  */
       __pyx_v_Fij = (((__pyx_v_Fij / __pyx_v_kifloat) * __pyx_v_dp2) / __pyx_v_rk_sq);
 
       /* "duly/cython_/cython_functions.pyx":112
  *             Fij = Fij / kifloat * dp2/rk_sq
  * 
- *             Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq)  - Fij**2 / kifloat             # <<<<<<<<<<<<<<
+ *             Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq) * (dp2/rk_sq) - Fij**2 / kifloat             # <<<<<<<<<<<<<<
  * 
  *             delta_Fijs[i, j] = Fij
  */
-      __pyx_v_Fij_sq = ((((__pyx_v_Fij_sq / __pyx_v_kifloat) / __pyx_v_kifloat) * (__pyx_v_dp2 / __pyx_v_rk_sq)) - (pow(__pyx_v_Fij, 2.0) / __pyx_v_kifloat));
+      __pyx_v_Fij_sq = (((((__pyx_v_Fij_sq / __pyx_v_kifloat) / __pyx_v_kifloat) * (__pyx_v_dp2 / __pyx_v_rk_sq)) * (__pyx_v_dp2 / __pyx_v_rk_sq)) - (pow(__pyx_v_Fij, 2.0) / __pyx_v_kifloat));
 
       /* "duly/cython_/cython_functions.pyx":114
- *             Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq)  - Fij**2 / kifloat
+ *             Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq) * (dp2/rk_sq) - Fij**2 / kifloat
  * 
  *             delta_Fijs[i, j] = Fij             # <<<<<<<<<<<<<<
  *             delta_Fijs_var[i, j] = Fij_sq
@@ -3801,8 +3801,8 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                         np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
 
 /* Python wrapper */
@@ -3993,7 +3993,7 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_4compute_grads_and_v
   __pyx_pybuffernd_kstar.diminfo[0].strides = __pyx_pybuffernd_kstar.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_kstar.diminfo[0].shape = __pyx_pybuffernd_kstar.rcbuffer->pybuffer.shape[0];
 
   /* "duly/cython_/cython_functions.pyx":131
- *                                 floatTYPE_t id_selected):
+ *                                         floatTYPE_t id_selected):
  * 
  *     cdef int N = X.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int dims = X.shape[1]
@@ -4414,8 +4414,8 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_4compute_grads_and_v
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                         np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
 
   /* function exit code */
@@ -4455,9 +4455,9 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_4compute_grads_and_v
 /* "duly/cython_/cython_functions.pyx":173
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
- * def compute_grads_and_covmat_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ * def compute_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
+ *                                             np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                             np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
 
 /* Python wrapper */
@@ -4654,7 +4654,7 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_6compute_grads_and_c
   __pyx_pybuffernd_kstar.diminfo[0].strides = __pyx_pybuffernd_kstar.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_kstar.diminfo[0].shape = __pyx_pybuffernd_kstar.rcbuffer->pybuffer.shape[0];
 
   /* "duly/cython_/cython_functions.pyx":178
- *                                 floatTYPE_t id_selected):
+ *                                             floatTYPE_t id_selected):
  * 
  *     cdef int N = X.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int dims = X.shape[1]
@@ -5137,9 +5137,9 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_6compute_grads_and_c
   /* "duly/cython_/cython_functions.pyx":173
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
- * def compute_grads_and_covmat_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ * def compute_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
+ *                                             np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                             np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
 
   /* function exit code */
@@ -12639,8 +12639,8 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                     np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                     np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
   __pyx_tuple__9 = PyTuple_Pack(23, __pyx_n_s_X, __pyx_n_s_dist_indices, __pyx_n_s_kstar, __pyx_n_s_grads, __pyx_n_s_grads_var, __pyx_n_s_N, __pyx_n_s_dims, __pyx_n_s_kstar_max, __pyx_n_s_delta_Fijs, __pyx_n_s_delta_Fijs_var, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_dim, __pyx_n_s_ki, __pyx_n_s_dim2, __pyx_n_s_ind_j, __pyx_n_s_ind_ki, __pyx_n_s_Fij, __pyx_n_s_Fij_sq, __pyx_n_s_rk_sq, __pyx_n_s_delta_Fijs_list, __pyx_n_s_delta_Fijs_var_list); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__9);
@@ -12663,8 +12663,8 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                         np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
   __pyx_tuple__13 = PyTuple_Pack(19, __pyx_n_s_X, __pyx_n_s_dist_indices, __pyx_n_s_kstar, __pyx_n_s_id_selected, __pyx_n_s_N, __pyx_n_s_dims, __pyx_n_s_kstar_max, __pyx_n_s_grads, __pyx_n_s_grads_var, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_dim, __pyx_n_s_ki, __pyx_n_s_dim2, __pyx_n_s_ind_j, __pyx_n_s_ind_ki, __pyx_n_s_rk_sq, __pyx_n_s_kifloat, __pyx_n_s_dp2); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__13);
@@ -12674,9 +12674,9 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "duly/cython_/cython_functions.pyx":173
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
- * def compute_grads_and_covmat_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ * def compute_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
+ *                                             np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                             np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
   __pyx_tuple__15 = PyTuple_Pack(19, __pyx_n_s_X, __pyx_n_s_dist_indices, __pyx_n_s_kstar, __pyx_n_s_id_selected, __pyx_n_s_N, __pyx_n_s_dims, __pyx_n_s_kstar_max, __pyx_n_s_grads, __pyx_n_s_grads_covmat, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_dim, __pyx_n_s_ki, __pyx_n_s_dim2, __pyx_n_s_ind_j, __pyx_n_s_ind_ki, __pyx_n_s_rk_sq, __pyx_n_s_kifloat, __pyx_n_s_dp2); if (unlikely(!__pyx_tuple__15)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__15);
@@ -13095,8 +13095,8 @@ if (!__Pyx_RefNanny) {
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                     np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                     np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
   __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4duly_7cython__16cython_functions_1compute_deltaFs_from_coords_and_grads, NULL, __pyx_n_s_duly_cython__cython_functions); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -13119,8 +13119,8 @@ if (!__Pyx_RefNanny) {
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def compute_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ *                                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                         np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
   __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4duly_7cython__16cython_functions_5compute_grads_and_var_from_coords, NULL, __pyx_n_s_duly_cython__cython_functions); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 126, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -13130,9 +13130,9 @@ if (!__Pyx_RefNanny) {
   /* "duly/cython_/cython_functions.pyx":173
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
- * def compute_grads_and_covmat_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
- *                                 np.ndarray[DTYPE_t, ndim = 2] dist_indices,
- *                                 np.ndarray[DTYPE_t, ndim = 1] kstar,
+ * def compute_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,             # <<<<<<<<<<<<<<
+ *                                             np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+ *                                             np.ndarray[DTYPE_t, ndim = 1] kstar,
  */
   __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4duly_7cython__16cython_functions_7compute_grads_and_covmat_from_coords, NULL, __pyx_n_s_duly_cython__cython_functions); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 173, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);

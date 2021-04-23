@@ -590,7 +590,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_grad(self):
+    def compute_deltaFs_grad(self, extgrads=None, extgrads_covmat=None):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
         a linear expansion (see `compute_grads`).
 
@@ -600,15 +600,27 @@ class DensityEstimation(IdEstimation):
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
 
-        if self.verb: print('Estimation of the density gradient started')
+        if self.verb: print('Estimation of the gradient (linear) corrections deltaFij to the log-density started')
 
         sec = time.time()
         if self.X is not None:
-            Fij_list, Fij_var_list = cf.compute_deltaFs_from_coords(self.X, self.dist_indices,
-                                                                    self.kstar, self.id_selected)
+            if extgrads is None:
+                Fij_list, Fij_var_list = cf.compute_deltaFs_from_coords(self.X,
+                                                                        self.dist_indices,
+                                                                        self.kstar,
+                                                                        self.id_selected)
+            else:
+                assert extgrads_covmat is not None
+                Fij_list, Fij_var_list = cf.compute_deltaFs_from_coords_and_grads(self.X,
+                                                                        self.dist_indices,
+                                                                        self.kstar,
+                                                                        extgrads,
+                                                                        extgrads_covmat)
 
         else:
             print('Warning, falling back to a very slow implementation of the gradient estimation')
+            if extgrads is not None:
+                print('NOT using the given external gradients')
 
             Fij_list = []
             Fij_var_list = []

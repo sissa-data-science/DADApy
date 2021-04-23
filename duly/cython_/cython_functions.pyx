@@ -16,10 +16,10 @@ ctypedef np.float64_t floatTYPE_t
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,
-                                np.ndarray[DTYPE_t, ndim = 2] dist_indices,
-                                np.ndarray[DTYPE_t, ndim = 1] kstar,
-                                np.ndarray[DTYPE_t, ndim = 2] grads,
-                                np.ndarray[DTYPE_t, ndim = 2] grads_var):
+                                    np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                    np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                    np.ndarray[DTYPE_t, ndim = 2] grads,
+                                    np.ndarray[DTYPE_t, ndim = 2] grads_var):
     # TODO: function should be checked! It should take the gradients and compute the deltaFs and the errors
     cdef int N = X.shape[0]
     cdef int dims = X.shape[1]
@@ -109,7 +109,7 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
 
             Fij = Fij / kifloat * dp2/rk_sq
 
-            Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq)  - Fij**2 / kifloat
+            Fij_sq = Fij_sq / kifloat / kifloat * (dp2/rk_sq) * (dp2/rk_sq) - Fij**2 / kifloat
 
             delta_Fijs[i, j] = Fij
             delta_Fijs_var[i, j] = Fij_sq
@@ -124,9 +124,9 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def compute_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,
-                                np.ndarray[DTYPE_t, ndim = 2] dist_indices,
-                                np.ndarray[DTYPE_t, ndim = 1] kstar,
-                                floatTYPE_t id_selected):
+                                        np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                        np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                        floatTYPE_t id_selected):
 
     cdef int N = X.shape[0]
     cdef int dims = X.shape[1]
@@ -170,10 +170,10 @@ def compute_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def compute_grads_and_covmat_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,
-                                np.ndarray[DTYPE_t, ndim = 2] dist_indices,
-                                np.ndarray[DTYPE_t, ndim = 1] kstar,
-                                floatTYPE_t id_selected):
+def compute_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,
+                                            np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                            np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                            floatTYPE_t id_selected):
 
     cdef int N = X.shape[0]
     cdef int dims = X.shape[1]

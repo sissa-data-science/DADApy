@@ -224,3 +224,5 @@ do
 
 # Cython
 cython_/*.html
+cython_/*.so
+cython_/*.c
