@@ -69,7 +69,7 @@ class Base:
 
 # ----------------------------------------------------------------------------------------------
 
-    def compute_distances(self, maxk, njobs=1, metric='minkowski', p=2, algo='auto'):
+    def compute_distances(self, maxk=None, njobs=1, metric='minkowski', p=2, algo='auto'):
         """Compute distances between points up to the maxk nearest neighbour
 
         Args:
@@ -186,7 +186,8 @@ class Base:
         assert (0. < decimation and decimation <= 1.)
 
         if decimation == 1.:
-            assert (self.distances is not None)
+            if self.distances is None:
+                self.compute_distances()
             return self.distances
         else:
             if maxk is None:
