@@ -1,6 +1,7 @@
 # requirements needed for Sphinx documentation
 nbsphinx
 nbsphinx_link
+ipython
 sphinx_rtd_theme
 numpy
 scipy
