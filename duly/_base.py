@@ -80,10 +80,10 @@ class Base:
             algo: type of algorithm used
 
         """
-        if self.maxk is None:
+        if maxk is not None:
             self.maxk = maxk
         else:
-            self.maxk = min(maxk, self.maxk)
+            assert self.maxk is not None, 'set parameter maxk in the function or for the class'
 
         self.p = p
 
@@ -187,7 +187,7 @@ class Base:
 
         if decimation == 1.:
             if self.distances is None:
-                self.compute_distances()
+                self.compute_distances(maxk=self.maxk)
             return self.distances
         else:
             if maxk is None:
