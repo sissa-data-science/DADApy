@@ -1,8 +1,12 @@
-import utils
+import duly.utils_.utils as ut
+import numpy as np
+import scipy
 
-#load, just once, the coefficients for the polynomials in d at fixed L
+#--------------------------------------------------------------------------------------
+
+#load, just once and for all, the coefficients for the polynomials in d at fixed L
 import pkg_resources
-DATA_PATH = pkg_resources.resource_filename('utils_', '/discrete_volumes')
+DATA_PATH = pkg_resources.resource_filename('duly.utils_', '/discrete_volumes/')
 coeff = np.loadtxt(DATA_PATH + 'L_coefficients_float.dat',dtype=np.double)
 
 #--------------------------------------------------------------------------------------
@@ -96,3 +100,41 @@ def compute_derivative_discrete_vol(l,d):
 		   d*scipy.special.gamma(d) * scipy.special.digamma(1 + d)) ) / scipy.special.factorial(d)**2
 
 #--------------------------------------------------------------------------------------
+
+def compute_binomial_logL(d,Rk,k,Rn,n,discrete=True,w=1):
+	"""Compute the binomial log likelihood given Rk,Rn,k,n
+
+	Args:
+		d (float): embedding dimension
+		Rk (ndarray(float) or float): external radii
+		k (ndarray(int) or int): number of points within the external radii
+		Rn (ndarray(float) or float): external radii
+		n (ndarray(int)): number of points within the internal radii
+		discrete (bool, default=False): choose discrete or continuous volumes formulation
+		w (ndarray(int or float), default=1): weights or multeplicity for each point 
+
+	Returns:
+		-LogL (float): minus total likelihood
+
+	"""
+
+	if discrete:
+
+		p = compute_discrete_volume(Rn, d)/compute_discrete_volume(Rk, d)
+	
+	else:
+		p = (Rn/Rk)**d
+
+	log_binom = np.log( scipy.special.binom(k,n) )
+
+	# for big values of k and n (~1000) the binomial coefficients explode -> use 
+	# its logarithmic definition through Stirling apporximation
+	if np.any( log_binom == np.inf ):
+		mask = np.where( log_binom == np.inf )[0]
+		log_binom[mask] = ut.log_binom_stirling(k[mask],n[mask])
+
+	LogL = log_binom + n*np.log( p ) + (k-n)*np.log( 1. - p )
+	# add weights cotribution
+	LogL = LogL*w
+	# returns -LogL in order to be able to minimise it through scipy
+	return -LogL.sum()

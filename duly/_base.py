@@ -95,7 +95,7 @@ class Base:
         self.distances, self.dist_indices = nbrs.kneighbors(self.X)
 
         # removal of zero distances should be done here, automatically
-        self._remove_zero_dists(self.distances)
+        # self._remove_zero_dists(self.distances)
 
         if self.verb: print('Computation of the distances finished')
 

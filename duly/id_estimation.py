@@ -194,16 +194,17 @@ class IdEstimation(Base):
 
 		# checks-out
 		if self.maxk < self.Nele:
-		# if not all possible NN were taken into account and k is equal to self.maxk, it is likely that 
-		# there are other points within Rk that are not being considered and thus potentially
-		# altering the statistics -> neglect them through self.mask in the calculation of likelihood
-			self.mask = ~(self.k==self.maxk)
+		# if not all possible NN were taken into account (i.e. maxk < Nele) and k is equal to self.maxk
+		# or distances[:,-1]<Rk, it is likely that there are other points within Rk that are not being 
+		# considered and thus potentially altering the statistics -> neglect them through self.mask 
+		# in the calculation of likelihood
+			self.mask = (self.distances[:,-1] > self.Rk) #or self.k == self.maxk
 
 			if np.any(~self.mask):
 				print('NB: for ' + str(sum(~(self.mask))) + ' points, the counting of k could be wrong, '+\
 				      'as more points might be present within the selected Rk. In order not to affect '+\
 				      'the statistics a mask is provided to remove them from the calculation of the '+\
-				      'likelihood or posterior.\nConsider recomputing NN higher maxk or lower Rk.')
+				      'likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk.')
 		
 		else:
 			self.mask = np.ones(self.Nele,dtype=bool)
@@ -358,6 +359,7 @@ class IdEstimation(Base):
 
 	# ----------------------------------------------------------------------------------------------
 	def set_id(self, d):
+		assert d > 0, 'cannot support negative dimensiones (yet)'
 		self.id_selected = d
 
 	# ----------------------------------------------------------------------------------------------
@@ -376,19 +378,19 @@ class IdEstimation(Base):
 def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 	"""Compute the posterior distribution of d given the input aggregates
 	Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
-	However, the binomial is defined on the ratio of volum and so do the beta distribution. As a
+	However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
 	consequence one has to change variable to have the distribution over d
 
 	Args:
-		k (nd.array(int)): number of points within the external shells
+		k (nd.array(int) or int): number of points within the external shells
 		n (nd.array(int)): number of points within the internal shells
-		R (float or tuple(float,float)): Rk and Rn or ratio, depening on discrete or continuous version
-		discrete (bool): choose discrete or continuous ebedding space, default=False
+		r (float): ratio between shells' radii
 		a0 (float): beta distribution parameter, default =1 for flat prior
 		b0 (float): prior initialiser, default =1 for flat prior
+		plot (bool,default=False): plot the posterior and give a numerical estimate other than the analytical one
 	Returns:
-		mean_bayes (float): 
-		std_bayes (float):
+		mean_bayes (float): mean value of the posterior
+		std_bayes (float): std of the posterior
 	"""
 	from scipy.special import beta as beta_f
 	from scipy.stats import beta as beta_d
@@ -401,14 +403,14 @@ def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 	posterior = beta_d(a,b)
 
 	if plot:
-		def p_d(d,r):
+		def p_d(d):
 			return abs( posterior.pdf(r**d)*(r**d)*np.log(r) )
 
 		dx = 0.1
 		d_left = 0.000001
 		d_right = 20 + dx + d_left
 		d_range = np.arange(d_left,d_right,dx)
-		P = np.array([ p_d(di,r) for di in d_range])*dx
+		P = np.array([ p_d(di) for di in d_range])*dx
 
 		while sum(P!=0)<1000:
 
@@ -421,7 +423,7 @@ def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 		        dx/=10
 
 		    d_range = np.arange(d_left,d_right,dx)
-		    P = np.array([ p_d(di,r) for di in d_range])*dx
+		    P = np.array([ p_d(di) for di in d_range])*dx
 
 		plt.plot(d_range,P)
 		plt.xlabel('d')
