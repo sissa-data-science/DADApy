@@ -147,7 +147,7 @@ class IdDiscrete(Base):
 				k_tot = k_eff-1
 				n_tot = n_eff-1
 
-			self.id_estimated_binom, self.id_estimated_binom_std = \
+			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = \
 				beta_prior_d(k_tot,n_tot,self.Lk,self.Ln)
 		else:
 			print('select a proper method for id computation')
@@ -385,6 +385,8 @@ def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True):
 	Returns:
 		mean_bayes (float): mean value of the posterior
 		std_bayes (float): std of the posterior
+		d_range (ndarray(float)): domain of the posterior
+		P (ndarray(float)): probability of the posterior
 	"""
 	from scipy.special import beta as beta_f
 	from scipy.stats import beta as beta_d
@@ -437,7 +439,7 @@ def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True):
 #	E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r) 
 #	S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
-	return E_d_emp, S_d_emp
+	return E_d_emp, S_d_emp, d_range, P
 
 #--------------------------------------------------------------------------------------
 

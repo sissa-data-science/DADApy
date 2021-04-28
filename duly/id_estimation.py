@@ -251,7 +251,7 @@ class IdEstimation(Base):
 		if method == 'mle':
 			self.id_estimated_binom = np.log( (E_n-1)/(k_eff.mean()-1) )/np.log( self.r )
 		elif method == 'bayes':
-			self.id_estimated_binom, self.id_estimated_binom_std = beta_prior(k_eff-1,n_eff-1,self.r)
+			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k_eff-1,n_eff-1,self.r)
 		else:
 			print('select a proper method for id computation')
 			return 0
@@ -333,7 +333,7 @@ class IdEstimation(Base):
 		if method == 'mle':
 			self.id_estimated_binom = np.log( (E_n-1)/(k-1) )/np.log( self.r )
 		elif method == 'bayes':
-			self.id_estimated_binom, self.id_estimated_binom_std = beta_prior(k-1,self.n-1,self.r)
+			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k-1,self.n-1,self.r)
 		else:
 			print('select a proper method for id computation')
 			return 0
@@ -436,7 +436,8 @@ def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 	E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r) 
 	S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
-	return E_d, S_d
+	return E_d, S_d, d_range, P
+
 
 #--------------------------------------------------------------------------------------
 
