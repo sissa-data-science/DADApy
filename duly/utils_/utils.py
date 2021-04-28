@@ -32,6 +32,42 @@ def compute_all_distances(X, n_jobs=cores):
 # 							method='L-BFGS-B', tol = 1.e-7, bounds = (0, 1000))
 # 	return max_log_lik.x
 
+#--------------------------------------------------------------------------------------
+
+import re
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    '''sort list in human order, for both numbers and letters
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    '''
+    return [ atoi(c) for c in re.split('(\d+)', text) ]
+
+#usage example:
+#import glob
+#datas = []
+#dirr = 'my_dir/'
+#files = glob.glob(dirr+'*.ext')
+#files.sort(key = natural_keys)
+
+
+#--------------------------------------------------------------------------------------
+
+def stirling(n):
+    return np.sqrt(2*np.pi*n)*(n/np.e)**n * (1.+ 1./12./n)# + 1/288/n/n - 139/51840/n/n/n/)
+
+def log_stirling(n):
+    return (n+0.5)*np.log(n)-n+0.5*np.log(2*np.pi)+ 1./12./n #-1/360/n/n/n
+
+def binom_stirling(k,n):
+    return stirling(k)/sitrling(n)/stirling(k-n)
+
+def log_binom_stirling(k,n):
+    return log_stirling(k)-log_stirling(n)-log_stirling(k-n)
+
+#--------------------------------------------------------------------------------------
+
 def _loglik(d, mus, n1, n2, N):
     one_m_mus_d = 1. - mus ** (-d)
     sum = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))

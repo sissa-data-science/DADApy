@@ -125,6 +125,9 @@ class IdDiscrete(Base):
 		n_eff = self.n[self.mask]
 		k_eff = self.k[self.mask]
 
+		if self.verb:
+			print('n and k computed')
+
 		E_n = n_eff.mean()
 		if E_n == 1.:
 			print('no points in the inner shell, returning 0/. Consider increasing Rk and/or the ratio')
@@ -146,6 +149,9 @@ class IdDiscrete(Base):
 			else:
 				k_tot = k_eff-1
 				n_tot = n_eff-1
+
+			if self.verb:
+				print('startin bayesian estimation')
 
 			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = \
 				beta_prior_d(k_tot,n_tot,self.Lk,self.Ln)
@@ -347,7 +353,7 @@ class IdDiscrete(Base):
 	# ----------------------------------------------------------------------------------------------
 	
 	def set_id(self, d):
-		assert d > 0, 'cannot support negative dimensiones (yet)'
+		assert d > 0, 'cannot support negative dimensions (yet)'
 		self.id_selected = d
 
 	# ----------------------------------------------------------------------------------------------
@@ -368,7 +374,7 @@ class IdDiscrete(Base):
 
 # ----------------------------------------------------------------------------------------------
 
-def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True):
+def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True,verbose=True):
 	"""Compute the posterior distribution of d given the input aggregates
 	Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
 	However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
@@ -409,6 +415,7 @@ def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True):
 	d_right = 20 + dx + d_left
 	d_range = np.arange(d_left,d_right,dx)
 	P = np.array([ p_d(di) for di in d_range])*dx
+	counter = 0
 	while sum(P!=0)<1000:
 		if any(P!=0):
 			dx/=10
@@ -420,6 +427,10 @@ def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True):
 
 		d_range = np.arange(d_left,d_right,dx)
 		P = np.array([ p_d(di) for di in d_range])*dx
+
+		counter+=1
+		if verbose:
+			print('bayes domain restriction no', counter,end='\r')
 
 	P = P.reshape(P.shape[0])
 

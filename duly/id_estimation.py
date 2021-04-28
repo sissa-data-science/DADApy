@@ -211,7 +211,7 @@ class IdEstimation(Base):
 
 	# ----------------------------------------------------------------------------------------------
 
-	def compute_id_binomial_Rk(self,Rk=None,ratio=None, method='bayes'):
+	def compute_id_binomial_Rk(self,Rk=None,ratio=None, method='bayes',plot=False):
 		"""Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
 		In the estimation of d one has to remove the central point from the counting of n and k
@@ -222,6 +222,7 @@ class IdEstimation(Base):
 			ratio (float): ratio between internal and external shell
 			method (str, default 'bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
 										   gives the mean value and std of d, while mle only the max of the likelihood
+			plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
 
 		"""
 		# checks-in and initialisations
@@ -251,7 +252,7 @@ class IdEstimation(Base):
 		if method == 'mle':
 			self.id_estimated_binom = np.log( (E_n-1)/(k_eff.mean()-1) )/np.log( self.r )
 		elif method == 'bayes':
-			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k_eff-1,n_eff-1,self.r)
+			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k_eff-1,n_eff-1,self.r,plot)
 		else:
 			print('select a proper method for id computation')
 			return 0
@@ -295,7 +296,7 @@ class IdEstimation(Base):
 
 	#--------------------------------------------------------------------------------------
 
-	def compute_id_binomial_k(self,k=None,ratio=None, method='bayes'):
+	def compute_id_binomial_k(self,k=None,ratio=None, method='bayes',plot=False):
 		"""Calculate Id using the binomial estimator by fixing the number of neighbours
 		
 		As in the case in which one fix Rk, also in this version of the estimation 
@@ -309,7 +310,7 @@ class IdEstimation(Base):
 		Args:
 			k (int): order of neighbour that set the external shell
 			ratio (float): ratio between internal and external shell
-
+			plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
 		"""
 		# checks-in and initialisations
 		if ratio is not None:
@@ -333,12 +334,12 @@ class IdEstimation(Base):
 		if method == 'mle':
 			self.id_estimated_binom = np.log( (E_n-1)/(k-1) )/np.log( self.r )
 		elif method == 'bayes':
-			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k-1,self.n-1,self.r)
+			if plot:
+				self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k-1,self.n-1,self.r,plot)
 		else:
 			print('select a proper method for id computation')
 			return 0
 
-	# ----------------------------------------------------------------------------------------------
 
 	# ----------------------------------------------------------------------------------------------
 
@@ -359,7 +360,7 @@ class IdEstimation(Base):
 
 	# ----------------------------------------------------------------------------------------------
 	def set_id(self, d):
-		assert d > 0, 'cannot support negative dimensiones (yet)'
+		assert d > 0, 'cannot support negative dimensions (yet)'
 		self.id_selected = d
 
 	# ----------------------------------------------------------------------------------------------
@@ -436,7 +437,10 @@ def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 	E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r) 
 	S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
-	return E_d, S_d, d_range, P
+	if plot:
+		return E_d, S_d, d_range, P
+	else:
+		return E_d, S_d, None, None 
 
 
 #--------------------------------------------------------------------------------------
