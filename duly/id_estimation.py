@@ -220,7 +220,7 @@ class IdEstimation(Base):
 		Args:
 			Rk (float): radius of the external shell
 			ratio (float): ratio between internal and external shell
-			method (str, default 'bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
+			method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
 										   gives the mean value and std of d, while mle only the max of the likelihood
 			plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
 
@@ -252,7 +252,8 @@ class IdEstimation(Base):
 		if method == 'mle':
 			self.id_estimated_binom = np.log( (E_n-1)/(k_eff.mean()-1) )/np.log( self.r )
 		elif method == 'bayes':
-			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k_eff-1,n_eff-1,self.r,plot)
+			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior =\
+				_beta_prior(k_eff-1,n_eff-1,self.r,plot=plot,verbose=self.verb)
 		else:
 			print('select a proper method for id computation')
 			return 0
@@ -335,7 +336,8 @@ class IdEstimation(Base):
 			self.id_estimated_binom = np.log( (E_n-1)/(k-1) )/np.log( self.r )
 		elif method == 'bayes':
 			if plot:
-				self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = beta_prior(k-1,self.n-1,self.r,plot)
+				self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior =\
+					_beta_prior(k-1,self.n-1,self.r,plot=plot,verbose=self.verb)
 		else:
 			print('select a proper method for id computation')
 			return 0
@@ -376,7 +378,7 @@ class IdEstimation(Base):
 
 # ----------------------------------------------------------------------------------------------
 
-def beta_prior(k,n,r,a0=1,b0=1,plot=False):
+def _beta_prior(k,n,r,a0=1,b0=1,plot=False,verbose=True):
 	"""Compute the posterior distribution of d given the input aggregates
 	Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
 	However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
@@ -396,6 +398,7 @@ def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 	from scipy.special import beta as beta_f
 	from scipy.stats import beta as beta_d
 
+
 	a = a0 + n.sum()
 	if isinstance(k,(np.int,int)):
 		b = b0 + k*n.shape[0] - n.sum()
@@ -404,27 +407,32 @@ def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 	posterior = beta_d(a,b)
 
 	if plot:
+		import matplotlib.pyplot as plt
 		def p_d(d):
 			return abs( posterior.pdf(r**d)*(r**d)*np.log(r) )
 
 		dx = 0.1
-		d_left = 0.000001
+		d_left = 0.0001
 		d_right = 20 + dx + d_left
 		d_range = np.arange(d_left,d_right,dx)
 		P = np.array([ p_d(di) for di in d_range])*dx
-
-		while sum(P!=0)<1000:
-
-		    if any(P!=0):
-		        dx/=10
-		        ind = np.where(P!=0)[0]
-		        d_left = d_range[ind[0]-10]
-		        d_right = d_range[ind[-1]+10]
-		    else:
-		        dx/=10
-
-		    d_range = np.arange(d_left,d_right,dx)
-		    P = np.array([ p_d(di) for di in d_range])*dx
+		elements = sum(P!=0)
+		counter = 0 
+		while elements<1000:
+			if elements>10:
+				dx/=10
+				ind = np.where(P!=0)[0]
+				d_left = d_range[ind[0]]
+				d_right = d_range[ind[-1]]
+			else:
+				dx/=10
+	
+			d_range = np.arange(d_left,d_right,dx)
+			P = np.array([ p_d(di) for di in d_range])*dx
+			elements = sum(P!=0)
+			counter+=1
+			if verbose:
+				print('iter no\t',counter,d_left,d_right,elements)
 
 		plt.plot(d_range,P)
 		plt.xlabel('d')
@@ -432,7 +440,7 @@ def beta_prior(k,n,r,a0=1,b0=1,plot=False):
 		E_d_emp = (d_range*P).sum()
 		S_d_emp = np.sqrt( (d_range*d_range*P).sum()-E_d_emp*E_d_emp )
 		print('empirical average:\t',E_d_emp,\
-			  'empirical std:\t\t', S_d_emp
+			  '\nempirical std:\t\t', S_d_emp
 			)
 	E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r) 
 	S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )

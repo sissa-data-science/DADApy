@@ -154,7 +154,7 @@ class IdDiscrete(Base):
 				print('startin bayesian estimation')
 
 			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = \
-				beta_prior_d(k_tot,n_tot,self.Lk,self.Ln)
+				_beta_prior_d(k_tot,n_tot,self.Lk,self.Ln,self.verb)
 		else:
 			print('select a proper method for id computation')
 			return 0
@@ -359,8 +359,9 @@ class IdDiscrete(Base):
 	# ----------------------------------------------------------------------------------------------
 	
 	def set_Lk_Ln(self, lk, ln):
-		assert ( isinstance(ln,(np.int,int)) and isinstance(lk,(np.int,int)) and
-		lk > 0 and ln > 0 and lk > ln ), 'select positive integers for Ln and Lk, s.t. Lk > Ln'
+		assert ( isinstance( ln,(np.int64,np.int32,np.int16,np.int8,np.uint64,np.uint32,np.uint16,np.uint8,int) ) and ln > 0 ), 'select a proper integer Ln>0'
+		assert ( isinstance( lk,(np.int64,np.int32,np.int16,np.int8,np.uint64,np.uint32,np.uint16,np.uint8,int) ) and lk > 0 ), 'select a proper integer Lk>0'
+		assert ( lk > ln ), 'select Lk and Ln, s.t. Lk > Ln'
 		self.Ln = ln
 		self.Lk = lk
 
@@ -374,7 +375,7 @@ class IdDiscrete(Base):
 
 # ----------------------------------------------------------------------------------------------
 
-def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True,verbose=True):
+def _beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True,verbose=True):
 	"""Compute the posterior distribution of d given the input aggregates
 	Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
 	However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
@@ -416,21 +417,22 @@ def beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True,verbose=True):
 	d_range = np.arange(d_left,d_right,dx)
 	P = np.array([ p_d(di) for di in d_range])*dx
 	counter = 0
-	while sum(P!=0)<1000:
-		if any(P!=0):
+	elements = sum(P!=0)
+	while elements<1000:
+		if elements>10:
 			dx/=10
 			ind = np.where(P!=0)[0]
-			d_left = d_range[ind[0]-10]
-			d_right = d_range[ind[-1]+10]
+			d_left = d_range[ind[0]]
+			d_right = d_range[ind[-1]]
 		else:
 			dx/=10
 
 		d_range = np.arange(d_left,d_right,dx)
 		P = np.array([ p_d(di) for di in d_range])*dx
-
+		elements = sum(P!=0)
 		counter+=1
 		if verbose:
-			print('bayes domain restriction no', counter,end='\r')
+			print('iter no\t',counter,d_left,d_right,elements)
 
 	P = P.reshape(P.shape[0])
 
