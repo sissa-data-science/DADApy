@@ -31,15 +31,16 @@ class IdDiscrete(Base):
 
 		if weights is not None:
 			self.set_w(weights)
+			self.is_w = True
 		else:
-			self.set_w(np.ones(self.Nele))
+			self.is_w = False
 
 		self.Lk = None
 		self.Ln = None
 	
 	# ----------------------------------------------------------------------------------------------
 
-	def fix_Lk(self,Lk=None,Ln=None,w=False):
+	def fix_Lk(self,Lk=None,Ln=None):
 		"""Computes the k points within the given Rk and n points within given Rn.
 
 		For each point, computes the number self.k of points within a sphere of radius Rk
@@ -70,7 +71,7 @@ class IdDiscrete(Base):
 
 
 		# compute k and n
-		if w is False:
+		if self.is_w is False:
 			self.k = (self.distances <= self.Lk).sum(axis=1)
 			self.n = (self.distances <= self.Ln).sum(axis=1)
 		else:
@@ -97,7 +98,7 @@ class IdDiscrete(Base):
 
 	# ----------------------------------------------------------------------------------------------
 
-	def compute_id_binomial_Lk(self,Lk=None,Ln=None, method='bayes',w=False):
+	def compute_id_binomial_Lk(self,Lk=None,Ln=None, method='bayes'):
 		"""Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
 		In the estimation of d one has to remove the central point from the counting of n and k
@@ -120,7 +121,7 @@ class IdDiscrete(Base):
 			'set self.Lk and self.Ln or insert proper values for the Lk and Ln parameters'
 
 		# routine
-		self.fix_Lk(w=w)
+		self.fix_Lk()
 	
 		n_eff = self.n[self.mask]
 		k_eff = self.k[self.mask]
@@ -134,7 +135,7 @@ class IdDiscrete(Base):
 			return 0
 
 		if method == 'mle':
-			if w:
+			if self.is_w:
 				ww = self.weights[self.mask]
 			else:
 				ww = 1
@@ -243,7 +244,7 @@ class IdDiscrete(Base):
 	#--------------------------------------------------------------------------------------
 		
 
-	def fix_k_shell(self,k_shell,ratio,w=False):
+	def fix_k_shell(self,k_shell,ratio):
 	
 		"""Computes the Lk, Ln, n given k_shell
 			
@@ -286,7 +287,7 @@ class IdDiscrete(Base):
 				Ln_temp -= 1
 
 			# compute k and n
-			if w:
+			if self.is_w:
 				which_k = dist_i <= Lk_temp
 				self.k[i] = sum( self.weights[ self.dist_indices[i][which_k] ] )
 				which_n = dist_i <= Ln_temp
@@ -306,7 +307,7 @@ class IdDiscrete(Base):
 
 	#--------------------------------------------------------------------------------------
 
-	def compute_id_binomial_k(self,k,shell=True,ratio=None,w=False):
+	def compute_id_binomial_k(self,k,shell=True,ratio=None):
 		"""Calculate Id using the binomial estimator by fixing the number of neighbours or shells
 		
 		As in the case in which one fix Lk, also in this version of the estimation 
@@ -341,7 +342,7 @@ class IdDiscrete(Base):
 			print('no points in the inner shell, returning 0/. Consider increasing Lk and/or the ratio')
 			return 0
 
-		if w:
+		if self.is_w:
 			ww = self.weights[self.mask]
 		else:
 			ww = 1
@@ -390,8 +391,8 @@ def _beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True,verbose=True):
 		b0 (float): prior initialiser, default =1 for flat prior
 		plot (bool, default=False): plot the posterior
 	Returns:
-		mean_bayes (float): mean value of the posterior
-		std_bayes (float): std of the posterior
+		E_d_emp (float): mean value of the posterior
+		S_d_emp (float): std of the posterior
 		d_range (ndarray(float)): domain of the posterior
 		P (ndarray(float)): probability of the posterior
 	"""
