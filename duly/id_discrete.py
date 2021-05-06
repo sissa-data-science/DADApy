@@ -131,7 +131,7 @@ class IdDiscrete(Base):
 
 		E_n = n_eff.mean()
 		if E_n == 1.:
-			print('no points in the inner shell, returning 0/. Consider increasing Rk and/or the ratio')
+			print('no points in the inner shell, returning 0. Consider increasing Rk and/or the ratio')
 			return 0
 
 		if method == 'mle':
@@ -192,7 +192,7 @@ class IdDiscrete(Base):
 			k_eff = self.maxk
 
 		#routine
-		self.Lk,self.k,self.Ln,self.n = np.zeros(self.Nele),np.zeros(self.Nele),np.zeros(self.Nele),np.zeros(self.Nele)
+		self.Lk,self.k,self.Ln,self.n = np.zeros(self.Nele),np.zeros(self.Nele,dtype=np.int64),np.zeros(self.Nele),np.zeros(self.Nele,dtype=np.int64)
 		self.mask = np.ones(self.Nele,dtype=bool)
 
 		# cut distances at the k-th NN and cycle over each point
@@ -232,8 +232,8 @@ class IdDiscrete(Base):
 			n_temp = sum(dist_i <= Ln_temp)
 	
 			self.Lk[i] = Lk_temp 
-			self.k[i] = k_temp
-			self.n[i] = n_temp
+			self.k[i] = k_temp.astype(np.int64)
+			self.n[i] = n_temp.astype(np.int64)
 			self.Ln[i] = Ln_temp
 
 		# checks out
@@ -266,7 +266,7 @@ class IdDiscrete(Base):
 	
 		assert ratio>0 and ratio<1, 'set a proper value for the ratio'
 
-		self.Lk,self.k,self.Ln,self.n = np.zeros(self.Nele),np.zeros(self.Nele),np.zeros(self.Nele),np.zeros(self.Nele)
+		self.Lk,self.k,self.Ln,self.n = np.zeros(self.Nele),np.zeros(self.Nele,dtype=np.int64),np.zeros(self.Nele),np.zeros(self.Nele,dtype=np.int64)
 		self.mask = np.ones(self.Nele,dtype=bool)
 		
 		for i,dist_i in enumerate(self.distances):
@@ -289,12 +289,12 @@ class IdDiscrete(Base):
 			# compute k and n
 			if self.is_w:
 				which_k = dist_i <= Lk_temp
-				self.k[i] = sum( self.weights[ self.dist_indices[i][which_k] ] )
+				self.k[i] = sum( self.weights[ self.dist_indices[i][which_k] ] ).astype(np.int64)
 				which_n = dist_i <= Ln_temp
-				self.n[i] = sum( self.weights[ self.dist_indices[i][which_n] ] )
+				self.n[i] = sum( self.weights[ self.dist_indices[i][which_n] ] ).astype(np.int64)
 			else:
-				self.k[i] = index[k_shell+1]
-				self.n[i] = sum(dist_i <= Ln_temp)
+				self.k[i] = index[k_shell+1].astype(np.int64)
+				self.n[i] = sum(dist_i <= Ln_temp).astype(np.int64)
 		
 			self.Lk[i] = Lk_temp 
 			self.Ln[i] = Ln_temp
@@ -339,7 +339,7 @@ class IdDiscrete(Base):
 
 		E_n = n_eff.mean()
 		if E_n == 1.:
-			print('no points in the inner shell, returning 0/. Consider increasing Lk and/or the ratio')
+			print('no points in the inner shell, returning 0. Consider increasing Lk and/or the ratio')
 			return 0
 
 		if self.is_w:

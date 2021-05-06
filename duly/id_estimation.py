@@ -246,7 +246,7 @@ class IdEstimation(Base):
 
 		E_n = n_eff.mean()
 		if E_n == 1.:
-			print('no points in the inner shell, returning 0/. Consider increasing Rk and/or the ratio')
+			print('no points in the inner shell, returning 0. Consider increasing Rk and/or the ratio')
 			return 0
 		
 		if method == 'mle':
@@ -285,7 +285,7 @@ class IdEstimation(Base):
 		if k_eff is not None:
 			assert k_eff < self.maxk, 'You first need to recompute the distances with the proper amount on NN'
 		else:	
-			k_eff = self.maxk -1 
+			k_eff = self.maxk - 1
 
 		#routine
 		self.k = k_eff
