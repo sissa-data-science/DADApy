@@ -10,3 +10,4 @@ def fixed_seed():
     """This fixture will make sure that the random seed is the same for all tests"""
     random.seed(0)
     np.random.seed(0)
+    rng = np.random.default_rng(0)

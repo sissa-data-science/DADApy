@@ -335,8 +335,7 @@ class IdEstimation(Base):
 		if method == 'mle':
 			self.id_estimated_binom = np.log( (E_n-1)/(k-1) )/np.log( self.r )
 		elif method == 'bayes':
-			if plot:
-				self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior =\
+			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior =\
 					_beta_prior(k-1,self.n-1,self.r,plot=plot,verbose=self.verb)
 		else:
 			print('select a proper method for id computation')

@@ -7,7 +7,9 @@ import scipy
 #load, just once and for all, the coefficients for the polynomials in d at fixed L
 import pkg_resources
 DATA_PATH = pkg_resources.resource_filename('duly.utils_', '/discrete_volumes/')
-coeff = np.loadtxt(DATA_PATH + 'L_coefficients_float.dat',dtype=np.double)
+coeff = np.loadtxt(DATA_PATH + 'L_coefficients_float.dat',dtype=np.float64)
+
+#V_exact_int = np.loadtxt(DATA_PATH + 'V_exact.dat',dtype=np.uint64)
 
 #--------------------------------------------------------------------------------------
 

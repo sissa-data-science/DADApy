@@ -328,7 +328,7 @@ class IdDiscrete(Base):
 
 		if shell:
 			assert k < self.maxk, 'asking for a much too large number of shells'
-			self.fix_k_shell(k,ratio,w)
+			self.fix_k_shell(k,ratio)
 
 		else:
 			assert k < self.maxk, 'You first need to recompute the distances with the proper number of NN'
