@@ -98,7 +98,7 @@ class IdDiscrete(Base):
 
 	# ----------------------------------------------------------------------------------------------
 
-	def compute_id_binomial_Lk(self,Lk=None,Ln=None, method='bayes'):
+	def compute_id_binomial_Lk(self,Lk=None,Ln=None, method='bayes',plot=True):
 		"""Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
 		In the estimation of d one has to remove the central point from the counting of n and k
@@ -144,7 +144,7 @@ class IdDiscrete(Base):
 				bounds=((0.001,30.),)    ).x[0]
 
 		elif method == 'bayes':
-			if w:
+			if self.is_w:
 				k_tot = self.weights[self.mask]*(k_eff-1)
 				n_tot = self.weights[self.mask]*(n_eff-1)
 			else:
@@ -155,7 +155,7 @@ class IdDiscrete(Base):
 				print('startin bayesian estimation')
 
 			self.id_estimated_binom, self.id_estimated_binom_std, self.posterior_domain, self.posterior = \
-				_beta_prior_d(k_tot,n_tot,self.Lk,self.Ln,self.verb)
+				_beta_prior_d(k_tot,n_tot,self.Lk,self.Ln,plot=plot,verbose=self.verb)
 		else:
 			print('select a proper method for id computation')
 			return 0
@@ -439,10 +439,12 @@ def _beta_prior_d(k,n,Lk,Ln,a0=1,b0=1,plot=True,verbose=True):
 
 	if plot:
 		import matplotlib.pyplot as plt
+		plt.figure()
 		plt.plot(d_range,P)
 		plt.xlabel('d')
 		plt.ylabel('P(d)')
 		plt.title('posterior of d')
+		plt.show()
 
 	E_d_emp = (d_range*P).sum()
 	S_d_emp = np.sqrt( (d_range*d_range*P).sum()-E_d_emp*E_d_emp )
