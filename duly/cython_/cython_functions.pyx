@@ -53,8 +53,8 @@ def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,
             delta_Fijs[i, j] = Fij
             delta_Fijs_var[i, j] = Fij_sq
 
-    delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
-    delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
+    delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]
+    delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]
 
     return delta_Fijs_list, delta_Fijs_var_list
 
@@ -113,8 +113,8 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
             delta_Fijs[i, j] = Fij
             delta_Fijs_var[i, j] = Fij_sq
 
-    delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
-    delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
+    delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]
+    delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]
 
     return delta_Fijs_list, delta_Fijs_var_list
 

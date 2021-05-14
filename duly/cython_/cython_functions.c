@@ -2865,7 +2865,7 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
  *             delta_Fijs[i, j] = Fij
  *             delta_Fijs_var[i, j] = Fij_sq             # <<<<<<<<<<<<<<
  * 
- *     delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
+ *     delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]
  */
       __pyx_t_21 = __pyx_v_i;
       __pyx_t_22 = __pyx_v_j;
@@ -2878,8 +2878,8 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
   /* "duly/cython_/cython_functions.pyx":56
  *             delta_Fijs_var[i, j] = Fij_sq
  * 
- *     delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]             # <<<<<<<<<<<<<<
- *     delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
+ *     delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]             # <<<<<<<<<<<<<<
+ *     delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]
  * 
  */
   __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 56, __pyx_L1_error)
@@ -2890,7 +2890,9 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
     __pyx_v_i = __pyx_t_10;
     __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 56, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_ki); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 56, __pyx_L1_error)
+    __pyx_t_22 = __pyx_v_i;
+    if (__pyx_t_22 < 0) __pyx_t_22 += __pyx_pybuffernd_kstar.diminfo[0].shape;
+    __pyx_t_1 = __Pyx_PyInt_From_npy_long(((*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__16cython_functions_DTYPE_t *, __pyx_pybuffernd_kstar.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_kstar.diminfo[0].strides)) - 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 56, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_26 = PySlice_New(Py_None, __pyx_t_1, Py_None); if (unlikely(!__pyx_t_26)) __PYX_ERR(0, 56, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_26);
@@ -2914,8 +2916,8 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
 
   /* "duly/cython_/cython_functions.pyx":57
  * 
- *     delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
- *     delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]             # <<<<<<<<<<<<<<
+ *     delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]
+ *     delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]             # <<<<<<<<<<<<<<
  * 
  *     return delta_Fijs_list, delta_Fijs_var_list
  */
@@ -2927,7 +2929,9 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
     __pyx_v_i = __pyx_t_10;
     __pyx_t_26 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_26)) __PYX_ERR(0, 57, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_26);
-    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_ki); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
+    __pyx_t_22 = __pyx_v_i;
+    if (__pyx_t_22 < 0) __pyx_t_22 += __pyx_pybuffernd_kstar.diminfo[0].shape;
+    __pyx_t_1 = __Pyx_PyInt_From_npy_long(((*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__16cython_functions_DTYPE_t *, __pyx_pybuffernd_kstar.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_kstar.diminfo[0].strides)) - 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_6 = PySlice_New(Py_None, __pyx_t_1, Py_None); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 57, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
@@ -2950,7 +2954,7 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_compute_deltaFs_from
   __pyx_t_2 = 0;
 
   /* "duly/cython_/cython_functions.pyx":59
- *     delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
+ *     delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]
  * 
  *     return delta_Fijs_list, delta_Fijs_var_list             # <<<<<<<<<<<<<<
  * 
@@ -3641,7 +3645,7 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
  *             delta_Fijs[i, j] = Fij
  *             delta_Fijs_var[i, j] = Fij_sq             # <<<<<<<<<<<<<<
  * 
- *     delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
+ *     delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]
  */
       __pyx_t_26 = __pyx_v_i;
       __pyx_t_27 = __pyx_v_j;
@@ -3654,8 +3658,8 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
   /* "duly/cython_/cython_functions.pyx":116
  *             delta_Fijs_var[i, j] = Fij_sq
  * 
- *     delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]             # <<<<<<<<<<<<<<
- *     delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
+ *     delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]             # <<<<<<<<<<<<<<
+ *     delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]
  * 
  */
   __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
@@ -3666,7 +3670,9 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
     __pyx_v_i = __pyx_t_10;
     __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 116, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_ki); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 116, __pyx_L1_error)
+    __pyx_t_27 = __pyx_v_i;
+    if (__pyx_t_27 < 0) __pyx_t_27 += __pyx_pybuffernd_kstar.diminfo[0].shape;
+    __pyx_t_3 = __Pyx_PyInt_From_npy_long(((*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__16cython_functions_DTYPE_t *, __pyx_pybuffernd_kstar.rcbuffer->pybuffer.buf, __pyx_t_27, __pyx_pybuffernd_kstar.diminfo[0].strides)) - 1)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 116, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_5 = PySlice_New(Py_None, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 116, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
@@ -3690,8 +3696,8 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
 
   /* "duly/cython_/cython_functions.pyx":117
  * 
- *     delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
- *     delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]             # <<<<<<<<<<<<<<
+ *     delta_Fijs_list = [delta_Fijs[i, :kstar[i]-1] for i in range(N)]
+ *     delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]             # <<<<<<<<<<<<<<
  * 
  *     return delta_Fijs_list, delta_Fijs_var_list
  */
@@ -3703,7 +3709,9 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
     __pyx_v_i = __pyx_t_10;
     __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 117, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_ki); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)
+    __pyx_t_27 = __pyx_v_i;
+    if (__pyx_t_27 < 0) __pyx_t_27 += __pyx_pybuffernd_kstar.diminfo[0].shape;
+    __pyx_t_3 = __Pyx_PyInt_From_npy_long(((*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__16cython_functions_DTYPE_t *, __pyx_pybuffernd_kstar.rcbuffer->pybuffer.buf, __pyx_t_27, __pyx_pybuffernd_kstar.diminfo[0].strides)) - 1)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_6 = PySlice_New(Py_None, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 117, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
@@ -3726,7 +3734,7 @@ static PyObject *__pyx_pf_4duly_7cython__16cython_functions_2compute_deltaFs_fro
   __pyx_t_1 = 0;
 
   /* "duly/cython_/cython_functions.pyx":119
- *     delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
+ *     delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]-1] for i in range(N)]
  * 
  *     return delta_Fijs_list, delta_Fijs_var_list             # <<<<<<<<<<<<<<
  * 
