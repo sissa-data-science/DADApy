@@ -15,6 +15,7 @@ class Base:
 	Attributes:
 		Nele (int): number of data points
 		X (np.ndarray(float)): the data points loaded into the object, of shape (Nele , dimension of embedding space)
+        dims (int, optional): embedding dimension of the datapoints
 		maxk (int): maximum number of neighbours to be considered for the calculation of distances
 		distances (float[:,:]): A matrix of dimension Nele x mask containing distances between points
 		dist_indeces (int[:,:]): A matrix of dimension Nele x mask containing the indices of the nearest neighbours
@@ -37,6 +38,7 @@ class Base:
 			self.dtype = self.X.dtype
 
 			self.Nele = coordinates.shape[0]
+			self.dims = coordinates.shape[1]
 			self.distances = None
 			# BUG to be solved: the next line
 			if self.maxk is None: self.maxk = self.Nele - 1
