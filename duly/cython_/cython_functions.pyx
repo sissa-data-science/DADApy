@@ -19,7 +19,7 @@ def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,
                                     np.ndarray[DTYPE_t, ndim = 2] dist_indices,
                                     np.ndarray[DTYPE_t, ndim = 1] kstar,
                                     np.ndarray[DTYPE_t, ndim = 2] grads,
-                                    np.ndarray[DTYPE_t, ndim = 2] grads_var):
+                                    np.ndarray[DTYPE_t, ndim = 2] grads_covmat):
     # TODO: function should be checked! It should take the gradients and compute the deltaFs and the errors
     cdef int N = X.shape[0]
     cdef int dims = X.shape[1]
@@ -31,7 +31,7 @@ def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,
     cdef floatTYPE_t Fij,Fij_sq, rk_sq
 
     for i in range(N):
-        ki = kstar[i]
+        ki = kstar[i]-1
         ind_ki = dist_indices[i, ki]
 
         for j in range(ki):
@@ -48,14 +48,13 @@ def compute_deltaFs_from_coords_and_grads(np.ndarray[floatTYPE_t, ndim = 2] X,
             # contraction deltaXij * covariance * deltaXij
             for dim in range(dims):
                 for dim2 in range(dims):
-                    Fij_sq += (X[ind_j, dim] - X[i, dim])*grads_var[i, dim, dim2] *(X[ind_j, dim2] - X[i, dim2])
-
+                    Fij_sq += (X[ind_j, dim] - X[i, dim])*grads_covmat[i, dim, dim2] *(X[ind_j, dim2] - X[i, dim2])
 
             delta_Fijs[i, j] = Fij
             delta_Fijs_var[i, j] = Fij_sq
 
-    delta_Fijs_list = [delta_Fijs[i, :kstar[i]] for i in range(N)]
-    delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]] for i in range(N)]
+    delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
+    delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
 
     return delta_Fijs_list, delta_Fijs_var_list
 
@@ -79,7 +78,7 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
 
 
     for i in range(N):
-        ki = kstar[i]
+        ki = kstar[i]-1
         kifloat = float(ki)
 
         ind_ki = dist_indices[i, ki]
@@ -114,8 +113,8 @@ def compute_deltaFs_from_coords(np.ndarray[floatTYPE_t, ndim = 2] X,
             delta_Fijs[i, j] = Fij
             delta_Fijs_var[i, j] = Fij_sq
 
-    delta_Fijs_list = [delta_Fijs[i, :kstar[i]] for i in range(N)]
-    delta_Fijs_var_list = [delta_Fijs_var[i, :kstar[i]] for i in range(N)]
+    delta_Fijs_list = [delta_Fijs[i, :ki] for i in range(N)]
+    delta_Fijs_var_list = [delta_Fijs_var[i, :ki] for i in range(N)]
 
     return delta_Fijs_list, delta_Fijs_var_list
 
@@ -140,7 +139,7 @@ def compute_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,
     cdef floatTYPE_t dp2 = id_selected + 2.
 
     for i in range(N):
-        ki = kstar[i]
+        ki = kstar[i]-1
 
         kifloat = float(ki)
 
@@ -187,7 +186,7 @@ def compute_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,
     cdef floatTYPE_t dp2 = id_selected + 2.
 
     for i in range(N):
-        ki = kstar[i]
+        ki = kstar[i]-1
 
         kifloat = float(ki)
 

@@ -2,8 +2,10 @@ import torch as t
 import torch.optim as optim
 import numpy as np
 
-device = 'cuda' if t.cuda.is_available() else 'cpu'
+#device = 'cuda' if t.cuda.is_available() else 'cpu'
+device = 'cpu'
 
+# ----------------------------------------------------------------------------------------------
 
 def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, alpha, alg='BFGS'):
     N = Fis.shape[0]
@@ -82,6 +84,7 @@ def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, al
     final_loss = loss_fn()
     return final_loss.data, Fis_t.detach().numpy()
 
+# ----------------------------------------------------------------------------------------------
 
 def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg='BFGS'):
     N = Fis.shape[0]
@@ -161,6 +164,106 @@ def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg='
 
     final_loss = loss_fn()
     return final_loss.data, Fis_t.detach().numpy()
+
+# ----------------------------------------------------------------------------------------------
+
+def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg='BFGS', onlyNN=False):
+    N = Fis.shape[0]
+
+    Fis = Fis + np.random.normal(0, 1, size=(N,)) * 0.1
+
+    Fis_t = t.from_numpy(Fis).float().to(device)
+    Fis_t.requires_grad_()
+    Fis_err_t = t.from_numpy(Fis_err).float().to(device)
+    PAk_ai_t = t.zeros(N, requires_grad=True, dtype=t.float, device=device)
+
+    vijs_t = t.ones(N, N).float().to(device)
+    nijs_t = t.ones(N, N).float().to(device)
+    Fijs_t = t.ones(N, N).float().to(device)
+    Fijs_var_t = t.ones(N, N).float().to(device)
+    mask = t.zeros(N, N).int().to(device)
+
+    if onlyNN is False:
+    #keep all neighbours up to k*
+        for i, vijs in enumerate(vij_list):
+
+            k = kstar[i]
+
+            for nneigh in range(k):
+                j = dist_indices[i, nneigh + 1]
+
+                Fijs_t[i, j] = Fis_t[j]-Fis_t[i]
+                Fijs_var_t[i, j] = 2 * (Fis_err[i]**2+Fis_err[j]**2)
+                vijs_t[i, j] = vijs[nneigh]
+                nijs_t[i, j] = float(nneigh + 1)
+                mask[i, j] = 1
+    else:
+    #only correlate to first NN
+        for i, vijs in enumerate(vij_list):
+
+            k = kstar[i]
+
+            for nneigh in range(1):
+                j = dist_indices[i, nneigh + 1]
+
+                Fijs_t[i, j] = Fis_t[j]-Fis_t[i]
+                Fijs_var_t[i, j] = 2 * (Fis_err[i]**2+Fis_err[j]**2)
+                vijs_t[i, j] = vijs[nneigh]
+                nijs_t[i, j] = float(nneigh + 1)
+                mask[i, j] = 1
+
+    def loss_fn():
+    #    deltas = (Fis_t[None, :] - Fis_t[:, None])
+
+        PAk_corr = PAk_ai_t[:, None] * nijs_t
+
+        Fis_corr = Fis_t[:, None] + PAk_corr
+
+        la = t.sum(mask * Fis_corr) - t.sum(mask * (vijs_t * t.exp(Fis_corr)))
+
+    #    lb = alpha * t.sum(mask * ((deltas - Fijs_t) ** 2 / Fijs_var_t))
+        lb = alpha * t.sum(mask * ((Fijs_t** 2) / Fijs_var_t))
+
+        l = la - lb
+        return -l
+
+    if alg == 'BFGS':
+        lr = 0.5
+        n_epochs = 50
+
+        optimiser = optim.LBFGS([Fis_t, PAk_ai_t], lr=lr, max_iter=20, max_eval=None,
+                                tolerance_grad=1e-7, tolerance_change=1e-9, history_size=100)
+
+        for e in range(n_epochs):
+            def closure():
+                optimiser.zero_grad()
+                loss = loss_fn()
+                loss.backward()
+                return loss
+
+            optimiser.step(closure)
+
+
+    elif alg == 'GD':
+        lr = 1e-7
+        n_epochs = 25000
+
+        optimiser = optim.SGD([Fis_t, PAk_ai_t], lr=lr)
+
+        for e in range(n_epochs):
+
+            loss = loss_fn()
+            loss.backward()
+            optimiser.step()
+            optimiser.zero_grad()
+
+            if e % 1000 == 0: print(e, loss.item())
+
+    final_loss = loss_fn()
+    return final_loss.data, Fis_t.detach().numpy()
+
+
+
 
 
 def optimise_metric_vectors(gammaij, d=2, lr=1e-3, n_epochs=10000, alg='GD', vi_init=None):

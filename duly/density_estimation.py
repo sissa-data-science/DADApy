@@ -343,6 +343,55 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def compute_density_PAk_gCorr_flat(self, alpha=1.,onlyNN=False):
+        from duly.utils_.mlmax_pytorch import maximise_wPAk_flatF
+        """
+        finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
+        computed using the gradients
+        """
+        # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
+
+        # compute optimal k
+        if self.kstar is None: self.compute_kstar()
+        kstar = self.kstar
+
+
+        dc = np.empty(self.Nele, dtype=float)
+        Rho = np.empty(self.Nele, dtype=float)
+        Rho_err = np.empty(self.Nele, dtype=float)
+
+        prefactor = np.exp(
+            self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
+
+        vij_list = []
+
+        for i in range(self.Nele):
+            dc[i] = self.distances[i, kstar[i]]
+            rr = np.log(kstar[i]) - (
+                    np.log(prefactor) + self.id_selected * np.log(self.distances[i, kstar[i]]))
+            Rho[i] = rr
+            vj = np.zeros(kstar[i])
+            for j in range(kstar[i]):
+                vj[j] = prefactor * (pow(self.distances[i, j + 1], self.id_selected) - pow(
+                    self.distances[i, j], self.id_selected))
+
+            vij_list.append(vj)
+
+            Rho_err[i] = np.sqrt((4 * kstar[i] + 2) / (kstar[i] * (kstar[i] - 1)))
+
+        if self.verb: print("Starting likelihood maximisation")
+        sec = time.time()
+        l_, Rho = maximise_wPAk_flatF(Rho, Rho_err, kstar, vij_list, self.dist_indices, alpha, onlyNN)
+        sec2 = time.time()
+        if self.verb: print(
+            "{0:0.2f} seconds for likelihood maximisation".format(sec2 - sec))
+
+
+        self.Rho = Rho
+        self.Rho -= np.log(self.Nele)
+
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_gPAk(self, mode='standard'):
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
@@ -368,7 +417,7 @@ class DensityEstimation(IdEstimation):
                 dc[i] = self.distances[i, k]
                 Rho[i] = np.log(k) - np.log(prefactor)
 
-                Rho_err[i] = 1. / np.sqrt(k)
+                Rho_err[i] = np.sqrt((4 * kstar[i] + 2) / (kstar[i] * (kstar[i] - 1)))
                 corrected_rk = 0.
                 Fijs = Fij_list[i]
 
