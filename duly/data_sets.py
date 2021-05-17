@@ -94,3 +94,7 @@ if __name__ == '__main__':
     ds.serialize_computation('compute_distances', maxk=3)
 
     print(ds.data_sets[0].distances)
+
+    ds.compute_clustering(Z = 1)
+
+    ds.serialize_computation('compute_clustering', Z = 1)

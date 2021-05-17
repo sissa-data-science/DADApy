@@ -236,43 +236,5 @@ def MLmax_kNN_corr(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha)
     print(np.mean(abs(results.jac)))
     return rr
 
-
-### Maximisation of other quantities (not maximum likelihood)
-
-def Symm_Imbalance(params, args):
-    X = args[0]
-    Xp = args[1]
-    maxk = args[2]
-    k = args[3]
-    ltype = args[4]
-
-    D = X.shape[1]
-    #Dp = X.shape[1]
-
-    #Cx = np.hstack([params[:D - 1], 1 ])
-    # Cxp = np.hstack([params[D - 1:]**2, 1 - np.sum(params[D - 1:]**2)])
-
-    Cx = params[:D ]#**2
-    #Cxp = params[D:]**2
-
-    X = X * Cx[None, :]
-    #Xp = Xp * Cxp[None, :]
-
-    lx_xp, l_xp_x = ut._get_loss_between_two(X, Xp, maxk, k, ltype)
-
-    #total_imbalance = (lx_xp + l_xp_x) / 2.
-
-    return lx_xp, l_xp_x
-
-
-def Min_Symm_Imbalance(X, Xp, maxk, k, ltype, params0):
-    results = minimize(Symm_Imbalance, params0, method='Nelder-Mead', tol=1e-5,
-                       args=([X, Xp, maxk, k, ltype]), options={'maxiter': 5000})
-
-    print(results.message)
-    print(results.nit)
-    return results.x, results.fun
-
-
 if __name__ == '__main__':
     pass

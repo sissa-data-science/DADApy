@@ -32,6 +32,7 @@ class Base:
 		#self.working_memory = working_memory
 		self.verb = verbose
 		self.njobs = njobs
+		self.dims = None
 
 		if coordinates is not None:
 			# should be used to set minimum precision where necessary

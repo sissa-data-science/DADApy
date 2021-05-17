@@ -6,24 +6,27 @@ from sklearn.neighbors import NearestNeighbors
 
 cores = multiprocessing.cpu_count()
 
-#--------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------
 
 def compute_all_distances(X, n_jobs=cores):
-	dists = pairwise_distances(X, Y=None, metric='euclidean', n_jobs=n_jobs)
+    dists = pairwise_distances(X, Y=None, metric='euclidean', n_jobs=n_jobs)
 
-	return dists
+    return dists
 
-#--------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------
 
 from scipy.spatial import cKDTree as KD
 
-def compute_NN_PBC(X,k_max,box_size=None,p=2,cutoff=np.inf):
 
-	tree = KD(X,boxsize=box_size)
-	dist, ind = tree.query(X,k=k_max+1,p=p,distance_upper_bound=cutoff)
-	return dist, ind
+def compute_NN_PBC(X, k_max, box_size=None, p=2, cutoff=np.inf):
+    tree = KD(X, boxsize=box_size)
+    dist, ind = tree.query(X, k=k_max + 1, p=p, distance_upper_bound=cutoff)
+    return dist, ind
 
-#--------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------
 
 # helper function of compute_id_diego
 
@@ -44,79 +47,87 @@ def compute_NN_PBC(X,k_max,box_size=None,p=2,cutoff=np.inf):
 # 							method='L-BFGS-B', tol = 1.e-7, bounds = (0, 1000))
 # 	return max_log_lik.x
 
-#--------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 import re
+
+
 def atoi(text):
-	return int(text) if text.isdigit() else text
+    return int(text) if text.isdigit() else text
+
 
 def natural_keys(text):
-	'''sort list in human order, for both numbers and letters
-	http://nedbatchelder.com/blog/200712/human_sorting.html
-	'''
-	return [ atoi(c) for c in re.split('(\d+)', text) ]
-
-#usage example:
-#import glob
-#datas = []
-#dirr = 'my_dir/'
-#files = glob.glob(dirr+'*.ext')
-#files.sort(key = natural_keys)
+    '''sort list in human order, for both numbers and letters
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    '''
+    return [atoi(c) for c in re.split('(\d+)', text)]
 
 
-#--------------------------------------------------------------------------------------
+# usage example:
+# import glob
+# datas = []
+# dirr = 'my_dir/'
+# files = glob.glob(dirr+'*.ext')
+# files.sort(key = natural_keys)
+
+
+# --------------------------------------------------------------------------------------
 
 def stirling(n):
-	return np.sqrt(2*np.pi*n)*(n/np.e)**n * (1.+ 1./12./n)# + 1/288/n/n - 139/51840/n/n/n/)
+    return np.sqrt(2 * np.pi * n) * (n / np.e) ** n * (1. + 1. / 12. / n)  # + 1/288/n/n - 139/51840/n/n/n/)
+
 
 def log_stirling(n):
-	return (n+0.5)*np.log(n)-n+0.5*np.log(2*np.pi)+ 1./12./n #-1/360/n/n/n
+    return (n + 0.5) * np.log(n) - n + 0.5 * np.log(2 * np.pi) + 1. / 12. / n  # -1/360/n/n/n
 
-def binom_stirling(k,n):
-	return stirling(k)/sitrling(n)/stirling(k-n)
 
-def log_binom_stirling(k,n):
-	return log_stirling(k)-log_stirling(n)-log_stirling(k-n)
+def binom_stirling(k, n):
+    return stirling(k) / stirling(n) / stirling(k - n)
 
-#--------------------------------------------------------------------------------------
+
+def log_binom_stirling(k, n):
+    return log_stirling(k) - log_stirling(n) - log_stirling(k - n)
+
+
+# --------------------------------------------------------------------------------------
 
 def _loglik(d, mus, n1, n2, N):
-	one_m_mus_d = 1. - mus ** (-d)
-	sum = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))
-	return sum - N / d
+    one_m_mus_d = 1. - mus ** (-d)
+    sum = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.) * np.log(mus))
+    return sum - N / d
 
 
 def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.e-7):
-	# mu can't be == 1 add some noise
-	indx = np.nonzero(mus == 1)
-	mus[indx] += np.finfo(dtype).eps
+    # mu can't be == 1 add some noise
+    indx = np.nonzero(mus == 1)
+    mus[indx] += np.finfo(dtype).eps
 
-	l1 = _loglik(d1, mus, n1, n2, N)
-	while (abs(d0 - d1) > eps):
-		d2 = (d0 + d1) / 2.
-		l2 = _loglik(d2, mus, n1, n2, N)
-		if l2 * l1 > 0:
-			d1 = d2
-		else:
-			d0 = d2
-	d = (d0 + d1) / 2.
+    l1 = _loglik(d1, mus, n1, n2, N)
+    while (abs(d0 - d1) > eps):
+        d2 = (d0 + d1) / 2.
+        l2 = _loglik(d2, mus, n1, n2, N)
+        if l2 * l1 > 0:
+            d1 = d2
+        else:
+            d0 = d2
+    d = (d0 + d1) / 2.
 
-	return d
+    return d
 
 
 def _fisher_info_scaling(id_ml, mus, n1, n2):
-	N = len(mus)
-	one_m_mus_d = 1. - mus ** (-id_ml)
-	log_mu = np.log(mus)
+    N = len(mus)
+    one_m_mus_d = 1. - mus ** (-id_ml)
+    log_mu = np.log(mus)
 
-	j0 = N / id_ml ** 2
+    j0 = N / id_ml ** 2
 
-	factor1 = np.divide(log_mu, one_m_mus_d)
-	factor2 = mus ** (-id_ml)
-	tmp = np.multiply(factor1 ** 2, factor2)
-	j1 = (n2 - n1 - 1) * np.sum(tmp)
+    factor1 = np.divide(log_mu, one_m_mus_d)
+    factor2 = mus ** (-id_ml)
+    tmp = np.multiply(factor1 ** 2, factor2)
+    j1 = (n2 - n1 - 1) * np.sum(tmp)
 
-	return j0 + j1
+    return j0 + j1
 
 
 # def _f(d, mu, n, N):
@@ -129,278 +140,247 @@ def _fisher_info_scaling(id_ml, mus, n1, n2):
 #     return sum - N / d
 
 
-def _return_ranks(dist_indices_1, dist_indices_2, maxk_2, k=1):
-	assert (dist_indices_1.shape[0] == dist_indices_2.shape[0])
+# --------------------------------------------------------------------------------------
+# Functions used in the metric_compasisons module
+# --------------------------------------------------------------------------------------
 
-	N = dist_indices_1.shape[0]
+def _return_ranks(dist_indices_1, dist_indices_2, k=1):
+    """Finds all the ranks according to distance 2 of the kth neighbours according to distance 1.
 
-	losses = np.zeros(N)
+    Args:
+        dist_indices_1 (int[:,:]): nearest neighbours according to distance1
+        dist_indices_2 (int[:,:]): nearest neighbours according to distance2
+        k (int): order of nearest neighbour considered for the calculation of the conditional ranks, default is 1
 
-	for i in range(N):
-		idx_k_d1 = dist_indices_1[i, k]
+    Returns:
+        np.array(int): ranks according to distance 2 of the first neighbour in distance 1
+    """
+    assert (dist_indices_1.shape[0] == dist_indices_2.shape[0])
 
-		wr = np.where(idx_k_d1 == dist_indices_2[i])
+    N = dist_indices_1.shape[0]
+    maxk_2 = dist_indices_2.shape[1]
 
-		if len(wr[0]) == 0:
-			losses[i] = np.random.randint(maxk_2, N)
-		else:
-			losses[i] = wr[0][0]
+    conditional_ranks = np.zeros(N)
 
-	return losses
+    for i in range(N):
+        idx_k_d1 = dist_indices_1[i, k]
 
+        wr = np.where(idx_k_d1 == dist_indices_2[i])
 
-def _return_ranks_wdegeneracy(distances_1, distances_2):
-	N = distances_1.shape[0]
-	losses = np.zeros(N)
+        if len(wr[0]) == 0:
+            conditional_ranks[i] = np.random.randint(maxk_2, N)
+        else:
+            conditional_ranks[i] = wr[0][0]
 
-	for i in range(N):
-		# find all occurrences of first neigh
-
-		dists1 = distances_1[i]
-
-		# nnd = np.partition(dists1, 1)[1]
-		nnd = np.sort(dists1)[1]
-
-		nn_indices = np.where(dists1 == nnd)[0]
-
-		# print(nn_indices)
-		if i in nn_indices:
-			nn_indices = np.delete(nn_indices, np.where(i == nn_indices))
-
-		losses[i] = 0
-		nn = 0
-
-		lnn_indices = len(nn_indices)
-		# if lnn_indices > 1: print('found a point with {} NNs'.format(lnn_indices))
-
-		for nn_index in nn_indices:
-			nn += 1
-
-			dists2i = distances_2[i]
-
-			# find all elements at a given distance in the second metric
-			d2_nndist = dists2i[nn_index]
-
-			d2_nnidx = sum(dists2i <= d2_nndist) - 1
-
-			d2_nndeg = sum(dists2i == d2_nndist) - 1
-
-			# if d2_nndeg > 0: print('found {} points at given dist '.format(d2_nndeg))
-
-			losses[i] += (d2_nnidx - (d2_nndeg) / 2.)
-
-		losses[i] /= nn
-
-	return losses
+    return conditional_ranks
 
 
-def _return_imbalance(dist_indices_1, dist_indices_2, maxk_2, k=1, dtype='mean'):
-	assert (dist_indices_1.shape[0] == dist_indices_2.shape[0])
+def _return_imbalance(dist_indices_1, dist_indices_2, k=1, dtype='mean'):
+    """Compute the information imbalance between two precomputed distance measures.
 
-	N = dist_indices_1.shape[0]
+    Args:
+        dist_indices_1 (int[:,:]): nearest neighbours according to distance1
+        dist_indices_2 (int[:,:]): nearest neighbours according to distance2
+        k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
+        dtype (str): type of information imbalance computation, default is 'mean'
 
-	ranks = _return_ranks(dist_indices_1, dist_indices_2, maxk_2, k=k)
+    Returns:
+        (float): information imbalance from distance 1 to distance 2
+    """
+    assert (dist_indices_1.shape[0] == dist_indices_2.shape[0])
 
-	if dtype == 'mean':
-		imb = np.mean(ranks) / (N / 2.)
-	elif dtype == 'log_mean':
-		imb = np.log(np.mean(ranks) / (N / 2.))
-	elif dtype == 'binned':
-		nbins = int(round(N / k))
-		# print(nbins)
-		Hmax = np.log(nbins)
+    N = dist_indices_1.shape[0]
 
-		cs = ranks / N
-		freqs, bins = np.histogram(cs, nbins, range=(0, 1.))
-		ps = freqs / N
+    ranks = _return_ranks(dist_indices_1, dist_indices_2, k=k)
 
-		nonzero = np.nonzero(ps)
-		ps = ps[nonzero]
-		H = - np.dot(ps, np.log(ps))
+    if dtype == 'mean':
+        imb = np.mean(ranks) / (N / 2.)
+    elif dtype == 'log_mean':
+        imb = np.log(np.mean(ranks) / (N / 2.))
+    elif dtype == 'binned':
+        nbins = int(round(N / k))
 
-		imb = H / Hmax
-		# print(cs,freqs, H, imb)
+        Hmax = np.log(nbins)
 
-	else:
-		raise ValueError("Choose a valid imb type")
-	return imb
+        cs = ranks / N
+        freqs, bins = np.histogram(cs, nbins, range=(0, 1.))
+        ps = freqs / N
+
+        nonzero = np.nonzero(ps)
+        ps = ps[nonzero]
+        H = - np.dot(ps, np.log(ps))
+
+        imb = H / Hmax
+
+    else:
+        raise ValueError("Choose a valid imbalance type (dtype)")
+    return imb
 
 
 def _return_imb_ij(i, j, maxk, X, k, dtype):
-	X_ = X[:, [i]]
+    """Returns the imbalances between distances taken as the i and the j component of the coordinate matrix X.
 
-	nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-							p=2, n_jobs=1).fit(X_)
+    Args:
+        i (int): component for the first distance
+        j (int): component for the second distance
+        maxk (int): number of nearest neighbours to be computed
+        X (float[:, :]): coordinate matrix
+        k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
+        dtype (str): type of information imbalance computation, default is 'mean'
 
-	_, dist_indices_i = nbrs.kneighbors(X_)
+    Returns:
+        (float, float): the information imbalance from distance i to distance j and vice versa
+    """
+    X_ = X[:, [i]]
 
-	X_ = X[:, [j]]
+    nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
+                            p=2, n_jobs=1).fit(X_)
 
-	nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-							p=2, n_jobs=1).fit(X_)
+    _, dist_indices_i = nbrs.kneighbors(X_)
 
-	_, dist_indices_j = nbrs.kneighbors(X_)
+    X_ = X[:, [j]]
 
-	nij = _return_imbalance(dist_indices_i, dist_indices_j, maxk, k=k, dtype=dtype)
-	nji = _return_imbalance(dist_indices_j, dist_indices_i, maxk, k=k, dtype=dtype)
+    nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
+                            p=2, n_jobs=1).fit(X_)
 
-	print('computing loss with coord number ', i)
-	return nij, nji
+    _, dist_indices_j = nbrs.kneighbors(X_)
 
+    nij = _return_imbalance(dist_indices_i, dist_indices_j, k=k, dtype=dtype)
+    nji = _return_imbalance(dist_indices_j, dist_indices_i, k=k, dtype=dtype)
 
-def _return_imb_with_coords(X, coords, dist_indices, maxk, k, ltype='mean'):
-	X_ = X[:, coords]
-
-	nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-							p=2, n_jobs=1).fit(X_)
-
-	_, dist_indices_i = nbrs.kneighbors(X_)
-
-	ni0 = _return_imbalance(dist_indices_i, dist_indices, maxk, k=k, dtype=ltype)
-	n0i = _return_imbalance(dist_indices, dist_indices_i, maxk, k=k, dtype=ltype)
-	print('computing loss with coords ', coords)
-	return n0i, ni0
+    return nij, nji
 
 
-def _get_loss_between_two(X, Xp, maxk, k, ltype='mean'):
-	nbrsX = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-							 p=2, n_jobs=1).fit(X)
+def _return_imb_with_coords(X, coords, dist_indices, maxk, k, dtype='mean'):
+    """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
+     built using a subset of coordinates.
 
-	nbrsXp = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-							  p=2, n_jobs=1).fit(Xp)
+    Args:
+        X: coordinate matrix
+        coords: subset of coordinates to be used when building the alternative distance
+        dist_indices (int[:,:]): nearest neighbours according to full distance
+        maxk (int): number of nearest neighbours to be computed in the alternative distance
+        k (int): order of nearest neighbour considered, default is 1
+        dtype (str): type of information imbalance computation, default is 'mean'
 
-	_, dist_indices_Xp = nbrsXp.kneighbors(Xp)
+    Returns:
+        (float, float): the information imbalance from 'full' to 'alternative' and vice versa
+    """
+    X_ = X[:, coords]
 
-	_, dist_indices_X = nbrsX.kneighbors(X)
+    nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
+                            p=2, n_jobs=1).fit(X_)
 
-	nXp_X = _return_imbalance(dist_indices_Xp, dist_indices_X, maxk, k=k, dtype=ltype)
-	nX_Xp = _return_imbalance(dist_indices_X, dist_indices_Xp, maxk, k=k, dtype=ltype)
+    _, dist_indices_coords = nbrs.kneighbors(X_)
 
-	return nX_Xp, nXp_X
-
-
-def _get_loss_linear_comb_two_dists_wdeg(dY, d1, d2, a1):
-	dX = np.sqrt((a1 ** 2 * d1 ** 2 + d2 ** 2))
-
-	nX_Y = _return_loss_wdegeneracy(dX, dY)
-	nY_X = _return_loss_wdegeneracy(dY, dX)
-
-	return nX_Y, nY_X
-
-
-def _get_loss_linear_comb_three_dists_wdeg(dY, d1, d2, d3, a1, a2):
-	dX = np.sqrt((a1 ** 2 * d1 ** 2 + a2 ** 2 * d2 ** 2 + d3 ** 2))
-
-	nX_Y = _return_loss_wdegeneracy(dX, dY)
-	nY_X = _return_loss_wdegeneracy(dY, dX)
-
-	return nX_Y, nY_X
+    imb_coords_full = _return_imbalance(dist_indices_coords, dist_indices, k=k, dtype=dtype)
+    imb_full_coords = _return_imbalance(dist_indices, dist_indices_coords, k=k, dtype=dtype)
+    print('computing imbalances with coords ', coords)
+    return imb_full_coords, imb_coords_full
 
 
-def _get_loss_linear_comb_two_dists(dist_indices_Y, d1, d2, a1, maxk, k=1,
-									ltype='mean'):
-	dX = np.sqrt((a1 ** 2 * d1 ** 2 + d2 ** 2))
+def _return_imb_between_two(X, Xp, maxk, k, ltype='mean'):
+    nbrsX = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
+                             p=2, n_jobs=1).fit(X)
 
-	dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0:maxk + 1])
+    nbrsXp = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
+                              p=2, n_jobs=1).fit(Xp)
 
-	nX_Y = _return_imbalance(dist_indices_X, dist_indices_Y, maxk, k=k, dtype=ltype)
-	nY_X = _return_imbalance(dist_indices_Y, dist_indices_X, maxk, k=k, dtype=ltype)
+    _, dist_indices_Xp = nbrsXp.kneighbors(Xp)
 
-	return nX_Y, nY_X
+    _, dist_indices_X = nbrsX.kneighbors(X)
 
+    nXp_X = _return_imbalance(dist_indices_Xp, dist_indices_X, k=k, dtype=ltype)
+    nX_Xp = _return_imbalance(dist_indices_X, dist_indices_Xp, k=k, dtype=ltype)
 
-def _get_loss_linear_comb_three_dists(dist_indices_Y, d1, d2, d3, a1, a2, maxk, k=1,
-									  ltype='mean'):
-	dX = np.sqrt((a1 ** 2 * d1 ** 2 + a2 ** 2 * d2 ** 2 + d3 ** 2))
-
-	dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0:maxk + 1])
-
-	nX_Y = _return_imbalance(dist_indices_X, dist_indices_Y, maxk, k=k, dtype=ltype)
-	nY_X = _return_imbalance(dist_indices_Y, dist_indices_X, maxk, k=k, dtype=ltype)
-
-	return nX_Y, nY_X
+    return nX_Xp, nXp_X
 
 
-def _get_loss_between_two_one_fixed(X, dist_indices_Xp, maxk, k, ltype='mean'):
-	nbrsX = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-							 p=2, n_jobs=1).fit(X)
+def _return_imb_linear_comb_two_dists(dist_indices_Y, d1, d2, a1, maxk, k=1,
+                                      ltype='mean'):
+    dX = np.sqrt((a1 ** 2 * d1 ** 2 + d2 ** 2))
 
-	_, dist_indices_X = nbrsX.kneighbors(X)
+    dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0:maxk + 1])
 
-	nXp_X = _return_imbalance(dist_indices_Xp, dist_indices_X, maxk, k=k, dtype=ltype)
-	nX_Xp = _return_imbalance(dist_indices_X, dist_indices_Xp, maxk, k=k, dtype=ltype)
+    nX_Y = _return_imbalance(dist_indices_X, dist_indices_Y, k=k, dtype=ltype)
+    nY_X = _return_imbalance(dist_indices_Y, dist_indices_X, k=k, dtype=ltype)
 
-	return nX_Xp, nXp_X
-
-
-def _return_loss_wdegeneracy(distances_1, distances_2):
-	N = distances_1.shape[0]
-
-	ranks = _return_ranks_wdegeneracy(distances_1, distances_2)
-
-	return (np.mean(ranks) - 1) / (N / 2. - 1)
+    return nX_Y, nY_X
 
 
-def load_coords_and_losses(coords_file='selected_coords.txt',
-						   losses_file='all_losses.npy'):
-	coords = np.genfromtxt(coords_file).astype(int)
+def _return_imb_linear_comb_three_dists(dist_indices_Y, d1, d2, d3, a1, a2, maxk, k=1,
+                                        ltype='mean'):
+    dX = np.sqrt((a1 ** 2 * d1 ** 2 + a2 ** 2 * d2 ** 2 + d3 ** 2))
 
-	losses = np.load(losses_file)
+    dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0:maxk + 1])
 
-	return coords, losses
+    nX_Y = _return_imbalance(dist_indices_X, dist_indices_Y, k=k, dtype=ltype)
+    nY_X = _return_imbalance(dist_indices_Y, dist_indices_X, k=k, dtype=ltype)
+
+    return nX_Y, nY_X
+
+
+
+# --------------------------------------------------------------------------------------
+# Others
+# --------------------------------------------------------------------------------------
 
 
 def _align_arrays(set1, err1, set2, err2=None):
-	"""Computes the constant offset between two sets of error-affected measures and returns the first array aligned to the second, shifted by such offset.
+    """Computes the constant offset between two sets of error-affected measures and returns the first array aligned to
+    the second, shifted by such offset.
 
-	The offset is computed by inverse-variance weighting least square linear regression of a constant law on the differences between the two sets.
+    The offset is computed by inverse-variance weighting least square linear regression of a constant law on the
+    differences between the two sets.
 
-	Args:
-		set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
-		err1 (np.array(float)): array containing the statistical errors on the values set1.
-		set2 (np.array(float)): array containing the reference set of values, to which set1 will be aligned.
-		err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given, set2 is assumed to contain errorless measures
+    Args:
+        set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
+        err1 (np.array(float)): array containing the statistical errors on the values set1.
+        set2 (np.array(float)): array containing the reference set of values, to which set1 will be aligned.
+        err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given,
+        set2 is assumed to contain errorless measures
 
-		Returns:
-			new_set2 (np.array(float)): set1 - offset
-			offset (float): constant offset between the two sets
-	"""
+        Returns:
+            new_set2 (np.array(float)): set1 - offset
+            offset (float): constant offset between the two sets
+    """
 
-	if (err2 is None):
-		assert(set1.shape == set2.shape == err1.shape)
-		w = 1./np.square(err1)
-	
-	else:
-		assert(set1.shape == set2.shape == err1.shape == err2.shape)
-		w = 1./(np.square(err1)+np.square(err2))
+    if (err2 is None):
+        assert (set1.shape == set2.shape == err1.shape)
+        w = 1. / np.square(err1)
 
-	diffs = set1 - set2
-	offset = np.average(diffs,weights=w)
+    else:
+        assert (set1.shape == set2.shape == err1.shape == err2.shape)
+        w = 1. / (np.square(err1) + np.square(err2))
 
-	return offset, set1-offset
+    diffs = set1 - set2
+    offset = np.average(diffs, weights=w)
+
+    return offset, set1 - offset
 
 
 def _compute_pull_variables(set1, err1, set2, err2=None):
-	"""Computes the pull distribution between two sets of error-affected measures.
+    """Computes the pull distribution between two sets of error-affected measures.
 
-	For each value i the pull vairable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
-	If err2 is not given, set2 is assumed to contain errorless measures.
+    For each value i the pull vairable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
+    If err2 is not given, set2 is assumed to contain errorless measures.
 
-	Args:
-		set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
-		err1 (np.array(float)): array containing the statistical errors on the values set1.
-		set2 (np.array(float)): array containing the reference set of values.
-		err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given, set2 is assumed to contain errorless measures
+    Args:
+        set1 (np.array(float)): array containing the first set of values, to be aligned to set2.
+        err1 (np.array(float)): array containing the statistical errors on the values set1.
+        set2 (np.array(float)): array containing the reference set of values.
+        err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given,
+        set2 is assumed to contain errorless measures
 
-		Returns:
-			pull (np.array(float)): array of the pull variables
-	"""
+        Returns:
+            pull (np.array(float)): array of the pull variables
+    """
 
-	if (err2 is None):
-		assert(set1.shape == set2.shape == err1.shape)
-		return ( set1 - set2 ) / err1
-	
-	else:
-		assert(set1.shape == set2.shape == err1.shape == err2.shape)
-		den = np.sqrt(np.square(err1)+np.square(err2))
-		return ( set1 - set2 ) / den    
+    if (err2 is None):
+        assert (set1.shape == set2.shape == err1.shape)
+        return (set1 - set2) / err1
+
+    else:
+        assert (set1.shape == set2.shape == err1.shape == err2.shape)
+        den = np.sqrt(np.square(err1) + np.square(err2))
+        return (set1 - set2) / den

@@ -2,12 +2,14 @@ import multiprocessing
 
 import numpy as np
 from joblib import Parallel, delayed
+from sklearn.neighbors import NearestNeighbors
 
 import duly.utils_.mlmax as mlmax
 import duly.utils_.utils as ut
 from duly._base import Base
 
 cores = multiprocessing.cpu_count()
+
 
 class MetricComparisons(Base):
     """This class contains several methods to compare metric spaces obtained using subsets of the data features.
@@ -22,8 +24,8 @@ class MetricComparisons(Base):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
 
-    def return_inf_imb_of_coords(self, k=1, dtype='mean'):
-        """Compute the information imbalances between all pairs of D features of the data
+    def return_inf_imb_pairs_of_coords(self, k=1, dtype='mean'):
+        """Compute the information imbalances between all pairs of D features of the data.
 
         Args:
             k (int): number of neighbours considered in the computation of the imbalances
@@ -63,8 +65,8 @@ class MetricComparisons(Base):
 
         return n_mat
 
-    def return_inf_imb_with_all_coords(self, k=1, dtype='mean'):
-        """Compute the information imbalances between the original space and each one of its D features
+    def return_inf_imb_full_all_coords(self, k=1, dtype='mean'):
+        """Compute the information imbalances between the 'full' space and each one of its D features
 
         Args:
             k (int): number of neighbours considered in the computation of the imbalances
@@ -79,30 +81,13 @@ class MetricComparisons(Base):
 
         ncoords = self.X.shape[1]
 
-        if self.njobs == 1:
-            n1s_n2s = []
+        coord_list = [[i] for i in range(ncoords)]
+        imbalances = self.return_inf_imb_full_selected_coords(coord_list, k=k, dtype=dtype)
 
-            for i in range(ncoords):
-                if self.verb is True: print('computing loss with coord number ', i)
+        return imbalances
 
-                n0i, ni0 = ut._return_imb_with_coords(self.X, [i], self.dist_indices, self.maxk, k,
-                                                      dtype)
-                n1s_n2s.append((n0i, ni0))
-
-        elif self.njobs > 1:
-            if self.verb == True: print(
-                'computing loss with coord number on {} processors'.format(self.njobs))
-            n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(ut._return_imb_with_coords)(self.X, [i], self.dist_indices, self.maxk, k,
-                                                    dtype) for
-                i in range(ncoords))
-        else:
-            raise ValueError("njobs cannot be negative")
-
-        return np.array(n1s_n2s).T
-
-    def return_inf_imb_with_selected_coords(self, coord_list, k=1, dtype='mean'):
-        """Compute the information imbalances between the original space and a selection of features
+    def return_inf_imb_full_selected_coords(self, coord_list, k=1, dtype='mean'):
+        """Compute the information imbalances between the 'full' space and a selection of features.
 
         Args:
             coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
@@ -120,117 +105,118 @@ class MetricComparisons(Base):
 
         print('total number of computations is: ', len(coord_list))
 
+        imbalances = self.return_inf_imb_target_selected_coords(self.dist_indices, coord_list, k=k, dtype=dtype)
+
+        return imbalances
+
+    def return_inf_imb_target_all_coords(self, target_ranks, k=1, dtype='mean'):
+        """Compute the information imbalances between the 'target' space and a all single feature spaces in X.
+
+        Args:
+            target_ranks (np.array(int)): an array containing the ranks in the target space
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+
+        Returns:
+            (np.array(float)): a 2xL matrix containing the information imbalances between
+            the target space and each one of the L subspaces defined in coord_list
+
+        """
+        assert (self.X is not None)
+
+        ncoords = self.X.shape[1]
+
+        coord_list = [[i] for i in range(ncoords)]
+        imbalances = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
+
+        return imbalances
+
+    def return_inf_imb_target_selected_coords(self, target_ranks, coord_list, k=1, dtype='mean'):
+        """Compute the information imbalances between the 'target' space and a selection of features.
+
+        Args:
+            target_ranks (np.array(int)): an array containing the ranks in the target space
+            coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
+            sub-list defines a set of coordinates for which the information imbalance should be
+            computed.
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+
+        Returns:
+            (np.array(float)): a 2xL matrix containing the information imbalances between
+            the target space and each one of the L subspaces defined in coord_list
+
+        """
+        assert self.X is not None
+        assert target_ranks.shape[0] == self.X.shape[0]
+
+        print('total number of computations is: ', len(coord_list))
+
         if self.njobs == 1:
             n1s_n2s = []
 
             for coords in coord_list:
                 if self.verb == True: print('computing loss with coord selection')
 
-                n0i, ni0 = ut._return_imb_with_coords(self.X, coords, self.dist_indices, self.maxk, k,
-                                                      dtype)
+                n0i, ni0 = ut._return_imb_with_coords(self.X, coords, target_ranks, self.maxk, k, dtype)
                 n1s_n2s.append((n0i, ni0))
 
         elif self.njobs > 1:
             if self.verb is True: print(
                 'computing loss with coord number on {} processors'.format(self.njobs))
             n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(ut._return_imb_with_coords)(self.X, coords, self.dist_indices, self.maxk, k,
-                                                    dtype)
+                delayed(ut._return_imb_with_coords)(self.X, coords, target_ranks, self.maxk, k, dtype)
                 for coords in coord_list)
         else:
             raise ValueError("njobs cannot be negative")
 
         return np.array(n1s_n2s).T
 
-    def return_min_imbalance_between_selected_coords(self, coord_list1, coord_list2, k=1,
-                                                     ltype='mean', params0=None):
-        assert (self.X is not None)
+    def greedy_feature_selection_full(self, n_coords, k=1, dtype='mean', symm=True):
+        """Greedy selection of the set of coordinates which is most informative about full distance measure.
 
-        if params0 is None:
+        Args:
+            n_coords: number of coodinates after which the algorithm is stopped
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+            symm (bool): whether to use the symmetrised information imbalance
 
-            # params0 = np.array(
-            #     [1. / len(coord_list1)] * (len(coord_list1) - 1) + [1. / len(coord_list2)] * (
-            #             len(coord_list2) - 1))
-
-            params0 = np.random.uniform(0, 1, size=(len(coord_list1) + len(coord_list2)))
-        else:
-
-            assert (params0.shape[0] == len(coord_list1) + len(coord_list2))
-
-        X1 = self.X[:, coord_list1]
-        X2 = self.X[:, coord_list2]
-
-        params, minimb = mlmax.Min_Symm_Imbalance(X1, X2, self.maxk, k, ltype, params0)
-
-        return params, minimb
-
-    def iterative_construction_of_sparse_representation(self, n_coords, k, ltype='mean'):
-        print('taking dataset as the complete representation')
+        Returns:
+            selected_coords:
+            all_imbalances:
+        """
+        print('taking full space as the complete representation')
         assert self.X is not None
+        selected_coords, all_imbalances = self.greedy_feature_selection_target(self.dist_indices, n_coords, k,
+                                                                               dtype=dtype, symm=symm)
 
-        D = self.X.shape[1]
+        return selected_coords, all_imbalances
 
-        # select initial coordinate as the most informative
-        losses = self.return_inf_imb_with_all_coords(k=k, dtype=ltype)
-        proj = np.dot(losses.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
+    def greedy_feature_selection_target(self, target_ranks, n_coords, k, dtype='mean', symm=True):
+        """Greedy selection of the set of coordinates which is most informative about a target distance.
 
-        selected_coord = np.argmin(proj)
+        Args:
+            n_coords: number of coodinates after which the algorithm is stopped
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+            symm (bool): whether to use the symmetrised information imbalance
 
-        print('1 coordinate selected: ', selected_coord)
-
-        other_coords = list(np.arange(D).astype(int))
-
-        other_coords.remove(selected_coord)
-
-        selected_coords = [selected_coord]
-
-        all_losses = [losses]
-
-        np.savetxt('selected_coords.txt', selected_coords, fmt="%i")
-        np.save('all_losses.npy', all_losses)
-
-        for i in range(n_coords):
-            coord_list = [selected_coords + [oc] for oc in other_coords]
-
-            losses_ = self.return_inf_imb_with_selected_coords(coord_list, k=k, dtype=ltype)
-            losses = np.empty((2, D))
-            losses[:, :] = None
-            losses[:, other_coords] = losses_
-
-            proj = np.dot(losses_.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
-
-            selected_coord = other_coords[np.argmin(proj)]
-
-            print('{} coordinate selected: '.format(i + 2), selected_coord)
-
-            other_coords.remove(selected_coord)
-
-            selected_coords.append(selected_coord)
-
-            all_losses.append(losses)
-
-            np.savetxt('selected_coords.txt', selected_coords, fmt='%i')
-            np.save('all_losses.npy', all_losses)
-
-        return selected_coords, all_losses
-
-    def iterative_construction_of_sparse_representation_wlabel(self, n_coords, k, ltype='mean',
-                                                               symm=True):
+        Returns:
+            selected_coords:
+            all_imbalances:
+        """
         print('taking labels as the reference representation')
         assert self.X is not None
-        assert (self.gt_labels is not None)
-        assert (type(self.gt_labels[0]) == np.ndarray)
 
         D = self.X.shape[1]
 
-        # select ground truth label coordinate as the most informative
-        losses = self.return_neigh_loss_of_labels_with_all_coords(k=k, ltype=ltype)
+        imbalances = self.return_inf_imb_target_all_coords(target_ranks, k=k, dtype=dtype)
 
-        if symm == True:
-            proj = np.dot(losses.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
+        if symm:
+            proj = np.dot(imbalances.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
             selected_coord = np.argmin(proj)
         else:
-            selected_coord = np.argmin(losses[1])
+            selected_coord = np.argmin(imbalances[1])
 
         print('1 coordinate selected: ', selected_coord)
 
@@ -240,25 +226,24 @@ class MetricComparisons(Base):
 
         selected_coords = [selected_coord]
 
-        all_losses = [losses]
+        all_imbalances = [imbalances]
 
         np.savetxt('selected_coords.txt', selected_coords, fmt="%i")
-        np.save('all_losses.npy', all_losses)
+        np.save('all_losses.npy', all_imbalances)
 
         for i in range(n_coords):
             coord_list = [selected_coords + [oc] for oc in other_coords]
 
-            losses_ = self.return_neigh_loss_of_labels_with_selected_coords(coord_list, k=k,
-                                                                            ltype=ltype)
-            losses = np.empty((2, D))
-            losses[:, :] = None
-            losses[:, other_coords] = losses_
+            imbalances_ = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
+            imbalances = np.empty((2, D))
+            imbalances[:, :] = None
+            imbalances[:, other_coords] = imbalances_
 
-            if symm == True:
-                proj = np.dot(losses_.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
+            if symm:
+                proj = np.dot(imbalances_.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
                 to_select = np.argmin(proj)
             else:
-                to_select = np.argmin(losses_[1])
+                to_select = np.argmin(imbalances_[1])
 
             selected_coord = other_coords[to_select]
 
@@ -268,92 +253,46 @@ class MetricComparisons(Base):
 
             selected_coords.append(selected_coord)
 
-            all_losses.append(losses)
+            all_imbalances.append(imbalances)
 
-            np.savetxt('selected_coords.txt', selected_coords, fmt="%i")
-            np.save('all_losses.npy', all_losses)
+            np.savetxt('selected_coords.txt', selected_coords, fmt='%i')
+            np.save('all_losses.npy', all_imbalances)
 
-        return selected_coords, all_losses
+        return selected_coords, all_imbalances
 
-    def iterative_construction_of_sparse_representation_permsym(self, n_coords, k, nsym):
-        print('taking dataset as the complete representation')
-        assert self.X is not None
+    def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1, dtype='mean'):
+        """Compute the information imbalances between a target distance and all possinle combinations of d coordinates
+        contained of X.
+
+        Args:
+            target_ranks (np.array(int)): an array containing the ranks in the target space
+            d:
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+            symm (bool): whether to use the symmetrised information imbalance
+
+        Returns:
+
+        """
+        assert (self.X is not None)
+        import itertools
+
+        print("WARNING:  computational cost grows combinatorially! Don't forget to save the results.")
+
+        if self.verb == True:
+            print("computing loss between all {}-plets and the target label".format(d))
 
         D = self.X.shape[1]
 
-        assert (D % nsym == 0)
+        all_coords = list(np.arange(D).astype(int))
 
-        ncoords = int(D / nsym)
-        print(D, nsym, ncoords)
-        # select initial coordinate as the most informative
-        coord_list = []
+        coord_list = list(itertools.combinations(all_coords, d))
 
-        for i in range(ncoords):
-            sym_coord = [i + j * ncoords for j in range(nsym)]
-            coord_list.append(sym_coord)
+        imbalances = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
 
-        losses = self.return_inf_imb_with_selected_coords(coord_list, k=k)
+        return np.array(coord_list), np.array(imbalances)
 
-        proj = np.dot(losses.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
-
-        selected_coord = np.argmin(proj)
-
-        print('1 coordinate selected: ', selected_coord)
-
-        other_coords = list(np.arange(ncoords).astype(int))
-
-        other_coords.remove(selected_coord)
-
-        selected_coords = [selected_coord]
-
-        all_losses = [losses]
-
-        np.savetxt('selected_coords.txt', selected_coords, fmt="%i")
-
-        for i in range(n_coords):
-
-            coord_list_idx = [selected_coords + [oc] for oc in other_coords]
-
-            coord_list = []
-
-            for cli in coord_list_idx:
-                sym_coords = []
-
-                for i in cli:
-                    sym_coord = [i + j * ncoords for j in range(nsym)]
-                    sym_coords += sym_coord
-
-                coord_list.append(sym_coords)
-
-            losses = self.return_inf_imb_with_selected_coords(coord_list, k=k)
-
-            proj = np.dot(losses.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
-
-            selected_coord = other_coords[np.argmin(proj)]
-
-            print('{} coordinate selected: '.format(i + 2), selected_coord)
-
-            other_coords.remove(selected_coord)
-
-            selected_coords.append(selected_coord)
-
-            all_losses.append(losses)
-
-            np.savetxt('selected_coords.txt', selected_coords, fmt='%i')
-
-            with open('all_losses.txt', 'w') as f:
-                for i, loss in enumerate(all_losses):
-                    f.write('### losses for coord ' + str(i + 1) + ' ###' + '\n')
-                    for l in loss:
-                        for ll in l:
-                            f.write(str(ll))
-                            f.write(' ')
-                        f.write('\n')
-                    f.write('\n')
-
-        return selected_coords, all_losses
-
-    def get_coordinates_infomation_ranking(self):
+    def return_coordinates_infomation_ranking(self):
         print('taking dataset as the complete representation')
         assert self.X is not None
 
