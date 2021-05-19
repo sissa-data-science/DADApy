@@ -2,9 +2,7 @@ import multiprocessing
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.neighbors import NearestNeighbors
 
-import duly.utils_.mlmax as mlmax
 import duly.utils_.utils as ut
 from duly._base import Base
 
@@ -44,15 +42,16 @@ class MetricComparisons(Base):
 
             for i in range(ncoords):
                 for j in range(i):
-                    if self.verb == True: print('computing loss between coords ', i, j)
+                    if self.verb:
+                        print('computing loss between coords ', i, j)
 
                     nij, nji = ut._return_imb_ij(i, j, self.maxk, self.X, k, dtype)
                     n_mat[i, j] = nij
                     n_mat[j, i] = nji
 
         elif self.njobs > 1:
-            if self.verb is True: print(
-                'computing imbalances with coord number on {} processors'.format(self.njobs))
+            if self.verb:
+                print('computing imbalances with coord number on {} processors'.format(self.njobs))
 
             nmats = Parallel(n_jobs=self.njobs)(
                 delayed(ut._return_imb_ij)(i, j, self.maxk, self.X, k, dtype) for i in range(ncoords) for j in range(i))
@@ -156,14 +155,15 @@ class MetricComparisons(Base):
             n1s_n2s = []
 
             for coords in coord_list:
-                if self.verb == True: print('computing loss with coord selection')
+                if self.verb:
+                    print('computing loss with coord selection')
 
                 n0i, ni0 = ut._return_imb_with_coords(self.X, coords, target_ranks, self.maxk, k, dtype)
                 n1s_n2s.append((n0i, ni0))
 
         elif self.njobs > 1:
-            if self.verb is True: print(
-                'computing loss with coord number on {} processors'.format(self.njobs))
+            if self.verb:
+                print('computing loss with coord number on {} processors'.format(self.njobs))
             n1s_n2s = Parallel(n_jobs=self.njobs)(
                 delayed(ut._return_imb_with_coords)(self.X, coords, target_ranks, self.maxk, k, dtype)
                 for coords in coord_list)
@@ -196,6 +196,7 @@ class MetricComparisons(Base):
         """Greedy selection of the set of coordinates which is most informative about a target distance.
 
         Args:
+            target_ranks (np.array(int)): an array containing the ranks in the target space
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
             dtype (str): specific way to characterise the deviation from a delta distribution
@@ -208,7 +209,7 @@ class MetricComparisons(Base):
         print('taking labels as the reference representation')
         assert self.X is not None
 
-        D = self.X.shape[1]
+        dims = self.dims
 
         imbalances = self.return_inf_imb_target_all_coords(target_ranks, k=k, dtype=dtype)
 
@@ -220,7 +221,7 @@ class MetricComparisons(Base):
 
         print('1 coordinate selected: ', selected_coord)
 
-        other_coords = list(np.arange(D).astype(int))
+        other_coords = list(np.arange(dims).astype(int))
 
         other_coords.remove(selected_coord)
 
@@ -235,7 +236,7 @@ class MetricComparisons(Base):
             coord_list = [selected_coords + [oc] for oc in other_coords]
 
             imbalances_ = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
-            imbalances = np.empty((2, D))
+            imbalances = np.empty((2, dims))
             imbalances[:, :] = None
             imbalances[:, other_coords] = imbalances_
 
@@ -261,7 +262,7 @@ class MetricComparisons(Base):
         return selected_coords, all_imbalances
 
     def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1, dtype='mean'):
-        """Compute the information imbalances between a target distance and all possinle combinations of d coordinates
+        """Compute the information imbalances between a target distance and all possible combinations of d coordinates
         contained of X.
 
         Args:
@@ -269,7 +270,6 @@ class MetricComparisons(Base):
             d:
             k (int): number of neighbours considered in the computation of the imbalances
             dtype (str): specific way to characterise the deviation from a delta distribution
-            symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
 
@@ -279,7 +279,7 @@ class MetricComparisons(Base):
 
         print("WARNING:  computational cost grows combinatorially! Don't forget to save the results.")
 
-        if self.verb == True:
+        if self.verb:
             print("computing loss between all {}-plets and the target label".format(d))
 
         D = self.X.shape[1]
@@ -308,7 +308,7 @@ class MetricComparisons(Base):
             print('niter is ', i)
 
             print(self.X.shape)
-            nls = self.return_neigh_loss_with_coords(k=1)
+            nls = self.return_inf_imb_full_all_coords(k=1)
 
             projection = nls.T.dot([np.sqrt(0.5), np.sqrt(0.5)])
 
@@ -318,7 +318,8 @@ class MetricComparisons(Base):
 
             self.X = np.delete(self.X, idx_to_remove, 1)
 
-            if i < (d - 1): self.compute_distances(maxk=self.Nele, njobs=1)
+            if i < (d - 1):
+                self.compute_distances(maxk=self.Nele, njobs=1)
 
             coords_kept.pop(idx_to_remove)
 
