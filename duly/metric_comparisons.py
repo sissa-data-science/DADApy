@@ -2,6 +2,7 @@ import multiprocessing
 
 import numpy as np
 from joblib import Parallel, delayed
+from sklearn.neighbors import NearestNeighbors
 
 import duly.utils_.utils as ut
 from duly._base import Base
@@ -22,7 +23,39 @@ class MetricComparisons(Base):
         super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
                          njobs=njobs)
 
-    def return_inf_imb_pairs_of_coords(self, k=1, dtype='mean'):
+    def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1, dtype='mean'):
+        """Returns the imbalances between distances taken as the i and the j component of the coordinate matrix X.
+
+        Args:
+            coords1 (list(int)): components for the first distance
+            coords2 (list(int)): components for the second distance
+            maxk (int): number of nearest neighbours to be computed
+            k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
+            dtype (str): type of information imbalance computation, default is 'mean'
+
+        Returns:
+            (float, float): the information imbalance from distance i to distance j and vice versa
+        """
+        X_ = self.X[:, coords1]
+
+        nbrs = NearestNeighbors(n_neighbors=self.maxk, algorithm='auto', metric='minkowski',
+                                p=2, n_jobs=1).fit(X_)
+
+        _, dist_indices_i = nbrs.kneighbors(X_)
+
+        X_ = self.X[:, coords2]
+
+        nbrs = NearestNeighbors(n_neighbors=self.maxk, algorithm='auto', metric='minkowski',
+                                p=2, n_jobs=1).fit(X_)
+
+        _, dist_indices_j = nbrs.kneighbors(X_)
+
+        imb_ij = ut._return_imbalance(dist_indices_i, dist_indices_j, k=k, dtype=dtype)
+        imb_ji = ut._return_imbalance(dist_indices_j, dist_indices_i, k=k, dtype=dtype)
+
+        return imb_ij, imb_ji
+
+    def return_inf_imb_matrix_of_coords(self, k=1, dtype='mean'):
         """Compute the information imbalances between all pairs of D features of the data.
 
         Args:
@@ -34,7 +67,7 @@ class MetricComparisons(Base):
         """
         assert (self.X is not None)
 
-        ncoords = self.X.shape[1]
+        ncoords = self.dims
 
         n_mat = np.zeros((ncoords, ncoords))
 
@@ -45,7 +78,7 @@ class MetricComparisons(Base):
                     if self.verb:
                         print('computing loss between coords ', i, j)
 
-                    nij, nji = ut._return_imb_ij(i, j, self.maxk, self.X, k, dtype)
+                    nij, nji = self.return_inf_imb_two_selected_coords([i], [j], k, dtype)
                     n_mat[i, j] = nij
                     n_mat[j, i] = nji
 
@@ -54,11 +87,12 @@ class MetricComparisons(Base):
                 print('computing imbalances with coord number on {} processors'.format(self.njobs))
 
             nmats = Parallel(n_jobs=self.njobs)(
-                delayed(ut._return_imb_ij)(i, j, self.maxk, self.X, k, dtype) for i in range(ncoords) for j in range(i))
+                delayed(self.return_inf_imb_two_selected_coords)([i], [j], k, dtype) for i in range(ncoords) for j in range(i))
 
             indices = [(i, j) for i in range(ncoords) for j in range(i)]
 
             for idx, n in zip(indices, nmats):
+                print(indices, nmats)
                 n_mat[idx[0], idx[1]] = n[0]
                 n_mat[idx[1], idx[0]] = n[1]
 
@@ -123,7 +157,7 @@ class MetricComparisons(Base):
         """
         assert (self.X is not None)
 
-        ncoords = self.X.shape[1]
+        ncoords = self.dims
 
         coord_list = [[i] for i in range(ncoords)]
         imbalances = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
@@ -153,11 +187,9 @@ class MetricComparisons(Base):
 
         if self.njobs == 1:
             n1s_n2s = []
-
             for coords in coord_list:
                 if self.verb:
                     print('computing loss with coord selection')
-
                 n0i, ni0 = ut._return_imb_with_coords(self.X, coords, target_ranks, self.maxk, k, dtype)
                 n1s_n2s.append((n0i, ni0))
 

@@ -18,7 +18,8 @@ The code can be found on GitHub at https://github.com/sissa-data-science/DULY.
    implemented_algorithms
    usage
    modules
-   jupyter_example
+   jupyter_example_1
+   jupyter_example_2
    
    
 Indices and tables

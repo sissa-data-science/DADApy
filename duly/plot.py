@@ -6,12 +6,11 @@ from scipy.cluster import hierarchy
 from sklearn import manifold
 
 
-def plot_ID_line_fit_estimation(Data, decimation = 0.9, fraction_used=0.9):
-
+def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
     mus = Data.distances[:, 2] / Data.distances[:, 1]
 
-    idx  = np.arange(mus.shape[0])
-    idx = np.random.choice(idx, size=(int(np.around(Data.Nele*decimation))), replace = False)
+    idx = np.arange(mus.shape[0])
+    idx = np.random.choice(idx, size=(int(np.around(Data.Nele * decimation))), replace=False)
     mus = mus[idx]
 
     mus = np.sort(np.sort(mus))
@@ -23,7 +22,7 @@ def plot_ID_line_fit_estimation(Data, decimation = 0.9, fraction_used=0.9):
 
     x_, y_ = np.atleast_2d(x[:Nele_eff]).T, y[:Nele_eff]
 
-    slope, residuals, rank, s = np.linalg.lstsq(x_, y_, rcond=None)#x[:Nele_eff, None]?
+    slope, residuals, rank, s = np.linalg.lstsq(x_, y_, rcond=None)  # x[:Nele_eff, None]?
 
     plt.plot(x, y, 'o')
     plt.plot(x[:Nele_eff], y[:Nele_eff], 'o')
@@ -34,11 +33,10 @@ def plot_ID_line_fit_estimation(Data, decimation = 0.9, fraction_used=0.9):
 
     plt.xlabel('log(mu)')
     plt.ylabel('-log(1-F(mu))')
-    #plt.savefig('ID_line_fit_plot.png')
+    # plt.savefig('ID_line_fit_plot.png')
 
 
-def plot_ID_vs_fraction(Data, fractions = np.linspace(0.1, 1, 25)):
-
+def plot_ID_vs_fraction(Data, fractions=np.linspace(0.1, 1, 25)):
     IDs = []
     IDs_errs = []
     verbose = Data.verb
@@ -50,14 +48,13 @@ def plot_ID_vs_fraction(Data, fractions = np.linspace(0.1, 1, 25)):
         IDs_errs.append(Data.id_estimated_ml_std)
 
     Data.verb = verbose
-    plt.errorbar(fractions*Data.Nele, IDs, yerr=IDs_errs)
+    plt.errorbar(fractions * Data.Nele, IDs, yerr=IDs_errs)
     plt.xlabel('N')
     plt.ylabel('estimated ID')
-    #plt.savefig('ID_decimation_plot.png')
+    # plt.savefig('ID_decimation_plot.png')
 
 
-def plot_ID_vs_nneigh(Data, nneighs = np.arange(2, 90)):
-
+def plot_ID_vs_nneigh(Data, nneighs=np.arange(2, 90)):
     IDs = []
     IDs_errs = []
     verbose = Data.verb
@@ -67,16 +64,15 @@ def plot_ID_vs_nneigh(Data, nneighs = np.arange(2, 90)):
         Data.compute_id_diego(nneigh=nneigh)
         IDs.append(Data.id_estimated_ml)
 
-
     Data.verb = verbose
-    plt.plot(1./nneighs, IDs)
-    #plt.xscale('log')
+    plt.plot(1. / nneighs, IDs)
+    # plt.xscale('log')
     plt.xlabel('1/nneigh')
     plt.ylabel('estimated ID')
-    #plt.savefig('ID_neighs_plot.png')
+    # plt.savefig('ID_neighs_plot.png')
 
 
-def plot_SLAn(Data, linkage = 'single'):
+def plot_SLAn(Data, linkage='single'):
     assert (Data.labels is not None)
 
     nd = int((Data.Nclus_m * Data.Nclus_m - Data.Nclus_m) / 2)
@@ -89,7 +85,7 @@ def plot_SLAn(Data, linkage = 'single'):
         for j in range(i + 1, Data.Nclus_m):
             Dis[nl] = Fmax - Rho_bord_m[i][j]
             nl = nl + 1
-    
+
     if linkage == 'single':
         DD = sp.cluster.hierarchy.single(Dis)
     elif linkage == 'complete':
@@ -100,10 +96,10 @@ def plot_SLAn(Data, linkage = 'single'):
         DD = sp.cluster.hierarchy.weighted(Dis)
     else:
         print('ERROR: select a valid linkage criterion')
-        
+
     fig, ax = plt.subplots(nrows=1, ncols=1)  # create figure & 1 axis
     dn = sp.cluster.hierarchy.dendrogram(DD)
-    #fig.savefig('dendrogramm.png')  # save the figure to file
+    # fig.savefig('dendrogramm.png')  # save the figure to file
     plt.show()
     # plt.close(fig)  # close the figure
 
@@ -143,7 +139,7 @@ def plot_MDS(Data):
     lc.set_facecolor(np.full(len(segments), 'black'))
     lc.set_linewidths(0.02 * Rho_bord_m.flatten())
     ax.add_collection(lc)
-    #fig.savefig('2D.png')
+    # fig.savefig('2D.png')
     plt.show()
     # plt.close(fig)  # close the figure
 
@@ -155,13 +151,32 @@ def plot_matrix(Data):
     for j in range(Data.Nclus_m):
         topography[j, j] = Data.Rho[Data.centers_m[j]]
     plt.imshow(topography, cmap='hot', interpolation='nearest')
-    #fig.savefig('matrix.png')
+    # fig.savefig('matrix.png')
     plt.show()
     # plt.close(fig)  # close the figure
 
-def plot_inf_imb_plane(imbalances):
 
-    pass
+def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
+    plt.figure(figsize=(4, 4))
+    for i, (imb0, imb1) in enumerate(imbalances.T):
+        if coord_list is not None:
+            if labels is not None:
+                label = [labels[c] for c in coord_list[i]]
+            else:
+                label = coord_list[i]
+        else:
+            label = ''
+
+        plt.scatter(imb0, imb1, label=label)
+
+    plt.plot([0, 1], [0, 1], 'k--')
+
+    if coord_list is not None:
+        plt.legend()
+
+    plt.xlabel(r'$\Delta(X_{full} \rightarrow X_{coords}) $')
+    plt.ylabel(r'$\Delta(X_{full} \rightarrow X_{coords}) $')
+
 
 if __name__ == '__main__':
     # generate some random points in n dimensions

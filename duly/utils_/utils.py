@@ -217,40 +217,6 @@ def _return_imbalance(dist_indices_1, dist_indices_2, k=1, dtype='mean'):
     return imb
 
 
-def _return_imb_ij(i, j, maxk, X, k, dtype):
-    """Returns the imbalances between distances taken as the i and the j component of the coordinate matrix X.
-
-    Args:
-        i (int): component for the first distance
-        j (int): component for the second distance
-        maxk (int): number of nearest neighbours to be computed
-        X (float[:, :]): coordinate matrix
-        k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
-        dtype (str): type of information imbalance computation, default is 'mean'
-
-    Returns:
-        (float, float): the information imbalance from distance i to distance j and vice versa
-    """
-    X_ = X[:, [i]]
-
-    nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-                            p=2, n_jobs=1).fit(X_)
-
-    _, dist_indices_i = nbrs.kneighbors(X_)
-
-    X_ = X[:, [j]]
-
-    nbrs = NearestNeighbors(n_neighbors=maxk, algorithm='auto', metric='minkowski',
-                            p=2, n_jobs=1).fit(X_)
-
-    _, dist_indices_j = nbrs.kneighbors(X_)
-
-    nij = _return_imbalance(dist_indices_i, dist_indices_j, k=k, dtype=dtype)
-    nji = _return_imbalance(dist_indices_j, dist_indices_i, k=k, dtype=dtype)
-
-    return nij, nji
-
-
 def _return_imb_with_coords(X, coords, dist_indices, maxk, k, dtype='mean'):
     """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
      built using a subset of coordinates.
@@ -272,7 +238,6 @@ def _return_imb_with_coords(X, coords, dist_indices, maxk, k, dtype='mean'):
                             p=2, n_jobs=1).fit(X_)
 
     _, dist_indices_coords = nbrs.kneighbors(X_)
-
     imb_coords_full = _return_imbalance(dist_indices_coords, dist_indices, k=k, dtype=dtype)
     imb_full_coords = _return_imbalance(dist_indices, dist_indices_coords, k=k, dtype=dtype)
     print('computing imbalances with coords ', coords)
