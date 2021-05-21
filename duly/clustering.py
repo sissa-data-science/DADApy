@@ -42,7 +42,8 @@ class Clustering(DensityEstimation):
     def compute_clustering_optimised(self, Z=1.65, halo=False):
         from duly.cython_ import cython_functions as cf
         assert (self.Rho is not None)
-        if self.verb: print('Clustering started')
+        if self.verb:
+            print('Clustering started')
 
         # Make all values of Rho positives (this is important to help convergence)
         Rho_min = np.min(self.Rho)
@@ -50,7 +51,7 @@ class Clustering(DensityEstimation):
         Rho_c = self.Rho + np.log(self.Nele)
         Rho_c = Rho_c - Rho_min + 1
 
-        # Putative modes of the PDF as preliminar clusters
+        # Putative modes of the PDF as preliminary clusters
 
         Nele = self.distances.shape[0]
         g = Rho_c - self.Rho_err

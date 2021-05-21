@@ -90,7 +90,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_kstar(self, Dthr=23.92):
+    def compute_kstar(self, Dthr=23.92812698):
         """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
 
         Args:
@@ -100,17 +100,19 @@ class DensityEstimation(IdEstimation):
         Returns:
 
         """
-        if self.id_selected is None: self.compute_id_2NN()
+        if self.id_selected is None:
+            self.compute_id_2NN()
 
-        if self.verb: print('kstar estimation started, Dthr = {}'.format(Dthr))
+        if self.verb:
+            print('kstar estimation started, Dthr = {}'.format(Dthr))
 
         # Dthr = 23.92812698  # this threshold value corresponds to being sure within a p-value
         # of 1E-6 that the k-NN densities, do not touch unless you really know what you are doing
 
-        # Array inizialization for kstar
+        # Array initialization for kstar
         kstar = np.empty(self.Nele, dtype=int)
         prefactor = np.exp(
-            self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
+            self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2.) / 2.))
 
         sec = time.time()
         for i in range(self.Nele):
@@ -125,8 +127,8 @@ class DensityEstimation(IdEstimation):
                 j = j + 1
             kstar[i] = j - 2
         sec2 = time.time()
-        if self.verb: print(
-            "{0:0.2f} seconds finding the optimal k for all the points".format(sec2 - sec))
+        if self.verb:
+            print("{0:0.2f} seconds finding the optimal k for all the points".format(sec2 - sec))
 
         self.kstar = kstar
 
@@ -134,7 +136,6 @@ class DensityEstimation(IdEstimation):
 
     def compute_density_kstarNN(self):
         if self.kstar is None: self.compute_kstar()
-        kstar = self.kstar
 
         if self.verb: print('kstar-NN density estimation started')
 
@@ -147,10 +148,9 @@ class DensityEstimation(IdEstimation):
         Rho_min = 9.9E300
 
         for i in range(self.Nele):
-            k = kstar[i]
+            k = self.kstar[i]
             dc[i] = self.distances[i, k]
             Rho[i] = np.log(k) - np.log(prefactor)
-
             rk = self.distances[i, k]
 
             Rho[i] -= self.id_selected * np.log(rk)
@@ -181,25 +181,24 @@ class DensityEstimation(IdEstimation):
 
         # compute optimal k
         if self.kstar is None: self.compute_kstar()
-        kstar = self.kstar
 
         if self.verb: print('PAk density estimation started')
 
-        dc = np.empty(self.Nele, dtype=float)
-        Rho = np.empty(self.Nele, dtype=float)
-        Rho_err = np.empty(self.Nele, dtype=float)
-        vi = np.empty(self.maxk, dtype=float)
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
         prefactor = np.exp(
-            self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
+            self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2.) / 2.))
         Rho_min = 9.9E300
 
         sec = time.time()
         for i in range(self.Nele):
-            dc[i] = self.distances[i, kstar[i]]
-            rr = np.log(kstar[i]) - (
-                    np.log(prefactor) + self.id_selected * np.log(self.distances[i, kstar[i]]))
+            vi = np.zeros(self.maxk, dtype=float)
+            dc[i] = self.distances[i, self.kstar[i]]
+            rr = np.log(self.kstar[i]) - (
+                    np.log(prefactor) + self.id_selected * np.log(self.distances[i, self.kstar[i]]))
             knn = 0
-            for j in range(kstar[i]):
+            for j in range(self.kstar[i]):
                 # to avoid easy overflow
                 vi[j] = prefactor * (pow(self.distances[i, j + 1], self.id_selected) - pow(
                     self.distances[i, j], self.id_selected))
@@ -213,10 +212,10 @@ class DensityEstimation(IdEstimation):
                     break
             if (knn == 0):
                 if (method == 'NR'):
-                    Rho[i] = cf._nrmaxl(rr, kstar[i], vi, self.maxk)
+                    Rho[i] = cf._nrmaxl(rr, self.kstar[i], vi, self.maxk)
                 elif (method == 'NM'):
                     from duly.utils_.mlmax import MLmax
-                    Rho[i] = MLmax(rr, kstar[i], vi)
+                    Rho[i] = MLmax(rr, self.kstar[i], vi)
                 else:
                     raise ValueError("Please choose a valid method")
                 # Rho[i] = NR.nrmaxl(rr, kstar[i], vi, self.maxk) # OLD FORTRAN
@@ -225,7 +224,7 @@ class DensityEstimation(IdEstimation):
             if (Rho[i] < Rho_min):
                 Rho_min = Rho[i]
 
-            Rho_err[i] = np.sqrt((4 * kstar[i] + 2) / (kstar[i] * (kstar[i] - 1)))
+            Rho_err[i] = np.sqrt((4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1)))
 
         sec2 = time.time()
         if self.verb: print(
@@ -237,7 +236,7 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
         self.Rho_err = Rho_err
         self.dc = dc
-        self.kstar = kstar
+        self.kstar = self.kstar
 
         if self.verb: print('PAk density estimation finished')
 

@@ -86,7 +86,7 @@ class IdEstimation(Base):
 			decimation: fraction of points used in the estimate. The lower the value, the less points used, the farther they are.\
 						Can be used to change the scale at which one is looking at the data
 			fraction: fraction of mus that will be considered for the estimate (discard highest mus)
-			alghoritm: 'base' to perform the linear fit, 'ml' to perform maximum likelihood
+			algorithm: 'base' to perform the linear fit, 'ml' to perform maximum likelihood
 
 		Returns:
 
