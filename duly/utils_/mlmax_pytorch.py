@@ -26,7 +26,7 @@ def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, al
 
         k = kstar[i]
 
-        for nneigh in range(k):
+        for nneigh in range(k-1):
             j = dist_indices[i, nneigh + 1]
 
             Fijs_t[i, j] = Fijs[nneigh]
@@ -189,7 +189,7 @@ def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg=
 
             k = kstar[i]
 
-            for nneigh in range(k):
+            for nneigh in range(k-1):
                 j = dist_indices[i, nneigh + 1]
 
                 Fijs_t[i, j] = Fis_t[j]-Fis_t[i]

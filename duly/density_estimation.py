@@ -3,6 +3,7 @@ import multiprocessing
 
 import numpy as np
 from scipy.special import gammaln
+from scipy import sparse
 
 from duly.id_estimation import IdEstimation
 from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
@@ -21,11 +22,14 @@ class DensityEstimation(IdEstimation):
 
     Attributes:
         kstar (np.array(float)): array containing the chosen number k* of neighbors for each of the Nele points
+        array_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k* nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
+        common_neighs (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size Nele x Nele. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa.
         dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the Nele points
         Rho (np.array(float), optional): array containing the Nele log-densities
         Rho_err (np.array(float), optional): array containing the Nele errors on the Rho
         grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i 
         grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
+        check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance matrices of the gradients.
         Fij_list (list(np.array(float)), optional): list of Nele arrays containing for each i the k* estimates of deltaF_ij computed from point i
         Fij_var_list (list(np.array(float)), optional): list of Nele arrays containing the squared errors on the deltaF_ij's
 
@@ -37,6 +41,11 @@ class DensityEstimation(IdEstimation):
                          njobs=njobs)
 
         self.kstar=None
+        self.neigh_vector_diffs=None
+        self.nind_list=None
+        self.nind_iptr=None
+        self.nind_mat=None
+        self.common_neighs=None
         self.dc=None
         self.Rho=None
         self.Rho_err=None
@@ -44,6 +53,8 @@ class DensityEstimation(IdEstimation):
         self.grads_var=None
         self.Fij_list=None
         self.Fij_var_list=None
+        self.Fij_array=None
+        self.Fij_var_array=None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -60,16 +71,15 @@ class DensityEstimation(IdEstimation):
 
         if self.verb: print('k-NN density estimation started (k={})'.format(k))
 
-        kstar = np.empty(self.Nele, dtype=int)
-        dc = np.empty(self.Nele, dtype=float)
-        Rho = np.empty(self.Nele, dtype=float)
-        Rho_err = np.empty(self.Nele, dtype=float)
+        kstar = np.full(self.Nele, k, dtype=int)
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
         prefactor = np.exp(
             self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
         Rho_min = 9.9E300
 
         for i in range(self.Nele):
-            kstar[i] = k
             dc[i] = self.distances[i, k]
             Rho[i] = np.log(kstar[i]) - (
                     np.log(prefactor) + self.id_selected * np.log(self.distances[i, kstar[i]]))
@@ -128,29 +138,112 @@ class DensityEstimation(IdEstimation):
             kstar[i] = j - 2
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds finding the optimal k for all the points".format(sec2 - sec))
+            print( "{0:0.2f} seconds finding the optimal k for all the points".format(sec2 - sec) )
 
         self.kstar = kstar
 
     # ----------------------------------------------------------------------------------------------
 
+    def compute_neigh_indices(self):
+        """Compute the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest (excluded).
+        The couples of indices are stored in a numpy ndarray of rank 2 and secondary dimension = 2.
+        The index of the corresponding AAAAAAAAAAAAA make indpointer which is a np.array of length Nele which indicates for each i the starting index of the corresponding [i,.] subarray.
+
+        """
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if self.verb:
+            print('Computation of the neighbour indices started')
+
+        sec = time.time()
+
+        #self.get_vector_diffs = sparse.csr_matrix((self.Nele, self.Nele),dtype=np.int_)
+        self.nind_list , self.nind_iptr = cf.return_neigh_ind(self.dist_indices, self.kstar)
+
+        sec2 = time.time()
+        if self.verb: print(
+            "{0:0.2f} seconds computing vector differences".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_neigh_vector_diffs(self):
+        """Compute the vector differences from each point to its k* nearest neighbors.
+        The resulting vectors are stored in a numpy ndarray of rank 2 and secondary dimension = dims.
+        The index of  scipy sparse csr_matrix format.
+
+        """
+        # compute neighbour indices
+        if self.nind_list is None: self.compute_neigh_indices()
+
+        if self.verb: print('Computation of the vector differences started')
+        sec = time.time()
+
+        #self.get_vector_diffs = sparse.csr_matrix((self.Nele, self.Nele),dtype=np.int_)
+        self.neigh_vector_diffs = cf.return_neigh_vector_diffs(self.X, self.nind_list)
+
+        sec2 = time.time()
+        if self.verb: print(
+            "{0:0.2f} seconds computing vector differences".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def return_neigh_vector_diffs(self, i, j):
+        """Return the vector difference between points i and j.
+
+        Args:
+            i and j, indices of the two points
+
+        Returns:
+            self.X[j] - self.X[i]
+        """ 
+        return self.neigh_vector_diffs[self.nind_mat[i,j]]
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_common_neighs(self):
+        """Compute the common number of neighbours between couple of points (i,j) such that j is\
+        in the neighbourhood of i. The numbers are stored in a scipy sparse csr_matrix format.
+
+        Args:
+
+        Returns:
+
+        """
+
+        # compute neighbour indices
+        if self.nind_list is None: self.compute_neigh_indices()
+
+        if self.verb: print('Computation of the numbers of common neighbours started')
+
+        sec = time.time()
+        self.common_neighs = cf.return_common_neighs(self.kstar, self.dist_indices, self.nind_list)
+        sec2 = time.time()
+        if self.verb: print(
+            "{0:0.2f} seconds to carry out the computation.".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_kstarNN(self):
-        if self.kstar is None: self.compute_kstar()
+        if self.kstar is None:
+            self.compute_kstar()
 
         if self.verb: print('kstar-NN density estimation started')
 
-        dc = np.empty(self.Nele, dtype=float)
-        Rho = np.empty(self.Nele, dtype=float)
-        Rho_err = np.empty(self.Nele, dtype=float)
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
         prefactor = np.exp(
             self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
 
         Rho_min = 9.9E300
 
         for i in range(self.Nele):
-            k = self.kstar[i]
+            k =self.kstar[i]
             dc[i] = self.distances[i, k]
             Rho[i] = np.log(k) - np.log(prefactor)
+
             rk = self.distances[i, k]
 
             Rho[i] -= self.id_selected * np.log(rk)
@@ -180,9 +273,11 @@ class DensityEstimation(IdEstimation):
         #   - "For"=Newton-Raphson implemented in Fortran
 
         # compute optimal k
-        if self.kstar is None: self.compute_kstar()
+        if self.kstar is None:
+            self.compute_kstar()
 
-        if self.verb: print('PAk density estimation started')
+        if self.verb:
+            print('PAk density estimation started')
 
         dc = np.zeros(self.Nele, dtype=float)
         Rho = np.zeros(self.Nele, dtype=float)
@@ -227,8 +322,8 @@ class DensityEstimation(IdEstimation):
             Rho_err[i] = np.sqrt((4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1)))
 
         sec2 = time.time()
-        if self.verb: print(
-            "{0:0.2f} seconds optimizing the likelihood for all the points".format(sec2 - sec))
+        if self.verb:
+            print("{0:0.2f} seconds optimizing the likelihood for all the points".format(sec2 - sec))
 
         # Normalise density
         Rho -= np.log(self.Nele)
@@ -238,7 +333,8 @@ class DensityEstimation(IdEstimation):
         self.dc = dc
         self.kstar = self.kstar
 
-        if self.verb: print('PAk density estimation finished')
+        if self.verb:
+            print('PAk density estimation finished')
 
     # ----------------------------------------------------------------------------------------------
 
@@ -251,8 +347,8 @@ class DensityEstimation(IdEstimation):
         # TODO: we need to implement a gCorr term with the deltaFijs equal to zero
 
         # compute optimal k
-        if self.kstar is None: self.compute_kstar()
-        kstar = self.kstar
+        if self.kstar is None:
+            self.compute_kstar()
 
         if Fij_type == 'zero':
             # set changes in free energy to zero
@@ -280,15 +376,15 @@ class DensityEstimation(IdEstimation):
             prefactor = np.exp(
                 self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
 
-            dc = np.array([self.distances[i, kstar[i]] for i in range(self.Nele)])
+            dc = np.array([self.distances[i,self.kstar[i]] for i in range(self.Nele)])
 
             Vis = prefactor * (dc ** self.id_selected)
 
             # get good initial conditions for the optimisation
-            Fis = np.array([np.log(kstar[i]) - np.log(Vis[i]) for i in range(self.Nele)])
+            Fis = np.array([np.log(self.kstar[i]) - np.log(Vis[i]) for i in range(self.Nele)])
 
             # optimise the likelihood using pytorch
-            l_, Rho = maximise(Fis, kstar, Vis, self.dist_indices, Fij_list, Fij_var_list, alpha)
+            l_, Rho = maximise(Fis,self.kstar, Vis, self.dist_indices, Fij_list, Fij_var_list, alpha)
 
         # normalise density
         Rho -= np.log(self.Nele)
@@ -305,14 +401,8 @@ class DensityEstimation(IdEstimation):
         """
         # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
 
-        # compute optimal k
-        if self.kstar is None: self.compute_kstar()
-        kstar = self.kstar
-
         # compute changes in free energy
-        if self.Fij_list is None: self.compute_deltaFs_grad()
-        Fij_list = self.Fij_list
-        Fij_var_list = self.Fij_var_list
+        if self.Fij_array is None: self.compute_deltaFs_grads_semisum()
 
         dc = np.empty(self.Nele, dtype=float)
         Rho = np.empty(self.Nele, dtype=float)
@@ -323,18 +413,25 @@ class DensityEstimation(IdEstimation):
         vij_list = []
 
         for i in range(self.Nele):
-            dc[i] = self.distances[i, kstar[i]]
-            rr = np.log(kstar[i]) - (
-                    np.log(prefactor) + self.id_selected * np.log(self.distances[i, kstar[i]]))
+            
+            Fij_list = self.Fij_list
+            Fij_var_list = self.Fij_var_list
+
+            Fij_list.append(self.Fij_array[self.nind_iptr[i]:self.nind_iptr[i+1]])
+            Fij_var_list.append(self.Fij_var_array[self.nind_iptr[i]:self.nind_iptr[i+1]])
+
+            dc[i] = self.distances[i, self.kstar[i]]
+            rr = np.log(self.kstar[i]) - (
+                    np.log(prefactor) + self.id_selected * np.log(self.distances[i, self.kstar[i]]))
             Rho[i] = rr
-            vj = np.zeros(kstar[i])
-            for j in range(kstar[i]):
+            vj = np.zeros(self.kstar[i])
+            for j in range(self.kstar[i]):
                 vj[j] = prefactor * (pow(self.distances[i, j + 1], self.id_selected) - pow(
                     self.distances[i, j], self.id_selected))
 
             vij_list.append(vj)
 
-        l_, Rho = maximise_wPAk(Rho, kstar, vij_list, self.dist_indices, Fij_list,
+        l_, Rho = maximise_wPAk(Rho, self.kstar, vij_list, self.dist_indices, Fij_list,
                                 Fij_var_list, alpha)
 
         self.Rho = Rho
@@ -351,13 +448,12 @@ class DensityEstimation(IdEstimation):
         # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
 
         # compute optimal k
-        if self.kstar is None: self.compute_kstar()
-        kstar = self.kstar
+        if self.kstar is None:
+            self.compute_kstar()
 
-
-        dc = np.empty(self.Nele, dtype=float)
-        Rho = np.empty(self.Nele, dtype=float)
-        Rho_err = np.empty(self.Nele, dtype=float)
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
 
         prefactor = np.exp(
             self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
@@ -365,22 +461,22 @@ class DensityEstimation(IdEstimation):
         vij_list = []
 
         for i in range(self.Nele):
-            dc[i] = self.distances[i, kstar[i]]
-            rr = np.log(kstar[i]) - (
-                    np.log(prefactor) + self.id_selected * np.log(self.distances[i, kstar[i]]))
+            dc[i] = self.distances[i, self.kstar[i]]
+            rr = np.log(self.kstar[i]) - (
+                    np.log(prefactor) + self.id_selected * np.log(self.distances[i, self.kstar[i]]))
             Rho[i] = rr
-            vj = np.zeros(kstar[i])
-            for j in range(kstar[i]):
+            vj = np.zeros(self.kstar[i])
+            for j in range(self.kstar[i]):
                 vj[j] = prefactor * (pow(self.distances[i, j + 1], self.id_selected) - pow(
                     self.distances[i, j], self.id_selected))
 
             vij_list.append(vj)
 
-            Rho_err[i] = np.sqrt((4 * kstar[i] + 2) / (kstar[i] * (kstar[i] - 1)))
+            Rho_err[i] = np.sqrt((4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1)))
 
         if self.verb: print("Starting likelihood maximisation")
         sec = time.time()
-        l_, Rho = maximise_wPAk_flatF(Rho, Rho_err, kstar, vij_list, self.dist_indices, alpha, onlyNN)
+        l_, Rho = maximise_wPAk_flatF(Rho, Rho_err, self.kstar, vij_list, self.dist_indices, alpha, onlyNN)
         sec2 = time.time()
         if self.verb: print(
             "{0:0.2f} seconds for likelihood maximisation".format(sec2 - sec))
@@ -391,14 +487,63 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def compute_density_dF_PAk(self):
+
+        # check for deltaFij 
+        if self.Fij_array is None: self.compute_deltaFs_grads_semisum()
+
+        if self.verb: 
+            print('dF_PAk density estimation started')
+            sec=time.time()
+
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
+        prefactor = np.exp(
+            self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
+
+        Rho_min = 9.9E300
+
+        for i in range(self.Nele):
+            k = int(self.kstar[i])
+            dc[i] = self.distances[i, k]
+            Rho[i] = np.log(k) - np.log(prefactor)
+
+            Rho_err[i] = np.sqrt((4 * k + 2) / (k * (k - 1)))
+            corrected_rk = 0.
+            Fijs = self.Fij_array[self.nind_iptr[i]:self.nind_iptr[i+1]]
+
+            for j in range(1, k ):
+                Fij = Fijs[j - 1]
+                rjjm1 = self.distances[i, j] ** self.id_selected - self.distances[
+                    i, j - 1] ** self.id_selected
+
+                corrected_rk += rjjm1 * np.exp(Fij)  # * (1+Fij)
+
+            Rho[i] -= np.log(corrected_rk)
+
+            if (Rho[i] < Rho_min):
+                Rho_min = Rho[i]       
+
+        # Normalise density
+        Rho -= np.log(self.Nele)
+
+        self.Rho = Rho
+        self.Rho_err = Rho_err
+        self.dc = dc
+
+        sec2 = time.time()
+        if self.verb: print("{0:0.2f} seconds for dF_PAk density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
     def compute_density_gPAk(self, mode='standard'):
         # compute optimal k
-        if self.kstar is None: self.compute_kstar()
-        kstar = self.kstar
+        if self.kstar is None:
+            self.compute_kstar()
 
-        dc = np.empty(self.Nele, dtype=float)
-        Rho = np.empty(self.Nele, dtype=float)
-        Rho_err = np.empty(self.Nele, dtype=float)
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
         prefactor = np.exp(
             self.id_selected / 2. * np.log(np.pi) - gammaln((self.id_selected + 2) / 2))
 
@@ -412,15 +557,15 @@ class DensityEstimation(IdEstimation):
         if mode == 'standard':
 
             for i in range(self.Nele):
-                k = int(kstar[i])
+                k = int(self.kstar[i])
                 dc[i] = self.distances[i, k]
                 Rho[i] = np.log(k) - np.log(prefactor)
 
-                Rho_err[i] = np.sqrt((4 * kstar[i] + 2) / (kstar[i] * (kstar[i] - 1)))
+                Rho_err[i] = np.sqrt((4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1)))
                 corrected_rk = 0.
                 Fijs = Fij_list[i]
 
-                for j in range(1, k + 1):
+                for j in range(1, k):
                     Fij = Fijs[j - 1]
                     rjjm1 = self.distances[i, j] ** self.id_selected - self.distances[
                         i, j - 1] ** self.id_selected
@@ -437,11 +582,11 @@ class DensityEstimation(IdEstimation):
             vi = np.empty(self.maxk, dtype=float)
 
             for i in range(self.Nele):
-                k = int(kstar[i])
+                k = int(self.kstar[i])
                 dc[i] = self.distances[i, k]
 
-                rr = np.log(kstar[i]) - (
-                        np.log(prefactor) + self.id_selected * np.log(self.distances[i, kstar[i]]))
+                rr = np.log(self.kstar[i]) - (
+                        np.log(prefactor) + self.id_selected * np.log(self.distances[i, self.kstar[i]]))
 
                 Rho_err[i] = 1. / np.sqrt(k)
 
@@ -471,11 +616,11 @@ class DensityEstimation(IdEstimation):
             vi = np.empty(self.maxk, dtype=float)
 
             for i in range(self.Nele):
-                k = int(kstar[i])
+                k = int(self.kstar[i])
                 dc[i] = self.distances[i, k]
 
-                rr = np.log(kstar[i]) - (
-                        np.log(prefactor) + self.id_selected * np.log(self.distances[i, kstar[i]]))
+                rr = np.log(self.kstar[i]) - (
+                        np.log(prefactor) + self.id_selected * np.log(self.distances[i, self.kstar[i]]))
 
                 Rho_err[i] = 1. / np.sqrt(k)
 
@@ -517,13 +662,12 @@ class DensityEstimation(IdEstimation):
     def compute_density_gCorr(self, use_variance=True):
         # TODO: matrix A should be in sparse format!
 
-        # compute optimal k
-        if self.kstar is None: self.compute_kstar()
-
         # compute changes in free energy
-        if self.Fij_list is None: self.compute_deltaFs_grad()
-        Fij_list = self.Fij_list
-        Fij_var_list = self.Fij_var_list
+        if self.Fij_array is None: self.compute_deltaFs_grads_semisum()
+        
+        if self.verb: 
+            print('gCorr density estimation started')
+            sec=time.time()
 
         # compute adjacency matrix and cumulative changes
         A = np.zeros((self.Nele, self.Nele))
@@ -533,8 +677,8 @@ class DensityEstimation(IdEstimation):
 
         for i in range(self.Nele):
 
-            Fijs = Fij_list[i]
-            Fijs_var = Fij_var_list[i] + 1.e-4
+            Fijs = self.Fij_array[self.nind_iptr[i]:self.nind_iptr[i+1]]
+            Fijs_var = self.Fij_var_array[self.nind_iptr[i]:self.nind_iptr[i+1]]
 
             # deltaFcum_from_i[i] = np.sum(Fijs/Fijs_var)
             deltaFcum_from_i[i] = np.sum(Fijs)
@@ -564,6 +708,9 @@ class DensityEstimation(IdEstimation):
 
         self.Rho = Rho
 
+        sec2 = time.time()
+        if self.verb: print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+
     # ----------------------------------------------------------------------------------------------
 
     def return_grads(self):
@@ -578,7 +725,8 @@ class DensityEstimation(IdEstimation):
         assert (self.X is not None)
 
         # compute optimal k
-        if self.kstar is None: self.compute_kstar()
+        if self.kstar is None:
+            self.compute_kstar()
         d = self.X.shape[1]
         grads = np.zeros((self.X.shape[0], d))
 
@@ -586,14 +734,14 @@ class DensityEstimation(IdEstimation):
             xi = self.X[i]
 
             mean_vec = np.zeros(d)
-            kstar = int(self.kstar[i])
+            k = int(self.kstar[i])
 
-            for j in range(kstar):
+            for j in range(k):
                 xj = self.X[self.dist_indices[i, j + 1]]
                 xjmxi = xj - xi
                 mean_vec += xjmxi
 
-            mean_vec = mean_vec / kstar
+            mean_vec = mean_vec / k
             r = np.linalg.norm(xjmxi)
 
             grads[i, :] = (self.id_selected + 2) / r ** 2 * mean_vec
@@ -621,17 +769,20 @@ class DensityEstimation(IdEstimation):
 
         """
         # compute optimal k
-        if self.kstar is None: self.compute_kstar()
+        if self.kstar is None:
+            self.compute_kstar()
 
-        if self.verb: print('Estimation of the density gradient started')
+        if self.verb:
+            print('Estimation of the density gradient started')
 
         sec = time.time()
         if comp_covmat is False:
-            self.grads, self.grads_var = cf.compute_grads_and_var_from_coords(self.X, self.dist_indices,
+            self.grads, self.grads_var = cf.return_grads_and_var_from_coords(self.X, self.dist_indices,
                                                                   self.kstar, self.id_selected)
         else:
-            self.grads, self.grads_var = cf.compute_grads_and_covmat_from_coords(self.X, self.dist_indices,
+            self.grads, self.grads_var = cf.return_grads_and_covmat_from_coords(self.X, self.dist_indices,
                                                                   self.kstar, self.id_selected)
+            self.check_grads_covmat = True
         sec2 = time.time()
         if self.verb: print(
             "{0:0.2f} seconds computing gradients".format(sec2 - sec))
@@ -646,20 +797,22 @@ class DensityEstimation(IdEstimation):
 
         """
         # compute optimal k
-        if self.kstar is None: self.compute_kstar()
+        if self.kstar is None:
+            self.compute_kstar()
 
-        if self.verb: print('Estimation of the gradient (linear) corrections deltaFij to the log-density started')
+        if self.verb:
+            print('Estimation of the gradient (linear) corrections deltaFij to the log-density started')
 
         sec = time.time()
         if self.X is not None:
             if extgrads is None:
-                Fij_list, Fij_var_list = cf.compute_deltaFs_from_coords(self.X,
+                Fij_list, Fij_var_list = cf.return_deltaFs_from_coords(self.X,
                                                                         self.dist_indices,
                                                                         self.kstar,
                                                                         self.id_selected)
             else:
                 assert extgrads_covmat is not None
-                Fij_list, Fij_var_list = cf.compute_deltaFs_from_coords_and_grads(self.X,
+                Fij_list, Fij_var_list = cf.return_deltaFs_from_coords_and_grads(self.X,
                                                                         self.dist_indices,
                                                                         self.kstar,
                                                                         extgrads,
@@ -673,9 +826,8 @@ class DensityEstimation(IdEstimation):
             Fij_list = []
             Fij_var_list = []
 
-            kstar = self.kstar
             for i in range(self.Nele):
-                k = int(kstar[i])
+                k = int(self.kstar[i])
 
                 rk = self.distances[i, k]
 
@@ -724,6 +876,67 @@ class DensityEstimation(IdEstimation):
             "{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
+
+    def compute_deltaFs_grads_semisum(self, chi='auto'):
+        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using\
+            a linear expansion with as slope the semisum of the average gradient of the log-density over the neighbourhood of points i and j. \
+            The parameter chi is used in the estimation of the squared error of the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), \
+            where E_i is the error on the estimate of grad_i*DeltaX_ij.
+        
+        Args:
+            chi: the Pearson correlation coefficient between the estimates of the gradient in i and j. Can take a numerical value between 0 and 1.\
+                The option 'auto' takes a geometrical estimate of chi based on AAAAAAAAA
+
+        Returns:
+
+        """
+
+        # check or compute vector_diffs
+        if self.neigh_vector_diffs is None: self.compute_neigh_vector_diffs()
+
+        # check or compute gradients and their covariance matrices
+        if self.grads is None: self.compute_grads(comp_covmat=True)
+
+        elif self.check_grads_covmat == False: self.compute_grads(comp_covmat=True)
+
+        if self.verb: print('Estimation of the gradient semisum (linear) corrections deltaFij to the log-density started')
+        sec = time.time()
+
+        nspar = self.nind_list.shape[0]
+
+        Fij_array = np.zeros(nspar)
+        Fij_var_array = np.zeros(nspar)
+
+        k1 = self.kstar[self.nind_list[:,0]]
+        k2 = self.kstar[self.nind_list[:,1]]
+        g1 = self.grads[self.nind_list[:,0]]
+        g2 = self.grads[self.nind_list[:,1]]
+        g_var1 = self.grads_var[self.nind_list[:,0]]
+        g_var2 = self.grads_var[self.nind_list[:,1]]
+        
+        if chi=='auto':
+            # check or compute common_neighs
+            if self.common_neighs is None: self.compute_common_neighs()
+
+            chi = self.common_neighs/(k1+k2-self.common_neighs)
+
+        else:
+            assert (chi >= 0. and chi <=1.), "Invalid value for argument 'chi'"
+
+        Fij_array = 0.5*np.einsum('ij, ij -> i', g1+g2, self.neigh_vector_diffs)
+        vari = np.einsum( 'ij, ij -> i', self.neigh_vector_diffs , np.einsum('ijk, ik -> ij', g_var1, self.neigh_vector_diffs))
+        varj = np.einsum( 'ij, ij -> i', self.neigh_vector_diffs , np.einsum('ijk, ik -> ij', g_var2, self.neigh_vector_diffs))
+        Fij_var_array = 0.25*(vari+varj+2*chi*np.sqrt(vari*varj))
+
+        sec2 = time.time()
+        if self.verb: print(
+            "{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
+
+        self.Fij_array = Fij_array
+        self.Fij_var_array = Fij_var_array
+
+    # ----------------------------------------------------------------------------------------------
+
 
     def return_entropy(self):
         """Compute a very rough estimate of the entropy of the data distribution
