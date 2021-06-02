@@ -280,7 +280,7 @@ def get_histogram(Data):
         plt.plot([x1, x2], [ynew, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
 
     zorder=zorder+1
-    viridis = cm.get_cmap('viridis', Nclus_m)
+    viridis = cm.get_cmap('viridis', Data.Nclus_m)
     plt.scatter (xs,ys,c=labels,s=100,zorder=zorder,cmap='viridis')
     for i in range (Data.Nclus_m):
         zorder=zorder+1
