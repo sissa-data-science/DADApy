@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
+from matplotlib import cm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import scipy as sp
 from scipy.cluster import hierarchy
 from sklearn import manifold
@@ -278,10 +280,18 @@ def get_histogram(Data):
         plt.plot([x1, x2], [ynew, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
 
     zorder=zorder+1
-    plt.scatter (xs,ys,c=labels,s=100,zorder=zorder)
+    viridis = cm.get_cmap('viridis', Nclus_m)
+    plt.scatter (xs,ys,c=labels,s=100,zorder=zorder,cmap='viridis')
     for i in range (Data.Nclus_m):
         zorder=zorder+1
-        plt.annotate(labels[i],(xs[i],ys[i]),horizontalalignment='center',verticalalignment='center',zorder=zorder)
+        cc='k'
+        r=viridis.colors[labels[i]][0]
+        g=viridis.colors[labels[i]][1]
+        b=viridis.colors[labels[i]][2]
+        luma = (0.2126 * r + 0.7152 * g + 0.0722 * b)*255
+        if (luma<156):
+            cc='w'
+        plt.annotate(labels[i],(xs[i],ys[i]),horizontalalignment='center',verticalalignment='center',zorder=zorder,c=cc,weight='bold')
     plt.show()
 
 def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
