@@ -10,6 +10,142 @@ boolTYPE = np.bool
 ctypedef np.int_t DTYPE_t
 ctypedef np.float64_t floatTYPE_t
 
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_ind(np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                     np.ndarray[DTYPE_t, ndim = 1] kstar):
+    cdef int N = kstar.shape[0]
+    cdef int kstar_max = np.max(kstar)
+    cdef int nspar = kstar.sum() - N
+    cdef np.ndarray[DTYPE_t, ndim = 2] nind_list = np.ndarray((nspar, 2), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim = 1] nind_iptr = np.ndarray(shape=(N + 1,), dtype=DTYPE)
+    #    cdef np.ndarray[DTYPE_t, ndim = 2] nind_mat = np.zeros((N, N),dtype=DTYPE)
+
+    cdef int i, j, k, ind_spar, ki
+
+    ind_spar = 0
+    for i in range(N):
+        nind_iptr[i] = ind_spar
+        ki = kstar[i] - 1
+        for k in range(ki):
+            j = dist_indices[i, k + 1]
+            #nind_mat[i,j] = ind_spar
+            nind_list[ind_spar, 0] = i
+            nind_list[ind_spar, 1] = j
+            ind_spar += 1
+    nind_iptr[N] = nspar
+    assert (ind_spar == nspar)
+
+    #    return nind_list, nind_mat
+    return nind_list, nind_iptr
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_vector_diffs(np.ndarray[floatTYPE_t, ndim = 2] X,
+                              np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    cdef int dims = X.shape[1]
+    cdef int nspar = nind_list.shape[0]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims))
+
+    cdef int i, j, ind_spar, dim
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        for dim in range(dims):
+            vector_diffs[ind_spar, dim] = X[j, dim] - X[i, dim]
+
+    # ind_spar = 0
+    # for i in range(N):
+    #     ki = kstar[i]-1
+    #     for k in range(ki):
+    #         j = dist_indices[i, k+1]
+    #         if nind_mat[j,i] is not None:
+    #             for dim in range(dims):
+    #                 vector_diffs[ind_spar,dim] = -vector_diffs[nind_mat[j,i],dim]
+    #         else:
+    #             for dim in range(dims):
+    #                 vector_diffs[ind_spar,dim] = X[j, dim] - X[i, dim]
+    #         nind_mat[i,j] = ind_spar
+    #         nind_list[ind_spar,0]=i
+    #         nind_list[ind_spar,1]=j
+    #         ind_spar += 1
+
+    return vector_diffs
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
+                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                         np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    cdef int N = kstar.shape[0]
+    cdef int nspar = nind_list.shape[0]
+
+    cdef int i, j, ind_spar
+
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs = np.zeros(nspar, dtype=np.int_)
+
+    #for i in range(N):
+    #    ki = kstar[i]-1
+    #    for k in range(ki):
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        common_neighs[ind_spar] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
+                                          assume_unique=True).sum()
+
+    #        j = dist_indices[i, k+1]
+    #        if common_neighs[i,j] == 0:
+    #            common_neighs[i,j] = np.in1d(dist_indices[i,:ki+1],dist_indices[j,:kstar[j]],assume_unique=True).sum()
+    #            common_neighs[j,i] = common_neighs[i,j]
+
+    return common_neighs
+
+# ----------------------------------------------------------------------------------------------
+
+# @cython.boundscheck(False)
+# @cython.cdivision(True)
+# def return_deltaFs_gradient_semisum(np.ndarray[floatTYPE_t, ndim = 2] vector_diffs,
+#                                     get_vector_diffs,
+#                                     np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+#                                     np.ndarray[DTYPE_t, ndim = 1] kstar):
+#     cdef int N = X.shape[0]
+#     cdef int dims = X.shape[1]
+#     cdef int kstar_max = np.max(kstar)
+#     cdef int nspar = kstar.sum()-N
+#     cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims))
+
+#     get_vector_diffs = sparse.lil_matrix((N, N),dtype=DTYPE)
+#     mask = sparse.lil_matrix((N, N),dtype=np.bool_)
+
+#     cdef int i, j, k, dim, ki
+#     cdef int ind_spar
+
+#     ind_spar = 0
+#     for i in range(N):
+#         ki = kstar[i]-1
+#         for k in range(ki):
+#             j = dist_indices[i, k+1]
+#             if mask[j,i] == True:
+#                 for dim in range(dims):
+#                     vector_diffs[ind_spar,dim] = -vector_diffs[get_vector_diffs[j,i],dim]
+#             else:
+#                 for dim in range(dims):
+#                     vector_diffs[ind_spar,dim] = X[j, dim] - X[i, dim]
+#             mask[i,j] = True
+#             get_vector_diffs[i,j] = ind_spar
+#             ind_spar += 1
+#     assert (ind_spar == nspar)
+
+#     return vector_diffs, get_vector_diffs
+
 
 @cython.boundscheck(False)
 @cython.cdivision(True)

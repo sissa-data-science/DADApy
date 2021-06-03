@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
+from matplotlib import cm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import scipy as sp
 from scipy.cluster import hierarchy
 from sklearn import manifold
@@ -155,6 +157,142 @@ def plot_matrix(Data):
     plt.show()
     # plt.close(fig)  # close the figure
 
+def get_histogram(Data):
+# Generation of SL dendrogram
+# Prepare some auxiliary lists
+    e1=[]
+    e2=[]
+    d12=[]
+    L=[]
+    Li1=[]
+    Li2=[]
+    Ldis=[]
+    Fmax=max(Data.Rho)
+    Rho_bord_m = np.copy(Data.out_bord)
+# Obtain distances in list format from topography
+    for i in range(Data.Nclus_m - 1):
+        for j in range(i + 1, Data.Nclus_m):
+            dis12=Fmax-Rho_bord_m[i][j]
+            e1.append(i)
+            e2.append(j)
+            d12.append(dis12)
+
+# Obtain the dendrogram in form of links
+    nlinks=0
+    clnew=Data.Nclus_m
+    for j in range(Data.Nclus_m-1):
+        aa=np.argmin(d12)
+        nlinks=nlinks+1
+        L.append(clnew+nlinks)
+        Li1.append(e1[aa])
+        Li2.append(e2[aa])
+        Ldis.append(d12[aa])
+    #update distance matrix
+        t=0
+        fe=Li1[nlinks-1]
+        fs=Li2[nlinks-1]
+        newname=L[nlinks-1]
+    # list of untouched clusters
+        unt=[]
+        for r in d12:
+            if ((e1[t]!=fe)&(e1[t]!=fs)):
+                unt.append(e1[t])
+            if ((e2[t]!=fe)&(e2[t]!=fs)):
+                unt.append(e2[t])
+            t=t+1
+        myset = set(unt)
+        unt=list(myset)
+    # Build a new distance matrix
+        e1new=[]
+        e2new=[]
+        d12new=[]
+        for j in unt:
+            t=0
+            dmin=9.9E99
+            for r in d12:
+                if ((e1[t]==j)|(e2[t]==j)):
+                    if ((e1[t]==fe)|(e2[t]==fe)|(e1[t]==fs)|(e2[t]==fs)):
+                        if (d12[t]<dmin):
+                            dmin=d12[t]
+                t=t+1
+            e1new.append(j)
+            e2new.append(newname)
+            d12new.append(dmin)
+
+        t=0
+        for r in d12:
+            if ((unt.count(e1[t]))&(unt.count(e2[t]))):
+                e1new.append(e1[t])
+                e2new.append(e2[t])
+                d12new.append(d12[t])
+            t=t+1
+
+        e1=e1new
+        e2=e2new
+        d12=d12new
+
+# Get the order in which the elements should be displayed
+    sorted_elements=[]
+    sorted_elements.append(L[nlinks-1])
+
+    for jj in range(len(L)):
+        j=len(L)-jj-1
+        for i in range(len(sorted_elements)):
+            if (sorted_elements[i]==L[j]):
+                sorted_elements[i]=Li2[j]
+                sorted_elements.insert(i,Li1[j])
+# Get coordinates for the plot
+    pop=np.zeros((Data.Nclus_m),dtype=int)
+    for i in range (Data.Nclus_m):
+        pop[i]=len(Data.clstruct_m[i])
+#print (pop)
+    add=0.
+    x=[]
+    y=[]
+    label=[]
+    for i in range(len(sorted_elements)):
+        label.append(sorted_elements[i])
+        j=Data.centers_m[label[i]]
+        y.append(Data.Rho[j])
+        x.append(add+0.5*np.log(pop[i]))
+        add=add+np.log(pop[i])
+
+    xs=x.copy()
+    ys=y.copy()
+    labels=label.copy()
+    zorder=0
+    for jj in range(len(L)):
+        c1=label.index(Li1[jj])
+        c2=label.index(Li2[jj])
+        label.append(L[jj])
+        x.append((x[c1]+x[c2])/2.)
+        ynew=Fmax-Ldis[jj]
+        y.append(ynew)
+        x1=x[c1]
+        y1=y[c1]
+        x2=x[c2]
+        y2=y[c2]
+        zorder=zorder+1
+        plt.plot([x1, x1], [y1, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
+        zorder=zorder+1
+        plt.plot([x2, x2], [y2, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
+        zorder=zorder+1
+        plt.plot([x1, x2], [ynew, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
+
+    zorder=zorder+1
+    viridis = cm.get_cmap('viridis', Data.Nclus_m)
+    plt.scatter (xs,ys,c=labels,s=100,zorder=zorder,cmap='viridis')
+    for i in range (Data.Nclus_m):
+        zorder=zorder+1
+        cc='k'
+        r=viridis.colors[labels[i]][0]
+        g=viridis.colors[labels[i]][1]
+        b=viridis.colors[labels[i]][2]
+        luma = (0.2126 * r + 0.7152 * g + 0.0722 * b)*255
+        if (luma<156):
+            cc='w'
+        plt.annotate(labels[i],(xs[i],ys[i]),horizontalalignment='center',verticalalignment='center',zorder=zorder,c=cc,weight='bold')
+    plt.show()
 
 def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
     plt.figure(figsize=(4, 4))
@@ -201,6 +339,8 @@ if __name__ == '__main__':
     dist.compute_clustering(Z=1.65, halo=True)
 
     plot_SLAn(dist)
+
+    get_histogram(dist)
 
     plot_MDS(dist)
 
