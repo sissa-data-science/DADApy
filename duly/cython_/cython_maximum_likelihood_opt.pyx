@@ -107,5 +107,5 @@ def _nrmaxl(floatTYPE_t rinit,
     #Covinv2=_matinv2(Cov2)
     #_matinv2(Cov2,Covinv2)
     #print("N iterations: ", niter)
-    print(func)
+    #print(func)
     return b
