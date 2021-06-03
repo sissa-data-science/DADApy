@@ -16,8 +16,8 @@ class get_numpy_include(object):
         return numpy.get_include()
 
 
-ext_modules += [Extension("duly.cython_.cython_functions", sources=["duly/cython_/cython_functions.c"],
-                          include_dirs=[get_numpy_include()])]
+# ext_modules += [Extension("duly.cython_.cython_functions", sources=["duly/cython_/cython_functions.c"],
+#                           include_dirs=[get_numpy_include()])]
 
 ext_modules += [Extension("duly.cython_.cython_clustering", sources=["duly/cython_/cython_clustering.c"],
                           include_dirs=[get_numpy_include()])]
