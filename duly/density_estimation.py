@@ -6,7 +6,8 @@ from scipy.special import gammaln
 
 from duly.id_estimation import IdEstimation
 from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
-from duly.cython_ import cython_functions as cf
+from duly.cython_ import cython_maximum_likelihood_opt as cml
+from duly.cython_ import cython_grads as cgr
 
 cores = multiprocessing.cpu_count()
 
@@ -212,7 +213,7 @@ class DensityEstimation(IdEstimation):
                     break
             if (knn == 0):
                 if (method == 'NR'):
-                    Rho[i] = cf._nrmaxl(rr, self.kstar[i], vi, self.maxk)
+                    Rho[i] = cml._nrmaxl(rr, self.kstar[i], vi, self.maxk)
                 elif (method == 'NM'):
                     from duly.utils_.mlmax import MLmax
                     Rho[i] = MLmax(rr, self.kstar[i], vi)
@@ -627,10 +628,10 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
         if comp_covmat is False:
-            self.grads, self.grads_var = cf.compute_grads_and_var_from_coords(self.X, self.dist_indices,
+            self.grads, self.grads_var = cgr.compute_grads_and_var_from_coords(self.X, self.dist_indices,
                                                                   self.kstar, self.id_selected)
         else:
-            self.grads, self.grads_var = cf.compute_grads_and_covmat_from_coords(self.X, self.dist_indices,
+            self.grads, self.grads_var = cgr.compute_grads_and_covmat_from_coords(self.X, self.dist_indices,
                                                                   self.kstar, self.id_selected)
         sec2 = time.time()
         if self.verb: print(
@@ -653,13 +654,13 @@ class DensityEstimation(IdEstimation):
         sec = time.time()
         if self.X is not None:
             if extgrads is None:
-                Fij_list, Fij_var_list = cf.compute_deltaFs_from_coords(self.X,
+                Fij_list, Fij_var_list = cgr.compute_deltaFs_from_coords(self.X,
                                                                         self.dist_indices,
                                                                         self.kstar,
                                                                         self.id_selected)
             else:
                 assert extgrads_covmat is not None
-                Fij_list, Fij_var_list = cf.compute_deltaFs_from_coords_and_grads(self.X,
+                Fij_list, Fij_var_list = cgr.compute_deltaFs_from_coords_and_grads(self.X,
                                                                         self.dist_indices,
                                                                         self.kstar,
                                                                         extgrads,

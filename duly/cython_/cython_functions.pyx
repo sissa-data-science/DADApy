@@ -509,7 +509,7 @@ def _compute_clustering(floatTYPE_t Z,
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def _nrmaxl(floatTYPE_t rinit,
-            DTYPE_t kopt,
+            DTYPE_t kstar_i,
             np.ndarray[floatTYPE_t, ndim = 1] vi,
             DTYPE_t maxk):
 
@@ -541,11 +541,11 @@ def _nrmaxl(floatTYPE_t rinit,
     L0=0.
     a=0.
     stepmax=0.1*abs(b)
-    gb=float(kopt)
-    ga=float(kopt+1)*float(kopt)/2.
+    gb=float(kstar_i)
+    ga= float(kstar_i + 1) * float(kstar_i) / 2.
 
 
-    for j in range(kopt):
+    for j in range(kstar_i):
         jf=float(j+1)
         t=b+a*jf
         s=exp(t)
@@ -563,7 +563,7 @@ def _nrmaxl(floatTYPE_t rinit,
     func=100.
     niter=0
 
-    while ( (func>1e-6) and (niter < 1000) ):
+    while ( (func>1e-8) and (niter < 10000) ):
         sb=(Covinv2[0,0]*gb+Covinv2[0,1]*ga)
         sa=(Covinv2[1,0]*gb+Covinv2[1,1]*ga)
         niter=niter+1
@@ -573,12 +573,12 @@ def _nrmaxl(floatTYPE_t rinit,
         b=b-sigma*sb
         a=a-sigma*sa
         L0=0.
-        gb=float(kopt)
-        ga=float(kopt+1)*float(kopt)/2.
+        gb=float(kstar_i)
+        ga= float(kstar_i + 1) * float(kstar_i) / 2.
         Cov2[0,0]=0. #gbb
         Cov2[0,1]=0. #gab
         Cov2[1,1]=0. #gaa
-        for j in range(kopt):
+        for j in range(kstar_i):
             jf=float(j+1)
             t=b+a*jf
             s=exp(t)
@@ -602,5 +602,5 @@ def _nrmaxl(floatTYPE_t rinit,
     #Covinv2=_matinv2(Cov2)
     #_matinv2(Cov2,Covinv2)
     #print("N iterations: ", niter)
-    
+    print(func)
     return b

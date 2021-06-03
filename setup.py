@@ -1,14 +1,3 @@
-# import os
-# import numpy
-# from distutils.core import setup, Extension
-# from Cython.Build import cythonize
-#
-# import setuptools
-#
-# import numpy
-# from numpy.distutils.core import setup, Extension
-# from Cython.Build import cythonize
-# from Cython.Distutils import build_ext
 from setuptools import setup, Extension
 
 cmdclass = {}
@@ -29,6 +18,16 @@ class get_numpy_include(object):
 
 ext_modules += [Extension("duly.cython_.cython_functions", sources=["duly/cython_/cython_functions.c"],
                           include_dirs=[get_numpy_include()])]
+
+ext_modules += [Extension("duly.cython_.cython_clustering", sources=["duly/cython_/cython_clustering.c"],
+                          include_dirs=[get_numpy_include()])]
+
+ext_modules += [Extension("duly.cython_.cython_grads", sources=["duly/cython_/cython_grads.c"],
+                          include_dirs=[get_numpy_include()])]
+
+ext_modules += [
+    Extension("duly.cython_.cython_maximum_likelihood_opt", sources=["duly/cython_/cython_maximum_likelihood_opt.c"],
+              include_dirs=[get_numpy_include()])]
 
 setup(name='duly', packages=['duly', 'duly.utils_'],
       install_requires=['numpy', 'scipy', 'scikit-learn', 'Cython', 'pytest'],

@@ -370,3 +370,46 @@ class MetricComparisons(Base):
         print('keeping datasets number ', coords_kept)
 
         return np.array(coords_removed)[::-1], np.array(projection_removed)[::-1]
+
+    def return_label_overlap(self, labels, k=30):
+        assert (self.distances is not None)
+
+        overlaps = []
+        for i in range(self.Nele):
+            neigh_idx_i = self.dist_indices[i, 1:k + 1]
+            overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
+
+        overlap = np.mean(overlaps)
+        return overlap
+
+    def return_label_overlap_coords(self, labels, coords, k=30):
+        assert (self.X is not None)
+
+        X_ = self.X[:, coords]
+
+        nbrs = NearestNeighbors(n_neighbors=self.maxk, algorithm='auto', metric='minkowski',
+                                p=2, n_jobs=1).fit(X_)
+
+        _, dist_indices_ = nbrs.kneighbors(X_)
+
+        overlaps = []
+        for i in range(self.Nele):
+            neigh_idx_i = dist_indices_[i, 1:k + 1]
+            overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
+
+        overlap = np.mean(overlaps)
+        return overlap
+
+    def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
+        assert (self.X is not None)
+
+        if True:#self.njobs == 1:
+            overlaps = []
+            for coords in coord_list:
+                if self.verb:
+                    print('computing overlap for coord selection')
+
+                overlap = self.return_label_overlap_coords(labels, coords, k)
+                overlaps.append(overlap)
+
+        return overlaps

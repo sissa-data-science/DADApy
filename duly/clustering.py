@@ -4,6 +4,7 @@ import multiprocessing
 import numpy as np
 
 from duly.density_estimation import DensityEstimation
+from duly.cython_ import cython_clustering as cf
 
 cores = multiprocessing.cpu_count()
 
@@ -40,7 +41,6 @@ class Clustering(DensityEstimation):
         self.out_bord = None
 
     def compute_clustering_optimised(self, Z=1.65, halo=False):
-        from duly.cython_ import cython_functions as cf
         assert (self.Rho is not None)
         if self.verb:
             print('Clustering started')
