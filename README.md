@@ -9,7 +9,7 @@ DULy is a Python package for the characterisation of manifolds in high dimension
 
 # Homepage
 For more details and tutorials, visit the homepage at:
-[https://duly.readthedocs.io/](https://singroup.github.io/dscribe/)
+[https://duly.readthedocs.io/](https://duly.readthedocs.io/)
 
 # Quick Example
 ```python
