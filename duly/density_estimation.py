@@ -621,6 +621,7 @@ class DensityEstimation(IdEstimation):
             print("{0:0.2f} seconds for dF_PAk density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
+    
     def compute_density_gPAk(self, mode="standard"):
         # compute optimal k
         if self.kstar is None:
@@ -771,41 +772,33 @@ class DensityEstimation(IdEstimation):
             sec = time.time()
 
         # compute adjacency matrix and cumulative changes
-        A = np.zeros((self.Nele, self.Nele))
+        A = sparse.lil_matrix((self.Nele,self.Nele),dtype=np.float_)
 
-        deltaFcum_from_i = np.zeros(self.Nele)
-        deltaFcum_into_i = np.zeros(self.Nele)
+        supp_deltaF = sparse.lil_matrix((self.Nele,self.Nele),dtype=np.float_)
 
-        for i in range(self.Nele):
+        if use_variance:
+            for nspar,indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                tmp = 1./self.Fij_var_array[nspar]
+                A[i,j] = -tmp
+                supp_deltaF[i,j] = self.Fij_array[nspar]*tmp
+        else:
+            for nspar,indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                A[i,j] = -1.
+                supp_deltaF[i,j] = self.Fij_array[nspar]
 
-            Fijs = self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-            Fijs_var = self.Fij_var_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
+        A = sparse.lil_matrix(A + A.transpose())            
 
-            # deltaFcum_from_i[i] = np.sum(Fijs/Fijs_var)
-            deltaFcum_from_i[i] = np.sum(Fijs)
-            # TODO: should this be divided by the variance?
+        diag = - A.sum(axis=1)
 
-            for n_neigh in range(int(self.kstar[i] / 2)):
-                j = self.dist_indices[i, n_neigh + 1]
+        A.setdiag(diag)
 
-                # update adjacency
-                if use_variance:
-                    update = 1.0 / Fijs_var[n_neigh]
-                else:
-                    update = 1.0
+        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))-np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
 
-                A[i, j] -= update
-                A[j, i] -= update
-
-                # deltaFcum_into_i[j] += Fijs[n_neigh]/Fijs_var[n_neigh]
-                deltaFcum_into_i[j] += Fijs[n_neigh]
-                # TODO: should this be divided by the variance?
-
-        A[np.diag_indices_from(A)] = -np.sum(A, axis=1)
-
-        deltaFcum = deltaFcum_from_i - deltaFcum_into_i
-
-        Rho = np.dot(np.linalg.inv(A), -deltaFcum)
+        Rho = sparse.linalg.spsolve(A.tocsr(),deltaFcum)
 
         self.Rho = Rho
 
