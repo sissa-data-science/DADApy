@@ -1,10 +1,8 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
-from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+import numpy as np
 import scipy as sp
-from scipy.cluster import hierarchy
+from matplotlib import cm
+from matplotlib.collections import LineCollection
 from sklearn import manifold
 
 
@@ -12,7 +10,9 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
     mus = Data.distances[:, 2] / Data.distances[:, 1]
 
     idx = np.arange(mus.shape[0])
-    idx = np.random.choice(idx, size=(int(np.around(Data.Nele * decimation))), replace=False)
+    idx = np.random.choice(
+        idx, size=(int(np.around(Data.Nele * decimation))), replace=False
+    )
     mus = mus[idx]
 
     mus = np.sort(np.sort(mus))
@@ -20,21 +20,26 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
     Nele_eff = int(np.around(fraction_used * Data.Nele, decimals=0))
 
     x = np.log(mus)
-    y = -np.log(1. - np.arange(0, mus.shape[0]) / mus.shape[0])
+    y = -np.log(1.0 - np.arange(0, mus.shape[0]) / mus.shape[0])
 
     x_, y_ = np.atleast_2d(x[:Nele_eff]).T, y[:Nele_eff]
 
-    slope, residuals, rank, s = np.linalg.lstsq(x_, y_, rcond=None)  # x[:Nele_eff, None]?
+    slope, residuals, rank, s = np.linalg.lstsq(
+        x_, y_, rcond=None
+    )  # x[:Nele_eff, None]?
 
-    plt.plot(x, y, 'o')
-    plt.plot(x[:Nele_eff], y[:Nele_eff], 'o')
-    plt.plot(x, x * slope, '-')
+    plt.plot(x, y, "o")
+    plt.plot(x[:Nele_eff], y[:Nele_eff], "o")
+    plt.plot(x, x * slope, "-")
 
-    print('slope is {:f}, average resitual is {:f}'.format(slope[0],
-                                                           residuals[0] / Nele_eff))
+    print(
+        "slope is {:f}, average resitual is {:f}".format(
+            slope[0], residuals[0] / Nele_eff
+        )
+    )
 
-    plt.xlabel('log(mu)')
-    plt.ylabel('-log(1-F(mu))')
+    plt.xlabel("log(mu)")
+    plt.ylabel("-log(1-F(mu))")
     # plt.savefig('ID_line_fit_plot.png')
 
 
@@ -51,14 +56,13 @@ def plot_ID_vs_fraction(Data, fractions=np.linspace(0.1, 1, 25)):
 
     Data.verb = verbose
     plt.errorbar(fractions * Data.Nele, IDs, yerr=IDs_errs)
-    plt.xlabel('N')
-    plt.ylabel('estimated ID')
+    plt.xlabel("N")
+    plt.ylabel("estimated ID")
     # plt.savefig('ID_decimation_plot.png')
 
 
 def plot_ID_vs_nneigh(Data, nneighs=np.arange(2, 90)):
     IDs = []
-    IDs_errs = []
     verbose = Data.verb
     Data.verb = False
 
@@ -67,15 +71,15 @@ def plot_ID_vs_nneigh(Data, nneighs=np.arange(2, 90)):
         IDs.append(Data.id_estimated_ml)
 
     Data.verb = verbose
-    plt.plot(1. / nneighs, IDs)
+    plt.plot(1.0 / nneighs, IDs)
     # plt.xscale('log')
-    plt.xlabel('1/nneigh')
-    plt.ylabel('estimated ID')
+    plt.xlabel("1/nneigh")
+    plt.ylabel("estimated ID")
     # plt.savefig('ID_neighs_plot.png')
 
 
-def plot_SLAn(Data, linkage='single'):
-    assert (Data.labels is not None)
+def plot_SLAn(Data, linkage="single"):
+    assert Data.labels is not None
 
     nd = int((Data.Nclus_m * Data.Nclus_m - Data.Nclus_m) / 2)
     Dis = np.empty(nd, dtype=float)
@@ -88,16 +92,16 @@ def plot_SLAn(Data, linkage='single'):
             Dis[nl] = Fmax - Rho_bord_m[i][j]
             nl = nl + 1
 
-    if linkage == 'single':
+    if linkage == "single":
         DD = sp.cluster.hierarchy.single(Dis)
-    elif linkage == 'complete':
+    elif linkage == "complete":
         DD = sp.cluster.hierarchy.complete(Dis)
-    elif linkage == 'average':
+    elif linkage == "average":
         DD = sp.cluster.hierarchy.average(Dis)
-    elif linkage == 'weighted':
+    elif linkage == "weighted":
         DD = sp.cluster.hierarchy.weighted(Dis)
     else:
-        print('ERROR: select a valid linkage criterion')
+        print("ERROR: select a valid linkage criterion")
 
     fig, ax = plt.subplots(nrows=1, ncols=1)  # create figure & 1 axis
     dn = sp.cluster.hierarchy.dendrogram(DD)
@@ -110,35 +114,36 @@ def plot_MDS(Data):
     Fmax = max(Data.Rho)
     Rho_bord_m = np.copy(Data.out_bord)
     d_dis = np.zeros((Data.Nclus_m, Data.Nclus_m), dtype=float)
-    model = manifold.MDS(n_components=2, n_jobs=None, dissimilarity='precomputed')
+    model = manifold.MDS(n_components=2, n_jobs=None, dissimilarity="precomputed")
     for i in range(Data.Nclus_m):
         for j in range(Data.Nclus_m):
             d_dis[i][j] = Fmax - Rho_bord_m[i][j]
     for i in range(Data.Nclus_m):
-        d_dis[i][i] = 0.
+        d_dis[i][i] = 0.0
     out = model.fit_transform(d_dis)
     fig, ax = plt.subplots(nrows=1, ncols=1)
     s = []
     col = []
     for i in range(Data.Nclus_m):
-        s.append(20. * np.sqrt(len(Data.clstruct_m[i])))
+        s.append(20.0 * np.sqrt(len(Data.clstruct_m[i])))
         col.append(i)
     plt.scatter(out[:, 0], out[:, 1], s=s, c=col)
     for i in range(Data.Nclus_m):
         ax.annotate(i, (out[i, 0], out[i, 1]))
     # Add edges
     rr = np.amax(Rho_bord_m)
-    if (rr > 0.):
-        Rho_bord_m = Rho_bord_m / rr * 100.
+    if rr > 0.0:
+        Rho_bord_m = Rho_bord_m / rr * 100.0
     start_idx, end_idx = np.where(out)
-    segments = [[out[i, :], out[j, :]]
-                for i in range(len(out)) for j in range(len(out))]
+    segments = [
+        [out[i, :], out[j, :]] for i in range(len(out)) for j in range(len(out))
+    ]
     values = np.abs(Rho_bord_m)
     lc = LineCollection(segments, zorder=0, norm=plt.Normalize(0, values.max()))
     lc.set_array(Rho_bord_m.flatten())
     # lc.set_linewidths(np.full(len(segments),0.5))
-    lc.set_edgecolor(np.full(len(segments), 'black'))
-    lc.set_facecolor(np.full(len(segments), 'black'))
+    lc.set_edgecolor(np.full(len(segments), "black"))
+    lc.set_facecolor(np.full(len(segments), "black"))
     lc.set_linewidths(0.02 * Rho_bord_m.flatten())
     ax.add_collection(lc)
     # fig.savefig('2D.png')
@@ -148,151 +153,168 @@ def plot_MDS(Data):
 
 def plot_matrix(Data):
     Rho_bord_m = np.copy(Data.out_bord)
-    fig, ax = plt.subplots(nrows=1, ncols=1)
     topography = np.copy(Rho_bord_m)
     for j in range(Data.Nclus_m):
         topography[j, j] = Data.Rho[Data.centers_m[j]]
-    plt.imshow(topography, cmap='hot', interpolation='nearest')
+
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    plt.imshow(topography, cmap="hot", interpolation=None)
     # fig.savefig('matrix.png')
     plt.show()
     # plt.close(fig)  # close the figure
 
+
 def get_histogram(Data):
-# Generation of SL dendrogram
-# Prepare some auxiliary lists
-    e1=[]
-    e2=[]
-    d12=[]
-    L=[]
-    Li1=[]
-    Li2=[]
-    Ldis=[]
-    Fmax=max(Data.Rho)
+    # Generation of SL dendrogram
+    # Prepare some auxiliary lists
+    e1 = []
+    e2 = []
+    d12 = []
+    L = []
+    Li1 = []
+    Li2 = []
+    Ldis = []
+    Fmax = max(Data.Rho)
     Rho_bord_m = np.copy(Data.out_bord)
-# Obtain distances in list format from topography
+    # Obtain distances in list format from topography
     for i in range(Data.Nclus_m - 1):
         for j in range(i + 1, Data.Nclus_m):
-            dis12=Fmax-Rho_bord_m[i][j]
+            dis12 = Fmax - Rho_bord_m[i][j]
             e1.append(i)
             e2.append(j)
             d12.append(dis12)
 
-# Obtain the dendrogram in form of links
-    nlinks=0
-    clnew=Data.Nclus_m
-    for j in range(Data.Nclus_m-1):
-        aa=np.argmin(d12)
-        nlinks=nlinks+1
-        L.append(clnew+nlinks)
+    # Obtain the dendrogram in form of links
+    nlinks = 0
+    clnew = Data.Nclus_m
+    for j in range(Data.Nclus_m - 1):
+        aa = np.argmin(d12)
+        nlinks = nlinks + 1
+        L.append(clnew + nlinks)
         Li1.append(e1[aa])
         Li2.append(e2[aa])
         Ldis.append(d12[aa])
-    #update distance matrix
-        t=0
-        fe=Li1[nlinks-1]
-        fs=Li2[nlinks-1]
-        newname=L[nlinks-1]
-    # list of untouched clusters
-        unt=[]
+        # update distance matrix
+        t = 0
+        fe = Li1[nlinks - 1]
+        fs = Li2[nlinks - 1]
+        newname = L[nlinks - 1]
+        # list of untouched clusters
+        unt = []
         for r in d12:
-            if ((e1[t]!=fe)&(e1[t]!=fs)):
+            if (e1[t] != fe) & (e1[t] != fs):
                 unt.append(e1[t])
-            if ((e2[t]!=fe)&(e2[t]!=fs)):
+            if (e2[t] != fe) & (e2[t] != fs):
                 unt.append(e2[t])
-            t=t+1
+            t = t + 1
         myset = set(unt)
-        unt=list(myset)
-    # Build a new distance matrix
-        e1new=[]
-        e2new=[]
-        d12new=[]
+        unt = list(myset)
+        # Build a new distance matrix
+        e1new = []
+        e2new = []
+        d12new = []
         for j in unt:
-            t=0
-            dmin=9.9E99
+            t = 0
+            dmin = 9.9e99
             for r in d12:
-                if ((e1[t]==j)|(e2[t]==j)):
-                    if ((e1[t]==fe)|(e2[t]==fe)|(e1[t]==fs)|(e2[t]==fs)):
-                        if (d12[t]<dmin):
-                            dmin=d12[t]
-                t=t+1
+                if (e1[t] == j) | (e2[t] == j):
+                    if (e1[t] == fe) | (e2[t] == fe) | (e1[t] == fs) | (e2[t] == fs):
+                        if d12[t] < dmin:
+                            dmin = d12[t]
+                t = t + 1
             e1new.append(j)
             e2new.append(newname)
             d12new.append(dmin)
 
-        t=0
+        t = 0
         for r in d12:
-            if ((unt.count(e1[t]))&(unt.count(e2[t]))):
+            if (unt.count(e1[t])) & (unt.count(e2[t])):
                 e1new.append(e1[t])
                 e2new.append(e2[t])
                 d12new.append(d12[t])
-            t=t+1
+            t = t + 1
 
-        e1=e1new
-        e2=e2new
-        d12=d12new
+        e1 = e1new
+        e2 = e2new
+        d12 = d12new
 
-# Get the order in which the elements should be displayed
-    sorted_elements=[]
-    sorted_elements.append(L[nlinks-1])
+    # Get the order in which the elements should be displayed
+    sorted_elements = []
+    sorted_elements.append(L[nlinks - 1])
 
     for jj in range(len(L)):
-        j=len(L)-jj-1
+        j = len(L) - jj - 1
         for i in range(len(sorted_elements)):
-            if (sorted_elements[i]==L[j]):
-                sorted_elements[i]=Li2[j]
-                sorted_elements.insert(i,Li1[j])
-# Get coordinates for the plot
-    pop=np.zeros((Data.Nclus_m),dtype=int)
-    for i in range (Data.Nclus_m):
-        pop[i]=len(Data.clstruct_m[i])
-#print (pop)
-    add=0.
-    x=[]
-    y=[]
-    label=[]
+            if sorted_elements[i] == L[j]:
+                sorted_elements[i] = Li2[j]
+                sorted_elements.insert(i, Li1[j])
+    # Get coordinates for the plot
+    pop = np.zeros((Data.Nclus_m), dtype=int)
+    for i in range(Data.Nclus_m):
+        pop[i] = len(Data.clstruct_m[i])
+    # print (pop)
+    add = 0.0
+    x = []
+    y = []
+    label = []
     for i in range(len(sorted_elements)):
         label.append(sorted_elements[i])
-        j=Data.centers_m[label[i]]
+        j = Data.centers_m[label[i]]
         y.append(Data.Rho[j])
-        x.append(add+0.5*np.log(pop[i]))
-        add=add+np.log(pop[i])
+        x.append(add + 0.5 * np.log(pop[i]))
+        add = add + np.log(pop[i])
 
-    xs=x.copy()
-    ys=y.copy()
-    labels=label.copy()
-    zorder=0
+    xs = x.copy()
+    ys = y.copy()
+    labels = label.copy()
+    zorder = 0
     for jj in range(len(L)):
-        c1=label.index(Li1[jj])
-        c2=label.index(Li2[jj])
+        c1 = label.index(Li1[jj])
+        c2 = label.index(Li2[jj])
         label.append(L[jj])
-        x.append((x[c1]+x[c2])/2.)
-        ynew=Fmax-Ldis[jj]
+        x.append((x[c1] + x[c2]) / 2.0)
+        ynew = Fmax - Ldis[jj]
         y.append(ynew)
-        x1=x[c1]
-        y1=y[c1]
-        x2=x[c2]
-        y2=y[c2]
-        zorder=zorder+1
-        plt.plot([x1, x1], [y1, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
-        zorder=zorder+1
-        plt.plot([x2, x2], [y2, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
-        zorder=zorder+1
-        plt.plot([x1, x2], [ynew, ynew], color='k', linestyle='-', linewidth=2,zorder=zorder)
+        x1 = x[c1]
+        y1 = y[c1]
+        x2 = x[c2]
+        y2 = y[c2]
+        zorder = zorder + 1
+        plt.plot(
+            [x1, x1], [y1, ynew], color="k", linestyle="-", linewidth=2, zorder=zorder
+        )
+        zorder = zorder + 1
+        plt.plot(
+            [x2, x2], [y2, ynew], color="k", linestyle="-", linewidth=2, zorder=zorder
+        )
+        zorder = zorder + 1
+        plt.plot(
+            [x1, x2], [ynew, ynew], color="k", linestyle="-", linewidth=2, zorder=zorder
+        )
 
-    zorder=zorder+1
-    viridis = cm.get_cmap('viridis', Data.Nclus_m)
-    plt.scatter (xs,ys,c=labels,s=100,zorder=zorder,cmap='viridis')
-    for i in range (Data.Nclus_m):
-        zorder=zorder+1
-        cc='k'
-        r=viridis.colors[labels[i]][0]
-        g=viridis.colors[labels[i]][1]
-        b=viridis.colors[labels[i]][2]
-        luma = (0.2126 * r + 0.7152 * g + 0.0722 * b)*255
-        if (luma<156):
-            cc='w'
-        plt.annotate(labels[i],(xs[i],ys[i]),horizontalalignment='center',verticalalignment='center',zorder=zorder,c=cc,weight='bold')
+    zorder = zorder + 1
+    viridis = cm.get_cmap("viridis", Data.Nclus_m)
+    plt.scatter(xs, ys, c=labels, s=100, zorder=zorder, cmap="viridis")
+    for i in range(Data.Nclus_m):
+        zorder = zorder + 1
+        cc = "k"
+        r = viridis.colors[labels[i]][0]
+        g = viridis.colors[labels[i]][1]
+        b = viridis.colors[labels[i]][2]
+        luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) * 255
+        if luma < 156:
+            cc = "w"
+        plt.annotate(
+            labels[i],
+            (xs[i], ys[i]),
+            horizontalalignment="center",
+            verticalalignment="center",
+            zorder=zorder,
+            c=cc,
+            weight="bold",
+        )
     plt.show()
+
 
 def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
     plt.figure(figsize=(4, 4))
@@ -303,28 +325,29 @@ def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
             else:
                 label = coord_list[i]
         else:
-            label = ''
+            label = ""
 
         plt.scatter(imb0, imb1, label=label)
 
-    plt.plot([0, 1], [0, 1], 'k--')
+    plt.plot([0, 1], [0, 1], "k--")
 
     if coord_list is not None:
         plt.legend()
 
-    plt.xlabel(r'$\Delta(X_{full} \rightarrow X_{coords}) $')
-    plt.ylabel(r'$\Delta(X_{full} \rightarrow X_{coords}) $')
+    plt.xlabel(r"$\Delta(X_{full} \rightarrow X_{coords}) $")
+    plt.ylabel(r"$\Delta(X_{full} \rightarrow X_{coords}) $")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # generate some random points in n dimensions
 
     from adpy import Data
 
     # X = np.vstack(
-    #     (np.random.normal(0, 1, size=(1000, 15)), np.random.normal(5, 1, size=(1000, 15))))
+    #     (np.random.normal(0, 1, size=(1000, 15)),
+    #      np.random.normal(5, 1, size=(1000, 15))))
 
-    X = np.genfromtxt('Fig1.dat', dtype='float')
+    X = np.genfromtxt("Fig1.dat", dtype="float")
 
     dist = Data(X)
 

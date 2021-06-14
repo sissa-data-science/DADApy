@@ -19,11 +19,18 @@ class MetricComparisons(Base):
 
     """
 
-    def __init__(self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
-        super().__init__(coordinates=coordinates, distances=distances, maxk=maxk, verbose=verbose,
-                         njobs=njobs)
+    def __init__(
+        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+    ):
+        super().__init__(
+            coordinates=coordinates,
+            distances=distances,
+            maxk=maxk,
+            verbose=verbose,
+            njobs=njobs,
+        )
 
-    def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1, dtype='mean'):
+    def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1, dtype="mean"):
         """Returns the imbalances between distances taken as the i and the j component of the coordinate matrix X.
 
         Args:
@@ -38,15 +45,17 @@ class MetricComparisons(Base):
         """
         X_ = self.X[:, coords1]
 
-        nbrs = NearestNeighbors(n_neighbors=self.maxk, algorithm='auto', metric='minkowski',
-                                p=2, n_jobs=1).fit(X_)
+        nbrs = NearestNeighbors(
+            n_neighbors=self.maxk, algorithm="auto", metric="minkowski", p=2, n_jobs=1
+        ).fit(X_)
 
         _, dist_indices_i = nbrs.kneighbors(X_)
 
         X_ = self.X[:, coords2]
 
-        nbrs = NearestNeighbors(n_neighbors=self.maxk, algorithm='auto', metric='minkowski',
-                                p=2, n_jobs=1).fit(X_)
+        nbrs = NearestNeighbors(
+            n_neighbors=self.maxk, algorithm="auto", metric="minkowski", p=2, n_jobs=1
+        ).fit(X_)
 
         _, dist_indices_j = nbrs.kneighbors(X_)
 
@@ -55,7 +64,7 @@ class MetricComparisons(Base):
 
         return imb_ij, imb_ji
 
-    def return_inf_imb_matrix_of_coords(self, k=1, dtype='mean'):
+    def return_inf_imb_matrix_of_coords(self, k=1, dtype="mean"):
         """Compute the information imbalances between all pairs of D features of the data.
 
         Args:
@@ -65,7 +74,7 @@ class MetricComparisons(Base):
         Returns:
             n_mat (np.array(float)): a DxD matrix containing all the information imbalances
         """
-        assert (self.X is not None)
+        assert self.X is not None
 
         ncoords = self.dims
 
@@ -76,18 +85,27 @@ class MetricComparisons(Base):
             for i in range(ncoords):
                 for j in range(i):
                     if self.verb:
-                        print('computing loss between coords ', i, j)
+                        print("computing loss between coords ", i, j)
 
-                    nij, nji = self.return_inf_imb_two_selected_coords([i], [j], k, dtype)
+                    nij, nji = self.return_inf_imb_two_selected_coords(
+                        [i], [j], k, dtype
+                    )
                     n_mat[i, j] = nij
                     n_mat[j, i] = nji
 
         elif self.njobs > 1:
             if self.verb:
-                print('computing imbalances with coord number on {} processors'.format(self.njobs))
+                print(
+                    "computing imbalances with coord number on {} processors".format(
+                        self.njobs
+                    )
+                )
 
             nmats = Parallel(n_jobs=self.njobs)(
-                delayed(self.return_inf_imb_two_selected_coords)([i], [j], k, dtype) for i in range(ncoords) for j in range(i))
+                delayed(self.return_inf_imb_two_selected_coords)([i], [j], k, dtype)
+                for i in range(ncoords)
+                for j in range(i)
+            )
 
             indices = [(i, j) for i in range(ncoords) for j in range(i)]
 
@@ -98,7 +116,7 @@ class MetricComparisons(Base):
 
         return n_mat
 
-    def return_inf_imb_full_all_coords(self, k=1, dtype='mean'):
+    def return_inf_imb_full_all_coords(self, k=1, dtype="mean"):
         """Compute the information imbalances between the 'full' space and each one of its D features
 
         Args:
@@ -110,16 +128,18 @@ class MetricComparisons(Base):
             the original space and each of its D features.
 
         """
-        assert (self.X is not None)
+        assert self.X is not None
 
         ncoords = self.X.shape[1]
 
         coord_list = [[i] for i in range(ncoords)]
-        imbalances = self.return_inf_imb_full_selected_coords(coord_list, k=k, dtype=dtype)
+        imbalances = self.return_inf_imb_full_selected_coords(
+            coord_list, k=k, dtype=dtype
+        )
 
         return imbalances
 
-    def return_inf_imb_full_selected_coords(self, coord_list, k=1, dtype='mean'):
+    def return_inf_imb_full_selected_coords(self, coord_list, k=1, dtype="mean"):
         """Compute the information imbalances between the 'full' space and a selection of features.
 
         Args:
@@ -134,15 +154,17 @@ class MetricComparisons(Base):
             the original space and each one of the L subspaces defined in coord_list
 
         """
-        assert (self.X is not None)
+        assert self.X is not None
 
-        print('total number of computations is: ', len(coord_list))
+        print("total number of computations is: ", len(coord_list))
 
-        imbalances = self.return_inf_imb_target_selected_coords(self.dist_indices, coord_list, k=k, dtype=dtype)
+        imbalances = self.return_inf_imb_target_selected_coords(
+            self.dist_indices, coord_list, k=k, dtype=dtype
+        )
 
         return imbalances
 
-    def return_inf_imb_target_all_coords(self, target_ranks, k=1, dtype='mean'):
+    def return_inf_imb_target_all_coords(self, target_ranks, k=1, dtype="mean"):
         """Compute the information imbalances between the 'target' space and a all single feature spaces in X.
 
         Args:
@@ -155,16 +177,20 @@ class MetricComparisons(Base):
             the target space and each one of the L subspaces defined in coord_list
 
         """
-        assert (self.X is not None)
+        assert self.X is not None
 
         ncoords = self.dims
 
         coord_list = [[i] for i in range(ncoords)]
-        imbalances = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
+        imbalances = self.return_inf_imb_target_selected_coords(
+            target_ranks, coord_list, k=k, dtype=dtype
+        )
 
         return imbalances
 
-    def return_inf_imb_target_selected_coords(self, target_ranks, coord_list, k=1, dtype='mean'):
+    def return_inf_imb_target_selected_coords(
+        self, target_ranks, coord_list, k=1, dtype="mean"
+    ):
         """Compute the information imbalances between the 'target' space and a selection of features.
 
         Args:
@@ -183,28 +209,37 @@ class MetricComparisons(Base):
         assert self.X is not None
         assert target_ranks.shape[0] == self.X.shape[0]
 
-        print('total number of computations is: ', len(coord_list))
+        print("total number of computations is: ", len(coord_list))
 
         if self.njobs == 1:
             n1s_n2s = []
             for coords in coord_list:
                 if self.verb:
-                    print('computing loss with coord selection')
-                n0i, ni0 = ut._return_imb_with_coords(self.X, coords, target_ranks, self.maxk, k, dtype)
+                    print("computing loss with coord selection")
+                n0i, ni0 = ut._return_imb_with_coords(
+                    self.X, coords, target_ranks, self.maxk, k, dtype
+                )
                 n1s_n2s.append((n0i, ni0))
 
         elif self.njobs > 1:
             if self.verb:
-                print('computing loss with coord number on {} processors'.format(self.njobs))
+                print(
+                    "computing loss with coord number on {} processors".format(
+                        self.njobs
+                    )
+                )
             n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(ut._return_imb_with_coords)(self.X, coords, target_ranks, self.maxk, k, dtype)
-                for coords in coord_list)
+                delayed(ut._return_imb_with_coords)(
+                    self.X, coords, target_ranks, self.maxk, k, dtype
+                )
+                for coords in coord_list
+            )
         else:
             raise ValueError("njobs cannot be negative")
 
         return np.array(n1s_n2s).T
 
-    def greedy_feature_selection_full(self, n_coords, k=1, dtype='mean', symm=True):
+    def greedy_feature_selection_full(self, n_coords, k=1, dtype="mean", symm=True):
         """Greedy selection of the set of coordinates which is most informative about full distance measure.
 
         Args:
@@ -217,14 +252,17 @@ class MetricComparisons(Base):
             selected_coords:
             all_imbalances:
         """
-        print('taking full space as the complete representation')
+        print("taking full space as the complete representation")
         assert self.X is not None
-        selected_coords, all_imbalances = self.greedy_feature_selection_target(self.dist_indices, n_coords, k,
-                                                                               dtype=dtype, symm=symm)
+        selected_coords, all_imbalances = self.greedy_feature_selection_target(
+            self.dist_indices, n_coords, k, dtype=dtype, symm=symm
+        )
 
         return selected_coords, all_imbalances
 
-    def greedy_feature_selection_target(self, target_ranks, n_coords, k, dtype='mean', symm=True):
+    def greedy_feature_selection_target(
+        self, target_ranks, n_coords, k, dtype="mean", symm=True
+    ):
         """Greedy selection of the set of coordinates which is most informative about a target distance.
 
         Args:
@@ -238,20 +276,22 @@ class MetricComparisons(Base):
             selected_coords:
             all_imbalances:
         """
-        print('taking labels as the reference representation')
+        print("taking labels as the reference representation")
         assert self.X is not None
 
         dims = self.dims
 
-        imbalances = self.return_inf_imb_target_all_coords(target_ranks, k=k, dtype=dtype)
+        imbalances = self.return_inf_imb_target_all_coords(
+            target_ranks, k=k, dtype=dtype
+        )
 
         if symm:
-            proj = np.dot(imbalances.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
+            proj = np.dot(imbalances.T, np.array([np.sqrt(0.5), np.sqrt(0.5)]))
             selected_coord = np.argmin(proj)
         else:
             selected_coord = np.argmin(imbalances[1])
 
-        print('1 coordinate selected: ', selected_coord)
+        print("1 coordinate selected: ", selected_coord)
 
         other_coords = list(np.arange(dims).astype(int))
 
@@ -261,26 +301,28 @@ class MetricComparisons(Base):
 
         all_imbalances = [imbalances]
 
-        np.savetxt('selected_coords.txt', selected_coords, fmt="%i")
-        np.save('all_losses.npy', all_imbalances)
+        np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
+        np.save("all_losses.npy", all_imbalances)
 
         for i in range(n_coords):
             coord_list = [selected_coords + [oc] for oc in other_coords]
 
-            imbalances_ = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
+            imbalances_ = self.return_inf_imb_target_selected_coords(
+                target_ranks, coord_list, k=k, dtype=dtype
+            )
             imbalances = np.empty((2, dims))
             imbalances[:, :] = None
             imbalances[:, other_coords] = imbalances_
 
             if symm:
-                proj = np.dot(imbalances_.T, np.array([np.sqrt(.5), np.sqrt(.5)]))
+                proj = np.dot(imbalances_.T, np.array([np.sqrt(0.5), np.sqrt(0.5)]))
                 to_select = np.argmin(proj)
             else:
                 to_select = np.argmin(imbalances_[1])
 
             selected_coord = other_coords[to_select]
 
-            print('{} coordinate selected: '.format(i + 2), selected_coord)
+            print("{} coordinate selected: ".format(i + 2), selected_coord)
 
             other_coords.remove(selected_coord)
 
@@ -288,12 +330,12 @@ class MetricComparisons(Base):
 
             all_imbalances.append(imbalances)
 
-            np.savetxt('selected_coords.txt', selected_coords, fmt='%i')
-            np.save('all_losses.npy', all_imbalances)
+            np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
+            np.save("all_losses.npy", all_imbalances)
 
         return selected_coords, all_imbalances
 
-    def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1, dtype='mean'):
+    def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1, dtype="mean"):
         """Compute the information imbalances between a target distance and all possible combinations of d coordinates
         contained of X.
 
@@ -306,10 +348,12 @@ class MetricComparisons(Base):
         Returns:
 
         """
-        assert (self.X is not None)
+        assert self.X is not None
         import itertools
 
-        print("WARNING:  computational cost grows combinatorially! Don't forget to save the results.")
+        print(
+            "WARNING:  computational cost grows combinatorially! Don't forget to save the results."
+        )
 
         if self.verb:
             print("computing loss between all {}-plets and the target label".format(d))
@@ -320,12 +364,14 @@ class MetricComparisons(Base):
 
         coord_list = list(itertools.combinations(all_coords, d))
 
-        imbalances = self.return_inf_imb_target_selected_coords(target_ranks, coord_list, k=k, dtype=dtype)
+        imbalances = self.return_inf_imb_target_selected_coords(
+            target_ranks, coord_list, k=k, dtype=dtype
+        )
 
         return np.array(coord_list), np.array(imbalances)
 
     def return_coordinates_infomation_ranking(self):
-        print('taking dataset as the complete representation')
+        print("taking dataset as the complete representation")
         assert self.X is not None
 
         d = self.X.shape[1]
@@ -337,7 +383,7 @@ class MetricComparisons(Base):
         projection_removed = []
 
         for i in range(d):
-            print('niter is ', i)
+            print("niter is ", i)
 
             print(self.X.shape)
             nls = self.return_inf_imb_full_all_coords(k=1)
@@ -359,55 +405,56 @@ class MetricComparisons(Base):
 
             projection_removed.append(projection[idx_to_remove])
 
-            print('removing index number ', idx_to_remove)
-            print('corresponding to coordinate number ', c_to_remove)
+            print("removing index number ", idx_to_remove)
+            print("corresponding to coordinate number ", c_to_remove)
 
         # idx_to_remove = 0
         # c_to_remove = coords_kept[idx_to_remove]
         # coords_kept.pop(idx_to_remove)
         # projection_removed.append(projection[idx_to_remove])
 
-        print('keeping datasets number ', coords_kept)
+        print("keeping datasets number ", coords_kept)
 
         return np.array(coords_removed)[::-1], np.array(projection_removed)[::-1]
 
     def return_label_overlap(self, labels, k=30):
-        assert (self.distances is not None)
+        assert self.distances is not None
 
         overlaps = []
         for i in range(self.Nele):
-            neigh_idx_i = self.dist_indices[i, 1:k + 1]
+            neigh_idx_i = self.dist_indices[i, 1 : k + 1]
             overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
 
         overlap = np.mean(overlaps)
         return overlap
 
     def return_label_overlap_coords(self, labels, coords, k=30):
-        assert (self.X is not None)
+        assert self.X is not None
 
         X_ = self.X[:, coords]
 
-        nbrs = NearestNeighbors(n_neighbors=self.maxk, algorithm='auto', metric='minkowski',
-                                p=2, n_jobs=1).fit(X_)
+        nbrs = NearestNeighbors(
+            n_neighbors=self.maxk, algorithm="auto", metric="minkowski", p=2, n_jobs=1
+        ).fit(X_)
 
         _, dist_indices_ = nbrs.kneighbors(X_)
 
         overlaps = []
         for i in range(self.Nele):
-            neigh_idx_i = dist_indices_[i, 1:k + 1]
+            neigh_idx_i = dist_indices_[i, 1 : k + 1]
             overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
 
         overlap = np.mean(overlaps)
         return overlap
 
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
-        assert (self.X is not None)
+        assert self.X is not None
 
-        if True:#self.njobs == 1:
+        if True:  # self.njobs == 1:
             overlaps = []
             for coords in coord_list:
                 if self.verb:
-                    print('computing overlap for coord selection')
+                    print("computing overlap for coord selection")
 
                 overlap = self.return_label_overlap_coords(labels, coords, k)
                 overlaps.append(overlap)

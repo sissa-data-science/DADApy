@@ -1,14 +1,14 @@
-import time
 import multiprocessing
+import time
 
 import numpy as np
-from scipy.special import gammaln
 from scipy import sparse
+from scipy.special import gammaln
 
+from duly.cython_ import cython_grads as cgr
+from duly.cython_ import cython_maximum_likelihood_opt as cml
 from duly.id_estimation import IdEstimation
 from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
-from duly.cython_ import cython_maximum_likelihood_opt as cml
-from duly.cython_ import cython_grads as cgr
 
 cores = multiprocessing.cpu_count()
 
@@ -396,7 +396,6 @@ class DensityEstimation(IdEstimation):
 
         # Fij_types: 'grad', 'zero', 'PAk'
         # TODO: we need to implement a gCorr term with the deltaFijs equal to zero
-
         # compute optimal k
         if self.kstar is None:
             self.compute_kstar()
@@ -621,7 +620,7 @@ class DensityEstimation(IdEstimation):
             print("{0:0.2f} seconds for dF_PAk density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
-    
+
     def compute_density_gPAk(self, mode="standard"):
         # compute optimal k
         if self.kstar is None:
@@ -772,33 +771,35 @@ class DensityEstimation(IdEstimation):
             sec = time.time()
 
         # compute adjacency matrix and cumulative changes
-        A = sparse.lil_matrix((self.Nele,self.Nele),dtype=np.float_)
+        A = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
-        supp_deltaF = sparse.lil_matrix((self.Nele,self.Nele),dtype=np.float_)
+        supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
         if use_variance:
-            for nspar,indices in enumerate(self.nind_list):
+            for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                tmp = 1./self.Fij_var_array[nspar]
-                A[i,j] = -tmp
-                supp_deltaF[i,j] = self.Fij_array[nspar]*tmp
+                tmp = 1.0 / self.Fij_var_array[nspar]
+                A[i, j] = -tmp
+                supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
         else:
-            for nspar,indices in enumerate(self.nind_list):
+            for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                A[i,j] = -1.
-                supp_deltaF[i,j] = self.Fij_array[nspar]
+                A[i, j] = -1.0
+                supp_deltaF[i, j] = self.Fij_array[nspar]
 
-        A = sparse.lil_matrix(A + A.transpose())            
+        A = sparse.lil_matrix(A + A.transpose())
 
-        diag = - A.sum(axis=1)
+        diag = -A.sum(axis=1)
 
         A.setdiag(diag)
 
-        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))-np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
+        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,)) - np.array(
+            supp_deltaF.sum(axis=1)
+        ).reshape((self.Nele,))
 
-        Rho = sparse.linalg.spsolve(A.tocsr(),deltaFcum)
+        Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
         self.Rho = Rho
 

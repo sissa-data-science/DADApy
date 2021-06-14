@@ -1,10 +1,10 @@
-import numpy as np
-from sklearn.neighbors import NearestNeighbors
-from sklearn.metrics import pairwise_distances_chunked
-from functools import partial
 import math
-
 import multiprocessing
+from functools import partial
+
+import numpy as np
+from sklearn.metrics import pairwise_distances_chunked
+from sklearn.neighbors import NearestNeighbors
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()

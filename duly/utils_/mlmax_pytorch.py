@@ -1,13 +1,16 @@
+import numpy as np
 import torch as t
 import torch.optim as optim
-import numpy as np
 
-#device = 'cuda' if t.cuda.is_available() else 'cpu'
-device = 'cpu'
+# device = 'cuda' if t.cuda.is_available() else 'cpu'
+device = "cpu"
 
 # ----------------------------------------------------------------------------------------------
 
-def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, alpha, alg='BFGS'):
+
+def maximise_wPAk(
+    Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, alpha, alg="BFGS"
+):
     N = Fis.shape[0]
 
     Fis = Fis + np.random.normal(0, 1, size=(N,)) * 0.1
@@ -26,7 +29,7 @@ def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, al
 
         k = kstar[i]
 
-        for nneigh in range(k-1):
+        for nneigh in range(k - 1):
             j = dist_indices[i, nneigh + 1]
 
             Fijs_t[i, j] = Fijs[nneigh]
@@ -36,7 +39,7 @@ def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, al
             mask[i, j] = 1
 
     def loss_fn():
-        deltas = (Fis_t[None, :] - Fis_t[:, None])
+        deltas = Fis_t[None, :] - Fis_t[:, None]
 
         PAk_corr = PAk_ai_t[:, None] * nijs_t
 
@@ -49,14 +52,22 @@ def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, al
         l = la - lb
         return -l
 
-    if alg == 'BFGS':
+    if alg == "BFGS":
         lr = 0.5
         n_epochs = 50
 
-        optimiser = optim.LBFGS([Fis_t, PAk_ai_t], lr=lr, max_iter=20, max_eval=None,
-                                tolerance_grad=1e-7, tolerance_change=1e-9, history_size=100)
+        optimiser = optim.LBFGS(
+            [Fis_t, PAk_ai_t],
+            lr=lr,
+            max_iter=20,
+            max_eval=None,
+            tolerance_grad=1e-7,
+            tolerance_change=1e-9,
+            history_size=100,
+        )
 
         for e in range(n_epochs):
+
             def closure():
                 optimiser.zero_grad()
                 loss = loss_fn()
@@ -65,8 +76,7 @@ def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, al
 
             optimiser.step(closure)
 
-
-    elif alg == 'GD':
+    elif alg == "GD":
         lr = 1e-7
         n_epochs = 25000
 
@@ -79,14 +89,17 @@ def maximise_wPAk(Fis, kstar, vij_list, dist_indices, Fij_list, Fij_var_list, al
             optimiser.step()
             optimiser.zero_grad()
 
-            if e % 1000 == 0: print(e, loss.item())
+            if e % 1000 == 0:
+                print(e, loss.item())
 
     final_loss = loss_fn()
     return final_loss.data, Fis_t.detach().numpy()
 
+
 # ----------------------------------------------------------------------------------------------
 
-def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg='BFGS'):
+
+def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg="BFGS"):
     N = Fis.shape[0]
 
     Fis = Fis + np.random.normal(0, 1, size=(N,)) * 0.01
@@ -108,12 +121,12 @@ def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg='
             j = dist_indices[i, nneigh + 1]
 
             Fijs_t[i, j] = Fijs[nneigh]
-            Fijs_var_t[i, j] = 2 * (Fijs_var[nneigh] + 1.e-4)
+            Fijs_var_t[i, j] = 2 * (Fijs_var[nneigh] + 1.0e-4)
             mask[i, j] = 1
 
     def loss_fn():
 
-        deltas = (Fis_t[None, :] - Fis_t[:, None])
+        deltas = Fis_t[None, :] - Fis_t[:, None]
 
         la = t.sum(kstar_t * Fis_t - Vis_t * t.exp(Fis_t))
 
@@ -124,15 +137,23 @@ def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg='
         # l = lb
         return -l
 
-    if alg == 'BFGS':
+    if alg == "BFGS":
 
         lr = 0.1
         n_epochs = 50
 
-        optimiser = optim.LBFGS([Fis_t], lr=lr, max_iter=20, max_eval=None,
-                                tolerance_grad=1e-7, tolerance_change=1e-9, history_size=100)
+        optimiser = optim.LBFGS(
+            [Fis_t],
+            lr=lr,
+            max_iter=20,
+            max_eval=None,
+            tolerance_grad=1e-7,
+            tolerance_change=1e-9,
+            history_size=100,
+        )
 
         for e in range(n_epochs):
+
             def closure():
                 optimiser.zero_grad()
                 loss = loss_fn()
@@ -141,7 +162,7 @@ def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg='
 
             optimiser.step(closure)
 
-    elif alg == 'GD':
+    elif alg == "GD":
 
         lr = 1e-5
         n_epochs = 25000
@@ -160,14 +181,19 @@ def maximise(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha, alg='
 
             optimiser.step()
             optimiser.zero_grad()
-            if e % 1000 == 0: print(e, loss.item())
+            if e % 1000 == 0:
+                print(e, loss.item())
 
     final_loss = loss_fn()
     return final_loss.data, Fis_t.detach().numpy()
 
+
 # ----------------------------------------------------------------------------------------------
 
-def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg='BFGS', onlyNN=False):
+
+def maximise_wPAk_flatF(
+    Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg="BFGS", onlyNN=False
+):
     N = Fis.shape[0]
 
     Fis = Fis + np.random.normal(0, 1, size=(N,)) * 0.1
@@ -184,21 +210,21 @@ def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg=
     mask = t.zeros(N, N).int().to(device)
 
     if onlyNN is False:
-    #keep all neighbours up to k*
+        # keep all neighbours up to k*
         for i, vijs in enumerate(vij_list):
 
             k = kstar[i]
 
-            for nneigh in range(k-1):
+            for nneigh in range(k - 1):
                 j = dist_indices[i, nneigh + 1]
 
-                Fijs_t[i, j] = Fis_t[j]-Fis_t[i]
-                Fijs_var_t[i, j] = 2 * (Fis_err[i]**2+Fis_err[j]**2)
+                Fijs_t[i, j] = Fis_t[j] - Fis_t[i]
+                Fijs_var_t[i, j] = 2 * (Fis_err[i] ** 2 + Fis_err[j] ** 2)
                 vijs_t[i, j] = vijs[nneigh]
                 nijs_t[i, j] = float(nneigh + 1)
                 mask[i, j] = 1
     else:
-    #only correlate to first NN
+        # only correlate to first NN
         for i, vijs in enumerate(vij_list):
 
             k = kstar[i]
@@ -206,14 +232,14 @@ def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg=
             for nneigh in range(1):
                 j = dist_indices[i, nneigh + 1]
 
-                Fijs_t[i, j] = Fis_t[j]-Fis_t[i]
-                Fijs_var_t[i, j] = 2 * (Fis_err[i]**2+Fis_err[j]**2)
+                Fijs_t[i, j] = Fis_t[j] - Fis_t[i]
+                Fijs_var_t[i, j] = 2 * (Fis_err[i] ** 2 + Fis_err[j] ** 2)
                 vijs_t[i, j] = vijs[nneigh]
                 nijs_t[i, j] = float(nneigh + 1)
                 mask[i, j] = 1
 
     def loss_fn():
-    #    deltas = (Fis_t[None, :] - Fis_t[:, None])
+        #    deltas = (Fis_t[None, :] - Fis_t[:, None])
 
         PAk_corr = PAk_ai_t[:, None] * nijs_t
 
@@ -221,20 +247,28 @@ def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg=
 
         la = t.sum(mask * Fis_corr) - t.sum(mask * (vijs_t * t.exp(Fis_corr)))
 
-    #    lb = alpha * t.sum(mask * ((deltas - Fijs_t) ** 2 / Fijs_var_t))
-        lb = alpha * t.sum(mask * ((Fijs_t** 2) / Fijs_var_t))
+        #    lb = alpha * t.sum(mask * ((deltas - Fijs_t) ** 2 / Fijs_var_t))
+        lb = alpha * t.sum(mask * ((Fijs_t ** 2) / Fijs_var_t))
 
         l = la - lb
         return -l
 
-    if alg == 'BFGS':
+    if alg == "BFGS":
         lr = 0.5
         n_epochs = 50
 
-        optimiser = optim.LBFGS([Fis_t, PAk_ai_t], lr=lr, max_iter=20, max_eval=None,
-                                tolerance_grad=1e-7, tolerance_change=1e-9, history_size=100)
+        optimiser = optim.LBFGS(
+            [Fis_t, PAk_ai_t],
+            lr=lr,
+            max_iter=20,
+            max_eval=None,
+            tolerance_grad=1e-7,
+            tolerance_change=1e-9,
+            history_size=100,
+        )
 
         for e in range(n_epochs):
+
             def closure():
                 optimiser.zero_grad()
                 loss = loss_fn()
@@ -243,8 +277,7 @@ def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg=
 
             optimiser.step(closure)
 
-
-    elif alg == 'GD':
+    elif alg == "GD":
         lr = 1e-7
         n_epochs = 25000
 
@@ -257,16 +290,16 @@ def maximise_wPAk_flatF(Fis, Fis_err, kstar, vij_list, dist_indices, alpha, alg=
             optimiser.step()
             optimiser.zero_grad()
 
-            if e % 1000 == 0: print(e, loss.item())
+            if e % 1000 == 0:
+                print(e, loss.item())
 
     final_loss = loss_fn()
     return final_loss.data, Fis_t.detach().numpy()
 
 
-
-
-
-def optimise_metric_vectors(gammaij, d=2, lr=1e-3, n_epochs=10000, alg='GD', vi_init=None):
+def optimise_metric_vectors(
+    gammaij, d=2, lr=1e-3, n_epochs=10000, alg="GD", vi_init=None
+):
     n_metrics = gammaij.shape[0]
 
     # convert the losses to tensor format
@@ -277,7 +310,7 @@ def optimise_metric_vectors(gammaij, d=2, lr=1e-3, n_epochs=10000, alg='GD', vi_
     # np.random.seed(1)
 
     if vi_init is not None:
-        assert (vi_init.shape[0] == n_metrics and vi_init.shape[1] == d)
+        assert vi_init.shape[0] == n_metrics and vi_init.shape[1] == d
         vi_t = t.from_numpy(vi_init).float().to(device)
         vi_t.requires_grad_()
     else:
@@ -306,7 +339,7 @@ def optimise_metric_vectors(gammaij, d=2, lr=1e-3, n_epochs=10000, alg='GD', vi_
 
     losses = []
 
-    if alg == 'GD':
+    if alg == "GD":
 
         optimiser = optim.SGD([vi_t], lr=lr)
 
@@ -327,10 +360,16 @@ def optimise_metric_vectors(gammaij, d=2, lr=1e-3, n_epochs=10000, alg='GD', vi_
                 print(e, loss.item())
                 losses.append(loss.item())
 
-
-    elif alg == 'BFGS':
-        optimiser = optim.LBFGS([vi_t], lr=lr, max_iter=25, max_eval=None,
-                                tolerance_grad=1e-7, tolerance_change=1e-9, history_size=100)
+    elif alg == "BFGS":
+        optimiser = optim.LBFGS(
+            [vi_t],
+            lr=lr,
+            max_iter=25,
+            max_eval=None,
+            tolerance_grad=1e-7,
+            tolerance_change=1e-9,
+            history_size=100,
+        )
 
         for e in range(n_epochs):
 

@@ -1,10 +1,10 @@
-import time
 import multiprocessing
+import time
 
 import numpy as np
 
-from duly.density_estimation import DensityEstimation
 from duly.cython_ import cython_clustering as cf
+from duly.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()
 

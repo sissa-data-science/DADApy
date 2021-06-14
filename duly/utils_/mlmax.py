@@ -1,12 +1,10 @@
-import numpy as np
-
-from scipy.optimize import minimize
-
 import duly.utils_.utils as ut
+import numpy as np
+from scipy.optimize import minimize
 
 
 def ML_fun_gPAk(params, args):
-    '''
+    """
     The function returns the log-Likelihood expression to be minimized.
 
     Requirements:
@@ -19,7 +17,7 @@ def ML_fun_gPAk(params, args):
     * **b**: correspond to the ''log(rho)'', as in Eq. (S1)
     * **a**: the linear correction, as in Eq. (S1)
 
-    '''
+    """
 
     Fi = params[0]
 
@@ -50,7 +48,7 @@ def ML_fun_gPAk(params, args):
 
 
 def ML_fun_gpPAk(params, args):
-    '''
+    """
     The function returns the log-Likelihood expression to be minimized.
 
     Requirements:
@@ -63,7 +61,7 @@ def ML_fun_gpPAk(params, args):
     * **b**: correspond to the ''log(rho)'', as in Eq. (S1)
     * **a**: the linear correction, as in Eq. (S1)
 
-    '''
+    """
 
     Fi = params[0]
 
@@ -95,7 +93,7 @@ def ML_fun_gpPAk(params, args):
 
 
 def ML_fun(params, args):
-    '''
+    """
     The function returns the log-Likelihood expression to be minimized.
 
     Requirements:
@@ -108,7 +106,7 @@ def ML_fun(params, args):
     * **b**: correspond to the ''log(rho)'', as in Eq. (S1)
     * **a**: the linear correction, as in Eq. (S1)
 
-    '''
+    """
     # g = [0, 0]
     b = params[0]
     a = params[1]
@@ -127,7 +125,7 @@ def ML_fun(params, args):
 
 
 def ML_hess_fun(params, args):
-    '''
+    """
     The function returns the expressions for the asymptotic variances of the estimated parameters.
 
     Requirements:
@@ -140,7 +138,7 @@ def ML_hess_fun(params, args):
     * **b**: correspond to the ''log(rho)'', as in Eq. (S1)
     * **a**: the linear correction, as in Eq. (S1)
 
-    '''
+    """
     g = [0, 0]
     b = params[0]
     a = params[1]
@@ -149,7 +147,7 @@ def ML_hess_fun(params, args):
     ga = (kopt + 1) * kopt * 0.5
     L0 = b * gb + a * ga
     Vi = args[1]
-    Cov2 = np.array([[0.] * 2] * 2)
+    Cov2 = np.array([[0.0] * 2] * 2)
     for k in range(1, kopt):
         jf = float(k)
         t = b + a * jf
@@ -171,7 +169,7 @@ def ML_hess_fun(params, args):
 
 
 def MLmax(rr, kopt, Vi):
-    '''
+    """
     This function uses the scipy.optimize package to minimize the function returned by ''ML_fun'', and
     the ''ML_hess_fun'' for the analytical calculation of the Hessian for errors estimation.
     It returns the value of the density which minimize the log-Likelihood in Eq. (S1)
@@ -182,12 +180,18 @@ def MLmax(rr, kopt, Vi):
     * **kopt**: is the optimal neighborhood size k as return by the Likelihood Ratio test
     * **Vi**: is the list of the ''kopt'' volumes of the shells defined by two successive nearest neighbors of the current point
 
-    # '''
+    #"""
     # results = minimize(ML_fun, [rr, 0.], method='Nelder-Mead', args=([kopt, Vi],),
     #                    options={'maxiter': 1000})
 
-    results = minimize(ML_fun, [rr, 0.], method='Nelder-Mead', tol=1e-6, args=([kopt, Vi]),
-                       options={'maxiter': 1000})
+    results = minimize(
+        ML_fun,
+        [rr, 0.0],
+        method="Nelder-Mead",
+        tol=1e-6,
+        args=([kopt, Vi]),
+        options={"maxiter": 1000},
+    )
 
     # err = ML_hess_fun(results.x, [kopt, Vi])
     # a_err = err[1]
@@ -197,9 +201,14 @@ def MLmax(rr, kopt, Vi):
 
 
 def MLmax_gPAk(rr, kopt, Vi, grads_ij):
-    results = minimize(ML_fun_gPAk, [rr, 0.], method='Nelder-Mead', tol=1e-6,
-                       args=([kopt, Vi, grads_ij]),
-                       options={'maxiter': 1000})
+    results = minimize(
+        ML_fun_gPAk,
+        [rr, 0.0],
+        method="Nelder-Mead",
+        tol=1e-6,
+        args=([kopt, Vi, grads_ij]),
+        options={"maxiter": 1000},
+    )
 
     rr = results.x[0]  # b
     print(results.message)
@@ -207,9 +216,14 @@ def MLmax_gPAk(rr, kopt, Vi, grads_ij):
 
 
 def MLmax_gpPAk(rr, kopt, Vi, grads_ij):
-    results = minimize(ML_fun_gpPAk, [rr, 0.], method='Nelder-Mead', tol=1e-6,
-                       args=([kopt, Vi, grads_ij]),
-                       options={'maxiter': 1000})
+    results = minimize(
+        ML_fun_gpPAk,
+        [rr, 0.0],
+        method="Nelder-Mead",
+        tol=1e-6,
+        args=([kopt, Vi, grads_ij]),
+        options={"maxiter": 1000},
+    )
 
     rr = results.x[0]  # b
     print(results.message)
@@ -217,16 +231,22 @@ def MLmax_gpPAk(rr, kopt, Vi, grads_ij):
 
 
 def MLmax_kNN_corr(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha):
-    print('ML maximisation started')
+    print("ML maximisation started")
 
     # methods: 'Nelder-Mead', 'BFGS'
     # results = minimize(ML_fun_kNN_corr, Fis, method='Nelder-Mead', tol=1e-6,
     #                    args=([kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha]),
     #                    options={'maxiter': 50000})
 
-    results = minimize(ML_fun_kNN_corr, Fis, method='CG', tol=1e-6, jac=ML_fun_grad,
-                       args=([kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha]),
-                       options={'maxiter': 100})
+    results = minimize(
+        ML_fun_kNN_corr,
+        Fis,
+        method="CG",
+        tol=1e-6,
+        jac=ML_fun_grad,
+        args=([kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha]),
+        options={"maxiter": 100},
+    )
 
     rr = results.x  # b
     print(results.message)
@@ -236,5 +256,6 @@ def MLmax_kNN_corr(Fis, kstar, Vis, dist_indices, Fij_list, Fij_var_list, alpha)
     print(np.mean(abs(results.jac)))
     return rr
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     pass
