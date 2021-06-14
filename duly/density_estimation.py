@@ -1,14 +1,15 @@
-import multiprocessing
 import time
+import multiprocessing
 
 import numpy as np
-from scipy import sparse
 from scipy.special import gammaln
+from scipy import sparse
+from scipy import linalg as slin
 
-from duly.cython_ import cython_grads as cgr
-from duly.cython_ import cython_maximum_likelihood_opt as cml
 from duly.id_estimation import IdEstimation
 from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
+from duly.cython_ import cython_maximum_likelihood_opt as cml
+from duly.cython_ import cython_grads as cgr
 
 cores = multiprocessing.cpu_count()
 
@@ -396,6 +397,7 @@ class DensityEstimation(IdEstimation):
 
         # Fij_types: 'grad', 'zero', 'PAk'
         # TODO: we need to implement a gCorr term with the deltaFijs equal to zero
+
         # compute optimal k
         if self.kstar is None:
             self.compute_kstar()
@@ -449,120 +451,6 @@ class DensityEstimation(IdEstimation):
         Rho -= np.log(self.Nele)
 
         self.Rho = Rho
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_density_PAk_gCorr(self, alpha=1.0):
-        from duly.utils_.mlmax_pytorch import maximise_wPAk
-
-        """
-        finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
-        computed using the gradients
-        """
-        # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
-
-        # compute changes in free energy
-        if self.Fij_array is None:
-            self.compute_deltaFs_grads_semisum()
-
-        dc = np.empty(self.Nele, dtype=float)
-        Rho = np.empty(self.Nele, dtype=float)
-
-        prefactor = np.exp(
-            self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
-        )
-
-        vij_list = []
-
-        for i in range(self.Nele):
-
-            Fij_list = self.Fij_list
-            Fij_var_list = self.Fij_var_list
-
-            Fij_list.append(self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]])
-            Fij_var_list.append(
-                self.Fij_var_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-            )
-
-            dc[i] = self.distances[i, self.kstar[i]]
-            rr = np.log(self.kstar[i]) - (
-                np.log(prefactor)
-                + self.id_selected * np.log(self.distances[i, self.kstar[i]])
-            )
-            Rho[i] = rr
-            vj = np.zeros(self.kstar[i])
-            for j in range(self.kstar[i]):
-                vj[j] = prefactor * (
-                    pow(self.distances[i, j + 1], self.id_selected)
-                    - pow(self.distances[i, j], self.id_selected)
-                )
-
-            vij_list.append(vj)
-
-        l_, Rho = maximise_wPAk(
-            Rho, self.kstar, vij_list, self.dist_indices, Fij_list, Fij_var_list, alpha
-        )
-
-        self.Rho = Rho
-        self.Rho -= np.log(self.Nele)
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_density_PAk_gCorr_flat(self, alpha=1.0, onlyNN=False):
-        from duly.utils_.mlmax_pytorch import maximise_wPAk_flatF
-
-        """
-        finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
-        computed using the gradients
-        """
-        # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
-
-        # compute optimal k
-        if self.kstar is None:
-            self.compute_kstar()
-
-        dc = np.zeros(self.Nele, dtype=float)
-        Rho = np.zeros(self.Nele, dtype=float)
-        Rho_err = np.zeros(self.Nele, dtype=float)
-
-        prefactor = np.exp(
-            self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
-        )
-
-        vij_list = []
-
-        for i in range(self.Nele):
-            dc[i] = self.distances[i, self.kstar[i]]
-            rr = np.log(self.kstar[i]) - (
-                np.log(prefactor)
-                + self.id_selected * np.log(self.distances[i, self.kstar[i]])
-            )
-            Rho[i] = rr
-            vj = np.zeros(self.kstar[i])
-            for j in range(self.kstar[i]):
-                vj[j] = prefactor * (
-                    pow(self.distances[i, j + 1], self.id_selected)
-                    - pow(self.distances[i, j], self.id_selected)
-                )
-
-            vij_list.append(vj)
-
-            Rho_err[i] = np.sqrt(
-                (4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1))
-            )
-
-        if self.verb:
-            print("Starting likelihood maximisation")
-        sec = time.time()
-        l_, Rho = maximise_wPAk_flatF(
-            Rho, Rho_err, self.kstar, vij_list, self.dist_indices, alpha, onlyNN
-        )
-        sec2 = time.time()
-        if self.verb:
-            print("{0:0.2f} seconds for likelihood maximisation".format(sec2 - sec))
-
-        self.Rho = Rho
-        self.Rho -= np.log(self.Nele)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -791,9 +679,11 @@ class DensityEstimation(IdEstimation):
 
         A = sparse.lil_matrix(A + A.transpose())
 
-        diag = -A.sum(axis=1)
+        diag = np.array(-A.sum(axis=1)).reshape((self.Nele,))
 
         A.setdiag(diag)
+
+        # print("Diag = {}".format(diag))
 
         deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,)) - np.array(
             supp_deltaF.sum(axis=1)
@@ -802,10 +692,281 @@ class DensityEstimation(IdEstimation):
         Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
         self.Rho = Rho
+        self.A = A.todense()
+        self.B = slin.pinvh(self.A)
+        self.Rho_err = np.sqrt(np.diag(self.B))
+        # self.Rho_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
+        # self.Rho_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,))
 
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_dF_PAk_gCorr(self, use_variance=True, alpha=1.0):
+
+        # check for deltaFij
+        if self.Fij_array is None:
+            self.compute_deltaFs_grads_semisum()
+
+        if self.verb:
+            print("dF_PAk_gCorr density estimation started")
+            sec = time.time()
+
+        dc = np.zeros(self.Nele, dtype=float)
+        corrected_vols = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
+        prefactor = np.exp(
+            self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
+        )
+
+        Rho_min = 9.9e300
+
+        for i in range(self.Nele):
+            k = int(self.kstar[i])
+            dc[i] = self.distances[i, k]
+            Fijs = self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
+
+            for j in range(1, k):
+                Fij = Fijs[j - 1]
+                rjjm1 = (
+                    self.distances[i, j] ** self.id_selected
+                    - self.distances[i, j - 1] ** self.id_selected
+                )
+
+                corrected_vols[i] += rjjm1 * np.exp(Fij)  # * (1+Fij)
+
+        corrected_vols *= prefactor * self.Nele
+
+        self.dc = dc
+
+        # compute adjacency matrix and cumulative changes
+        A = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
+
+        supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
+
+        if use_variance:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                tmp = 1.0 / self.Fij_var_array[nspar]
+                A[i, j] = -tmp
+                supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
+        else:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                A[i, j] = -1.0
+                supp_deltaF[i, j] = self.Fij_array[nspar]
+
+        A = sparse.lil_matrix(A + A.transpose())
+
+        diag = np.array(-A.sum(axis=1)).reshape((self.Nele,)) + alpha * self.kstar
+
+        #        print("Diag = {}".format(diag))
+
+        A.setdiag(diag)
+
+        deltaFcum = (
+            np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))
+            - np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
+            + alpha * (self.kstar * (np.log(self.kstar / corrected_vols)))
+        )
+
+        #        print("deltaFcum = {}".format(np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))-np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))))
+        #        print("Other term = {}".format(self.kstar*(np.log(self.kstar/corrected_vols))))
+
+        Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+        self.Rho = Rho
+        self.A = A.todense()
+        self.B = slin.pinvh(self.A)
+        self.Rho_err = np.sqrt(np.diag(self.B))
+        # self.Rho_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,))
+
+        sec2 = time.time()
+        if self.verb:
+            print(
+                "{0:0.2f} seconds for dF_PAk_gCorr density estimation".format(
+                    sec2 - sec
+                )
+            )
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_PAk_gCorr(self, gauss_approx=True, alpha=1.0):
+        """
+        finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
+        computed using the gradients
+        """
+        # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
+
+        # compute changes in free energy
+        if self.Fij_array is None:
+            self.compute_deltaFs_grads_semisum()
+
+        if self.verb:
+            print("PAk_gCorr density estimation started")
+            sec = time.time()
+
+        dc = np.empty(self.Nele, dtype=float)
+        Rho = np.empty(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
+        prefactor = np.exp(
+            self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
+        )
+        Rho_min = 9.9e300
+        vij_list = []
+        Fij_list = []
+        Fij_var_list = []
+
+        if gauss_approx is True:
+            if self.verb:
+                print("Maximising likelihood in Gaussian approximation")
+
+            self.compute_density_PAk()
+
+            # compute adjacency matrix and cumulative changes
+            A = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
+
+            supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
+
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                tmp = 1.0 / self.Fij_var_array[nspar]
+                A[i, j] = -tmp
+                supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
+
+            A = sparse.lil_matrix(A + A.transpose())
+
+            diag = (
+                np.array(-A.sum(axis=1)).reshape((self.Nele,))
+                + alpha / self.Rho_err ** 2
+            )
+
+            A.setdiag(diag)
+
+            deltaFcum = (
+                np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))
+                - np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
+                + alpha * self.Rho / self.Rho_err ** 2
+            )
+
+            Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            self.Rho_err = np.sqrt(np.diag(self.B))
+            # self.Rho_err = np.sqrt(diag/(np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,)))
+
+        else:
+            if self.verb:
+                print("Solving via SGD")
+            from duly.utils_.mlmax_pytorch import maximise_wPAk
+
+            for i in range(self.Nele):
+
+                Fij_list.append(
+                    self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
+                )
+                Fij_var_list.append(
+                    self.Fij_var_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
+                )
+
+                dc[i] = self.distances[i, self.kstar[i]]
+                rr = np.log(self.kstar[i]) - (
+                    np.log(prefactor)
+                    + self.id_selected * np.log(self.distances[i, self.kstar[i]])
+                )
+                Rho[i] = rr
+                vj = np.zeros(self.kstar[i])
+                for j in range(self.kstar[i]):
+                    vj[j] = prefactor * (
+                        pow(self.distances[i, j + 1], self.id_selected)
+                        - pow(self.distances[i, j], self.id_selected)
+                    )
+
+                vij_list.append(vj)
+
+            l_, Rho = maximise_wPAk(
+                Rho,
+                self.kstar,
+                vij_list,
+                self.dist_indices,
+                Fij_list,
+                Fij_var_list,
+                alpha,
+            )
+            Rho -= np.log(self.Nele)
+
+        self.Rho = Rho
+
+        sec2 = time.time()
+        if self.verb:
+            print(
+                "{0:0.2f} seconds for PAk_gCorr density estimation".format(sec2 - sec)
+            )
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_PAk_gCorr_flat(self, alpha=1.0, onlyNN=False):
+        from duly.utils_.mlmax_pytorch import maximise_wPAk_flatF
+
+        """
+        finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
+        computed using the gradients
+        """
+        # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
+
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
+
+        prefactor = np.exp(
+            self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
+        )
+
+        vij_list = []
+
+        for i in range(self.Nele):
+            dc[i] = self.distances[i, self.kstar[i]]
+            rr = np.log(self.kstar[i]) - (
+                np.log(prefactor)
+                + self.id_selected * np.log(self.distances[i, self.kstar[i]])
+            )
+            Rho[i] = rr
+            vj = np.zeros(self.kstar[i])
+            for j in range(self.kstar[i]):
+                vj[j] = prefactor * (
+                    pow(self.distances[i, j + 1], self.id_selected)
+                    - pow(self.distances[i, j], self.id_selected)
+                )
+
+            vij_list.append(vj)
+
+            Rho_err[i] = np.sqrt(
+                (4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1))
+            )
+
+        if self.verb:
+            print("Starting likelihood maximisation")
+        sec = time.time()
+        l_, Rho = maximise_wPAk_flatF(
+            Rho, Rho_err, self.kstar, vij_list, self.dist_indices, alpha, onlyNN
+        )
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for likelihood maximisation".format(sec2 - sec))
+
+        self.Rho = Rho
+        self.Rho -= np.log(self.Nele)
 
     # ----------------------------------------------------------------------------------------------
 
