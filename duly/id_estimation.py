@@ -281,6 +281,7 @@ class IdEstimation(Base):
             print(
                 "no points in the inner shell, returning 0. Consider increasing Rk and/or the ratio"
             )
+            self.id_estimated_binom = 0
             return 0
 
         if method == "mle":
@@ -344,8 +345,8 @@ class IdEstimation(Base):
     def compute_id_binomial_k(self, k=None, ratio=None, method="bayes", plot=False):
         """Calculate Id using the binomial estimator by fixing the number of neighbours
 
-        As in the case in which one fix Rk, also in this version of the estimation
-        one removes the central point from n and k. One furthermore has to remove also
+        As in the case in which one fixes Rk, also in this version of the estimation
+        one removes the central point from n and k. Furthermore one has to remove also
         the k-th NN, as it plays the role of the distance at which Rk is taken.
         So if k=5 it means the 5th NN from the central point will be considered,
         taking into account 6 points though (the central one too). This means that
@@ -380,6 +381,7 @@ class IdEstimation(Base):
             print(
                 "no points in the inner shell, returning 0\n. Consider increasing Rk and/or the ratio"
             )
+            self.id_estimated_binom = 0
             return 0
 
         if method == "mle":

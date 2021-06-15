@@ -2,7 +2,7 @@ import multiprocessing
 
 import numpy as np
 import scipy.special as sp
-from scipy.optimize import minimize as SMin
+from scipy.optimize import minimize_scalar as SMin
 
 from duly._base import Base
 from duly.utils_ import discrete_functions as df
@@ -177,12 +177,9 @@ class IdDiscrete(Base):
                 ww = self.weights[self.mask]
             else:
                 ww = 1
-            self.id_estimated_binom = SMin(
-                df.compute_binomial_logL,
-                10.0,
-                args=(self.Lk, k_eff - 1, self.Ln, n_eff - 1, True, ww),
-                bounds=((0.001, 30.0),),
-            ).x[0]
+            self.id_estimated_binom = SMin(    df.compute_binomial_logL,
+        args=(self.Lk,k_eff-1,self.Ln,n_eff-1,True,ww),
+        bounds=(0.0001,100.),method='bounded'    ).x
 
         elif method == "bayes":
             if self.is_w:
@@ -426,19 +423,9 @@ class IdDiscrete(Base):
         else:
             ww = 1
 
-        self.id_estimated_binom = SMin(
-            df.compute_binomial_logL,
-            10.0,
-            args=(
-                self.Lk[self.mask],
-                k_eff - 1,
-                self.Ln[self.mask],
-                n_eff - 1,
-                True,
-                ww,
-            ),
-            bounds=((0.001, 30.0),),
-        ).x[0]
+        self.id_estimated_binom = SMin(    df.compute_binomial_logL, 
+      args=(self.Lk[self.mask],k_eff-1,self.Ln[self.mask],n_eff-1,True,ww),
+      bounds=(0.0001,100.),method='bounded'   ).x
 
     # ----------------------------------------------------------------------------------------------
 

@@ -146,6 +146,9 @@ def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
     else:
         p = (Rn / Rk) ** d
 
+    if np.any(p==0) :
+    	print('something went wrong in the calculation of p: check radii and d used')
+
     log_binom = np.log(scipy.special.binom(k, n))
 
     # for big values of k and n (~1000) the binomial coefficients explode -> use
