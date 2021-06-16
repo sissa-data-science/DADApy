@@ -473,7 +473,8 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False, verbose=True):
         d_right = D_MAX + dx + d_left
         d_range = np.arange(d_left, d_right, dx)
         P = np.array([p_d(di) for di in d_range]) * dx
-        elements = sum(P != 0)
+        mask = (P != 0)
+        elements = mask.sum()
         counter = 0
         # if less than 3 points !=0 are found, reduce the interval
         while elements < 3:
