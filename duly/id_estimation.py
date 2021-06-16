@@ -11,7 +11,6 @@ from duly.utils_ import utils as ut
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
-
 class IdEstimation(Base):
     """Estimates the intrinsic dimension of a dataset choosing among various routines.
 
@@ -285,9 +284,7 @@ class IdEstimation(Base):
             return 0
 
         if method == "mle":
-            self.id_estimated_binom = np.log((E_n - 1) / (k_eff.mean() - 1)) / np.log(
-                self.r
-            )
+            self.id_estimated_binom = np.log((E_n - 1) / (k_eff.mean() - 1)) / np.log(self.r)
         elif method == "bayes":
             (
                 self.id_estimated_binom,
@@ -455,6 +452,9 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False, verbose=True):
     from scipy.special import beta as beta_f
     from scipy.stats import beta as beta_d
 
+    D_MAX = 300.
+    D_MIN = 0.0001
+
     a = a0 + n.sum()
     if isinstance(k, (np.int, int)):
         b = b0 + k * n.shape[0] - n.sum()
@@ -469,27 +469,29 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False, verbose=True):
             return abs(posterior.pdf(r ** d) * (r ** d) * np.log(r))
 
         dx = 0.1
-        d_left = 0.0001
-        d_right = 20 + dx + d_left
+        d_left = D_MIN
+        d_right = D_MAX + dx + d_left
         d_range = np.arange(d_left, d_right, dx)
         P = np.array([p_d(di) for di in d_range]) * dx
         elements = sum(P != 0)
         counter = 0
-        while elements < 1000:
-            if elements > 10:
-                dx /= 10
-                ind = np.where(P != 0)[0]
-                d_left = d_range[ind[0]]
-                d_right = d_range[ind[-1]]
-            else:
-                dx /= 10
-
+        # if less than 3 points !=0 are found, reduce the interval
+        while elements < 3:
+            dx/=10
             d_range = np.arange(d_left, d_right, dx)
             P = np.array([p_d(di) for di in d_range]) * dx
-            elements = sum(P != 0)
+            mask = (P != 0)
+            elements = mask.sum()
             counter += 1
-            if verbose:
-                print("iter no\t", counter, d_left, d_right, elements)
+    
+        # with more than 3 points !=0 we can restrict the domain and have a smooth distribution 
+        # I choose 1000 points but such quantity can be varied according to necessity
+        ind = np.where(mask)[0]
+        d_left = d_range[ind[0]]-0.5*dx if d_range[ind[0]]-dx > 0 else D_MIN 
+        d_right = d_range[ind[-1]]+0.5*dx
+        d_range = np.linspace(d_left,d_right,1000)
+        dx = (d_right-d_left)/1000
+        P = np.array([p_d(di) for di in d_range]) * dx
 
         plt.plot(d_range, P)
         plt.xlabel("d")
@@ -497,6 +499,7 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False, verbose=True):
         E_d_emp = (d_range * P).sum()
         S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
         print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
+
     E_d = (sp.digamma(a) - sp.digamma(a + b)) / np.log(r)
     S_d = np.sqrt((sp.polygamma(1, a) - sp.polygamma(1, a + b)) / np.log(r) ** 2)
 

@@ -11,6 +11,8 @@ from duly.utils_ import utils as ut
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
+D_MAX = 300.
+D_MIN = 0.0001
 
 class IdDiscrete(Base):
     """Estimates the intrinsic dimension of a dataset choosing among various routines.
@@ -179,7 +181,7 @@ class IdDiscrete(Base):
                 ww = 1
             self.id_estimated_binom = SMin(    df.compute_binomial_logL,
         args=(self.Lk,k_eff-1,self.Ln,n_eff-1,True,ww),
-        bounds=(0.0001,100.),method='bounded'    ).x
+        bounds=(D_MIN,D_MAX),method='bounded'    ).x
 
         elif method == "bayes":
             if self.is_w:
@@ -222,7 +224,7 @@ class IdDiscrete(Base):
         """
 
         # TODO: what if we have multiplicity???? use it straightly on the plain points
-        # 		or take it into account when counting the number of NN?
+        #       or take it into account when counting the number of NN?
 
         # checks-in and initialisations
         assert (
@@ -235,7 +237,7 @@ class IdDiscrete(Base):
             assert (
                 k_eff <= self.maxk
             ), "A k_eff > maxk was selected,\
-			 	recompute the distances with the proper amount on NN to see points up to that k_eff"
+                recompute the distances with the proper amount on NN to see points up to that k_eff"
         else:
             k_eff = self.maxk
 
@@ -260,7 +262,7 @@ class IdDiscrete(Base):
                 # Group distances according to shell. Returns radii of shell and cumulative number of points at that radius.
                 # The index at which a distance is first met == number of points at smaller distance
                 # EXAMPLE:
-                # a = np.array([0,1,1,2,3,3,4,4,4,6,6]) 	and suppose it would go on as 6,6,6,7,8...
+                # a = np.array([0,1,1,2,3,3,4,4,4,6,6])     and suppose it would go on as 6,6,6,7,8...
                 # un, ind = np.unique(a, return_index=True)
                 # un: array([0, 1, 2, 3, 4, 6])
                 # ind: array([0, 1, 3, 4, 6, 9])
@@ -295,7 +297,7 @@ class IdDiscrete(Base):
                 "BE CAREFUL: "
                 + str(sum(~self.mask))
                 + " points would have Rk set to 0\
-				   and thus will be kept out of the statistics. Consider increasing k."
+                   and thus will be kept out of the statistics. Consider increasing k."
             )
 
     # --------------------------------------------------------------------------------------
@@ -372,7 +374,7 @@ class IdDiscrete(Base):
                 "BE CAREFUL: "
                 + str(sum(~self.mask))
                 + " points would have Rk set to 0\
-				   and thus will be kept out of the statistics. Consider increasing k."
+                   and thus will be kept out of the statistics. Consider increasing k."
             )
 
     # --------------------------------------------------------------------------------------
@@ -425,7 +427,7 @@ class IdDiscrete(Base):
 
         self.id_estimated_binom = SMin(    df.compute_binomial_logL, 
       args=(self.Lk[self.mask],k_eff-1,self.Ln[self.mask],n_eff-1,True,ww),
-      bounds=(0.0001,100.),method='bounded'   ).x
+      bounds=(D_MIN,D_MAX),method='bounded'   ).x
 
     # ----------------------------------------------------------------------------------------------
 
@@ -522,30 +524,36 @@ def _beta_prior_d(k, n, Lk, Ln, a0=1, b0=1, plot=True, verbose=True):
         dx_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
         return abs(posterior.pdf(x) * dx_dd)
 
-    dx = 0.1
-    d_left = 0.000001
-    d_right = 20 + dx + d_left
+    # in principle we don't know where the distribution is peaked, so 
+    # we perform a blind search over the domain
+    dx = 1.
+    d_left = D_MIN
+    d_right = D_MAX + dx + d_left
     d_range = np.arange(d_left, d_right, dx)
     P = np.array([p_d(di) for di in d_range]) * dx
     counter = 0
     elements = sum(P != 0)
-    while elements < 1000:
-        if elements > 10:
-            dx /= 10
-            ind = np.where(P != 0)[0]
-            d_left = d_range[ind[0]]
-            d_right = d_range[ind[-1]]
-        else:
-            dx /= 10
-
+    # if less than 3 points !=0 are found, reduce the interval
+    while elements < 3:
+        dx/=10
         d_range = np.arange(d_left, d_right, dx)
         P = np.array([p_d(di) for di in d_range]) * dx
-        elements = sum(P != 0)
+        mask = (P != 0)
+        elements = mask.sum()
         counter += 1
-        if verbose:
-            print("iter no\t", counter, d_left, d_right, elements)
 
+    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution 
+    # I choose 1000 points but such quantity can be varied according to necessity
+    ind = np.where(mask)[0]
+    d_left = d_range[ind[0]]-0.5*dx if d_range[ind[0]]-dx > 0 else D_MIN 
+    d_right = d_range[ind[-1]]+0.5*dx
+    d_range = np.linspace(d_left,d_right,1000)
+    dx = (d_right-d_left)/1000
+    P = np.array([p_d(di) for di in d_range]) * dx
     P = P.reshape(P.shape[0])
+
+#    if verbose:
+#        print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -557,12 +565,12 @@ def _beta_prior_d(k, n, Lk, Ln, a0=1, b0=1, plot=True, verbose=True):
         plt.title("posterior of d")
         plt.show()
 
-    E_d_emp = (d_range * P).sum()
+    E_d_emp = np.dot(d_range,P)
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
     print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
-    # 	theoretical results, valid only in the continuum case
-    # 	E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
-    # 	S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
+    #   theoretical results, valid only in the continuum case
+    #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
+    #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
     return E_d_emp, S_d_emp, d_range, P
 
