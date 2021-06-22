@@ -127,4 +127,5 @@ def test_density_estimation_basics():
     )
 
     # Check we get the expected answer
-    assert np.array_equal(de.Rho, expected_den)
+    # assert np.array_equal(de.Rho, expected_den)
+    assert np.allclose(de.Rho, expected_den)
