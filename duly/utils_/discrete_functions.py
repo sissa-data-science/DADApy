@@ -1,5 +1,6 @@
 import duly.utils_.utils as ut
 import numpy as np
+
 # load, just once and for all, the coefficients for the polynomials in d at fixed L
 import pkg_resources
 import scipy
@@ -146,8 +147,8 @@ def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
     else:
         p = (Rn / Rk) ** d
 
-    if np.any(p==0) :
-    	print('something went wrong in the calculation of p: check radii and d used')
+    if np.any(p == 0):
+        print("something went wrong in the calculation of p: check radii and d used")
 
     log_binom = np.log(scipy.special.binom(k, n))
 

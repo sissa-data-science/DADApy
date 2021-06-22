@@ -3,7 +3,7 @@ import numpy as np
 from duly.data import Data
 
 
-class Data_sets:
+class DataSets:
     def __init__(
         self,
         coordinates_list=(),
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     X1 = np.random.uniform(0, 1, (100, 2))
     X2 = np.random.uniform(0, 1, (100, 2))
 
-    ds = Data_sets(coordinates_list=([X1, X2]))
+    ds = DataSets(coordinates_list=([X1, X2]))
 
     ds.serialize_computation("compute_distances", maxk=3)
 

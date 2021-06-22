@@ -11,8 +11,9 @@ from duly.utils_ import utils as ut
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
-D_MAX = 300.
+D_MAX = 300.0
 D_MIN = 0.0001
+
 
 class IdDiscrete(Base):
     """Estimates the intrinsic dimension of a dataset choosing among various routines.
@@ -179,9 +180,12 @@ class IdDiscrete(Base):
                 ww = self.weights[self.mask]
             else:
                 ww = 1
-            self.id_estimated_binom = SMin(    df.compute_binomial_logL,
-        args=(self.Lk,k_eff-1,self.Ln,n_eff-1,True,ww),
-        bounds=(D_MIN,D_MAX),method='bounded'    ).x
+            self.id_estimated_binom = SMin(
+                df.compute_binomial_logL,
+                args=(self.Lk, k_eff - 1, self.Ln, n_eff - 1, True, ww),
+                bounds=(D_MIN, D_MAX),
+                method="bounded",
+            ).x
 
         elif method == "bayes":
             if self.is_w:
@@ -425,9 +429,19 @@ class IdDiscrete(Base):
         else:
             ww = 1
 
-        self.id_estimated_binom = SMin(    df.compute_binomial_logL, 
-      args=(self.Lk[self.mask],k_eff-1,self.Ln[self.mask],n_eff-1,True,ww),
-      bounds=(D_MIN,D_MAX),method='bounded'   ).x
+        self.id_estimated_binom = SMin(
+            df.compute_binomial_logL,
+            args=(
+                self.Lk[self.mask],
+                k_eff - 1,
+                self.Ln[self.mask],
+                n_eff - 1,
+                True,
+                ww,
+            ),
+            bounds=(D_MIN, D_MAX),
+            method="bounded",
+        ).x
 
     # ----------------------------------------------------------------------------------------------
 
@@ -524,37 +538,37 @@ def _beta_prior_d(k, n, Lk, Ln, a0=1, b0=1, plot=True, verbose=True):
         dx_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
         return abs(posterior.pdf(x) * dx_dd)
 
-    # in principle we don't know where the distribution is peaked, so 
+    # in principle we don't know where the distribution is peaked, so
     # we perform a blind search over the domain
-    dx = 1.
+    dx = 1.0
     d_left = D_MIN
     d_right = D_MAX + dx + d_left
     d_range = np.arange(d_left, d_right, dx)
     P = np.array([p_d(di) for di in d_range]) * dx
     counter = 0
-    mask = (P != 0)
+    mask = P != 0
     elements = mask.sum()
     # if less than 3 points !=0 are found, reduce the interval
     while elements < 3:
-        dx/=10
+        dx /= 10
         d_range = np.arange(d_left, d_right, dx)
         P = np.array([p_d(di) for di in d_range]) * dx
-        mask = (P != 0)
+        mask = P != 0
         elements = mask.sum()
         counter += 1
 
-    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution 
+    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
     # I choose 1000 points but such quantity can be varied according to necessity
     ind = np.where(mask)[0]
-    d_left = d_range[ind[0]]-0.5*dx if d_range[ind[0]]-dx > 0 else D_MIN 
-    d_right = d_range[ind[-1]]+0.5*dx
-    d_range = np.linspace(d_left,d_right,1000)
-    dx = (d_right-d_left)/1000
+    d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
+    d_right = d_range[ind[-1]] + 0.5 * dx
+    d_range = np.linspace(d_left, d_right, 1000)
+    dx = (d_right - d_left) / 1000
     P = np.array([p_d(di) for di in d_range]) * dx
     P = P.reshape(P.shape[0])
 
-#    if verbose:
-#        print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
+    #    if verbose:
+    #        print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -566,7 +580,7 @@ def _beta_prior_d(k, n, Lk, Ln, a0=1, b0=1, plot=True, verbose=True):
         plt.title("posterior of d")
         plt.show()
 
-    E_d_emp = np.dot(d_range,P)
+    E_d_emp = np.dot(d_range, P)
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
     print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
     #   theoretical results, valid only in the continuum case

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Duly a package for Distance-based Unsupervised Learning in pYthon
+Distance-based Unsupervised Learning in pYthon (DULY)
 ===================================================================
 
 DULY is a Python package for "Distance-based Unsupervised Learning in pYthon".

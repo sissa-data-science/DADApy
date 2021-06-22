@@ -63,11 +63,13 @@ def natural_keys(text):
     """
     return [atoi(c) for c in re.split("(\d+)", text)]
 
+
 def float_keys(text):
-    '''sort list in human order, for both numbers and letters
+    """sort list in human order, for both numbers and letters
     http://nedbatchelder.com/blog/200712/human_sorting.html
-    '''
-    return [atoi(c) for c in re.split(r'((?:[0-9]+\.?[0-9]*|\.[0-9]+))', text)]
+    """
+    return [atoi(c) for c in re.split(r"((?:[0-9]+\.?[0-9]*|\.[0-9]+))", text)]
+
 
 # usage example:
 # import glob

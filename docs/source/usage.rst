@@ -1,11 +1,16 @@
 Typical usage of the package
 ============================
 
-A typical usage of Duly involves the initialisation of the Data class with
+A typical usage of Duly involves the initialisation of a Data object either with a set of coordinates or with a set of
+distances between points.
+After the initialisation a series of computations are performed by calling the class method relative to specific
+algorithm wanted.
+The results of the computations are typically available as attributes of the object.
 
 .. code-block:: python
 
     import numpy as np
+    import matplotlib.pyplot as plt
     from duly.data import Data
 
     # a simple 3D gaussian dataset
@@ -20,11 +25,26 @@ A typical usage of Duly involves the initialisation of the Data class with
     data.compute_distances(maxk = 100)
 
     # compute the intrinsic dimension
+    # using the 2NN estimator
     data.compute_id_2NN()
 
-    # compute the density of all points()
+    # check the value of the intrinsic
+    # dimension found
+    print(data.selected_id)
+
+    # compute the density of all points
+    # using a simple kNN estimator
     data.compute_density_kNN(k = 15)
 
-    # find the peaks of the density profile
-    data.compute_clustering()
+    # as an alternative, compute the density
+    # using a more sophisticated estimator
+    data.compute_density_PAk()
+
+    plt.hist(data.Rho)
+
+    # find the statistically significant peaks
+    # of the density profile computed previously
+    data.compute_clustering(Z = 1.5)
+
+    print(data.Nclus_m)
 

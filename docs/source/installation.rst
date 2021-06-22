@@ -5,7 +5,7 @@ Installing the requirements
 ---------------------------
 
 This package is based on numpy, scipy, scikit-learn, and Cython.
-These can be easily installed using anaconda or pip.
+These dependencies can be easily installed using anaconda or pip.
 Alternatively, they will be automatically installed with the package.
 
 

@@ -1,7 +1,8 @@
 The clustering module
 ==========================
 
-Inside the clustering module one finds ...
+The *clustering* module contains the *Clustering* class.
+Density-based clustering algorithms are implemented as methods of this class.
 
 .. automodule:: clustering
     :members:
