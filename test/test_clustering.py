@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pytest
 
@@ -6,7 +8,9 @@ from duly import Clustering
 
 def test_clustering_basics():
     """Test the clustering operations work correctly"""
-    X = np.load("2gaussians_in_2d.npy")
+    filename = os.path.join(os.path.split(__file__)[0], "2gaussians_in_2d.npy")
+
+    X = np.load(filename)
 
     cl = Clustering(coordinates=X)
 
