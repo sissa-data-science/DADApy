@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pytest
 
@@ -6,7 +8,9 @@ from duly import DensityEstimation
 
 def test_density_estimation_basics():
     """Test the density estimation operations work correctly"""
-    X = np.load("2gaussians_in_2d.npy")
+    X = os.path.join(os.path.split(__file__)[0], "2gaussians_in_2d.npy")
+
+    # X = np.load("2gaussians_in_2d.npy")
 
     de = DensityEstimation(coordinates=X)
 
