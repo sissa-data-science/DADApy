@@ -44,9 +44,8 @@ data.compute_clustering()
 
 - Intrinsic dimension estimators
 	 - 
--  Maximum likelihood estimator
-- 2-NN estimator
-- 2-NN estimator
+- Two-NN estimator
+- Gride estimator
 	
 - Density estimators
 	- 
