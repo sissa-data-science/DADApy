@@ -4,37 +4,39 @@ import pytest
 from duly.id_discrete import *
 from duly.utils_.utils import compute_NN_PBC as PBC
 
+
 def test_id_discrete():
-	"""Test the discrete id estimator"""
+    """Test the discrete id estimator"""
 
-	N = 500
+    N = 500
 
-	box = 20
+    box = 20
 
-	d =2
+    d = 2
 
-	X = rng.integers(0,box,size=(N, d))
+    X = rng.integers(0, box, size=(N, d))
 
-	dist, ind = PBC(X,N-1,box_size=box,p=1)
+    dist, ind = PBC(X, N - 1, box_size=box, p=1)
 
-	IDD = IdDiscrete(X, maxk=X.shape[0])
-	IDD.distances = dist
-	IDD.dist_indices = ind
+    IDD = IdDiscrete(X, maxk=X.shape[0])
+    IDD.distances = dist
+    IDD.dist_indices = ind
 
-	IDD.compute_id_binomial_k(25,False,0.5)
+    IDD.compute_id_binomial_k(25, False, 0.5)
 
-	assert pytest.approx(d, IDD.id_estimated_binom)
+    assert pytest.approx(d, IDD.id_estimated_binom)
 
-	IDD.compute_id_binomial_k(4,True,0.5)
+    IDD.compute_id_binomial_k(4, True, 0.5)
 
-	assert pytest.approx(d, IDD.id_estimated_binom)
+    assert pytest.approx(d, IDD.id_estimated_binom)
 
-	IDD.compute_id_binomial_Lk(4,2,'mle')
+    IDD.compute_id_binomial_Lk(4, 2, "mle")
 
-	assert pytest.approx(d, IDD.id_estimated_binom)
+    assert pytest.approx(d, IDD.id_estimated_binom)
 
 
 from duly.utils_ import discrete_functions as df
+
 """
 def test_id_volumes():
 
