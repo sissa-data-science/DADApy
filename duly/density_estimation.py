@@ -156,7 +156,10 @@ class DensityEstimation(IdEstimation):
                     * (np.log(vvi) + np.log(vvj) - 2.0 * np.log(vvi + vvj) + np.log(4))
                 )
                 j = j + 1
-            kstar[i] = j - 2
+            if j == self.maxk:
+                kstar[i] = j - 1
+            else:
+                kstar[i] = j - 2
         sec2 = time.time()
         if self.verb:
             print(
