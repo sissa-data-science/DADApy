@@ -2,6 +2,8 @@ import multiprocessing
 import time
 
 import numpy as np
+import scipy as sp
+import matplotlib.pyplot as plt
 
 from duly.cython_ import cython_clustering as cf
 from duly.density_estimation import DensityEstimation
@@ -46,6 +48,9 @@ class Clustering(DensityEstimation):
         self.centers_m = None
         self.Rho_bord_err_m = None
         self.out_bord = None
+
+        self.delta= None # Minimum distance from an element with higher density
+        self.ref= None   # Index of the nearest element with higher density 
 
     def compute_clustering_optimised(self, Z=1.65, halo=False):
         assert self.Rho is not None
@@ -94,6 +99,73 @@ class Clustering(DensityEstimation):
         if self.verb:
             print("Clustering finished, {} clusters found".format(self.Nclus_m))
             print("total time is, {}".format(secf - seci))
+
+    def compute_DecGraph(self):
+        assert self.Rho is not None
+        assert self.X is not None
+        self.delta=np.zeros(self.Nele)
+        self.ref=np.zeros(self.Nele,dtype='int')
+        tt=np.arange(self.Nele)
+        imax=[]
+        ncalls=0
+        for i in range(self.Nele):
+            ll=tt[((self.Rho>self.Rho[i]) & (tt!=i))]
+            if (ll.shape[0]>0):
+                a1,a2,a3=np.intersect1d(self.dist_indices[i,:],ll,return_indices=True,assume_unique=True)
+                if (a1.shape[0]>0):
+                    aa=np.min(a2)
+                    self.delta[i]=self.distances[i,aa]
+                    self.ref[i]=self.dist_indices[i,aa]
+                else:
+                    ncalls=ncalls+1
+                    dd=self.X[((self.Rho>self.Rho[i]) & (tt!=i))]
+                    ds=np.transpose(sp.spatial.distance.cdist([np.transpose(self.X[i,:])],dd))
+                    j=np.argmin(ds)
+                    self.ref[i]=ll[j]
+                    self.delta[i]=ds[j]
+            else:
+                self.delta[i]=-100.
+                imax.append(i)
+        self.delta[imax]=1.05*np.max(self.delta)
+        print ("Number of points for which self.delta needed call to cdist=",ncalls)
+        plt.xlabel(r'$\rho$')
+        plt.ylabel(r'$\delta$')
+        plt.scatter(self.Rho,self.delta)
+        plt.show()
+    def compute_cluster_DP(self, dens_cut=0.,delta_cut=0., halo=False):
+        assert self.delta is not None
+        ordered=np.argsort(-self.Rho)
+        self.labels=np.zeros(self.Nele,dtype='int')
+        tt=np.arange(self.Nele)
+        center_label=np.zeros(self.Nele,dtype='int')
+        ncluster=-1
+        for i in range(self.Nele):
+            j=ordered[i]
+            if ((self.Rho[j]>dens_cut) & (self.delta[j] >delta_cut)):
+                ncluster=ncluster+1
+                self.labels[j]=ncluster
+                center_label[j]=ncluster
+            else:
+                self.labels[j]=self.labels[self.ref[j]]
+                center_label[j]=-1
+        self.centers=tt[(center_label!=-1)]
+        if (halo):
+            bord=np.zeros(self.Nele,dtype='int')
+            halo=np.copy(self.labels)
+
+            for i in range(self.Nele):
+                for j in self.indices[i,:][(self.distances[i,:]<=self.dc[i])]:
+                    if (self.labels[i]!=self.labels[j]):
+                        bord[i]=1
+            halo_cutoff=np.zeros(ncluster+1)
+            for j in range (ncluster+1):
+                td=self.Rho[((bord==1)&(self.labels==i))]
+                if (td.size != 0):
+                    halo_cutoff[j]=np.max(td)
+            halo[tt[(self.dens<halo_cutoff[self.cluster])]]=-1
+            self.labels=halo
+
+
 
     def compute_clustering(self, Z=1.65, halo=False):
         assert self.Rho is not None
