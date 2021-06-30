@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
+from scipy import cluster 
 from matplotlib import cm
 from matplotlib.collections import LineCollection
 from sklearn import manifold
@@ -164,7 +165,7 @@ def plot_matrix(Data):
     # plt.close(fig)  # close the figure
 
 
-def get_histogram(Data):
+def get_dendrogram(Data):
     # Generation of SL dendrogram
     # Prepare some auxiliary lists
     e1 = []
