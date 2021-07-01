@@ -154,15 +154,18 @@ class Clustering(DensityEstimation):
             halo=np.copy(self.labels)
 
             for i in range(self.Nele):
-                for j in self.indices[i,:][(self.distances[i,:]<=self.dc[i])]:
+                for j in self.dist_indices[i,:][(self.distances[i,:]<=self.dc[i])]:
                     if (self.labels[i]!=self.labels[j]):
                         bord[i]=1
+            print (np.sum(bord))
             halo_cutoff=np.zeros(ncluster+1)
+            halo_cutoff[:]=np.min(self.Rho)-1
             for j in range (ncluster+1):
-                td=self.Rho[((bord==1)&(self.labels==i))]
+                td=self.Rho[((bord==1)&(self.labels==j))]
                 if (td.size != 0):
                     halo_cutoff[j]=np.max(td)
-            halo[tt[(self.dens<halo_cutoff[self.cluster])]]=-1
+            print (halo_cutoff)
+            halo[tt[(self.Rho<halo_cutoff[self.labels])]]=-1
             self.labels=halo
 
 
