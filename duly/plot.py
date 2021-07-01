@@ -164,6 +164,11 @@ def plot_matrix(Data):
     plt.show()
     # plt.close(fig)  # close the figure
 
+def plot_DecGraph(Data):
+    plt.xlabel(r'$\rho$')
+    plt.ylabel(r'$\delta$')
+    plt.scatter(Data.Rho,Data.delta)
+    plt.show()
 
 def get_dendrogram(Data):
     # Generation of SL dendrogram

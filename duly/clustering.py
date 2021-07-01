@@ -3,7 +3,6 @@ import time
 
 import numpy as np
 import scipy as sp
-import matplotlib.pyplot as plt
 
 from duly.cython_ import cython_clustering as cf
 from duly.density_estimation import DensityEstimation
@@ -128,10 +127,6 @@ class Clustering(DensityEstimation):
                 imax.append(i)
         self.delta[imax]=1.05*np.max(self.delta)
         print ("Number of points for which self.delta needed call to cdist=",ncalls)
-        plt.xlabel(r'$\rho$')
-        plt.ylabel(r'$\delta$')
-        plt.scatter(self.Rho,self.delta)
-        plt.show()
     def compute_cluster_DP(self, dens_cut=0.,delta_cut=0., halo=False):
         assert self.delta is not None
         ordered=np.argsort(-self.Rho)
@@ -157,14 +152,12 @@ class Clustering(DensityEstimation):
                 for j in self.dist_indices[i,:][(self.distances[i,:]<=self.dc[i])]:
                     if (self.labels[i]!=self.labels[j]):
                         bord[i]=1
-            print (np.sum(bord))
             halo_cutoff=np.zeros(ncluster+1)
             halo_cutoff[:]=np.min(self.Rho)-1
             for j in range (ncluster+1):
                 td=self.Rho[((bord==1)&(self.labels==j))]
                 if (td.size != 0):
                     halo_cutoff[j]=np.max(td)
-            print (halo_cutoff)
             halo[tt[(self.Rho<halo_cutoff[self.labels])]]=-1
             self.labels=halo
 
