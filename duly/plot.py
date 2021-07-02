@@ -111,7 +111,7 @@ def plot_SLAn(Data, linkage="single"):
     # plt.close(fig)  # close the figure
 
 
-def plot_MDS(Data):
+def plot_MDS(Data,cmap="viridis"):
     Fmax = max(Data.Rho)
     Rho_bord_m = np.copy(Data.out_bord)
     d_dis = np.zeros((Data.Nclus_m, Data.Nclus_m), dtype=float)
@@ -128,9 +128,27 @@ def plot_MDS(Data):
     for i in range(Data.Nclus_m):
         s.append(20.0 * np.sqrt(len(Data.clstruct_m[i])))
         col.append(i)
-    plt.scatter(out[:, 0], out[:, 1], s=s, c=col)
+    plt.scatter(out[:, 0], out[:, 1], s=s, c=col,cmap=cmap)
+    cmal = cm.get_cmap(cmap, Data.Nclus_m)
+    colors=cmal(np.arange(0,cmal.N))
     for i in range(Data.Nclus_m):
-        ax.annotate(i, (out[i, 0], out[i, 1]))
+        cc = "k"
+        r = colors[i][0]
+        g = colors[i][1]
+        b = colors[i][2]
+        luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) * 255
+        if luma < 156:
+            cc = "w"
+        plt.annotate(
+            i,
+            (out[i,0], out[i,1]),
+            horizontalalignment="center",
+            verticalalignment="center",
+            c=cc,
+            weight="bold",
+        )
+#    for i in range(Data.Nclus_m):
+#        ax.annotate(i, (out[i, 0], out[i, 1]))
     # Add edges
     rr = np.amax(Rho_bord_m)
     if rr > 0.0:
@@ -170,7 +188,7 @@ def plot_DecGraph(Data):
     plt.scatter(Data.Rho,Data.delta)
     plt.show()
 
-def get_dendrogram(Data):
+def get_dendrogram(Data,cmap="viridis"):
     # Generation of SL dendrogram
     # Prepare some auxiliary lists
     e1 = []
@@ -299,14 +317,15 @@ def get_dendrogram(Data):
         )
 
     zorder = zorder + 1
-    viridis = cm.get_cmap("viridis", Data.Nclus_m)
-    plt.scatter(xs, ys, c=labels, s=100, zorder=zorder, cmap="viridis")
+    cmal = cm.get_cmap(cmap, Data.Nclus_m)
+    colors=cmal(np.arange(0,cmal.N))
+    plt.scatter(xs, ys, c=labels, s=100, zorder=zorder, cmap=cmap)
     for i in range(Data.Nclus_m):
         zorder = zorder + 1
         cc = "k"
-        r = viridis.colors[labels[i]][0]
-        g = viridis.colors[labels[i]][1]
-        b = viridis.colors[labels[i]][2]
+        r = colors[labels[i]][0]
+        g = colors[labels[i]][1]
+        b = colors[labels[i]][2]
         luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) * 255
         if luma < 156:
             cc = "w"
