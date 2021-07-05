@@ -156,7 +156,10 @@ class DensityEstimation(IdEstimation):
                     * (np.log(vvi) + np.log(vvj) - 2.0 * np.log(vvi + vvj) + np.log(4))
                 )
                 j = j + 1
-            kstar[i] = j - 2
+            if j == self.maxk:
+                kstar[i] = j - 1
+            else:
+                kstar[i] = j - 2
         sec2 = time.time()
         if self.verb:
             print(
@@ -295,6 +298,68 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
         self.Rho_err = Rho_err
         self.dc = dc
+
+        if self.verb:
+            print("k-NN density estimation finished")
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_corr_kstarNN(self):
+        if self.common_neighs is None:
+            self.compute_common_neighs()
+
+        if self.verb:
+            print("kstar-NN density estimation started")
+
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+#        Rho_err = np.zeros(self.Nele, dtype=float)
+        prefactor = np.exp(
+            self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
+        )
+
+        Rho_min = 9.9e300
+
+        for i in range(self.Nele):
+            k = self.kstar[i]
+            dc[i] = self.distances[i, k]
+            Rho[i] = np.log(k) - np.log(prefactor)
+
+            rk = self.distances[i, k]
+
+            Rho[i] -= self.id_selected * np.log(rk)
+
+#            Rho_err[i] = 1.0 / np.sqrt(k)
+
+            if Rho[i] < Rho_min:
+                Rho_min = Rho[i]
+
+            # Normalise density
+
+        Rho -= np.log(self.Nele)
+        self.Rho = Rho
+        self.dc = dc
+
+        # compute error
+        A = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
+
+        for nspar, indices in enumerate(self.nind_list):
+            i = indices[0]
+            j = indices[1]
+            #A[i,j] = self.common_neighs[nspar]*1./self.kstar[i]
+            A[i,j] = self.common_neighs[nspar]/2.
+#            if A[i,j] == 0:
+#                tmp = self.common_neighs[nspar]*2./self.Nele
+#                A[ i, j ] = tmp
+#                A[ j, i ] = tmp
+
+        A = sparse.lil_matrix(A + A.transpose())
+                
+        A.setdiag(self.kstar)
+        
+        self.A = A.todense()
+        self.B = slin.pinvh(self.A)
+        self.Rho_err = np.sqrt(np.diag(self.B))
 
         if self.verb:
             print("k-NN density estimation finished")
@@ -840,20 +905,20 @@ class DensityEstimation(IdEstimation):
                 A[i, j] = -tmp
                 supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
 
-            A = sparse.lil_matrix(A + A.transpose())
+            A = alpha*sparse.lil_matrix(A + A.transpose())
 
             diag = (
                 np.array(-A.sum(axis=1)).reshape((self.Nele,))
-                + alpha / self.Rho_err ** 2
+                + 1. / self.Rho_err ** 2
             )
 
             A.setdiag(diag)
 
-            deltaFcum = (
+            deltaFcum = alpha*(
                 np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))
                 - np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
-                + alpha * self.Rho / self.Rho_err ** 2
-            )
+                ) + self.Rho / self.Rho_err ** 2
+            
 
             Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
