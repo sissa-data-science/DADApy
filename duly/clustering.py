@@ -1,8 +1,6 @@
 import multiprocessing
 import time
-
 import numpy as np
-
 from duly.cython_ import cython_clustering as cf
 from duly.density_estimation import DensityEstimation
 
