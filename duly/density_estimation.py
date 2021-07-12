@@ -304,6 +304,41 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def compute_density_kpeaks(self):
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if self.verb:
+            print("Density estimation for k-peaks clustering started")
+
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
+        Rho_min = 9.9e300
+
+        for i in range(self.Nele):
+            k = self.kstar[i]
+            dc[i] = self.distances[i, k]
+            Rho[i] = k
+            Rho_err[i] = 0
+            for j in range(k+1):
+                jj=self.dist_indices[i,j]
+                Rho_err[i]=Rho_err[i]+(self.kstar[jj]-k)**2
+            Rho_err[i]=np.sqrt(Rho_err[i]/k)
+
+            if Rho[i] < Rho_min:
+                Rho_min = Rho[i]
+
+            # Normalise density
+
+        self.Rho = Rho
+        self.Rho_err = Rho_err
+        self.dc = dc
+
+        if self.verb:
+            print("k-peaks density estimation finished")
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_corr_kstarNN(self):
         if self.common_neighs is None:
             self.compute_common_neighs()
