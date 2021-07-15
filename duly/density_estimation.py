@@ -321,7 +321,7 @@ class DensityEstimation(IdEstimation):
             dc[i] = self.distances[i, k]
             Rho[i] = k
             Rho_err[i] = 0
-            for j in range(k+1):
+            for j in range(1,k):
                 jj=self.dist_indices[i,j]
                 Rho_err[i]=Rho_err[i]+(self.kstar[jj]-k)**2
             Rho_err[i]=np.sqrt(Rho_err[i]/k)
