@@ -797,18 +797,25 @@ class DensityEstimation(IdEstimation):
 
         supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
+        # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+        k1 = self.kstar[self.nind_list[:, 0]]
+        k2 = self.kstar[self.nind_list[:, 1]]
+        redundancy = np.sqrt(k1 * k2)
+
         if use_variance:
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                tmp = 1.0 / self.Fij_var_array[nspar]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
                 A[i, j] = -tmp
                 supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
         else:
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                A[i, j] = -1.0
+                # A[i, j] = -1.0
+                A[i, j] = -1.0 / redundancy[nspar]
                 supp_deltaF[i, j] = self.Fij_array[nspar]
 
         A = sparse.lil_matrix(A + A.transpose())
@@ -971,10 +978,16 @@ class DensityEstimation(IdEstimation):
 
             supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
+            # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+            k1 = self.kstar[self.nind_list[:, 0]]
+            k2 = self.kstar[self.nind_list[:, 1]]
+            redundancy = np.sqrt(k1 * k2)
+
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                tmp = 1.0 / self.Fij_var_array[nspar]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
                 A[i, j] = -tmp
                 supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
 
