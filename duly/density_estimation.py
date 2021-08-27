@@ -67,6 +67,35 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def set_kstar(self, k=0):
+        """Set all elements of kstar to a fixed value k. Reset all other class attributes (all depending on kstar).
+
+        Args:
+            k: number of neighbours used to compute the density
+
+        Returns:
+
+        """
+
+        self.kstar = np.full(self.Nele, k, dtype=int)
+
+        self.neigh_vector_diffs = None
+        self.nind_list = None
+        self.nind_iptr = None
+        self.nind_mat = None
+        self.common_neighs = None
+        self.dc = None
+        self.Rho = None
+        self.Rho_err = None
+        self.grads = None
+        self.grads_var = None
+        self.Fij_list = None
+        self.Fij_var_list = None
+        self.Fij_array = None
+        self.Fij_var_array = None
+
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_kNN(self, k=3):
         """Compute the density of of each point using a simple kNN estimator
 
@@ -107,7 +136,7 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
         self.Rho_err = Rho_err
         self.dc = dc
-        self.kstar = kstar
+        self.kstar=kstar
 
         if self.verb:
             print("k-NN density estimation finished")
@@ -556,6 +585,10 @@ class DensityEstimation(IdEstimation):
 
     def compute_density_dF_PAk(self):
 
+        # check for deltaFij        
+        if self.kstar is None:
+            self.compute_kstar()
+
         # check for deltaFij
         if self.Fij_array is None:
             self.compute_deltaFs_grads_semisum()
@@ -792,9 +825,13 @@ class DensityEstimation(IdEstimation):
         Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
         self.Rho = Rho
+        #self.Rho_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
         self.A = A.todense()
         self.B = slin.pinvh(self.A)
+        #self.B = slin.inv(self.A)
+        
         self.Rho_err = np.sqrt(np.diag(self.B))
+
         # self.Rho_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
         # self.Rho_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,))
 
@@ -944,7 +981,7 @@ class DensityEstimation(IdEstimation):
 
             diag = (
                 np.array(-A.sum(axis=1)).reshape((self.Nele,))
-                + 1. / self.Rho_err ** 2
+                + (1.-alpha) / self.Rho_err ** 2
             )
 
             A.setdiag(diag)
@@ -952,7 +989,7 @@ class DensityEstimation(IdEstimation):
             deltaFcum = alpha*(
                 np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))
                 - np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
-                ) + self.Rho / self.Rho_err ** 2
+                ) + (1-alpha)*self.Rho / self.Rho_err ** 2
             
 
             Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
