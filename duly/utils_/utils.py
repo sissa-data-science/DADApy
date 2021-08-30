@@ -27,6 +27,12 @@ def compute_NN_PBC(X, k_max, box_size=None, p=2, cutoff=np.inf):
     return dist, ind
 
 
+def from_all_distances_to_nndistances(pdist_matrix, maxk):
+    dist_indices = np.asarray(np.argsort(pdist_matrix, axis=1)[:, 0 : maxk + 1])
+    distances = np.asarray(np.take_along_axis(pdist_matrix, dist_indices, axis=1))
+    return dist_indices, distances
+
+
 # --------------------------------------------------------------------------------------
 
 # helper function of compute_id_diego
