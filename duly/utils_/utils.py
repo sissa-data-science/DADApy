@@ -1,6 +1,8 @@
 import multiprocessing
 
 import numpy as np
+from scipy.spatial import cKDTree as KD
+
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
@@ -12,13 +14,10 @@ cores = multiprocessing.cpu_count()
 
 def compute_all_distances(X, n_jobs=cores):
     dists = pairwise_distances(X, Y=None, metric="euclidean", n_jobs=n_jobs)
-
     return dists
 
 
 # --------------------------------------------------------------------------------------
-
-from scipy.spatial import cKDTree as KD
 
 
 def compute_NN_PBC(X, k_max, box_size=None, p=2, cutoff=np.inf):
@@ -31,6 +30,28 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
     dist_indices = np.asarray(np.argsort(pdist_matrix, axis=1)[:, 0 : maxk + 1])
     distances = np.asarray(np.take_along_axis(pdist_matrix, dist_indices, axis=1))
     return dist_indices, distances
+
+
+def compute_nn_distances(X, maxk, metric="minkowski", p=2, period=None):
+    if period is None:
+
+        nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, p=p).fit(X)
+
+        distances, dist_indices = nbrs.kneighbors(X)
+
+        if metric == "hamming":
+            distances *= X.shape[1]
+
+    else:
+
+        distances, dist_indices = compute_NN_PBC(
+            X,
+            maxk,
+            box_size=period,
+            p=p,
+        )
+
+    return distances, dist_indices
 
 
 # --------------------------------------------------------------------------------------
@@ -236,38 +257,6 @@ def _return_imbalance(dist_indices_1, dist_indices_2, k=1, dtype="mean"):
     else:
         raise ValueError("Choose a valid imbalance type (dtype)")
     return imb
-
-
-def _return_imb_with_coords(X, coords, dist_indices, maxk, k, dtype="mean"):
-    """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
-     built using a subset of coordinates.
-
-    Args:
-        X: coordinate matrix
-        coords: subset of coordinates to be used when building the alternative distance
-        dist_indices (int[:,:]): nearest neighbours according to full distance
-        maxk (int): number of nearest neighbours to be computed in the alternative distance
-        k (int): order of nearest neighbour considered, default is 1
-        dtype (str): type of information imbalance computation, default is 'mean'
-
-    Returns:
-        (float, float): the information imbalance from 'full' to 'alternative' and vice versa
-    """
-    X_ = X[:, coords]
-
-    nbrs = NearestNeighbors(
-        n_neighbors=maxk, algorithm="auto", metric="minkowski", p=2, n_jobs=1
-    ).fit(X_)
-
-    _, dist_indices_coords = nbrs.kneighbors(X_)
-    imb_coords_full = _return_imbalance(
-        dist_indices_coords, dist_indices, k=k, dtype=dtype
-    )
-    imb_full_coords = _return_imbalance(
-        dist_indices, dist_indices_coords, k=k, dtype=dtype
-    )
-    print("computing imbalances with coords ", coords)
-    return imb_full_coords, imb_coords_full
 
 
 def _return_imb_between_two(X, Xp, maxk, k, ltype="mean"):
