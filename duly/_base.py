@@ -9,6 +9,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from duly.cython_ import cython_periodic_dist as cpd
 from duly.utils_.utils import from_all_distances_to_nndistances
+from duly.utils_.utils import compute_NN_PBC
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -120,11 +121,14 @@ class Base:
 
         else:
             print(
-                "Computing Euclidean periodic distances with period {}".format(period)
+                "Computing periodic distances.",
+                "The coordinates are assumed to be in the range (0, {})".format(period),
             )
-            distances = squareform(cpd.pdist_serial(self.X, period))
-            self.dist_indices, self.distances = from_all_distances_to_nndistances(
-                distances, self.maxk
+            self.distances, self.dist_indices = compute_NN_PBC(
+                self.X,
+                self.maxk,
+                box_size=period,
+                p=p,
             )
 
         # removal of zero distances should be done here, automatically
