@@ -2,10 +2,10 @@ import multiprocessing
 
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.neighbors import NearestNeighbors
 
 import duly.utils_.utils as ut
 from duly._base import Base
+from duly.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 
@@ -44,20 +44,14 @@ class MetricComparisons(Base):
             (float, float): the information imbalance from distance i to distance j and vice versa
         """
         X_ = self.X[:, coords1]
-
-        nbrs = NearestNeighbors(
-            n_neighbors=self.maxk, algorithm="auto", metric="minkowski", p=2, n_jobs=1
-        ).fit(X_)
-
-        _, dist_indices_i = nbrs.kneighbors(X_)
+        _, dist_indices_i = compute_nn_distances(
+            X_, self.maxk, self.metric, self.p, self.period
+        )
 
         X_ = self.X[:, coords2]
-
-        nbrs = NearestNeighbors(
-            n_neighbors=self.maxk, algorithm="auto", metric="minkowski", p=2, n_jobs=1
-        ).fit(X_)
-
-        _, dist_indices_j = nbrs.kneighbors(X_)
+        _, dist_indices_j = compute_nn_distances(
+            X_, self.maxk, self.metric, self.p, self.period
+        )
 
         imb_ij = ut._return_imbalance(dist_indices_i, dist_indices_j, k=k, dtype=dtype)
         imb_ji = ut._return_imbalance(dist_indices_j, dist_indices_i, k=k, dtype=dtype)
@@ -216,8 +210,8 @@ class MetricComparisons(Base):
             for coords in coord_list:
                 if self.verb:
                     print("computing loss with coord selection")
-                n0i, ni0 = ut._return_imb_with_coords(
-                    self.X, coords, target_ranks, self.maxk, k, dtype
+                n0i, ni0 = self._return_imb_with_coords(
+                    self.X, coords, target_ranks, k, dtype
                 )
                 n1s_n2s.append((n0i, ni0))
 
@@ -229,8 +223,8 @@ class MetricComparisons(Base):
                     )
                 )
             n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(ut._return_imb_with_coords)(
-                    self.X, coords, target_ranks, self.maxk, k, dtype
+                delayed(self._return_imb_with_coords)(
+                    self.X, coords, target_ranks, k, dtype
                 )
                 for coords in coord_list
             )
@@ -433,11 +427,9 @@ class MetricComparisons(Base):
 
         X_ = self.X[:, coords]
 
-        nbrs = NearestNeighbors(
-            n_neighbors=self.maxk, algorithm="auto", metric="minkowski", p=2, n_jobs=1
-        ).fit(X_)
-
-        _, dist_indices_ = nbrs.kneighbors(X_)
+        _, dist_indices_ = compute_nn_distances(
+            X_, self.maxk, self.metric, self.p, self.period
+        )
 
         overlaps = []
         for i in range(self.Nele):
@@ -460,3 +452,32 @@ class MetricComparisons(Base):
                 overlaps.append(overlap)
 
         return overlaps
+
+    def _return_imb_with_coords(self, X, coords, dist_indices, k, dtype="mean"):
+        """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
+         built using a subset of coordinates.
+
+        Args:
+            X: coordinate matrix
+            coords: subset of coordinates to be used when building the alternative distance
+            dist_indices (int[:,:]): nearest neighbours according to full distance
+            k (int): order of nearest neighbour considered, default is 1
+            dtype (str): type of information imbalance computation, default is 'mean'
+
+        Returns:
+            (float, float): the information imbalance from 'full' to 'alternative' and vice versa
+        """
+        X_ = X[:, coords]
+
+        _, dist_indices_coords = compute_nn_distances(
+            X_, self.maxk, self.metric, self.p, self.period
+        )
+
+        imb_coords_full = ut._return_imbalance(
+            dist_indices_coords, dist_indices, k=k, dtype=dtype
+        )
+        imb_full_coords = ut._return_imbalance(
+            dist_indices, dist_indices_coords, k=k, dtype=dtype
+        )
+        print("computing imbalances with coords ", coords)
+        return imb_full_coords, imb_coords_full
