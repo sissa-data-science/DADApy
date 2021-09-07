@@ -79,6 +79,51 @@ def return_neigh_vector_diffs(np.ndarray[floatTYPE_t, ndim = 2] X,
 
 # ----------------------------------------------------------------------------------------------
 
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_vector_diffs_periodic(np.ndarray[floatTYPE_t, ndim = 2] X,
+                              np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                              np.ndarray[floatTYPE_t, ndim = 1] period):
+    cdef int dims = X.shape[1]
+    cdef int nspar = nind_list.shape[0]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims))
+
+    cdef int i, j, ind_spar, dim
+    cdef floatTYPE_t temp
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        for dim in range(dims):
+            temp = X[j, dim] - X[i, dim]
+            if temp > period[dim]/2:
+                temp -= period[dim]
+            if temp < -period[dim]/2:
+                temp += period[dim] 
+            vector_diffs[ind_spar, dim] = temp
+
+
+    # ind_spar = 0
+    # for i in range(N):
+    #     ki = kstar[i]-1
+    #     for k in range(ki):
+    #         j = dist_indices[i, k+1]
+    #         if nind_mat[j,i] is not None:
+    #             for dim in range(dims):
+    #                 vector_diffs[ind_spar,dim] = -vector_diffs[nind_mat[j,i],dim]
+    #         else:
+    #             for dim in range(dims):
+    #                 vector_diffs[ind_spar,dim] = X[j, dim] - X[i, dim]
+    #         nind_mat[i,j] = ind_spar
+    #         nind_list[ind_spar,0]=i
+    #         nind_list[ind_spar,1]=j
+    #         ind_spar += 1
+
+    return vector_diffs
+
+# ----------------------------------------------------------------------------------------------
+
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
@@ -338,6 +383,104 @@ def return_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,
                     ind_j = dist_indices[i, j+1]
 
                     grads_covmat[i, dim, dim2] += (X[ind_j, dim] - X[i, dim]) * (X[ind_j, dim2] - X[i, dim2])
+
+                grads_covmat[i, dim, dim2] = grads_covmat[i, dim, dim2] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                                  - grads[i, dim]*grads[i, dim2] / kifloat
+
+    return grads, grads_covmat
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_grads_and_var_from_nnvecdiffs(   np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                            np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                            np.ndarray[DTYPE_t, ndim = 1] nind_iptr,
+                                            np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                            floatTYPE_t id_selected):
+
+    cdef int N = kstar.shape[0]
+    cdef int dims = neigh_vector_diffs.shape[1]
+    cdef int kstar_max = np.max(kstar)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
+    
+    cdef int i, j, dim, ki, dim2
+    cdef int ind_j
+    cdef floatTYPE_t rk_sq, kifloat
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+
+    for i in range(N):
+        ki = kstar[i]-1
+
+        kifloat = float(ki)
+
+        rk_sq = 0.
+        for dim in range(dims):
+            rk_sq += (neigh_vector_diffs[nind_iptr[i+1]-1,dim])**2
+
+        # compute gradients and variance of gradients together
+        for dim in range(dims):
+            for j in range(ki):
+                ind_j = nind_iptr[i]+j
+
+                grads[i, dim] += neigh_vector_diffs[ind_j,dim]
+                grads_var[i, dim] += neigh_vector_diffs[ind_j,dim]*neigh_vector_diffs[ind_j,dim]
+
+            grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+            grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                              - grads[i, dim]*grads[i, dim] / kifloat
+
+    return grads, grads_var
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_grads_and_covmat_from_nnvecdiffs(np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                            np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                            np.ndarray[DTYPE_t, ndim = 1] nind_iptr,
+                                            np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                            floatTYPE_t id_selected):
+
+    cdef int N = kstar.shape[0]
+    cdef int dims = neigh_vector_diffs.shape[1]
+    cdef int kstar_max = np.max(kstar)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims))
+
+    cdef int i, j, dim, ki, dim2
+    cdef int ind_j
+    cdef floatTYPE_t rk_sq, kifloat
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+    for i in range(N):
+        ki = kstar[i]-1
+
+        kifloat = float(ki)
+
+        rk_sq = 0.
+        for dim in range(dims):
+            rk_sq += (neigh_vector_diffs[nind_iptr[i+1]-1,dim])**2
+
+        # compute gradients
+        for dim in range(dims):
+            for j in range(ki):
+                ind_j = nind_iptr[i]+j
+
+                grads[i, dim] += neigh_vector_diffs[ind_j,dim]
+
+            grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+        # compute covariance matrix of gradients
+        for dim in range(dims):
+            for dim2 in range(dims):
+                for j in range(ki):
+                    ind_j = nind_iptr[i]+j
+
+                    grads_covmat[i, dim, dim2] += neigh_vector_diffs[ind_j,dim]*neigh_vector_diffs[ind_j,dim2]
 
                 grads_covmat[i, dim, dim2] = grads_covmat[i, dim, dim2] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
                                   - grads[i, dim]*grads[i, dim2] / kifloat
