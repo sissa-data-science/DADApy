@@ -124,7 +124,7 @@ class DensityEstimation(IdEstimation):
 
         for i in range(self.Nele):
             dc[i] = self.distances[i, self.kstar[i]]
-            Rho[i] = np.log(kstar[i]) - (
+            Rho[i] = np.log(self.kstar[i]) - (
                 np.log(prefactor)
                 + self.id_selected * np.log(self.distances[i, self.kstar[i]])
             )
