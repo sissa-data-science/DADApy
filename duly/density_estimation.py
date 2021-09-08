@@ -123,13 +123,13 @@ class DensityEstimation(IdEstimation):
         Rho_min = 9.9e300
 
         for i in range(self.Nele):
-            dc[i] = self.distances[i, k]
+            dc[i] = self.distances[i, self.kstar[i]]
             Rho[i] = np.log(kstar[i]) - (
                 np.log(prefactor)
-                + self.id_selected * np.log(self.distances[i, kstar[i]])
+                + self.id_selected * np.log(self.distances[i, self.kstar[i]])
             )
 
-            Rho_err[i] = 1.0 / np.sqrt(k)
+            Rho_err[i] = 1.0 / np.sqrt(self.kstar[i])
             if Rho[i] < Rho_min:
                 Rho_min = Rho[i]
 
