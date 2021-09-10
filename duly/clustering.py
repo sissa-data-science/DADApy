@@ -58,7 +58,7 @@ class Clustering(DensityEstimation):
         # Make all values of Rho positives (this is important to help convergence)
         Rho_min = np.min(self.Rho)
 
-        Rho_c = self.Rho + np.log(self.Nele)
+        Rho_c = self.Rho
         Rho_c = Rho_c - Rho_min + 1
 
         # Putative modes of the PDF as preliminary clusters
@@ -169,7 +169,7 @@ class Clustering(DensityEstimation):
 
         # Make all values of Rho positives (this is important to help convergence)
         Rho_min = np.min(self.Rho)
-        Rho_c = self.Rho + np.log(self.Nele)
+        Rho_c = self.Rho
         Rho_c = Rho_c - Rho_min + 1
 
         # Putative modes of the PDF as preliminary clusters

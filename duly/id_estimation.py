@@ -36,6 +36,8 @@ class IdEstimation(Base):
             njobs=njobs,
         )
 
+        self.id_selected = None
+
     # ----------------------------------------------------------------------------------------------
     # 'better' way to perform scaling study of id
     def compute_id_scaling(

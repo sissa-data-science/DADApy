@@ -3,8 +3,13 @@ import multiprocessing
 from functools import partial
 
 import numpy as np
+from scipy.spatial.distance import squareform
 from sklearn.metrics import pairwise_distances_chunked
 from sklearn.neighbors import NearestNeighbors
+
+from duly.cython_ import cython_periodic_dist as cpd
+from duly.utils_.utils import from_all_distances_to_nndistances
+from duly.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -69,21 +74,16 @@ class Base:
                 if self.maxk is None:
                     self.maxk = distances.shape[1] - 1
 
-                self.dist_indices = np.asarray(
-                    np.argsort(distances, axis=1)[:, 0 : self.maxk + 1]
-                )
-                self.distances = np.asarray(
-                    np.take_along_axis(distances, self.dist_indices, axis=1)
+                self.dist_indices, self.distances = from_all_distances_to_nndistances(
+                    distances, self.maxk
                 )
 
             self.dtype = self.distances.dtype
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_distances(
-        self, maxk=None, njobs=1, metric="minkowski", p=2, algo="auto"
-    ):
-        """Compute distances between points up to the maxk nearest neighbour
+    def compute_distances(self, maxk=None, metric="minkowski", p=2, period=None):
+        """Compute distaces between points up to the maxk nearest neighbour
 
         Args:
                 maxk: maximum number of neighbours for which distance is computed and stored
@@ -91,8 +91,13 @@ class Base:
                 metric: type of metric
                 p: type of metric
                 algo: type of algorithm used
+                period (float or array): periodicity (only used for periodic distance computation). Default is None.
 
         """
+        self.metric = metric
+        self.p = p
+        self.period = period
+
         if maxk is not None:
             self.maxk = maxk
         else:
@@ -100,19 +105,18 @@ class Base:
                 self.maxk is not None
             ), "set parameter maxk in the function or for the class"
 
-        self.p = p
+        if self.verb and period is not None:
+            print(
+                "Computing periodic distances.",
+                "The coordinates are assumed to be in the range (0, {})".format(period),
+            )
 
         if self.verb:
             print(f"Computation of the distances up to {self.maxk} NNs started")
 
-        nbrs = NearestNeighbors(
-            n_neighbors=self.maxk, algorithm=algo, metric=metric, p=p, n_jobs=njobs
-        ).fit(self.X)
-
-        self.distances, self.dist_indices = nbrs.kneighbors(self.X)
-
-        if metric == "hamming":
-            self.distances *= self.X.shape[1]
+        self.distances, self.dist_indices = compute_nn_distances(
+            self.X, self.maxk, self.metric, self.p, self.period
+        )
 
         # removal of zero distances should be done here, automatically
         # self._remove_zero_dists(self.distances)

@@ -67,6 +67,37 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def set_kstar(self, k=0):
+        """Set all elements of kstar to a fixed value k. Reset all other class attributes (all depending on kstar).
+
+        Args:
+            k: number of neighbours used to compute the density
+
+        Returns:
+
+        """
+        if isinstance (k, np.ndarray):
+            self.kstar = k
+        else:
+            self.kstar = np.full(self.Nele, k, dtype=int)
+
+        self.neigh_vector_diffs = None
+        self.nind_list = None
+        self.nind_iptr = None
+        self.nind_mat = None
+        self.common_neighs = None
+        self.dc = None
+        self.Rho = None
+        self.Rho_err = None
+        self.grads = None
+        self.grads_var = None
+        self.Fij_list = None
+        self.Fij_var_list = None
+        self.Fij_array = None
+        self.Fij_var_array = None
+
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_kNN(self, k=3):
         """Compute the density of of each point using a simple kNN estimator
 
@@ -81,7 +112,8 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("k-NN density estimation started (k={})".format(k))
 
-        kstar = np.full(self.Nele, k, dtype=int)
+        #kstar = np.full(self.Nele, k, dtype=int)
+        self.set_kstar(k)
         dc = np.zeros(self.Nele, dtype=float)
         Rho = np.zeros(self.Nele, dtype=float)
         Rho_err = np.zeros(self.Nele, dtype=float)
@@ -91,13 +123,13 @@ class DensityEstimation(IdEstimation):
         Rho_min = 9.9e300
 
         for i in range(self.Nele):
-            dc[i] = self.distances[i, k]
-            Rho[i] = np.log(kstar[i]) - (
+            dc[i] = self.distances[i, self.kstar[i]]
+            Rho[i] = np.log(self.kstar[i]) - (
                 np.log(prefactor)
-                + self.id_selected * np.log(self.distances[i, kstar[i]])
+                + self.id_selected * np.log(self.distances[i, self.kstar[i]])
             )
 
-            Rho_err[i] = 1.0 / np.sqrt(k)
+            Rho_err[i] = 1.0 / np.sqrt(self.kstar[i])
             if Rho[i] < Rho_min:
                 Rho_min = Rho[i]
 
@@ -107,7 +139,7 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
         self.Rho_err = Rho_err
         self.dc = dc
-        self.kstar = kstar
+        #self.kstar = kstar
 
         if self.verb:
             print("k-NN density estimation finished")
@@ -168,7 +200,8 @@ class DensityEstimation(IdEstimation):
                 )
             )
 
-        self.kstar = kstar
+        #self.kstar = kstar
+        self.set_kstar(kstar)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -198,10 +231,12 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_vector_diffs(self):
+    def compute_neigh_vector_diffs(self,):
         """Compute the vector differences from each point to its k* nearest neighbors.
         The resulting vectors are stored in a numpy ndarray of rank 2 and secondary dimension = dims.
         The index of  scipy sparse csr_matrix format.
+
+        AAA better implement periodicity to take both a scalar and a vector
 
         """
         # compute neighbour indices
@@ -213,7 +248,10 @@ class DensityEstimation(IdEstimation):
         sec = time.time()
 
         # self.get_vector_diffs = sparse.csr_matrix((self.Nele, self.Nele),dtype=np.int_)
-        self.neigh_vector_diffs = cgr.return_neigh_vector_diffs(self.X, self.nind_list)
+        if self.period is None:
+            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs(self.X, self.nind_list)
+        else:
+            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_periodic(self.X, self.nind_list, np.full((self.dims),fill_value=self.period))
 
         sec2 = time.time()
         if self.verb:
@@ -304,6 +342,42 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def compute_density_kpeaks(self):
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if self.verb:
+            print("Density estimation for k-peaks clustering started")
+
+        dc = np.zeros(self.Nele, dtype=float)
+        Rho = np.zeros(self.Nele, dtype=float)
+        Rho_err = np.zeros(self.Nele, dtype=float)
+        Rho_min = 9.9e300
+
+        for i in range(self.Nele):
+            k = self.kstar[i]
+            dc[i] = self.distances[i, k]
+            Rho[i] = k
+            Rho_err[i] = 0
+            for j in range(1, k):
+                jj = self.dist_indices[i, j]
+                Rho_err[i] = Rho_err[i] + (self.kstar[jj] - k) ** 2
+            Rho_err[i] = np.sqrt(Rho_err[i] / k)
+
+            if Rho[i] < Rho_min:
+                Rho_min = Rho[i]
+
+            # Normalise density
+
+        self.Rho = Rho
+        self.Rho_err = Rho_err
+        self.dc = dc
+
+        if self.verb:
+            print("k-peaks density estimation finished")
+
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_corr_kstarNN(self):
         if self.common_neighs is None:
             self.compute_common_neighs()
@@ -313,7 +387,7 @@ class DensityEstimation(IdEstimation):
 
         dc = np.zeros(self.Nele, dtype=float)
         Rho = np.zeros(self.Nele, dtype=float)
-#        Rho_err = np.zeros(self.Nele, dtype=float)
+        #        Rho_err = np.zeros(self.Nele, dtype=float)
         prefactor = np.exp(
             self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
         )
@@ -329,7 +403,7 @@ class DensityEstimation(IdEstimation):
 
             Rho[i] -= self.id_selected * np.log(rk)
 
-#            Rho_err[i] = 1.0 / np.sqrt(k)
+            #            Rho_err[i] = 1.0 / np.sqrt(k)
 
             if Rho[i] < Rho_min:
                 Rho_min = Rho[i]
@@ -346,17 +420,17 @@ class DensityEstimation(IdEstimation):
         for nspar, indices in enumerate(self.nind_list):
             i = indices[0]
             j = indices[1]
-            #A[i,j] = self.common_neighs[nspar]*1./self.kstar[i]
-            A[i,j] = self.common_neighs[nspar]/2.
-#            if A[i,j] == 0:
-#                tmp = self.common_neighs[nspar]*2./self.Nele
-#                A[ i, j ] = tmp
-#                A[ j, i ] = tmp
+            # A[i,j] = self.common_neighs[nspar]*1./self.kstar[i]
+            A[i, j] = self.common_neighs[nspar] / 2.0
+        #            if A[i,j] == 0:
+        #                tmp = self.common_neighs[nspar]*2./self.Nele
+        #                A[ i, j ] = tmp
+        #                A[ j, i ] = tmp
 
         A = sparse.lil_matrix(A + A.transpose())
-                
+
         A.setdiag(self.kstar)
-        
+
         self.A = A.todense()
         self.B = slin.pinvh(self.A)
         self.Rho_err = np.sqrt(np.diag(self.B))
@@ -445,7 +519,6 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
         self.Rho_err = Rho_err
         self.dc = dc
-        self.kstar = self.kstar
 
         if self.verb:
             print("PAk density estimation finished")
@@ -522,6 +595,10 @@ class DensityEstimation(IdEstimation):
     def compute_density_dF_PAk(self):
 
         # check for deltaFij
+        if self.kstar is None:
+            self.compute_kstar()
+
+        # check for deltaFij
         if self.Fij_array is None:
             self.compute_deltaFs_grads_semisum()
 
@@ -543,7 +620,7 @@ class DensityEstimation(IdEstimation):
             dc[i] = self.distances[i, k]
             Rho[i] = np.log(k) - np.log(prefactor)
 
-            Rho_err[i] = np.sqrt((4 * k + 2) / (k * (k - 1)))
+            # Rho_err[i] = np.sqrt((4 * k + 2) / (k * (k - 1)))
             corrected_rk = 0.0
             Fijs = self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
 
@@ -565,7 +642,7 @@ class DensityEstimation(IdEstimation):
         Rho -= np.log(self.Nele)
 
         self.Rho = Rho
-        self.Rho_err = Rho_err
+        self.Rho_err = 1.0 / np.sqrt(self.kstar)
         self.dc = dc
 
         sec2 = time.time()
@@ -728,18 +805,25 @@ class DensityEstimation(IdEstimation):
 
         supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
+        # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+        k1 = self.kstar[self.nind_list[:, 0]]
+        k2 = self.kstar[self.nind_list[:, 1]]
+        redundancy = np.sqrt(k1 * k2)
+
         if use_variance:
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                tmp = 1.0 / self.Fij_var_array[nspar]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
                 A[i, j] = -tmp
                 supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
         else:
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                A[i, j] = -1.0
+                # A[i, j] = -1.0
+                A[i, j] = -1.0 / redundancy[nspar]
                 supp_deltaF[i, j] = self.Fij_array[nspar]
 
         A = sparse.lil_matrix(A + A.transpose())
@@ -757,9 +841,13 @@ class DensityEstimation(IdEstimation):
         Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
         self.Rho = Rho
+        # self.Rho_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
         self.A = A.todense()
         self.B = slin.pinvh(self.A)
+        # self.B = slin.inv(self.A)
+
         self.Rho_err = np.sqrt(np.diag(self.B))
+
         # self.Rho_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
         # self.Rho_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,))
 
@@ -812,36 +900,39 @@ class DensityEstimation(IdEstimation):
 
         supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
+        # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+        k1 = self.kstar[self.nind_list[:, 0]]
+        k2 = self.kstar[self.nind_list[:, 1]]
+        redundancy = np.sqrt(k1 * k2)
+
         if use_variance:
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
                 A[i, j] = -tmp
                 supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
         else:
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                A[i, j] = -1.0
-                supp_deltaF[i, j] = self.Fij_array[nspar]
+                A[i, j] = -1.0 / redundancy[nspar]
+                supp_deltaF[i, j] = self.Fij_array[nspar] / redundancy[nspar]
 
-        A = sparse.lil_matrix(A + A.transpose())
+        A = alpha * sparse.lil_matrix(A + A.transpose())
 
-        diag = np.array(-A.sum(axis=1)).reshape((self.Nele,)) + alpha * self.kstar
+        diag = (
+            np.array(-A.sum(axis=1)).reshape((self.Nele,)) + (1.0 - alpha) * self.kstar
+        )
 
         #        print("Diag = {}".format(diag))
 
         A.setdiag(diag)
 
-        deltaFcum = (
+        deltaFcum = alpha * (
             np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))
             - np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
-            + alpha * (self.kstar * (np.log(self.kstar / corrected_vols)))
-        )
-
-        #        print("deltaFcum = {}".format(np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))-np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))))
-        #        print("Other term = {}".format(self.kstar*(np.log(self.kstar/corrected_vols))))
+        ) + (1.0 - alpha) * (self.kstar * (np.log(self.kstar / corrected_vols)))
 
         Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
@@ -849,7 +940,6 @@ class DensityEstimation(IdEstimation):
         self.A = A.todense()
         self.B = slin.pinvh(self.A)
         self.Rho_err = np.sqrt(np.diag(self.B))
-        # self.Rho_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,))
 
         sec2 = time.time()
         if self.verb:
@@ -861,7 +951,9 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_PAk_gCorr(self, gauss_approx=True, alpha=1.0):
+    def compute_density_PAk_gCorr(
+        self, gauss_approx=True, alpha=1.0, Rho_PAk=None, Rho_PAk_err=None
+    ):
         """
         finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
         computed using the gradients
@@ -891,34 +983,48 @@ class DensityEstimation(IdEstimation):
             if self.verb:
                 print("Maximising likelihood in Gaussian approximation")
 
-            self.compute_density_PAk()
+            if Rho_PAk is not None and Rho_PAk_err is not None:
+                self.Rho = Rho_PAk
+                self.Rho_err = Rho_PAk_err
+
+            else:
+                self.compute_density_PAk()
 
             # compute adjacency matrix and cumulative changes
             A = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
             supp_deltaF = sparse.lil_matrix((self.Nele, self.Nele), dtype=np.float_)
 
+            # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+            k1 = self.kstar[self.nind_list[:, 0]]
+            k2 = self.kstar[self.nind_list[:, 1]]
+            redundancy = np.sqrt(k1 * k2)
+
             for nspar, indices in enumerate(self.nind_list):
                 i = indices[0]
                 j = indices[1]
-                tmp = 1.0 / self.Fij_var_array[nspar]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
                 A[i, j] = -tmp
                 supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
 
-            A = alpha*sparse.lil_matrix(A + A.transpose())
+            A = alpha * sparse.lil_matrix(A + A.transpose())
 
             diag = (
                 np.array(-A.sum(axis=1)).reshape((self.Nele,))
-                + 1. / self.Rho_err ** 2
+                + (1.0 - alpha) / self.Rho_err ** 2
             )
 
             A.setdiag(diag)
 
-            deltaFcum = alpha*(
-                np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))
-                - np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
-                ) + self.Rho / self.Rho_err ** 2
-            
+            deltaFcum = (
+                alpha
+                * (
+                    np.array(supp_deltaF.sum(axis=0)).reshape((self.Nele,))
+                    - np.array(supp_deltaF.sum(axis=1)).reshape((self.Nele,))
+                )
+                + (1.0 - alpha) * self.Rho / self.Rho_err ** 2
+            )
 
             Rho = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
@@ -1099,12 +1205,14 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
         if comp_covmat is False:
-            self.grads, self.grads_var = cgr.return_grads_and_var_from_coords(
-                self.X, self.dist_indices, self.kstar, self.id_selected
+            #self.grads, self.grads_var = cgr.return_grads_and_var_from_coords(self.X, self.dist_indices, self.kstar, self.id_selected)
+            self.grads, self.grads_var = cgr.return_grads_and_var_from_nnvecdiffs(
+                self.neigh_vector_diffs, self.nind_list, self.nind_iptr, self.kstar, self.id_selected
             )
         else:
-            self.grads, self.grads_var = cgr.return_grads_and_covmat_from_coords(
-                self.X, self.dist_indices, self.kstar, self.id_selected
+            #self.grads, self.grads_var = cgr.return_grads_and_covmat_from_coords(self.X, self.dist_indices, self.kstar, self.id_selected)
+            self.grads, self.grads_var = cgr.return_grads_and_covmat_from_nnvecdiffs(
+                self.neigh_vector_diffs, self.nind_list, self.nind_iptr, self.kstar, self.id_selected
             )
             self.check_grads_covmat = True
         sec2 = time.time()
@@ -1114,7 +1222,7 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_deltaFs_grad(self, extgrads=None, extgrads_covmat=None):
-        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
+        """[OBSOLETE] Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
         a linear expansion (see `compute_grads`).
 
         Returns:
