@@ -55,7 +55,6 @@ class IdEstimation(Base):
 
         elif self.X is not None:
             steps, range_r2 = get_steps(upper_bound=self.Nele - 1)
-            print(range_r2)
             distances, dist_indices, mus, r2s = self._get_mus_scaling(
                 range_scaling=range_r2
             )
@@ -95,7 +94,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_2NN(self, decimation=1, fraction=0.9, algorithm="base"):
+    def compute_id_2NN(self, decimation=1, fraction=0.9, algorithm="base", return_id = False):
 
         """Compute intrinsic dimension using the 2NN algorithm
 
@@ -145,6 +144,9 @@ class IdEstimation(Base):
             # print('ID estimated from ML is {:f} +- {:f}'.format(self.id_estimated_ml, self.id_estimated_ml_std))
             # print(f'Selecting ID of {self.id_selected}')
             print(f"ID estimation finished: selecting ID of {self.id_selected}")
+
+        if return_id:
+            return id
 
     # ----------------------------------------------------------------------------------------------
 
