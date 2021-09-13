@@ -10,6 +10,7 @@ from duly.id_estimation import IdEstimation
 from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
 from duly.cython_ import cython_maximum_likelihood_opt as cml
 from duly.cython_ import cython_grads as cgr
+from duly.cython_ import cython_density as cd
 
 cores = multiprocessing.cpu_count()
 
@@ -201,6 +202,26 @@ class DensityEstimation(IdEstimation):
             )
 
         #self.kstar = kstar
+        self.set_kstar(kstar)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_kstar_optimised(self, Dthr=23.92812698):
+
+        if self.id_selected is None:
+            self.compute_id_2NN()
+
+        if self.verb:
+            print("kstar estimation started, Dthr = {}".format(Dthr))
+
+        kstar = cd._compute_kstar(
+            self.id_selected,
+            self.Nele,
+            self.maxk,
+            Dthr,
+            self.dist_indices,
+            self.distances
+        )
         self.set_kstar(kstar)
 
     # ----------------------------------------------------------------------------------------------
@@ -523,6 +544,26 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("PAk density estimation finished")
 
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_PAk_optimised(self, method="NR"):
+
+        # options for method:
+        #   - "NR"=Newton-Raphson implemented in cython
+        #   - "NM"=Nelder-Mead scipy built-in
+        #   - "For"=Newton-Raphson implemented in Fortran
+
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar_optimised()
+
+        self.Rho, self.Rho_err, self.dc = cd._compute_pak(
+            self.id_selected,
+            self.Nele,
+            self.maxk,
+            self.kstar,
+            self.distances
+        )
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_kstarNN_gCorr(

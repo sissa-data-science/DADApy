@@ -53,6 +53,14 @@ ext_modules += [
     )
 ]
 
+ext_modules += [
+    Extension(
+        "duly.cython_.cython_density",
+        sources=["duly/cython_/cython_density.c"],
+        include_dirs=[get_numpy_include()],
+    )
+]
+
 setup(
     name="duly",
     packages=["duly", "duly.utils_"],
