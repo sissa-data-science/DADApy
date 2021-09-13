@@ -1,12 +1,12 @@
 import multiprocessing
 
 import numpy as np
-import scipy.special as sp
+# import scipy.special as sp
 from scipy.optimize import minimize_scalar as SMin
 
 from duly._base import Base
 from duly.utils_ import discrete_functions as df
-from duly.utils_ import utils as ut
+# from duly.utils_ import utils as ut
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -45,18 +45,26 @@ class IdDiscrete(Base):
             njobs=njobs,
         )
 
-        if weights is not None:
+        if weights is None:
+            self.is_w = False
+            self.weights = None
+        else:
             self.set_w(weights)
             self.is_w = True
-        else:
-            self.is_w = False
 
-        self.Lk = None
-        self.Ln = None
+        self.lk = None
+        self.ln = None
+        self.k = None
+        self.n = None
+        self.mask = None
 
+        self.id_estimated_binom = None
+        self.id_estimated_binom_std = None
+        self.posterior_domain = None
+        self.posterior = None
     # ----------------------------------------------------------------------------------------------
 
-    def fix_Lk(self, Lk=None, Ln=None):
+    def fix_lk(self, lk=None, ln=None):
         """Computes the k points within the given Rk and n points within given Rn.
 
         For each point, computes the number self.k of points within a sphere of radius Rk
@@ -66,12 +74,11 @@ class IdDiscrete(Base):
         sure to have all the point of the selected shell. If self.maxk is equal
         to the number of points of the dataset no mask will be applied, as all the point
         were surely taken into account.
-        Eventually add the weights of the points if they have an explicit multeplicity
+        Eventually add the weights of the points if they have an explicit multiplicity
 
         Args:
-                Lk (int): external shell radius
-                Ln (int): internal shell radius
-                w (ndarray(int), optional): array of multeplicities of points
+                lk (int): external shell radius
+                ln (int): internal shell radius
 
         Returns:
 
@@ -81,17 +88,17 @@ class IdDiscrete(Base):
             self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
-        if Lk is not None and Ln is not None:
-            self.set_Lk_Ln(Lk, Ln)
+        if lk is not None and ln is not None:
+            self.set_lk_ln(lk, ln)
         else:
             assert (
-                self.Lk is not None and self.Ln is not None
-            ), "set self.Lk and self.Ln or insert proper values for the Lk and Ln parameters"
+                self.lk is not None and self.ln is not None
+            ), "set self.lk and self.ln or insert proper values for the lk and ln parameters"
 
         # compute k and n
         if self.is_w is False:
-            self.k = (self.distances <= self.Lk).sum(axis=1)
-            self.n = (self.distances <= self.Ln).sum(axis=1)
+            self.k = (self.distances <= self.lk).sum(axis=1)
+            self.n = (self.distances <= self.ln).sum(axis=1)
         else:
             assert (
                 self.weights is not None
@@ -99,14 +106,14 @@ class IdDiscrete(Base):
             self.k = np.array(
                 [
                     sum(self.weights[self.dist_indices[i][el]])
-                    for i, el in enumerate(self.distances <= self.Lk)
+                    for i, el in enumerate(self.distances <= self.lk)
                 ],
                 dtype=np.int,
             )
             self.n = np.array(
                 [
                     sum(self.weights[self.dist_indices[i][el]])
-                    for i, el in enumerate(self.distances <= self.Ln)
+                    for i, el in enumerate(self.distances <= self.ln)
                 ],
                 dtype=np.int,
             )
@@ -114,10 +121,10 @@ class IdDiscrete(Base):
         # checks-out
         if self.maxk < self.Nele:
             # if not all possible NN were taken into account (i.e. maxk < Nele) and k is equal to self.maxk
-            # or distances[:,-1]<Lk, it is likely that there are other points within Lk that are not being
+            # or distances[:,-1]<lk, it is likely that there are other points within lk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
             # in the calculation of likelihood
-            self.mask = self.distances[:, -1] > self.Lk  # or self.k == self.maxk
+            self.mask = self.distances[:, -1] > self.lk  # or self.k == self.maxk
 
             if np.any(~self.mask):
                 print(
@@ -134,33 +141,35 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_Lk(self, Lk=None, Ln=None, method="bayes", plot=True):
+    def compute_id_binomial_lk(self, lk=None, ln=None, subset=None, method="bayes", plot=True):
         """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
         In the estimation of d one has to remove the central point from the counting of n and k
         as it generates the process but it is not effectively part of it
 
         Args:
-                Rk (float): radius of the external shell
-                ratio (float): ratio between internal and external shell
-                method (str, default 'bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                                                                           gives the mean value and std of d, while mle only the max of the likelihood
 
+                lk (int): radius of the external shell
+                ln (int): radius of the internal shell
+                subset (int): choose a random subset of the dataset to make the Id estimate
+                method (str, default 'bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
+                    gives the mean value and std of d, while mle only the max of the likelihood
+                plot (bool): if bayes method is used, one can decide whether to plot the posterior
         """
         # checks-in and initialisations
         assert (
             self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
-        if Lk is not None and Ln is not None:
-            self.set_Lk_Ln(Lk, Ln)
+        if lk is not None and ln is not None:
+            self.set_lk_ln(lk, ln)
         else:
             assert (
-                self.Lk is not None and self.Ln is not None
-            ), "set self.Lk and self.Ln or insert proper values for the Lk and Ln parameters"
+                self.lk is not None and self.ln is not None
+            ), "set self.lk and self.ln or insert proper values for the lk and ln parameters"
 
         # routine
-        self.fix_Lk()
+        self.fix_lk()
 
         n_eff = self.n[self.mask]
         k_eff = self.k[self.mask]
@@ -168,8 +177,15 @@ class IdDiscrete(Base):
         if self.verb:
             print("n and k computed")
 
-        E_n = n_eff.mean()
-        if E_n == 1.0:
+        if subset is not None:
+            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            if subset < len(n_eff):
+                subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
+                n_eff = n_eff[subset]
+                k_eff = k_eff[subset]
+
+        e_n = n_eff.mean()
+        if e_n == 1.0:
             print(
                 "no points in the inner shell, returning 0. Consider increasing Rk and/or the ratio"
             )
@@ -182,7 +198,7 @@ class IdDiscrete(Base):
                 ww = 1
             self.id_estimated_binom = SMin(
                 df.compute_binomial_logL,
-                args=(self.Lk, k_eff - 1, self.Ln, n_eff - 1, True, ww),
+                args=(self.lk, k_eff - 1, self.ln, n_eff - 1, True, ww),
                 bounds=(D_MIN, D_MAX),
                 method="bounded",
             ).x
@@ -196,7 +212,7 @@ class IdDiscrete(Base):
                 n_tot = n_eff - 1
 
             if self.verb:
-                print("startin bayesian estimation")
+                print("starting bayesian estimation")
 
             (
                 self.id_estimated_binom,
@@ -204,7 +220,7 @@ class IdDiscrete(Base):
                 self.posterior_domain,
                 self.posterior,
             ) = _beta_prior_d(
-                k_tot, n_tot, self.Lk, self.Ln, plot=plot, verbose=self.verb
+                k_tot, n_tot, self.lk, self.ln, plot=plot, verbose=self.verb
             )
         else:
             print("select a proper method for id computation")
@@ -212,17 +228,17 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_k(self, k_eff=None, ratio=0.7):
+    def fix_k(self, k_eff=None, ratio=0.5):
         """Computes Rk, Rn, n for each point given a selected value of k
 
-        This routine computes external radii Lk, internal radii Ln and internal points n.
-        It also ensure that Lk is scaled onto the most external shell
+        This routine computes external radii lk, internal radii ln and internal points n.
+        It also ensure that lk is scaled onto the most external shell
         for which we are sure to have all points.
-        NB As a cosequence the k will be point dependent
+        NB As a consequence the k will be point dependent
 
         Args:
-                k (int, default=self.k_max): selected (max) number of NN
-                ratio (float, efault = 0.5): approximate ratio among Ln and Lk
+                k_eff (int, default=self.k_max): selected (max) number of NN
+                ratio (float, default = 0.5): approximate ratio among ln and lk
 
         Returns:
         """
@@ -235,18 +251,18 @@ class IdDiscrete(Base):
             self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
-        assert ratio > 0 and ratio < 1, "set a proper value for the ratio"
+        assert 0 < ratio < 1, "set a proper value for the ratio"
 
-        if k_eff is not None:
+        if k_eff is None:
+            k_eff = self.maxk
+        else:
             assert (
                 k_eff <= self.maxk
             ), "A k_eff > maxk was selected,\
                 recompute the distances with the proper amount on NN to see points up to that k_eff"
-        else:
-            k_eff = self.maxk
 
         # routine
-        self.Lk, self.k, self.Ln, self.n = (
+        self.lk, self.k, self.ln, self.n = (
             np.zeros(self.Nele),
             np.zeros(self.Nele, dtype=np.int64),
             np.zeros(self.Nele),
@@ -259,8 +275,9 @@ class IdDiscrete(Base):
 
             # case 1: all possible neighbours have been considered, no extra possible unseen points
             if k_eff == self.Nele:
-                Lk_temp = dist_i[-1]
+                lk_temp = dist_i[-1]
                 k_temp = k_eff
+
             # case 2: only some NN are considered -> work on surely "complete" shells
             else:
                 # Group distances according to shell. Returns radii of shell and cumulative number of points at that radius.
@@ -271,29 +288,30 @@ class IdDiscrete(Base):
                 # un: array([0, 1, 2, 3, 4, 6])
                 # ind: array([0, 1, 3, 4, 6, 9])
                 unique, index = np.unique(dist_i, return_index=True)
-                # Lk=0 may happen when we have smtg like dist_i = [0,0,0,0,0] or dist_i = [0,3,3,3,3,3]. As we don't have the full
-                # information for at least two shells, we skip the point
+
                 if unique.shape[0] < 3:
+                    # lk=0 may happen when we have smtg like dist_i = [0,0,0,0,0] or dist_i = [0,3,3,3,3,3]. As we don't have the full
+                    # information for at least two shells, we skip the point
                     self.mask[i] = False
                     continue
 
-                # set Rk to the distance of the second-to-last shell, for which we are sure to have full info
-                Lk_temp = unique[-2]  # EX: 4
+                # set lk to the distance of the second-to-last shell, for which we are sure to have full info
+                lk_temp = unique[-2]  # EX: 4
                 # set k to cumulative up to last complete shell
                 k_temp = index[-1]  # EX: 9
 
             # fix internal radius
-            Ln_temp = np.rint(Lk_temp * ratio)
-            # if the inner shell is accidently the same of the outer, go to the innerer one
-            if Ln_temp == Lk_temp:
-                Ln_temp -= 1
+            ln_temp = np.rint(lk_temp * ratio)
+            # if the inner shell is accidentally the same of the outer, go to the innerer one
+            if ln_temp == lk_temp:
+                ln_temp -= 1
 
-            n_temp = sum(dist_i <= Ln_temp)
+            n_temp = sum(dist_i <= ln_temp)
 
-            self.Lk[i] = Lk_temp
+            self.lk[i] = lk_temp
             self.k[i] = k_temp.astype(np.int64)
             self.n[i] = n_temp.astype(np.int64)
-            self.Ln[i] = Ln_temp
+            self.ln[i] = ln_temp
 
         # checks out
         if any(~self.mask):
@@ -308,9 +326,9 @@ class IdDiscrete(Base):
 
     def fix_k_shell(self, k_shell, ratio):
 
-        """Computes the Lk, Ln, n given k_shell
+        """Computes the lk, ln, n given k_shell
 
-        This routine computes the external radius Lk, the associated points k, internal radius Ln and associated points n.
+        This routine computes the external radius lk, the associated points k, internal radius ln and associated points n.
         The computation is performed starting from a given number of shells.
         It ensure that Rk is scaled onto the most external shell for which we are sure to have all points.
         NB in this case we will have an effective, point dependent k
@@ -328,9 +346,9 @@ class IdDiscrete(Base):
             self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
-        assert ratio > 0 and ratio < 1, "set a proper value for the ratio"
+        assert 0 < ratio < 1, "set a proper value for the ratio"
 
-        self.Lk, self.k, self.Ln, self.n = (
+        self.lk, self.k, self.ln, self.n = (
             np.zeros(self.Nele),
             np.zeros(self.Nele, dtype=np.int64),
             np.zeros(self.Nele),
@@ -345,32 +363,32 @@ class IdDiscrete(Base):
             # check whether the point has enough shells, at least one more than the one we want to consider
             if unique.shape[0] < k_shell + 1:
                 self.mask[i] = False
-                continue  # or Lk_temp = unique[-1] even if the shell is not the wanted one???
+                continue  # or lk_temp = unique[-1] even if the shell is not the wanted one???
 
-            # set Lk to the distance of the selected shell
-            Lk_temp = unique[k_shell]
-            # and Ln according to the ratio
-            Ln_temp = np.rint(Lk_temp * ratio)
-            # if the inner shell is accidently the same of the outer, go to the innerer one
-            if Ln_temp == Lk_temp:
-                Ln_temp -= 1
+            # set lk to the distance of the selected shell
+            lk_temp = unique[k_shell]
+            # and ln according to the ratio
+            ln_temp = np.rint(lk_temp * ratio)
+            # if the inner shell is accidentally the same of the outer, go to the innerer one
+            if ln_temp == lk_temp:
+                ln_temp -= 1
 
             # compute k and n
             if self.is_w:
-                which_k = dist_i <= Lk_temp
+                which_k = dist_i <= lk_temp
                 self.k[i] = sum(self.weights[self.dist_indices[i][which_k]]).astype(
                     np.int64
                 )
-                which_n = dist_i <= Ln_temp
+                which_n = dist_i <= ln_temp
                 self.n[i] = sum(self.weights[self.dist_indices[i][which_n]]).astype(
                     np.int64
                 )
             else:
                 self.k[i] = index[k_shell + 1].astype(np.int64)
-                self.n[i] = sum(dist_i <= Ln_temp).astype(np.int64)
+                self.n[i] = sum(dist_i <= ln_temp).astype(np.int64)
 
-            self.Lk[i] = Lk_temp
-            self.Ln[i] = Ln_temp
+            self.lk[i] = lk_temp
+            self.ln[i] = ln_temp
 
         # checks out
         if any(~self.mask):
@@ -383,18 +401,20 @@ class IdDiscrete(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(self, k, shell=True, ratio=None):
+    def compute_id_binomial_k(self, k, shell=True, ratio=None, subset=None):
         """Calculate Id using the binomial estimator by fixing the number of neighbours or shells
 
-        As in the case in which one fix Lk, also in this version of the estimation
+        As in the case in which one fix lk, also in this version of the estimation
         one removes the central point from n and k. Two different ways of computing
-        k,n,Lk,Ln are available, wheter one intends k as the k-th neighbour
+        k,n,lk,ln are available, whether one intends k as the k-th neighbour
         or the k-th shell. In both cases, one wants to be sure that the shell
         chosen is
 
         Args:
                 k (int): order of neighbour that set the external shell
+                shell (bool): k stands for number of neighbours or number of occupied shells
                 ratio (float): ratio between internal and external shell
+                subset (int): choose a random subset of the dataset to make the Id estimate
 
         """
         # checks-in and initialisations
@@ -402,7 +422,7 @@ class IdDiscrete(Base):
             self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
-        assert ratio > 0 and ratio < 1, "set a proper value for the ratio"
+        assert 0 < ratio < 1, "set a proper value for the ratio"
 
         if shell:
             assert k < self.maxk, "asking for a much too large number of shells"
@@ -416,11 +436,22 @@ class IdDiscrete(Base):
 
         n_eff = self.n[self.mask]
         k_eff = self.k[self.mask]
+        ln_eff = self.ln[self.mask]
+        lk_eff = self.lk[self.mask]
 
-        E_n = n_eff.mean()
-        if E_n == 1.0:
+        if subset is not None:
+            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            if subset < len(n_eff):
+                subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
+                n_eff = n_eff[subset]
+                k_eff = k_eff[subset]
+                ln_eff = ln_eff[subset]
+                lk_eff = lk_eff[subset]
+
+        e_n = n_eff.mean()
+        if e_n == 1.0:
             print(
-                "no points in the inner shell, returning 0. Consider increasing Lk and/or the ratio"
+                "no points in the inner shell, returning 0. Consider increasing lk and/or the ratio"
             )
             return 0
 
@@ -432,9 +463,9 @@ class IdDiscrete(Base):
         self.id_estimated_binom = SMin(
             df.compute_binomial_logL,
             args=(
-                self.Lk[self.mask],
+                lk_eff,
                 k_eff - 1,
-                self.Ln[self.mask],
+                ln_eff,
                 n_eff - 1,
                 True,
                 ww,
@@ -451,44 +482,12 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def set_Lk_Ln(self, lk, ln):
-        assert (
-            isinstance(
-                ln,
-                (
-                    np.int64,
-                    np.int32,
-                    np.int16,
-                    np.int8,
-                    np.uint64,
-                    np.uint32,
-                    np.uint16,
-                    np.uint8,
-                    int,
-                ),
-            )
-            and ln > 0
-        ), "select a proper integer Ln>0"
-        assert (
-            isinstance(
-                lk,
-                (
-                    np.int64,
-                    np.int32,
-                    np.int16,
-                    np.int8,
-                    np.uint64,
-                    np.uint32,
-                    np.uint16,
-                    np.uint8,
-                    int,
-                ),
-            )
-            and lk > 0
-        ), "select a proper integer Lk>0"
-        assert lk > ln, "select Lk and Ln, s.t. Lk > Ln"
-        self.Ln = ln
-        self.Lk = lk
+    def set_lk_ln(self, lk, ln):
+        assert (isinstance(ln, (np.int, int)) and ln > 0), "select a proper integer ln>0"
+        assert (isinstance(lk, (np.int, int)) and lk > 0), "select a proper integer lk>0"
+        assert lk > ln, "select lk and ln, s.t. lk > ln"
+        self.ln = ln
+        self.lk = lk
 
     # ----------------------------------------------------------------------------------------------
 
@@ -502,7 +501,7 @@ class IdDiscrete(Base):
 # ----------------------------------------------------------------------------------------------
 
 
-def _beta_prior_d(k, n, Lk, Ln, a0=1, b0=1, plot=True, verbose=True):
+def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
     """Compute the posterior distribution of d given the input aggregates
     Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
     However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
@@ -511,10 +510,10 @@ def _beta_prior_d(k, n, Lk, Ln, a0=1, b0=1, plot=True, verbose=True):
     Args:
             k (nd.array(int)): number of points within the external shells
             n (nd.array(int)): number of points within the internal shells
-            Lk (int): outer shell radius
-            Lk (int): inner shell radius
+            lk (int): outer shell radius
+            lk (int): inner shell radius
             a0 (float): beta distribution parameter, default =1 for flat prior
-            b0 (float): prior initialiser, default =1 for flat prior
+            b0 (float): prior initializer, default =1 for flat prior
             plot (bool, default=False): plot the posterior
     Returns:
             E_d_emp (float): mean value of the posterior
@@ -530,10 +529,10 @@ def _beta_prior_d(k, n, Lk, Ln, a0=1, b0=1, plot=True, verbose=True):
     posterior = beta_d(a, b)
 
     def p_d(d):
-        Vk = df.compute_discrete_volume(Lk, d)
-        Vn = df.compute_discrete_volume(Ln, d)
-        dVk_dd = df.compute_derivative_discrete_vol(Lk, d)
-        dVn_dd = df.compute_derivative_discrete_vol(Ln, d)
+        Vk = df.compute_discrete_volume(lk, d)
+        Vn = df.compute_discrete_volume(ln, d)
+        dVk_dd = df.compute_derivative_discrete_vol(lk, d)
+        dVn_dd = df.compute_derivative_discrete_vol(ln, d)
         x = Vn / Vk
         dx_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
         return abs(posterior.pdf(x) * dx_dd)

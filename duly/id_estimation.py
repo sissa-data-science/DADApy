@@ -181,23 +181,23 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_Rk(self, Rk=None, ratio=None):
-        """Computes the k points within the given Rk and n points within given Rn.
+    def fix_rk(self, rk=None, ratio=None):
+        """Computes the k points within the given rk and n points within given rn.
 
-        For each point, computes the number self.k of points within a sphere of radius Rk
-        and the number self.n within an inner sphere of radius Rn=Rk*ratio. It also provides
+        For each point, computes the number self.k of points within a sphere of radius rk
+        and the number self.n within an inner sphere of radius rn=rk*ratio. It also provides
         a mask to take into account those points for which the statistics might be wrong, i.e.
         k == self.maxk, meaning that all available points were selected. If self.maxk is equal
         to the number of points of the dataset no mask will be applied
 
         Args:
-                Rk (float or int): external shell radius
-                ratio (float,optional): ratio between interal and external radii of the shells
+                rk (float or int): external shell radius
+                ratio (float,optional): ratio between internal and external radii of the shells
 
         Returns:
 
         """
-        # checks-in and intialisations
+        # checks-in and initialisations
         if self.distances is None:
             self.compute_distances()
 
@@ -206,36 +206,36 @@ class IdEstimation(Base):
         else:
             assert (
                 self.r is not None
-            ), "set self.r or insert a valure for the ratio parameter"
+            ), "set self.r or insert a value for the ratio parameter"
 
-        if Rk is not None:
-            self.set_Rk(Rk)
+        if rk is not None:
+            self.set_rk(rk)
         else:
             assert (
-                self.Rk is not None
-            ), "set self.R or insert a valure for the Rk parameter"
+                self.rk is not None
+            ), "set self.R or insert a value for the rk parameter"
 
         # routine
-        self.Rn = self.Rk * self.r
-        self.k = (self.distances <= self.Rk).sum(axis=1)
-        self.n = (self.distances <= self.Rn).sum(axis=1)
+        self.rn = self.rk * self.r
+        self.k = (self.distances <= self.rk).sum(axis=1)
+        self.n = (self.distances <= self.rn).sum(axis=1)
 
         # checks-out
         if self.maxk < self.Nele:
             # if not all possible NN were taken into account (i.e. maxk < Nele) and k is equal to self.maxk
-            # or distances[:,-1]<Rk, it is likely that there are other points within Rk that are not being
+            # or distances[:,-1]<rk, it is likely that there are other points within rk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
             # in the calculation of likelihood
-            self.mask = self.distances[:, -1] > self.Rk  # or self.k == self.maxk
+            self.mask = self.distances[:, -1] > self.rk  # or self.k == self.maxk
 
             if np.any(~self.mask):
                 print(
                     "NB: for "
                     + str(sum(~(self.mask)))
                     + " points, the counting of k could be wrong, "
-                    + "as more points might be present within the selected Rk. In order not to affect "
+                    + "as more points might be present within the selected rk. In order not to affect "
                     + "the statistics a mask is provided to remove them from the calculation of the "
-                    + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
+                    + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering rk."
                 )
 
         else:
@@ -243,17 +243,18 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_Rk(self, Rk=None, ratio=None, method="bayes", plot=False):
+    def compute_id_binomial_rk(self, rk=None, ratio=None, subset=None, method="bayes", plot=False):
         """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
         In the estimation of d one has to remove the central point from the counting of n and k
         as it generates the process but it is not effectively part of it
 
         Args:
-                Rk (float): radius of the external shell
+                rk (float): radius of the external shell
                 ratio (float): ratio between internal and external shell
+                subset (int): choose a random subset of the dataset to make the Id estimate
                 method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                                                                           gives the mean value and std of d, while mle only the max of the likelihood
+                                            gives the mean value and std of d, while mle only the max of the likelihood
                 plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
 
         """
@@ -265,25 +266,32 @@ class IdEstimation(Base):
                 self.r is not None
             ), "set self.r or insert a valure for the ratio parameter"
 
-        if Rk is not None:
-            self.set_Rk(Rk)
+        if rk is not None:
+            self.set_rk(rk)
         else:
             assert (
-                self.Rk is not None
-            ), "set self.R or insert a valure for the Rk parameter"
+                self.rk is not None
+            ), "set self.R or insert a valure for the rk parameter"
 
-        self.Rn = self.Rk * self.r
+        self.rn = self.rk * self.r
 
         # routine
-        self.fix_Rk()
+        self.fix_rk()
 
         n_eff = self.n[self.mask]
         k_eff = self.k[self.mask]
 
+        if subset is not None:
+            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            if subset < len(n_eff):
+                subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
+                n_eff = n_eff[subset]
+                k_eff = k_eff[subset]
+
         E_n = n_eff.mean()
         if E_n == 1.0:
             print(
-                "no points in the inner shell, returning 0. Consider increasing Rk and/or the ratio"
+                "no points in the inner shell, returning 0. Consider increasing rk and/or the ratio"
             )
             self.id_estimated_binom = 0
             return 0
@@ -306,14 +314,14 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def fix_k(self, k_eff=None, ratio=None):
-        """Computes Rk, Rn, n for each point given a selected value of k
+        """Computes rk, rn, n for each point given a selected value of k
 
-        This routine computes the external radius Rk, internal radius Rn and internal points n
+        This routine computes the external radius rk, internal radius rn and internal points n
         given a value k (the number of NN to consider).
 
         Args:
                 k_eff (int, default=self.maxk): selected number of NN
-                ratio (float, ): ratio among Rn and Rk
+                ratio (float, ): ratio among rn and rk
 
         Returns:
 
@@ -338,20 +346,20 @@ class IdEstimation(Base):
 
         # routine
         self.k = k_eff
-        self.Rk = self.distances[:, self.k]  # k NN -> k-1 position in the array
-        self.Rn = self.Rk * self.r
-        self.n = (self.distances <= self.Rn.reshape(self.Nele, 1)).sum(axis=1)
+        self.rk = self.distances[:, self.k]  # k NN -> k-1 position in the array
+        self.rn = self.rk * self.r
+        self.n = (self.distances <= self.rn.reshape(self.Nele, 1)).sum(axis=1)
 
         self.mask = np.ones(self.Nele, dtype=bool)
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(self, k=None, ratio=None, method="bayes", plot=False):
+    def compute_id_binomial_k(self, k=None, ratio=None, subset=None, method="bayes", plot=False):
         """Calculate Id using the binomial estimator by fixing the number of neighbours
 
-        As in the case in which one fixes Rk, also in this version of the estimation
+        As in the case in which one fixes rk, also in this version of the estimation
         one removes the central point from n and k. Furthermore one has to remove also
-        the k-th NN, as it plays the role of the distance at which Rk is taken.
+        the k-th NN, as it plays the role of the distance at which rk is taken.
         So if k=5 it means the 5th NN from the central point will be considered,
         taking into account 6 points though (the central one too). This means that
         in principle k_eff = 6, to which I'm supposed to subtract 2. For this reason
@@ -360,6 +368,9 @@ class IdEstimation(Base):
         Args:
                 k (int): order of neighbour that set the external shell
                 ratio (float): ratio between internal and external shell
+                subset (int): choose a random subset of the dataset to make the Id estimate
+                method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
+                                            gives the mean value and std of d, while mle only the max of the likelihood
                 plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
         """
         # checks-in and initialisations
@@ -368,7 +379,7 @@ class IdEstimation(Base):
         else:
             assert (
                 self.r is not None
-            ), "set self.r or insert a valure for the ratio parameter"
+            ), "set self.r or insert a value for the ratio parameter"
 
         if k is not None:
             assert (
@@ -379,11 +390,18 @@ class IdEstimation(Base):
 
         # routine
         self.fix_k(k)
+        n_eff = self.n
 
-        E_n = self.n.mean()
+        if subset is not None:
+            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            if subset < len(self.n):
+                subset = rng.choice(len(self.n), subset, replace=False, shuffle=False)
+                n_eff = self.n[subset]
+
+        E_n = n_eff.mean()
         if E_n == 1.0:
             print(
-                "no points in the inner shell, returning 0\n. Consider increasing Rk and/or the ratio"
+                "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
             )
             self.id_estimated_binom = 0
             return 0
@@ -396,7 +414,7 @@ class IdEstimation(Base):
                 self.id_estimated_binom_std,
                 self.posterior_domain,
                 self.posterior,
-            ) = _beta_prior(k - 1, self.n - 1, self.r, plot=plot, verbose=self.verb)
+            ) = _beta_prior(k - 1, n_eff - 1, self.r, plot=plot, verbose=self.verb)
         else:
             print("select a proper method for id computation")
             return 0
@@ -427,14 +445,13 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
     def set_r(self, r):
-        assert 0 < r and r < 1, "select a proper ratio, 0<r<1"
+        assert 0 < r < 1, "select a proper ratio, 0<r<1"
         self.r = r
 
     # ----------------------------------------------------------------------------------------------
-    def set_Rk(self, R):
-        assert 0 < R, "select a proper Rk>0"
-        self.Rk = R
-
+    def set_rk(self, R):
+        assert 0 < R, "select a proper rk>0"
+        self.rk = R
 
 # ----------------------------------------------------------------------------------------------
 

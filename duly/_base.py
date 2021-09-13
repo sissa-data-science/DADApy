@@ -53,7 +53,7 @@ class Base:
 
             Nele0 = self.X.shape[0]
             #removal of overlapping data points
-            self.X = np.unique(self.X, axis = 0)
+            #self.X = np.unique(self.X, axis = 0)
 
 
             self.Nele = self.X.shape[0]
