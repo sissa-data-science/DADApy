@@ -149,65 +149,6 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_kstar(self, Dthr=23.92812698):
-        """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
-
-        Args:
-            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-            to a p-value of 1e-6.
-
-        Returns:
-
-        """
-        if self.intrinsic_dim is None:
-            self.compute_id_2NN()
-
-        if self.verb:
-            print("kstar estimation started, Dthr = {}".format(Dthr))
-
-        # Dthr = 23.92812698  # this threshold value corresponds to being sure within a p-value
-        # of 1E-6 that the k-NN densities, do not touch unless you really know what you are doing
-
-        # Array initialization for kstar
-        kstar = np.empty(self.N, dtype=int)
-        prefactor = np.exp(
-            self.intrinsic_dim / 2.0 * np.log(np.pi)
-            - gammaln((self.intrinsic_dim + 2.0) / 2.0)
-        )
-
-        sec = time.time()
-        for i in range(self.N):
-            j = 4
-            dL = 0.0
-            while j < self.maxk and dL < Dthr:
-                ksel = j - 1
-                vvi = prefactor * pow(self.distances[i, ksel], self.intrinsic_dim)
-                vvj = prefactor * pow(
-                    self.distances[self.dist_indices[i, j], ksel], self.intrinsic_dim
-                )
-                dL = (
-                    -2.0
-                    * ksel
-                    * (np.log(vvi) + np.log(vvj) - 2.0 * np.log(vvi + vvj) + np.log(4))
-                )
-                j = j + 1
-            if j == self.maxk:
-                kstar[i] = j - 1
-            else:
-                kstar[i] = j - 2
-        sec2 = time.time()
-        if self.verb:
-            print(
-                "{0:0.2f} seconds finding the optimal k for all the points".format(
-                    sec2 - sec
-                )
-            )
-
-        # self.kstar = kstar
-        self.set_kstar(kstar)
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_kstar_optimised(self, Dthr=23.92812698):
 
         if self.intrinsic_dim is None:
             self.compute_id_2NN()

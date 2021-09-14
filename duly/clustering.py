@@ -16,16 +16,16 @@ class Clustering(DensityEstimation):
 
     Attributes:
 
-        Nclus_m (int) : number of clusters found
-        labels (list(int)): cluster assignment. A list of length N containg the cluster assignment of each point
-        as an integer from 0 to Nclus_m-1.
-        centers_m (int): Indices of the centroids of each cluster (density peak)
-        clstruct_m (list(list(int))): a list of lists. Each sublist contains the indices belonging to the
+        N_clusters (int) : number of clusters found
+        cluster_assignment (list(int)): cluster assignment. A list of length N containg the cluster assignment of each point
+        as an integer from 0 to N_clusters-1.
+        cluster_centers (int): Indices of the centroids of each cluster (density peak)
+        cluster_indices (list(list(int))): a list of lists. Each sublist contains the indices belonging to the
         corresponding cluster.
-        out_bord (array(float)): an array of dimensions Nclus_m x Nclus_m containg the estimated log density of the
-        the saddle point between each couple of peaks.
-        Rho_bord_err_m (array(float)): an array of dimensions Nclus_m x Nclus_m containg the estimated error on the
-        log density of the saddle point between each couple of peaks.
+        log_den_bord (array(float)): an array of dimensions N_clusters x N_clusters containg the estimated log density
+        of the the saddle point between each couple of peaks.
+        log_den_bord_err (array(float)): an array of dimensions N_clusters x N_clusters containg the estimated error
+        on the log density of the saddle point between each couple of peaks.
 
     """
 
@@ -40,32 +40,32 @@ class Clustering(DensityEstimation):
             njobs=njobs,
         )
 
-        self.clstruct_m = None
-        self.Nclus_m = None
-        self.labels = None
-        self.centers_m = None
-        self.Rho_bord_err_m = None
-        self.out_bord = None
+        self.cluster_indices = None
+        self.N_clusters = None
+        self.cluster_assignment = None
+        self.cluster_centers = None
+        self.log_den_bord_err = None
+        self.log_den_bord = None
 
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering_optimised(self, Z=1.65, halo=False):
+    def compute_clustering(self, Z=1.65, halo=False):
         assert self.log_den is not None
         if self.verb:
             print("Clustering started")
 
         # Make all values of log_den positives (this is important to help convergence)
-        Rho_min = np.min(self.log_den)
+        log_den_min = np.min(self.log_den)
 
-        Rho_c = self.log_den
-        Rho_c = Rho_c - Rho_min + 1
+        log_den_c = self.log_den
+        log_den_c = log_den_c - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
 
         N = self.distances.shape[0]
-        g = Rho_c - self.log_den_err
-        # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
+        g = log_den_c - self.log_den_err
+        # centers are point of max density  (max(g) ) within their optimal neighbolog_denod (defined by kstar)
         seci = time.time()
 
         out = cf._compute_clustering(
@@ -76,26 +76,26 @@ class Clustering(DensityEstimation):
             self.maxk,
             self.verb,
             self.log_den_err,
-            Rho_min,
-            Rho_c,
+            log_den_min,
+            log_den_c,
             g,
             N,
         )
 
         secf = time.time()
 
-        self.clstruct_m = out[0]
-        self.Nclus_m = out[1]
-        self.labels = out[2]
-        self.centers_m = out[3]
+        self.cluster_indices = out[0]
+        self.N_clusters = out[1]
+        self.cluster_assignment = out[2]
+        self.cluster_centers = out[3]
         out_bord = out[4]
-        Rho_min = out[5]
-        self.Rho_bord_err_m = out[6]
+        log_den_min = out[5]
+        self.log_den_bord_err = out[6]
 
-        self.out_bord = out_bord + Rho_min - 1 - np.log(N)
+        self.log_den_bord = out_bord + log_den_min - 1 - np.log(N)
 
         if self.verb:
-            print("Clustering finished, {} clusters found".format(self.Nclus_m))
+            print("Clustering finished, {} clusters found".format(self.N_clusters))
             print("total time is, {}".format(secf - seci))
 
     def compute_DecGraph(self):
@@ -134,7 +134,7 @@ class Clustering(DensityEstimation):
     def compute_cluster_DP(self, dens_cut=0.0, delta_cut=0.0, halo=False):
         assert self.delta is not None
         ordered = np.argsort(-self.log_den)
-        self.labels = np.zeros(self.N, dtype="int")
+        self.cluster_assignment = np.zeros(self.N, dtype="int")
         tt = np.arange(self.N)
         center_label = np.zeros(self.N, dtype="int")
         ncluster = -1
@@ -142,43 +142,43 @@ class Clustering(DensityEstimation):
             j = ordered[i]
             if (self.log_den[j] > dens_cut) & (self.delta[j] > delta_cut):
                 ncluster = ncluster + 1
-                self.labels[j] = ncluster
+                self.cluster_assignment[j] = ncluster
                 center_label[j] = ncluster
             else:
-                self.labels[j] = self.labels[self.ref[j]]
+                self.cluster_assignment[j] = self.cluster_assignment[self.ref[j]]
                 center_label[j] = -1
         self.centers = tt[(center_label != -1)]
         if halo:
             bord = np.zeros(self.N, dtype="int")
-            halo = np.copy(self.labels)
+            halo = np.copy(self.cluster_assignment)
 
             for i in range(self.N):
                 for j in self.dist_indices[i, :][(self.distances[i, :] <= self.dc[i])]:
-                    if self.labels[i] != self.labels[j]:
+                    if self.cluster_assignment[i] != self.cluster_assignment[j]:
                         bord[i] = 1
             halo_cutoff = np.zeros(ncluster + 1)
             halo_cutoff[:] = np.min(self.log_den) - 1
             for j in range(ncluster + 1):
-                td = self.log_den[((bord == 1) & (self.labels == j))]
+                td = self.log_den[((bord == 1) & (self.cluster_assignment == j))]
                 if td.size != 0:
                     halo_cutoff[j] = np.max(td)
-            halo[tt[(self.log_den < halo_cutoff[self.labels])]] = -1
-            self.labels = halo
+            halo[tt[(self.log_den < halo_cutoff[self.cluster_assignment])]] = -1
+            self.cluster_assignment = halo
 
-    def compute_clustering(self, Z=1.65, halo=False):
+    def compute_clustering_pure_python(self, Z=1.65, halo=False):
         assert self.log_den is not None
         if self.verb:
             print("Clustering started")
 
         # Make all values of log_den positives (this is important to help convergence)
-        Rho_min = np.min(self.log_den)
-        Rho_c = self.log_den
-        Rho_c = Rho_c - Rho_min + 1
+        log_den_min = np.min(self.log_den)
+        log_den_c = self.log_den
+        log_den_c = log_den_c - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
         sec = time.time()
         N = self.distances.shape[0]
-        g = Rho_c - self.log_den_err
+        g = log_den_c - self.log_den_err
         centers = []
         for i in range(N):
             t = 0
@@ -226,8 +226,8 @@ class Clustering(DensityEstimation):
                     sec2 - sec
                 )
             )
-        Rho_bord = np.zeros((Nclus, Nclus), dtype=float)
-        Rho_bord_err = np.zeros((Nclus, Nclus), dtype=float)
+        log_den_bord = np.zeros((Nclus, Nclus), dtype=float)
+        log_den_bord_err = np.zeros((Nclus, Nclus), dtype=float)
         Point_bord = np.zeros((Nclus, Nclus), dtype=int)
         # Find border points between putative clusters
         sec = time.time()
@@ -252,26 +252,26 @@ class Clustering(DensityEstimation):
                             pp = -1
                             break
                 if pp != -1:
-                    if g[p1] > Rho_bord[c][cp]:
-                        Rho_bord[c][cp] = g[p1]
-                        Rho_bord[cp][c] = g[p1]
+                    if g[p1] > log_den_bord[c][cp]:
+                        log_den_bord[c][cp] = g[p1]
+                        log_den_bord[cp][c] = g[p1]
                         Point_bord[cp][c] = p1
                         Point_bord[c][cp] = p1
-                    # if (g[pp]>Rho_bord[c][cp]):
-                    #     Rho_bord[c][cp]=g[pp]
-                    #     Rho_bord[cp][c]=g[pp]
+                    # if (g[pp]>log_den_bord[c][cp]):
+                    #     log_den_bord[c][cp]=g[pp]
+                    #     log_den_bord[cp][c]=g[pp]
                     #     Point_bord[cp][c]=pp
                     #     Point_bord[c][cp]=pp
         for i in range(Nclus - 1):
             for j in range(i + 1, Nclus):
                 if Point_bord[i][j] != -1:
-                    Rho_bord[i][j] = Rho_c[Point_bord[i][j]]
-                    Rho_bord[j][i] = Rho_c[Point_bord[j][i]]
-                    Rho_bord_err[i][j] = self.log_den_err[Point_bord[i][j]]
-                    Rho_bord_err[j][i] = self.log_den_err[Point_bord[j][i]]
+                    log_den_bord[i][j] = log_den_c[Point_bord[i][j]]
+                    log_den_bord[j][i] = log_den_c[Point_bord[j][i]]
+                    log_den_bord_err[i][j] = self.log_den_err[Point_bord[i][j]]
+                    log_den_bord_err[j][i] = self.log_den_err[Point_bord[j][i]]
         for i in range(Nclus):
-            Rho_bord[i][i] = -1.0
-            Rho_bord_err[i][i] = 0.0
+            log_den_bord[i][i] = -1.0
+            log_den_bord_err[i][i] = 0.0
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds identifying the borders".format(sec2 - sec))
@@ -287,105 +287,89 @@ class Clustering(DensityEstimation):
             check = 0
             for i in range(Nclus - 1):
                 for j in range(i + 1, Nclus):
-                    a1 = Rho_c[centers[i]] - Rho_bord[i][j]
-                    a2 = Rho_c[centers[j]] - Rho_bord[i][j]
-                    e1 = Z * (self.log_den_err[centers[i]] + Rho_bord_err[i][j])
-                    e2 = Z * (self.log_den_err[centers[j]] + Rho_bord_err[i][j])
+                    a1 = log_den_c[centers[i]] - log_den_bord[i][j]
+                    a2 = log_den_c[centers[j]] - log_den_bord[i][j]
+                    e1 = Z * (self.log_den_err[centers[i]] + log_den_bord_err[i][j])
+                    e2 = Z * (self.log_den_err[centers[j]] + log_den_bord_err[i][j])
                     if a1 < e1 or a2 < e2:
                         check = 1
-                        pos.append(Rho_bord[i][j])
+                        pos.append(log_den_bord[i][j])
                         ipos.append(i)
                         jpos.append(j)
             if check == 1:
                 barriers = pos.index(max(pos))
                 imod = ipos[barriers]
                 jmod = jpos[barriers]
-                if Rho_c[centers[imod]] < Rho_c[centers[jmod]]:
+                if log_den_c[centers[imod]] < log_den_c[centers[jmod]]:
                     tmp = jmod
                     jmod = imod
                     imod = tmp
                 clsurv[jmod] = 0
-                Rho_bord[imod][jmod] = -1.0
-                Rho_bord[jmod][imod] = -1.0
-                Rho_bord_err[imod][jmod] = 0.0
-                Rho_bord_err[jmod][imod] = 0.0
+                log_den_bord[imod][jmod] = -1.0
+                log_den_bord[jmod][imod] = -1.0
+                log_den_bord_err[imod][jmod] = 0.0
+                log_den_bord_err[jmod][imod] = 0.0
                 clstruct[imod].extend(clstruct[jmod])
                 clstruct[jmod] = []
                 for i in range(Nclus):
                     if i != imod and i != jmod:
-                        if Rho_bord[imod][i] < Rho_bord[jmod][i]:
-                            Rho_bord[imod][i] = Rho_bord[jmod][i]
-                            Rho_bord[i][imod] = Rho_bord[imod][i]
-                            Rho_bord_err[imod][i] = Rho_bord_err[jmod][i]
-                            Rho_bord_err[i][imod] = Rho_bord_err[imod][i]
-                        Rho_bord[jmod][i] = -1
-                        Rho_bord[i][jmod] = Rho_bord[jmod][i]
-                        Rho_bord_err[jmod][i] = 0
-                        Rho_bord_err[i][jmod] = Rho_bord_err[jmod][i]
+                        if log_den_bord[imod][i] < log_den_bord[jmod][i]:
+                            log_den_bord[imod][i] = log_den_bord[jmod][i]
+                            log_den_bord[i][imod] = log_den_bord[imod][i]
+                            log_den_bord_err[imod][i] = log_den_bord_err[jmod][i]
+                            log_den_bord_err[i][imod] = log_den_bord_err[imod][i]
+                        log_den_bord[jmod][i] = -1
+                        log_den_bord[i][jmod] = log_den_bord[jmod][i]
+                        log_den_bord_err[jmod][i] = 0
+                        log_den_bord_err[i][jmod] = log_den_bord_err[jmod][i]
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds with multimodality test".format(sec2 - sec))
-        Nclus_m = 0
-        clstruct_m = []
-        centers_m = []
+        N_clusters = 0
+        cluster_indices = []
+        cluster_centers = []
         nnum = []
         for j in range(Nclus):
             nnum.append(-1)
             if clsurv[j] == 1:
-                nnum[j] = Nclus_m
-                Nclus_m = Nclus_m + 1
-                clstruct_m.append(clstruct[j])
-                centers_m.append(centers[j])
-        Rho_bord_m = np.zeros((Nclus_m, Nclus_m), dtype=float)
-        Rho_bord_err_m = np.zeros((Nclus_m, Nclus_m), dtype=float)
+                nnum[j] = N_clusters
+                N_clusters = N_clusters + 1
+                cluster_indices.append(clstruct[j])
+                cluster_centers.append(centers[j])
+        log_den_bord_m = np.zeros((N_clusters, N_clusters), dtype=float)
+        log_den_bord_err = np.zeros((N_clusters, N_clusters), dtype=float)
         for j in range(Nclus):
             if clsurv[j] == 1:
                 jj = nnum[j]
                 for k in range(Nclus):
                     if clsurv[k] == 1:
                         kk = nnum[k]
-                        Rho_bord_m[jj][kk] = Rho_bord[j][k]
-                        Rho_bord_err_m[jj][kk] = Rho_bord_err[j][k]
+                        log_den_bord_m[jj][kk] = log_den_bord[j][k]
+                        log_den_bord_err[jj][kk] = log_den_bord_err[j][k]
         Last_cls = np.empty(N, dtype=int)
-        for j in range(Nclus_m):
-            for k in clstruct_m[j]:
+        for j in range(N_clusters):
+            for k in cluster_indices[j]:
                 Last_cls[k] = j
         Last_cls_halo = np.copy(Last_cls)
         nh = 0
-        for j in range(Nclus_m):
-            Rho_halo = max(Rho_bord_m[j])
-            for k in clstruct_m[j]:
-                if Rho_c[k] < Rho_halo:
+        for j in range(N_clusters):
+            log_den_halo = max(log_den_bord_m[j])
+            for k in cluster_indices[j]:
+                if log_den_c[k] < log_den_halo:
                     nh = nh + 1
                     Last_cls_halo[k] = -1
         if halo:
-            labels = Last_cls_halo
+            cluster_assignment = Last_cls_halo
         else:
-            labels = Last_cls
-        out_bord = np.copy(Rho_bord_m)
-        self.clstruct_m = clstruct_m
-        self.Nclus_m = Nclus_m
-        self.labels = labels
-        self.centers_m = centers_m
-        self.out_bord = (
-            out_bord + Rho_min - 1 - np.log(N)
+            cluster_assignment = Last_cls
+        out_bord = np.copy(log_den_bord_m)
+        self.cluster_indices = cluster_indices
+        self.N_clusters = N_clusters
+        self.cluster_assignment = cluster_assignment
+        self.cluster_centers = cluster_centers
+        self.log_den_bord = (
+            out_bord + log_den_min - 1 - np.log(N)
         )  # remove wrong normalisation introduced earlier
-        self.Rho_bord_err_m = Rho_bord_err_m
+        self.log_den_bord_err = log_den_bord_err
         if self.verb:
-            print("Clustering finished, {} clusters found".format(self.Nclus_m))
-
-
-# if __name__ == '__main__':
-#     X = np.random.uniform(size=(50, 2))
-#
-#     cl = Clustering(coordinates=X)
-#
-#     cl.compute_distances(maxk=25)
-#
-#     cl.compute_id_2NN()
-#
-#     cl.compute_density_kNN(10)
-#
-#     cl.compute_clustering()
-#
-#     print(cl.Nclus_m)
+            print("Clustering finished, {} clusters found".format(self.N_clusters))

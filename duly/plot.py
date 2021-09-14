@@ -82,14 +82,14 @@ def plot_ID_vs_nneigh(Data, nneighs=np.arange(2, 90)):
 def plot_SLAn(Data, linkage="single"):
     assert Data.labels is not None
 
-    nd = int((Data.Nclus_m * Data.Nclus_m - Data.Nclus_m) / 2)
+    nd = int((Data.N_clusters * Data.N_clusters - Data.N_clusters) / 2)
     Dis = np.empty(nd, dtype=float)
     nl = 0
     Fmax = max(Data.log_den)
-    Rho_bord_m = np.copy(Data.out_bord)
+    Rho_bord_m = np.copy(Data.log_den_bord)
 
-    for i in range(Data.Nclus_m - 1):
-        for j in range(i + 1, Data.Nclus_m):
+    for i in range(Data.N_clusters - 1):
+        for j in range(i + 1, Data.N_clusters):
             Dis[nl] = Fmax - Rho_bord_m[i][j]
             nl = nl + 1
 
@@ -113,25 +113,25 @@ def plot_SLAn(Data, linkage="single"):
 
 def plot_MDS(Data, cmap="viridis"):
     Fmax = max(Data.log_den)
-    Rho_bord_m = np.copy(Data.out_bord)
-    d_dis = np.zeros((Data.Nclus_m, Data.Nclus_m), dtype=float)
+    Rho_bord_m = np.copy(Data.log_den_bord)
+    d_dis = np.zeros((Data.N_clusters, Data.N_clusters), dtype=float)
     model = manifold.MDS(n_components=2, n_jobs=None, dissimilarity="precomputed")
-    for i in range(Data.Nclus_m):
-        for j in range(Data.Nclus_m):
+    for i in range(Data.N_clusters):
+        for j in range(Data.N_clusters):
             d_dis[i][j] = Fmax - Rho_bord_m[i][j]
-    for i in range(Data.Nclus_m):
+    for i in range(Data.N_clusters):
         d_dis[i][i] = 0.0
     out = model.fit_transform(d_dis)
     fig, ax = plt.subplots(nrows=1, ncols=1)
     s = []
     col = []
-    for i in range(Data.Nclus_m):
-        s.append(20.0 * np.sqrt(len(Data.clstruct_m[i])))
+    for i in range(Data.N_clusters):
+        s.append(20.0 * np.sqrt(len(Data.cluster_indices[i])))
         col.append(i)
     plt.scatter(out[:, 0], out[:, 1], s=s, c=col, cmap=cmap)
-    cmal = cm.get_cmap(cmap, Data.Nclus_m)
+    cmal = cm.get_cmap(cmap, Data.N_clusters)
     colors = cmal(np.arange(0, cmal.N))
-    for i in range(Data.Nclus_m):
+    for i in range(Data.N_clusters):
         cc = "k"
         r = colors[i][0]
         g = colors[i][1]
@@ -147,7 +147,7 @@ def plot_MDS(Data, cmap="viridis"):
             c=cc,
             weight="bold",
         )
-    #    for i in range(Data.Nclus_m):
+    #    for i in range(Data.N_clusters):
     #        ax.annotate(i, (out[i, 0], out[i, 1]))
     # Add edges
     rr = np.amax(Rho_bord_m)
@@ -171,10 +171,10 @@ def plot_MDS(Data, cmap="viridis"):
 
 
 def plot_matrix(Data):
-    Rho_bord_m = np.copy(Data.out_bord)
+    Rho_bord_m = np.copy(Data.log_den_bord)
     topography = np.copy(Rho_bord_m)
-    for j in range(Data.Nclus_m):
-        topography[j, j] = Data.log_den[Data.centers_m[j]]
+    for j in range(Data.N_clusters):
+        topography[j, j] = Data.log_den[Data.cluster_centers[j]]
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
     plt.imshow(topography, cmap="hot", interpolation=None)
@@ -201,10 +201,10 @@ def get_dendrogram(Data, cmap="viridis"):
     Li2 = []
     Ldis = []
     Fmax = max(Data.log_den)
-    Rho_bord_m = np.copy(Data.out_bord)
+    Rho_bord_m = np.copy(Data.log_den_bord)
     # Obtain distances in list format from topography
-    for i in range(Data.Nclus_m - 1):
-        for j in range(i + 1, Data.Nclus_m):
+    for i in range(Data.N_clusters - 1):
+        for j in range(i + 1, Data.N_clusters):
             dis12 = Fmax - Rho_bord_m[i][j]
             e1.append(i)
             e2.append(j)
@@ -212,8 +212,8 @@ def get_dendrogram(Data, cmap="viridis"):
 
     # Obtain the dendrogram in form of links
     nlinks = 0
-    clnew = Data.Nclus_m
-    for j in range(Data.Nclus_m - 1):
+    clnew = Data.N_clusters
+    for j in range(Data.N_clusters - 1):
         aa = np.argmin(d12)
         nlinks = nlinks + 1
         L.append(clnew + nlinks)
@@ -275,9 +275,9 @@ def get_dendrogram(Data, cmap="viridis"):
                 sorted_elements[i] = Li2[j]
                 sorted_elements.insert(i, Li1[j])
     # Get coordinates for the plot
-    pop = np.zeros((Data.Nclus_m), dtype=int)
-    for i in range(Data.Nclus_m):
-        pop[i] = len(Data.clstruct_m[i])
+    pop = np.zeros((Data.N_clusters), dtype=int)
+    for i in range(Data.N_clusters):
+        pop[i] = len(Data.cluster_indices[i])
     # print (pop)
     add = 0.0
     x = []
@@ -285,7 +285,7 @@ def get_dendrogram(Data, cmap="viridis"):
     label = []
     for i in range(len(sorted_elements)):
         label.append(sorted_elements[i])
-        j = Data.centers_m[label[i]]
+        j = Data.cluster_centers[label[i]]
         y.append(Data.log_den[j])
         x.append(add + 0.5 * np.log(pop[i]))
         add = add + np.log(pop[i])
@@ -319,10 +319,10 @@ def get_dendrogram(Data, cmap="viridis"):
         )
 
     zorder = zorder + 1
-    cmal = cm.get_cmap(cmap, Data.Nclus_m)
+    cmal = cm.get_cmap(cmap, Data.N_clusters)
     colors = cmal(np.arange(0, cmal.N))
     plt.scatter(xs, ys, c=labels, s=100, zorder=zorder, cmap=cmap)
-    for i in range(Data.Nclus_m):
+    for i in range(Data.N_clusters):
         zorder = zorder + 1
         cc = "k"
         r = colors[labels[i]][0]
