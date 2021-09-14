@@ -17,13 +17,13 @@ def test_clustering_basics():
     cl.compute_distances(maxk=25)
 
     cl.compute_id_2NN()
-    assert pytest.approx(1.85, cl.id_selected)
+    assert pytest.approx(1.85, cl.intrinsic_dim)
 
     cl.compute_density_kNN(10)
 
     cl.compute_clustering()
 
-    assert cl.Nclus_m == 2
+    assert cl.N_clusters == 2
 
     expected_labels = np.array(
         [

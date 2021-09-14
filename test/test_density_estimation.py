@@ -17,7 +17,7 @@ def test_density_estimation_basics():
     de.compute_distances(maxk=25)
 
     de.compute_id_2NN()
-    assert pytest.approx(1.85, de.id_selected)
+    assert pytest.approx(1.85, de.intrinsic_dim)
 
     de.compute_density_kNN(10)
 
@@ -127,5 +127,5 @@ def test_density_estimation_basics():
     )
 
     # Check we get the expected answer
-    # assert np.array_equal(de.Rho, expected_den)
-    assert np.allclose(de.Rho, expected_den)
+    # assert np.array_equal(de.log_den, expected_den)
+    assert np.allclose(de.log_den, expected_den)

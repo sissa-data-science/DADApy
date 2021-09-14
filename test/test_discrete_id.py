@@ -1,8 +1,6 @@
-import numpy as np
 import pytest
 
 from duly.id_discrete import *
-from duly.utils_.utils import compute_NN_PBC as PBC
 
 
 def test_id_discrete():
@@ -16,13 +14,8 @@ def test_id_discrete():
 
     X = rng.integers(0, box, size=(N, d))
 
-    # dist, ind = PBC(X, N - 1, box_size=box, p=1)
-    # IDD = IdDiscrete(X, maxk=X.shape[0])
-    # IDD.distances = dist
-    # IDD.dist_indices = ind
-
     IDD = IdDiscrete(X, maxk=X.shape[0])
-    IDD.compute_distances(p=1,period=box)
+    IDD.compute_distances(p=1, period=box)
 
     IDD.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
 
