@@ -19,7 +19,7 @@ class IdEstimation(Base):
 
     Attributes:
 
-            id_selected (int): (rounded) selected intrinsic dimension after each estimate. Parameter used for density estimation
+            intrinsic_dim (int): (rounded) selected intrinsic dimension after each estimate. Parameter used for density estimation
             id_estimated_D (float):id estimated using Diego's routine
             id_estimated_2NN (float): 2NN id estimate
 
@@ -36,7 +36,7 @@ class IdEstimation(Base):
             njobs=njobs,
         )
 
-        self.id_selected = None
+        self.intrinsic_dim = None
 
     # ----------------------------------------------------------------------------------------------
     # 'better' way to perform scaling study of id
@@ -54,7 +54,7 @@ class IdEstimation(Base):
             r2s = self.distances[:, np.array([steps[:-1], steps[1:]])]
 
         elif self.X is not None:
-            steps, range_r2 = get_steps(upper_bound=self.Nele - 1)
+            steps, range_r2 = get_steps(upper_bound=self.N - 1)
             distances, dist_indices, mus, r2s = self._get_mus_scaling(
                 range_scaling=range_r2
             )
@@ -63,7 +63,7 @@ class IdEstimation(Base):
             if self.distances is None:
                 self.distances = distances
                 self.dist_indices = dist_indices
-                self.Nele = distances.shape[0]
+                self.N = distances.shape[0]
 
         # array of ids (as a function of the average distange to a point)
         self.ids_scaling = np.empty(mus.shape[1])
@@ -76,7 +76,7 @@ class IdEstimation(Base):
         for i in range(mus.shape[1]):
             n1 = 2 ** i
             id = ut._argmax_loglik(
-                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.Nele, eps=1.0e-7
+                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=1.0e-7
             )
             self.ids_scaling[i] = id
             self.ids_scaling_std[i] = (
@@ -97,18 +97,17 @@ class IdEstimation(Base):
     def compute_id_2NN(
         self, decimation=1, fraction=0.9, algorithm="base", return_id=False
     ):
-
         """Compute intrinsic dimension using the 2NN algorithm
 
-		Args:
-			decimation: fraction of points used in the estimate. The lower the value, the less points used, the farther they are.\
-						Can be used to change the scale at which one is looking at the data
-			fraction: fraction of mus that will be considered for the estimate (discard highest mus)
-			algorithm: 'base' to perform the linear fit, 'ml' to perform maximum likelihood
+        Args:
+                decimation: fraction of points used in the estimate. The lower the value, the less points used, the farther
+                they are.Can be used to change the scale at which one is looking at the data
+                fraction: fraction of mus that will be considered for the estimate (discard highest mus)
+                algorithm: 'base' to perform the linear fit, 'ml' to perform maximum likelihood
 
-		Returns:
+        Returns:
 
-		"""
+        """
         assert 0.0 < decimation and decimation <= 1.0
         # self.id_estimated_ml, self.id_estimated_ml_std = return_id(self.distances, decimation)
         # N = len(distances)
@@ -117,35 +116,30 @@ class IdEstimation(Base):
 
         mus = np.log(dist_used[:, 2] / dist_used[:, 1])
 
-        Nele = dist_used.shape[0]
-        Nele_eff = int(Nele * fraction)
-        y = -np.log(1 - np.arange(1, Nele_eff + 1) / Nele)
-        mus_reduced = np.sort(mus)[:Nele_eff]
-
-        # Nele_eff_dec = int(np.around(decimation * Nele_eff, decimals=0))
-        # idxs = np.arange(Nele_eff)
-        # idxs = np.random.choice(idxs, size=Nele_eff_dec, replace=False, p=None)
-        # mus_reduced = mus[idxs]
+        N = dist_used.shape[0]
+        N_eff = int(N * fraction)
+        y = -np.log(1 - np.arange(1, N_eff + 1) / N)
+        mus_reduced = np.sort(mus)[:N_eff]
 
         if algorithm == "ml":
-            id = Nele / np.sum(mus)
+            id = N / np.sum(mus)
 
         elif algorithm == "base":
 
             def func(x, m):
                 return m * x
 
-            # y = np.array( [-np.log(1 - i / self.N) for i in range(1, Nele_eff + 1)] )
+            # y = np.array( [-np.log(1 - i / self.N) for i in range(1, N_eff + 1)] )
             # y = y[idxs]
             id, _ = curve_fit(func, mus_reduced, y)
 
         self.id_estimated_2NN = id[0]
-        self.id_selected = np.around(id, decimals=2)[0]
+        self.intrinsic_dim = np.around(id, decimals=2)[0]
 
         if self.verb:
             # print('ID estimated from ML is {:f} +- {:f}'.format(self.id_estimated_ml, self.id_estimated_ml_std))
-            # print(f'Selecting ID of {self.id_selected}')
-            print(f"ID estimation finished: selecting ID of {self.id_selected}")
+            # print(f'Selecting ID of {self.intrinsic_dim}')
+            print(f"ID estimation finished: selecting ID of {self.intrinsic_dim}")
 
         if return_id:
             return id
@@ -167,7 +161,7 @@ class IdEstimation(Base):
 
         sum_log_mus = np.sum(np.log(distances_used[:, 2] / distances_used[:, 1]))
 
-        alpha_post = alpha + self.Nele
+        alpha_post = alpha + self.N
         beta_post = beta + sum_log_mus
 
         mean_post = alpha_post / beta_post
@@ -179,7 +173,7 @@ class IdEstimation(Base):
         self.id_estimated_mp = mean_post
         self.id_estimated_mp_std = std_post
         self.id_estimated_map = mode_post
-        self.id_selected = int(np.around(self.id_estimated_mp, decimals=0))
+        self.intrinsic_dim = int(np.around(self.id_estimated_mp, decimals=0))
 
     # ----------------------------------------------------------------------------------------------
 
@@ -223,7 +217,7 @@ class IdEstimation(Base):
         self.n = (self.distances <= self.rn).sum(axis=1)
 
         # checks-out
-        if self.maxk < self.Nele:
+        if self.maxk < self.N:
             # if not all possible NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
             # or distances[:,-1]<rk, it is likely that there are other points within rk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
@@ -241,7 +235,7 @@ class IdEstimation(Base):
                 )
 
         else:
-            self.mask = np.ones(self.Nele, dtype=bool)
+            self.mask = np.ones(self.N, dtype=bool)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -354,9 +348,9 @@ class IdEstimation(Base):
         self.k = k_eff
         self.rk = self.distances[:, self.k]  # k NN -> k-1 position in the array
         self.rn = self.rk * self.r
-        self.n = (self.distances <= self.rn.reshape(self.Nele, 1)).sum(axis=1)
+        self.n = (self.distances <= self.rn.reshape(self.N, 1)).sum(axis=1)
 
-        self.mask = np.ones(self.Nele, dtype=bool)
+        self.mask = np.ones(self.N, dtype=bool)
 
     # --------------------------------------------------------------------------------------
 
@@ -438,20 +432,20 @@ class IdEstimation(Base):
             assert (
                 self.id_estimated_binom is not None
             ), "You have to compute the id using the binomial estimator first!"
-            d = self.id_selected_binom
+            d = self.intrinsic_dim_binom
         if k is None:
             k = self.maxk
         if r is None:
             r = self.r
         if N is None:
-            N = self.Nele
+            N = self.N
 
         self.VarCramerRao = (r ** (-d) - 1) / (k * N * np.log(r) ** 2)
 
     # ----------------------------------------------------------------------------------------------
     def set_id(self, d):
         assert d > 0, "cannot support negative dimensions (yet)"
-        self.id_selected = d
+        self.intrinsic_dim = d
 
     # ----------------------------------------------------------------------------------------------
     def set_r(self, r):
@@ -543,17 +537,3 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False, verbose=True):
         return E_d, S_d, d_range, P
     else:
         return E_d, S_d, None, None
-
-
-# --------------------------------------------------------------------------------------
-
-# if __name__ == '__main__':
-#     X = rng.uniform(size = (1000, 2))
-#
-#     ide = IdEstimation(coordinates=X)
-#
-#     ide.compute_distances(maxk = 10)
-#
-#     ide.compute_id_2NN(decimation=1)
-#
-#     print(ide.id_estimated_2NN,ide.id_selected)

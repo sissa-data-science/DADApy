@@ -63,7 +63,7 @@ class Clustering(DensityEstimation):
 
         # Putative modes of the PDF as preliminary clusters
 
-        Nele = self.distances.shape[0]
+        N = self.distances.shape[0]
         g = Rho_c - self.Rho_err
         # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
@@ -79,7 +79,7 @@ class Clustering(DensityEstimation):
             Rho_min,
             Rho_c,
             g,
-            Nele,
+            N,
         )
 
         secf = time.time()
@@ -92,7 +92,7 @@ class Clustering(DensityEstimation):
         Rho_min = out[5]
         self.Rho_bord_err_m = out[6]
 
-        self.out_bord = out_bord + Rho_min - 1 - np.log(Nele)
+        self.out_bord = out_bord + Rho_min - 1 - np.log(N)
 
         if self.verb:
             print("Clustering finished, {} clusters found".format(self.Nclus_m))
@@ -101,12 +101,12 @@ class Clustering(DensityEstimation):
     def compute_DecGraph(self):
         assert self.Rho is not None
         assert self.X is not None
-        self.delta = np.zeros(self.Nele)
-        self.ref = np.zeros(self.Nele, dtype="int")
-        tt = np.arange(self.Nele)
+        self.delta = np.zeros(self.N)
+        self.ref = np.zeros(self.N, dtype="int")
+        tt = np.arange(self.N)
         imax = []
         ncalls = 0
-        for i in range(self.Nele):
+        for i in range(self.N):
             ll = tt[((self.Rho > self.Rho[i]) & (tt != i))]
             if ll.shape[0] > 0:
                 a1, a2, a3 = np.intersect1d(
@@ -134,11 +134,11 @@ class Clustering(DensityEstimation):
     def compute_cluster_DP(self, dens_cut=0.0, delta_cut=0.0, halo=False):
         assert self.delta is not None
         ordered = np.argsort(-self.Rho)
-        self.labels = np.zeros(self.Nele, dtype="int")
-        tt = np.arange(self.Nele)
-        center_label = np.zeros(self.Nele, dtype="int")
+        self.labels = np.zeros(self.N, dtype="int")
+        tt = np.arange(self.N)
+        center_label = np.zeros(self.N, dtype="int")
         ncluster = -1
-        for i in range(self.Nele):
+        for i in range(self.N):
             j = ordered[i]
             if (self.Rho[j] > dens_cut) & (self.delta[j] > delta_cut):
                 ncluster = ncluster + 1
@@ -149,10 +149,10 @@ class Clustering(DensityEstimation):
                 center_label[j] = -1
         self.centers = tt[(center_label != -1)]
         if halo:
-            bord = np.zeros(self.Nele, dtype="int")
+            bord = np.zeros(self.N, dtype="int")
             halo = np.copy(self.labels)
 
-            for i in range(self.Nele):
+            for i in range(self.N):
                 for j in self.dist_indices[i, :][(self.distances[i, :] <= self.dc[i])]:
                     if self.labels[i] != self.labels[j]:
                         bord[i] = 1
@@ -177,10 +177,10 @@ class Clustering(DensityEstimation):
 
         # Putative modes of the PDF as preliminary clusters
         sec = time.time()
-        Nele = self.distances.shape[0]
+        N = self.distances.shape[0]
         g = Rho_c - self.Rho_err
         centers = []
-        for i in range(Nele):
+        for i in range(N):
             t = 0
             for j in range(1, self.kstar[i] + 1):
                 if g[i] < g[self.dist_indices[i, j]]:
@@ -195,7 +195,7 @@ class Clustering(DensityEstimation):
                     centers.remove(i)
                     break
         cluster_init = []
-        for j in range(Nele):
+        for j in range(N):
             cluster_init.append(-1)
             Nclus = len(centers)
         if self.verb:
@@ -206,7 +206,7 @@ class Clustering(DensityEstimation):
         sortg = np.argsort(-g)  # Get the rank of the elements in the g vector
         # sorted in descendent order.
         # Perform preliminar assignation to clusters
-        for j in range(Nele):
+        for j in range(N):
             ele = sortg[j]
             nn = 0
             while cluster_init[ele] == -1:
@@ -215,7 +215,7 @@ class Clustering(DensityEstimation):
         clstruct = []  # useful list of points in the clusters
         for i in range(Nclus):
             x1 = []
-            for j in range(Nele):
+            for j in range(N):
                 if cluster_init[j] == i:
                     x1.append(j)
             clstruct.append(x1)
@@ -346,7 +346,7 @@ class Clustering(DensityEstimation):
                         kk = nnum[k]
                         Rho_bord_m[jj][kk] = Rho_bord[j][k]
                         Rho_bord_err_m[jj][kk] = Rho_bord_err[j][k]
-        Last_cls = np.empty(Nele, dtype=int)
+        Last_cls = np.empty(N, dtype=int)
         for j in range(Nclus_m):
             for k in clstruct_m[j]:
                 Last_cls[k] = j
@@ -368,7 +368,7 @@ class Clustering(DensityEstimation):
         self.labels = labels
         self.centers_m = centers_m
         self.out_bord = (
-            out_bord + Rho_min - 1 - np.log(Nele)
+            out_bord + Rho_min - 1 - np.log(N)
         )  # remove wrong normalisation introduced earlier
         self.Rho_bord_err_m = Rho_bord_err_m
         if self.verb:

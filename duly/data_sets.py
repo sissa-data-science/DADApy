@@ -82,7 +82,7 @@ class DataSets:
             d.compute_id_2NN(decimation=decimation, fraction=fraction)
             print("id computation finished")
 
-        self.ids = [d.id_selected for d in self.data_sets]
+        self.ids = [d.intrinsic_dim for d in self.data_sets]
 
     def compute_id_scaling(
         self, range_max=1024, d0=0.001, d1=1000, return_ids=False, save_mus=False

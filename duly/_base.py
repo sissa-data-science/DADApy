@@ -19,11 +19,11 @@ class Base:
 
     Attributes:
             N (int): number of data points
-            X (np.ndarray(float)): the data points loaded into the object, of shape (Nele , dimension of embedding space)
+            X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
     dims (int, optional): embedding dimension of the datapoints
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
-            distances (float[:,:]): A matrix of dimension Nele x mask containing distances between points
-            dist_indeces (int[:,:]): A matrix of dimension Nele x mask containing the indices of the nearest neighbours
+            distances (float[:,:]): A matrix of dimension N x mask containing distances between points
+            dist_indeces (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
             verb (bool): whether you want the code to speak or shut up
             njobs (int): number of cores to be used
             p (int): metric used to compute distances
@@ -43,6 +43,7 @@ class Base:
         self.verb = verbose
         self.njobs = njobs
         self.dims = None
+        self.N = None
 
         if coordinates is not None:
             assert isinstance(self.X, np.ndarray)

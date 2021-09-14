@@ -609,4 +609,4 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
 #
 #     ide.compute_id_2NN(decimation=1)
 #
-#     print(ide.id_estimated_2NN,ide.id_selected)
+#     print(ide.id_estimated_2NN,ide.intrinsic_dim)
