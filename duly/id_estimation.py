@@ -19,9 +19,7 @@ class IdEstimation(Base):
 
     Attributes:
 
-            intrinsic_dim (int): (rounded) selected intrinsic dimension after each estimate. Parameter used for density estimation
-            id_estimated_D (float):id estimated using Diego's routine
-            id_estimated_2NN (float): 2NN id estimate
+            intrinsic_dim (int): (rounded) computed intrinsic dimension of the data manifold.
 
     """
 
@@ -64,6 +62,11 @@ class IdEstimation(Base):
                 self.distances = distances
                 self.dist_indices = dist_indices
                 self.N = distances.shape[0]
+
+        else:
+            raise ValueError(
+                "You need a coordinate matrix to perform a scaling analysis"
+            )
 
         # array of ids (as a function of the average distange to a point)
         self.ids_scaling = np.empty(mus.shape[1])
@@ -418,7 +421,7 @@ class IdEstimation(Base):
                 self.id_estimated_binom_std,
                 self.posterior_domain,
                 self.posterior,
-            ) = _beta_prior(k - 1, n_eff - 1, self.r, plot=plot, verbose=self.verb)
+            ) = _beta_prior(k - 1, n_eff - 1, self.r, plot=plot)
         else:
             print("select a proper method for id computation")
             return 0
@@ -461,7 +464,7 @@ class IdEstimation(Base):
 # ----------------------------------------------------------------------------------------------
 
 
-def _beta_prior(k, n, r, a0=1, b0=1, plot=False, verbose=True):
+def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
     """Compute the posterior distribution of d given the input aggregates
     Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
     However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a

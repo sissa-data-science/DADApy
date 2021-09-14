@@ -23,7 +23,7 @@ class Base:
     dims (int, optional): embedding dimension of the datapoints
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             distances (float[:,:]): A matrix of dimension N x mask containing distances between points
-            dist_indeces (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
+            dist_indices (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
             verb (bool): whether you want the code to speak or shut up
             njobs (int): number of cores to be used
             p (int): metric used to compute distances
@@ -44,6 +44,9 @@ class Base:
         self.njobs = njobs
         self.dims = None
         self.N = None
+        self.metric = None
+        self.p = None
+        self.period = None
 
         if coordinates is not None:
             assert isinstance(self.X, np.ndarray)
@@ -102,10 +105,8 @@ class Base:
 
         Args:
                 maxk: maximum number of neighbours for which distance is computed and stored
-                njobs: number of processes
                 metric: type of metric
                 p: type of metric
-                algo: type of algorithm used
                 period (float or array): periodicity (only used for periodic distance computation). Default is None.
 
         """
@@ -246,16 +247,16 @@ class Base:
 
     def remove_identical_points_TO_BE_WRITTEN(self):
 
-        Nele0 = self.X.shape[0]
+        N0 = self.X.shape[0]
         # removal of overlapping data points
 
         self.X = np.unique(self.X)  # This does not work properly because of sorting!!
 
         self.N = self.X.shape[0]
 
-        if self.N != Nele0:
+        if self.N != N0:
             print(
-                f"{Nele0 - self.N}/{Nele0} overlapping datapoints: keeping {self.N} unique elements"
+                f"{N0 - self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements"
             )
             if self.distances is not None:
                 self.distances, self.dist_indices = None, None

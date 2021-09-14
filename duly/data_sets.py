@@ -13,23 +13,23 @@ class DataSets:
         njobs=1,
     ):
         if len(distances_list) == 0:
-            self.Nsets = len(coordinates_list)
-            distances_list = [None] * self.Nsets
+            self.N_sets = len(coordinates_list)
+            distances_list = [None] * self.N_sets
 
         elif len(coordinates_list) == 0:
-            self.Nsets = len(distances_list)
-            coordinates_list = [None] * self.Nsets
+            self.N_sets = len(distances_list)
+            coordinates_list = [None] * self.N_sets
 
         else:
             assert len(coordinates_list) == len(distances_list)
-            self.Nsets = len(coordinates_list)
+            self.N_sets = len(coordinates_list)
 
         if len(maxk_list) == 1:
-            maxk_list = [maxk_list[0]] * self.Nsets
+            maxk_list = [maxk_list[0]] * self.N_sets
 
         self.data_sets = []
 
-        for i in range(self.Nsets):
+        for i in range(self.N_sets):
             X = coordinates_list[i]
             dists = distances_list[i]
             maxk = maxk_list[i]
@@ -39,7 +39,7 @@ class DataSets:
 
             self.data_sets.append(data)
 
-        # self.maxk = min([self.data_sets[i].maxk for i in range(self.Nsets)])  # maxk neighbourhoods
+        # self.maxk = min([self.data_sets[i].maxk for i in range(self.N_sets)])  # maxk neighbourhoods
 
         self.verbose = verbose
         self.njobs = njobs
@@ -60,7 +60,7 @@ class DataSets:
         )
 
         self.data_sets.append(data)
-        self.Nsets += 1
+        self.N_sets += 1
 
     def set_common_gt_labels(self, labels):
 
@@ -118,7 +118,5 @@ if __name__ == "__main__":
     ds.serialize_computation("compute_distances", maxk=3)
 
     print(ds.data_sets[0].distances)
-
-    ds.compute_clustering(Z=1)
 
     ds.serialize_computation("compute_clustering", Z=1)
