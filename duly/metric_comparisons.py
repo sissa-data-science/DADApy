@@ -391,7 +391,7 @@ class MetricComparisons(Base):
             self.X = np.delete(self.X, idx_to_remove, 1)
 
             if i < (d - 1):
-                self.compute_distances(maxk=self.Nele, njobs=1)
+                self.compute_distances(maxk=self.N, njobs=1)
 
             coords_kept.pop(idx_to_remove)
 
@@ -415,7 +415,7 @@ class MetricComparisons(Base):
         assert self.distances is not None
 
         overlaps = []
-        for i in range(self.Nele):
+        for i in range(self.N):
             neigh_idx_i = self.dist_indices[i, 1 : k + 1]
             overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
 
@@ -432,7 +432,7 @@ class MetricComparisons(Base):
         )
 
         overlaps = []
-        for i in range(self.Nele):
+        for i in range(self.N):
             neigh_idx_i = dist_indices_[i, 1 : k + 1]
             overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
 

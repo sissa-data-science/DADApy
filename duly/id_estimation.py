@@ -94,7 +94,9 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_2NN(self, decimation=1, fraction=0.9, algorithm="base", return_id = False):
+    def compute_id_2NN(
+        self, decimation=1, fraction=0.9, algorithm="base", return_id=False
+    ):
 
         """Compute intrinsic dimension using the 2NN algorithm
 
@@ -109,7 +111,7 @@ class IdEstimation(Base):
 		"""
         assert 0.0 < decimation and decimation <= 1.0
         # self.id_estimated_ml, self.id_estimated_ml_std = return_id(self.distances, decimation)
-        # Nele = len(distances)
+        # N = len(distances)
         # remove highest mu values
         dist_used = self.decimate(decimation, maxk=self.maxk)
 
@@ -133,7 +135,7 @@ class IdEstimation(Base):
             def func(x, m):
                 return m * x
 
-            # y = np.array( [-np.log(1 - i / self.Nele) for i in range(1, Nele_eff + 1)] )
+            # y = np.array( [-np.log(1 - i / self.N) for i in range(1, Nele_eff + 1)] )
             # y = y[idxs]
             id, _ = curve_fit(func, mus_reduced, y)
 
@@ -222,7 +224,7 @@ class IdEstimation(Base):
 
         # checks-out
         if self.maxk < self.Nele:
-            # if not all possible NN were taken into account (i.e. maxk < Nele) and k is equal to self.maxk
+            # if not all possible NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
             # or distances[:,-1]<rk, it is likely that there are other points within rk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
             # in the calculation of likelihood
@@ -243,7 +245,9 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_rk(self, rk=None, ratio=None, subset=None, method="bayes", plot=False):
+    def compute_id_binomial_rk(
+        self, rk=None, ratio=None, subset=None, method="bayes", plot=False
+    ):
         """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
         In the estimation of d one has to remove the central point from the counting of n and k
@@ -282,7 +286,9 @@ class IdEstimation(Base):
         k_eff = self.k[self.mask]
 
         if subset is not None:
-            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            assert isinstance(
+                subset, (np.integer, int)
+            ), "subset needs to be an integer"
             if subset < len(n_eff):
                 subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
                 n_eff = n_eff[subset]
@@ -354,7 +360,9 @@ class IdEstimation(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(self, k=None, ratio=None, subset=None, method="bayes", plot=False):
+    def compute_id_binomial_k(
+        self, k=None, ratio=None, subset=None, method="bayes", plot=False
+    ):
         """Calculate Id using the binomial estimator by fixing the number of neighbours
 
         As in the case in which one fixes rk, also in this version of the estimation
@@ -393,7 +401,9 @@ class IdEstimation(Base):
         n_eff = self.n
 
         if subset is not None:
-            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            assert isinstance(
+                subset, (np.integer, int)
+            ), "subset needs to be an integer"
             if subset < len(self.n):
                 subset = rng.choice(len(self.n), subset, replace=False, shuffle=False)
                 n_eff = self.n[subset]
@@ -452,6 +462,7 @@ class IdEstimation(Base):
     def set_rk(self, R):
         assert 0 < R, "select a proper rk>0"
         self.rk = R
+
 
 # ----------------------------------------------------------------------------------------------
 

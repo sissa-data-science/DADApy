@@ -24,17 +24,17 @@ class DensityEstimation(IdEstimation):
     Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component. \
 
     Attributes:
-        kstar (np.array(float)): array containing the chosen number k* of neighbors for each of the Nele points
+        kstar (np.array(float)): array containing the chosen number k* of neighbors for each of the N points
         array_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k* nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
-        common_neighs (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size Nele x Nele. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa.
-        dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the Nele points
-        Rho (np.array(float), optional): array containing the Nele log-densities
-        Rho_err (np.array(float), optional): array containing the Nele errors on the Rho
+        common_neighs (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa.
+        dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the N points
+        Rho (np.array(float), optional): array containing the N log-densities
+        Rho_err (np.array(float), optional): array containing the N errors on the Rho
         grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i
         grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
         check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance matrices of the gradients.
-        Fij_list (list(np.array(float)), optional): list of Nele arrays containing for each i the k* estimates of deltaF_ij computed from point i
-        Fij_var_list (list(np.array(float)), optional): list of Nele arrays containing the squared errors on the deltaF_ij's
+        Fij_list (list(np.array(float)), optional): list of N arrays containing for each i the k* estimates of deltaF_ij computed from point i
+        Fij_var_list (list(np.array(float)), optional): list of N arrays containing the squared errors on the deltaF_ij's
 
 
     """
@@ -77,7 +77,7 @@ class DensityEstimation(IdEstimation):
         Returns:
 
         """
-        if isinstance (k, np.ndarray):
+        if isinstance(k, np.ndarray):
             self.kstar = k
         else:
             self.kstar = np.full(self.Nele, k, dtype=int)
@@ -113,7 +113,7 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("k-NN density estimation started (k={})".format(k))
 
-        #kstar = np.full(self.Nele, k, dtype=int)
+        # kstar = np.full(self.N, k, dtype=int)
         self.set_kstar(k)
         dc = np.zeros(self.Nele, dtype=float)
         Rho = np.zeros(self.Nele, dtype=float)
@@ -140,7 +140,7 @@ class DensityEstimation(IdEstimation):
         self.Rho = Rho
         self.Rho_err = Rho_err
         self.dc = dc
-        #self.kstar = kstar
+        # self.kstar = kstar
 
         if self.verb:
             print("k-NN density estimation finished")
@@ -201,7 +201,7 @@ class DensityEstimation(IdEstimation):
                 )
             )
 
-        #self.kstar = kstar
+        # self.kstar = kstar
         self.set_kstar(kstar)
 
     # ----------------------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ class DensityEstimation(IdEstimation):
             self.maxk,
             Dthr,
             self.dist_indices,
-            self.distances
+            self.distances,
         )
         self.set_kstar(kstar)
 
@@ -229,7 +229,7 @@ class DensityEstimation(IdEstimation):
     def compute_neigh_indices(self):
         """Compute the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest (excluded).
         The couples of indices are stored in a numpy ndarray of rank 2 and secondary dimension = 2.
-        The index of the corresponding AAAAAAAAAAAAA make indpointer which is a np.array of length Nele which indicates for each i the starting index of the corresponding [i,.] subarray.
+        The index of the corresponding AAAAAAAAAAAAA make indpointer which is a np.array of length N which indicates for each i the starting index of the corresponding [i,.] subarray.
 
         """
         # compute optimal k
@@ -241,7 +241,7 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
 
-        # self.get_vector_diffs = sparse.csr_matrix((self.Nele, self.Nele),dtype=np.int_)
+        # self.get_vector_diffs = sparse.csr_matrix((self.N, self.N),dtype=np.int_)
         self.nind_list, self.nind_iptr = cgr.return_neigh_ind(
             self.dist_indices, self.kstar
         )
@@ -252,7 +252,9 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_vector_diffs(self,):
+    def compute_neigh_vector_diffs(
+        self,
+    ):
         """Compute the vector differences from each point to its k* nearest neighbors.
         The resulting vectors are stored in a numpy ndarray of rank 2 and secondary dimension = dims.
         The index of  scipy sparse csr_matrix format.
@@ -268,11 +270,15 @@ class DensityEstimation(IdEstimation):
             print("Computation of the vector differences started")
         sec = time.time()
 
-        # self.get_vector_diffs = sparse.csr_matrix((self.Nele, self.Nele),dtype=np.int_)
+        # self.get_vector_diffs = sparse.csr_matrix((self.N, self.N),dtype=np.int_)
         if self.period is None:
-            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs(self.X, self.nind_list)
+            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs(
+                self.X, self.nind_list
+            )
         else:
-            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_periodic(self.X, self.nind_list, np.full((self.dims),fill_value=self.period))
+            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_periodic(
+                self.X, self.nind_list, np.full((self.dims), fill_value=self.period)
+            )
 
         sec2 = time.time()
         if self.verb:
@@ -408,7 +414,7 @@ class DensityEstimation(IdEstimation):
 
         dc = np.zeros(self.Nele, dtype=float)
         Rho = np.zeros(self.Nele, dtype=float)
-        #        Rho_err = np.zeros(self.Nele, dtype=float)
+        #        Rho_err = np.zeros(self.N, dtype=float)
         prefactor = np.exp(
             self.id_selected / 2.0 * np.log(np.pi) - gammaln((self.id_selected + 2) / 2)
         )
@@ -444,7 +450,7 @@ class DensityEstimation(IdEstimation):
             # A[i,j] = self.common_neighs[nspar]*1./self.kstar[i]
             A[i, j] = self.common_neighs[nspar] / 2.0
         #            if A[i,j] == 0:
-        #                tmp = self.common_neighs[nspar]*2./self.Nele
+        #                tmp = self.common_neighs[nspar]*2./self.N
         #                A[ i, j ] = tmp
         #                A[ j, i ] = tmp
 
@@ -558,12 +564,9 @@ class DensityEstimation(IdEstimation):
             self.compute_kstar_optimised()
 
         self.Rho, self.Rho_err, self.dc = cd._compute_pak(
-            self.id_selected,
-            self.Nele,
-            self.maxk,
-            self.kstar,
-            self.distances
+            self.id_selected, self.Nele, self.maxk, self.kstar, self.distances
         )
+
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_kstarNN_gCorr(
@@ -890,7 +893,7 @@ class DensityEstimation(IdEstimation):
         self.Rho_err = np.sqrt(np.diag(self.B))
 
         # self.Rho_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
-        # self.Rho_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,))
+        # self.Rho_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
 
         sec2 = time.time()
         if self.verb:
@@ -1072,7 +1075,7 @@ class DensityEstimation(IdEstimation):
             self.A = A.todense()
             self.B = slin.pinvh(self.A)
             self.Rho_err = np.sqrt(np.diag(self.B))
-            # self.Rho_err = np.sqrt(diag/(np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.Nele,)))
+            # self.Rho_err = np.sqrt(diag/(np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,)))
 
         else:
             if self.verb:
@@ -1246,14 +1249,22 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
         if comp_covmat is False:
-            #self.grads, self.grads_var = cgr.return_grads_and_var_from_coords(self.X, self.dist_indices, self.kstar, self.id_selected)
+            # self.grads, self.grads_var = cgr.return_grads_and_var_from_coords(self.X, self.dist_indices, self.kstar, self.id_selected)
             self.grads, self.grads_var = cgr.return_grads_and_var_from_nnvecdiffs(
-                self.neigh_vector_diffs, self.nind_list, self.nind_iptr, self.kstar, self.id_selected
+                self.neigh_vector_diffs,
+                self.nind_list,
+                self.nind_iptr,
+                self.kstar,
+                self.id_selected,
             )
         else:
-            #self.grads, self.grads_var = cgr.return_grads_and_covmat_from_coords(self.X, self.dist_indices, self.kstar, self.id_selected)
+            # self.grads, self.grads_var = cgr.return_grads_and_covmat_from_coords(self.X, self.dist_indices, self.kstar, self.id_selected)
             self.grads, self.grads_var = cgr.return_grads_and_covmat_from_nnvecdiffs(
-                self.neigh_vector_diffs, self.nind_list, self.nind_iptr, self.kstar, self.id_selected
+                self.neigh_vector_diffs,
+                self.nind_list,
+                self.nind_iptr,
+                self.kstar,
+                self.id_selected,
             )
             self.check_grads_covmat = True
         sec2 = time.time()

@@ -122,8 +122,8 @@ class IdDiscrete(Base):
             )
 
         # checks-out
-        if self.maxk < self.Nele:
-            # if not all possible NN were taken into account (i.e. maxk < Nele) and k is equal to self.maxk
+        if self.maxk < self.N:
+            # if not all possible NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
             # or distances[:,-1]<lk, it is likely that there are other points within lk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
             # in the calculation of likelihood
@@ -140,7 +140,7 @@ class IdDiscrete(Base):
                 )
 
         else:
-            self.mask = np.ones(self.Nele, dtype=bool)
+            self.mask = np.ones(self.N, dtype=bool)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -270,18 +270,18 @@ class IdDiscrete(Base):
 
         # routine
         self.lk, self.k, self.ln, self.n = (
-            np.zeros(self.Nele),
-            np.zeros(self.Nele, dtype=np.int64),
-            np.zeros(self.Nele),
-            np.zeros(self.Nele, dtype=np.int64),
+            np.zeros(self.N),
+            np.zeros(self.N, dtype=np.int64),
+            np.zeros(self.N),
+            np.zeros(self.N, dtype=np.int64),
         )
-        self.mask = np.ones(self.Nele, dtype=bool)
+        self.mask = np.ones(self.N, dtype=bool)
 
         # cut distances at the k-th NN and cycle over each point
         for i, dist_i in enumerate(self.distances[:, :k_eff]):
 
             # case 1: all possible neighbours have been considered, no extra possible unseen points
-            if k_eff == self.Nele:
+            if k_eff == self.N:
                 lk_temp = dist_i[-1]
                 k_temp = k_eff
 
@@ -356,12 +356,12 @@ class IdDiscrete(Base):
         assert 0 < ratio < 1, "set a proper value for the ratio"
 
         self.lk, self.k, self.ln, self.n = (
-            np.zeros(self.Nele),
-            np.zeros(self.Nele, dtype=np.int64),
-            np.zeros(self.Nele),
-            np.zeros(self.Nele, dtype=np.int64),
+            np.zeros(self.N),
+            np.zeros(self.N, dtype=np.int64),
+            np.zeros(self.N),
+            np.zeros(self.N, dtype=np.int64),
         )
-        self.mask = np.ones(self.Nele, dtype=bool)
+        self.mask = np.ones(self.N, dtype=bool)
 
         for i, dist_i in enumerate(self.distances):
 
@@ -501,7 +501,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def set_w(self, w):
-        assert len(w) == self.Nele and all(
+        assert len(w) == self.N and all(
             [wi > 0 and isinstance(wi, (np.int, int))] for wi in w
         ), "load proper integer weights"
         self.weights = np.array(w, dtype=np.int)

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
-from scipy import cluster 
+from scipy import cluster
 from matplotlib import cm
 from matplotlib.collections import LineCollection
 from sklearn import manifold
@@ -12,13 +12,13 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
 
     idx = np.arange(mus.shape[0])
     idx = np.random.choice(
-        idx, size=(int(np.around(Data.Nele * decimation))), replace=False
+        idx, size=(int(np.around(Data.N * decimation))), replace=False
     )
     mus = mus[idx]
 
     mus = np.sort(np.sort(mus))
 
-    Nele_eff = int(np.around(fraction_used * Data.Nele, decimals=0))
+    Nele_eff = int(np.around(fraction_used * Data.N, decimals=0))
 
     x = np.log(mus)
     y = -np.log(1.0 - np.arange(0, mus.shape[0]) / mus.shape[0])
@@ -56,7 +56,7 @@ def plot_ID_vs_fraction(Data, fractions=np.linspace(0.1, 1, 25)):
         IDs_errs.append(Data.id_estimated_ml_std)
 
     Data.verb = verbose
-    plt.errorbar(fractions * Data.Nele, IDs, yerr=IDs_errs)
+    plt.errorbar(fractions * Data.N, IDs, yerr=IDs_errs)
     plt.xlabel("N")
     plt.ylabel("estimated ID")
     # plt.savefig('ID_decimation_plot.png')
@@ -111,7 +111,7 @@ def plot_SLAn(Data, linkage="single"):
     # plt.close(fig)  # close the figure
 
 
-def plot_MDS(Data,cmap="viridis"):
+def plot_MDS(Data, cmap="viridis"):
     Fmax = max(Data.Rho)
     Rho_bord_m = np.copy(Data.out_bord)
     d_dis = np.zeros((Data.Nclus_m, Data.Nclus_m), dtype=float)
@@ -128,9 +128,9 @@ def plot_MDS(Data,cmap="viridis"):
     for i in range(Data.Nclus_m):
         s.append(20.0 * np.sqrt(len(Data.clstruct_m[i])))
         col.append(i)
-    plt.scatter(out[:, 0], out[:, 1], s=s, c=col,cmap=cmap)
+    plt.scatter(out[:, 0], out[:, 1], s=s, c=col, cmap=cmap)
     cmal = cm.get_cmap(cmap, Data.Nclus_m)
-    colors=cmal(np.arange(0,cmal.N))
+    colors = cmal(np.arange(0, cmal.N))
     for i in range(Data.Nclus_m):
         cc = "k"
         r = colors[i][0]
@@ -141,14 +141,14 @@ def plot_MDS(Data,cmap="viridis"):
             cc = "w"
         plt.annotate(
             i,
-            (out[i,0], out[i,1]),
+            (out[i, 0], out[i, 1]),
             horizontalalignment="center",
             verticalalignment="center",
             c=cc,
             weight="bold",
         )
-#    for i in range(Data.Nclus_m):
-#        ax.annotate(i, (out[i, 0], out[i, 1]))
+    #    for i in range(Data.Nclus_m):
+    #        ax.annotate(i, (out[i, 0], out[i, 1]))
     # Add edges
     rr = np.amax(Rho_bord_m)
     if rr > 0.0:
@@ -182,13 +182,15 @@ def plot_matrix(Data):
     plt.show()
     # plt.close(fig)  # close the figure
 
+
 def plot_DecGraph(Data):
-    plt.xlabel(r'$\rho$')
-    plt.ylabel(r'$\delta$')
-    plt.scatter(Data.Rho,Data.delta)
+    plt.xlabel(r"$\rho$")
+    plt.ylabel(r"$\delta$")
+    plt.scatter(Data.Rho, Data.delta)
     plt.show()
 
-def get_dendrogram(Data,cmap="viridis"):
+
+def get_dendrogram(Data, cmap="viridis"):
     # Generation of SL dendrogram
     # Prepare some auxiliary lists
     e1 = []
@@ -318,7 +320,7 @@ def get_dendrogram(Data,cmap="viridis"):
 
     zorder = zorder + 1
     cmal = cm.get_cmap(cmap, Data.Nclus_m)
-    colors=cmal(np.arange(0,cmal.N))
+    colors = cmal(np.arange(0, cmal.N))
     plt.scatter(xs, ys, c=labels, s=100, zorder=zorder, cmap=cmap)
     for i in range(Data.Nclus_m):
         zorder = zorder + 1

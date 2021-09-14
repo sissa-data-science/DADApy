@@ -18,7 +18,7 @@ class Base:
     """Base class. A simple container of coordinates and/or distances and of basic methods.
 
     Attributes:
-            Nele (int): number of data points
+            N (int): number of data points
             X (np.ndarray(float)): the data points loaded into the object, of shape (Nele , dimension of embedding space)
     dims (int, optional): embedding dimension of the datapoints
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
@@ -49,14 +49,14 @@ class Base:
 
             self.dtype = self.X.dtype
 
-            self.Nele = self.X.shape[0]
+            self.N = self.X.shape[0]
 
-            # self.Nele = coordinates.shape[0]
+            # self.N = coordinates.shape[0]
             self.dims = coordinates.shape[1]
             self.distances = None
             # BUG to be solved: the next line
             if self.maxk is None:
-                self.maxk = self.Nele - 1
+                self.maxk = self.N - 1
 
         if distances is not None:
             if isinstance(distances, tuple):
@@ -68,7 +68,7 @@ class Base:
                 if self.maxk is None:
                     self.maxk = distances[0].shape[1] - 1
 
-                self.Nele = distances[0].shape[0]
+                self.N = distances[0].shape[0]
 
                 self.distances = distances[0][:, : self.maxk + 1]
 
@@ -84,7 +84,7 @@ class Base:
                 )  # assuming square matrix
                 assert isinstance(distances, np.ndarray)
 
-                self.Nele = distances.shape[0]
+                self.N = distances.shape[0]
                 if self.maxk is None:
                     self.maxk = distances.shape[1] - 1
 
@@ -234,8 +234,8 @@ class Base:
             if maxk is None:
                 maxk = self.maxk
 
-            Nele_dec = np.rint(self.Nele * decimation)
-            idxs = rng.choice(self.Nele, Nele_dec, replace=False)
+            Nele_dec = np.rint(self.N * decimation)
+            idxs = rng.choice(self.N, Nele_dec, replace=False)
             X_temp = self.X[idxs]
             nbrs = NearestNeighbors(n_neighbors=maxk, p=self.p, n_jobs=self.njobs).fit(
                 X_temp
@@ -250,11 +250,11 @@ class Base:
 
         self.X = np.unique(self.X)  # This does not work properly because of sorting!!
 
-        self.Nele = self.X.shape[0]
+        self.N = self.X.shape[0]
 
-        if self.Nele != Nele0:
+        if self.N != Nele0:
             print(
-                f"{Nele0 - self.Nele}/{Nele0} overlapping datapoints: keeping {self.Nele} unique elements"
+                f"{Nele0 - self.N}/{Nele0} overlapping datapoints: keeping {self.N} unique elements"
             )
             if self.distances is not None:
                 self.distances, self.dist_indices = None, None

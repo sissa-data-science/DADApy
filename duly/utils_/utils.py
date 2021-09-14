@@ -19,6 +19,7 @@ def compute_all_distances(X, n_jobs=cores):
 
 # --------------------------------------------------------------------------------------
 
+
 def compute_NN_PBC(X, k_max, box_size=None, p=2, cutoff=np.inf):
     tree = KD(X, boxsize=box_size)
     dist, ind = tree.query(X, k=k_max + 1, p=p, distance_upper_bound=cutoff)
@@ -54,10 +55,9 @@ def compute_nn_distances(X, maxk, metric="minkowski", p=2, period=None):
 
 
 def cast_to64(myarray):
-    if myarray.dtype =='float32':
-        myarray = myarray.astype('float64')
+    if myarray.dtype == "float32":
+        myarray = myarray.astype("float64")
     return myarray
-
 
 
 # --------------------------------------------------------------------------------------
