@@ -21,11 +21,11 @@ def test_clustering_basics():
 
     cl.compute_density_kNN(10)
 
-    cl.compute_clustering()
+    cl.compute_clustering_pure_python()
 
     assert cl.N_clusters == 2
 
-    expected_labels = np.array(
+    expected_cluster_assignment = np.array(
         [
             0,
             0,
@@ -130,4 +130,4 @@ def test_clustering_basics():
         ]
     )
 
-    assert (cl.labels == expected_labels).all()
+    assert (cl.cluster_assignment == expected_cluster_assignment).all()
