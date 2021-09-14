@@ -38,9 +38,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
     # 'better' way to perform scaling study of id
-    def compute_id_scaling(
-        self, range_max=1024, d0=0.001, d1=1000, return_ids=False, save_mus=False
-    ):
+    def return_id_scaling(self, range_max=1024, d0=0.001, d1=1000):
         def get_steps(upper_bound, range_max=range_max):
             range_r2 = min(range_max, upper_bound)
             max_step = int(math.log(range_r2, 2))
@@ -69,11 +67,11 @@ class IdEstimation(Base):
             )
 
         # array of ids (as a function of the average distange to a point)
-        self.ids_scaling = np.empty(mus.shape[1])
+        ids_scaling = np.empty(mus.shape[1])
         # array of error estimates (via fisher information)
-        self.ids_scaling_std = np.empty(mus.shape[1])
+        ids_scaling_std = np.empty(mus.shape[1])
         # array of average 'first' and 'second' neighbor distances, relative to each id estimate
-        self.r2s_scaling = np.mean(r2s, axis=0)
+        r2s_scaling = np.mean(r2s, axis=0)
 
         # compute IDs via maximum likelihood (and their error) for all the scales up to range_scaling
         for i in range(mus.shape[1]):
@@ -81,19 +79,12 @@ class IdEstimation(Base):
             id = ut._argmax_loglik(
                 self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=1.0e-7
             )
-            self.ids_scaling[i] = id
-            self.ids_scaling_std[i] = (
+            ids_scaling[i] = id
+            ids_scaling_std[i] = (
                 1 / ut._fisher_info_scaling(id, mus[:, i], n1, 2 * n1)
             ) ** 0.5
 
-        # should we leave on option for saving mus? (can be useful especially for 'debugging' twoNN)
-        if save_mus:
-            self.mus_scaling = mus
-
-        # shoud we leave an option to get the IdS?
-        # The scale study should be done to do a quick plot and set the right id...
-        if return_ids:
-            return self.ids_scaling, self.ids_scaling_std, self.r2s_scaling
+        return ids_scaling, ids_scaling_std, r2s_scaling
 
     # ----------------------------------------------------------------------------------------------
 
@@ -111,9 +102,8 @@ class IdEstimation(Base):
         Returns:
 
         """
-        assert 0.0 < decimation and decimation <= 1.0
-        # self.id_estimated_ml, self.id_estimated_ml_std = return_id(self.distances, decimation)
-        # N = len(distances)
+        assert 0.0 < decimation <= 1.0
+
         # remove highest mu values
         dist_used = self.decimate(decimation, maxk=self.maxk)
 
@@ -125,27 +115,26 @@ class IdEstimation(Base):
         mus_reduced = np.sort(mus)[:N_eff]
 
         if algorithm == "ml":
-            id = N / np.sum(mus)
+            intrinsic_dim = N / np.sum(mus)
 
         elif algorithm == "base":
 
             def func(x, m):
                 return m * x
 
-            # y = np.array( [-np.log(1 - i / self.N) for i in range(1, N_eff + 1)] )
-            # y = y[idxs]
-            id, _ = curve_fit(func, mus_reduced, y)
+            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
 
-        self.id_estimated_2NN = id[0]
-        self.intrinsic_dim = np.around(id, decimals=2)[0]
+        else:
+            raise ValueError("Please select a valid algorithm type")
+
+        self.id_estimated_2NN = intrinsic_dim[0]
+        self.intrinsic_dim = np.around(intrinsic_dim, decimals=3)[0]
 
         if self.verb:
-            # print('ID estimated from ML is {:f} +- {:f}'.format(self.id_estimated_ml, self.id_estimated_ml_std))
-            # print(f'Selecting ID of {self.intrinsic_dim}')
             print(f"ID estimation finished: selecting ID of {self.intrinsic_dim}")
 
         if return_id:
-            return id
+            return intrinsic_dim
 
     # ----------------------------------------------------------------------------------------------
 
@@ -309,7 +298,7 @@ class IdEstimation(Base):
                 self.id_estimated_binom_std,
                 self.posterior_domain,
                 self.posterior,
-            ) = _beta_prior(k_eff - 1, n_eff - 1, self.r, plot=plot, verbose=self.verb)
+            ) = _beta_prior(k_eff - 1, n_eff - 1, self.r, plot=plot)
         else:
             print("select a proper method for id computation")
             return 0
