@@ -1,11 +1,13 @@
 import multiprocessing
 
 import numpy as np
+
 # import scipy.special as sp
 from scipy.optimize import minimize_scalar as SMin
 
 from duly._base import Base
 from duly.utils_ import discrete_functions as df
+
 # from duly.utils_ import utils as ut
 
 cores = multiprocessing.cpu_count()
@@ -36,7 +38,6 @@ class IdDiscrete(Base):
         weights=None,
         verbose=False,
         njobs=cores,
-        remove_identical_points=False
     ):
         super().__init__(
             coordinates=coordinates,
@@ -44,7 +45,6 @@ class IdDiscrete(Base):
             maxk=maxk,
             verbose=verbose,
             njobs=njobs,
-            remove_identical_points=remove_identical_points
         )
 
         if weights is None:
@@ -64,6 +64,7 @@ class IdDiscrete(Base):
         self.id_estimated_binom_std = None
         self.posterior_domain = None
         self.posterior = None
+
     # ----------------------------------------------------------------------------------------------
 
     def fix_lk(self, lk=None, ln=None):
@@ -143,7 +144,9 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_lk(self, lk=None, ln=None, subset=None, method="bayes", plot=True):
+    def compute_id_binomial_lk(
+        self, lk=None, ln=None, subset=None, method="bayes", plot=True
+    ):
         """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
         In the estimation of d one has to remove the central point from the counting of n and k
@@ -180,7 +183,9 @@ class IdDiscrete(Base):
             print("n and k computed")
 
         if subset is not None:
-            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            assert isinstance(
+                subset, (np.integer, int)
+            ), "subset needs to be an integer"
             if subset < len(n_eff):
                 subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
                 n_eff = n_eff[subset]
@@ -442,7 +447,9 @@ class IdDiscrete(Base):
         lk_eff = self.lk[self.mask]
 
         if subset is not None:
-            assert (isinstance(subset, (np.integer, int))), "subset needs to be an integer"
+            assert isinstance(
+                subset, (np.integer, int)
+            ), "subset needs to be an integer"
             if subset < len(n_eff):
                 subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
                 n_eff = n_eff[subset]
@@ -485,8 +492,8 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def set_lk_ln(self, lk, ln):
-        assert (isinstance(ln, (np.int, int)) and ln > 0), "select a proper integer ln>0"
-        assert (isinstance(lk, (np.int, int)) and lk > 0), "select a proper integer lk>0"
+        assert isinstance(ln, (np.int, int)) and ln > 0, "select a proper integer ln>0"
+        assert isinstance(lk, (np.int, int)) and lk > 0, "select a proper integer lk>0"
         assert lk > ln, "select lk and ln, s.t. lk > ln"
         self.ln = ln
         self.lk = lk
