@@ -24,15 +24,15 @@ def test_id_discrete():
     IDD = IdDiscrete(X, maxk=X.shape[0])
     IDD.compute_distances(p=1,period=box)
 
-    IDD.compute_id_binomial_k(25, False, 0.5)
+    IDD.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
 
     assert pytest.approx(d, IDD.id_estimated_binom)
 
-    IDD.compute_id_binomial_k(4, True, 0.5)
+    IDD.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
 
     assert pytest.approx(d, IDD.id_estimated_binom)
 
-    IDD.compute_id_binomial_lk(4, 2, "mle")
+    IDD.compute_id_binomial_lk(lk=4, ln=2, method="mle")
 
     assert pytest.approx(d, IDD.id_estimated_binom)
 
