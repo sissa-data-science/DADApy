@@ -36,7 +36,6 @@ class MetricComparisons(Base):
         Args:
             coords1 (list(int)): components for the first distance
             coords2 (list(int)): components for the second distance
-            maxk (int): number of nearest neighbours to be computed
             k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
             dtype (str): type of information imbalance computation, default is 'mean'
 
@@ -391,7 +390,7 @@ class MetricComparisons(Base):
             self.X = np.delete(self.X, idx_to_remove, 1)
 
             if i < (d - 1):
-                self.compute_distances(maxk=self.N, njobs=1)
+                self.compute_distances(maxk=self.N)
 
             coords_kept.pop(idx_to_remove)
 

@@ -488,7 +488,7 @@ class DensityEstimation(IdEstimation):
 
         # compute optimal k
         if self.kstar is None:
-            self.compute_kstar_optimised()
+            self.compute_kstar()
 
         self.log_den, self.log_den_err, self.dc = cd._compute_pak(
             self.intrinsic_dim, self.N, self.maxk, self.kstar, self.distances
@@ -1160,14 +1160,10 @@ class DensityEstimation(IdEstimation):
         The gradient is estimated via a linear expansion of the density propagated to the log-density.
 
         Args:
-            k: number of neighbours used to compute the density
 
         Returns:
 
-
         MODIFICARE QUI E ANCHE NEGLI ATTRIBUTI
-
-
 
         """
         # compute optimal k
