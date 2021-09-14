@@ -16,11 +16,13 @@ def test_id_discrete():
 
     X = rng.integers(0, box, size=(N, d))
 
-    dist, ind = PBC(X, N - 1, box_size=box, p=1)
+    # dist, ind = PBC(X, N - 1, box_size=box, p=1)
+    # IDD = IdDiscrete(X, maxk=X.shape[0])
+    # IDD.distances = dist
+    # IDD.dist_indices = ind
 
-    IDD = IdDiscrete(X, maxk=X.shape[0])
-    IDD.distances = dist
-    IDD.dist_indices = ind
+    IDD = IdDiscrete(X, maxk=X.shape[0], remove_identical_points=False)
+    IDD.compute_distances(p=1,period=box)
 
     IDD.compute_id_binomial_k(25, False, 0.5)
 
@@ -30,7 +32,7 @@ def test_id_discrete():
 
     assert pytest.approx(d, IDD.id_estimated_binom)
 
-    IDD.compute_id_binomial_Lk(4, 2, "mle")
+    IDD.compute_id_binomial_lk(4, 2, "mle")
 
     assert pytest.approx(d, IDD.id_estimated_binom)
 

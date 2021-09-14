@@ -34,7 +34,7 @@ class Base:
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores, remove_identical_points=True
     ):
 
         self.X = coordinates
@@ -51,14 +51,16 @@ class Base:
 
             self.dtype = self.X.dtype
 
-            Nele0 = self.X.shape[0]
-            #removal of overlapping data points
-            #self.X = np.unique(self.X, axis = 0)
+            if remove_identical_points:
+                Nele0 = self.X.shape[0]
+                #removal of overlapping data points
+                self.X = np.unique(self.X, axis = 0)
 
-
-            self.Nele = self.X.shape[0]
-            if self.Nele != Nele0:
-                print(f'{Nele0-self.Nele}/{Nele0} overlapping datapoints: keeping {self.Nele} unique elements')
+                self.Nele = self.X.shape[0]
+                if self.Nele != Nele0:
+                    print(f'{Nele0-self.Nele}/{Nele0} overlapping datapoints: keeping {self.Nele} unique elements')
+            else:
+                self.Nele = self.X.shape[0]
 
             #self.Nele = coordinates.shape[0]
             self.dims = coordinates.shape[1]
