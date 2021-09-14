@@ -85,7 +85,7 @@ def plot_SLAn(Data, linkage="single"):
     nd = int((Data.Nclus_m * Data.Nclus_m - Data.Nclus_m) / 2)
     Dis = np.empty(nd, dtype=float)
     nl = 0
-    Fmax = max(Data.Rho)
+    Fmax = max(Data.log_den)
     Rho_bord_m = np.copy(Data.out_bord)
 
     for i in range(Data.Nclus_m - 1):
@@ -112,7 +112,7 @@ def plot_SLAn(Data, linkage="single"):
 
 
 def plot_MDS(Data, cmap="viridis"):
-    Fmax = max(Data.Rho)
+    Fmax = max(Data.log_den)
     Rho_bord_m = np.copy(Data.out_bord)
     d_dis = np.zeros((Data.Nclus_m, Data.Nclus_m), dtype=float)
     model = manifold.MDS(n_components=2, n_jobs=None, dissimilarity="precomputed")
@@ -174,7 +174,7 @@ def plot_matrix(Data):
     Rho_bord_m = np.copy(Data.out_bord)
     topography = np.copy(Rho_bord_m)
     for j in range(Data.Nclus_m):
-        topography[j, j] = Data.Rho[Data.centers_m[j]]
+        topography[j, j] = Data.log_den[Data.centers_m[j]]
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
     plt.imshow(topography, cmap="hot", interpolation=None)
@@ -186,7 +186,7 @@ def plot_matrix(Data):
 def plot_DecGraph(Data):
     plt.xlabel(r"$\rho$")
     plt.ylabel(r"$\delta$")
-    plt.scatter(Data.Rho, Data.delta)
+    plt.scatter(Data.log_den, Data.delta)
     plt.show()
 
 
@@ -200,7 +200,7 @@ def get_dendrogram(Data, cmap="viridis"):
     Li1 = []
     Li2 = []
     Ldis = []
-    Fmax = max(Data.Rho)
+    Fmax = max(Data.log_den)
     Rho_bord_m = np.copy(Data.out_bord)
     # Obtain distances in list format from topography
     for i in range(Data.Nclus_m - 1):
@@ -286,7 +286,7 @@ def get_dendrogram(Data, cmap="viridis"):
     for i in range(len(sorted_elements)):
         label.append(sorted_elements[i])
         j = Data.centers_m[label[i]]
-        y.append(Data.Rho[j])
+        y.append(Data.log_den[j])
         x.append(add + 0.5 * np.log(pop[i]))
         add = add + np.log(pop[i])
 

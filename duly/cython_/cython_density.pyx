@@ -92,10 +92,10 @@ def _compute_pak(floatTYPE_t id_selected,
             #elif method == "NM":
             #    from duly.utils_.mlmax import MLmax
 
-            #    Rho[i] = MLmax(rr, self.kstar[i], vi)
+            #    log_den[i] = MLmax(rr, self.kstar[i], vi)
             #else:
             #    raise ValueError("Please choose a valid method")
-            # Rho[i] = NR.nrmaxl(rr, kstar[i], vi, self.maxk) # OLD FORTRAN
+            # log_den[i] = NR.nrmaxl(rr, kstar[i], vi, self.maxk) # OLD FORTRAN
         else:
             Rho[i] = rr
         if Rho[i] < Rho_min:

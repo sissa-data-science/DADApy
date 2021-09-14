@@ -51,20 +51,20 @@ class Clustering(DensityEstimation):
         self.ref = None  # Index of the nearest element with higher density
 
     def compute_clustering_optimised(self, Z=1.65, halo=False):
-        assert self.Rho is not None
+        assert self.log_den is not None
         if self.verb:
             print("Clustering started")
 
-        # Make all values of Rho positives (this is important to help convergence)
-        Rho_min = np.min(self.Rho)
+        # Make all values of log_den positives (this is important to help convergence)
+        Rho_min = np.min(self.log_den)
 
-        Rho_c = self.Rho
+        Rho_c = self.log_den
         Rho_c = Rho_c - Rho_min + 1
 
         # Putative modes of the PDF as preliminary clusters
 
         N = self.distances.shape[0]
-        g = Rho_c - self.Rho_err
+        g = Rho_c - self.log_den_err
         # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
 
@@ -75,7 +75,7 @@ class Clustering(DensityEstimation):
             self.dist_indices.astype(int),
             self.maxk,
             self.verb,
-            self.Rho_err,
+            self.log_den_err,
             Rho_min,
             Rho_c,
             g,
@@ -99,7 +99,7 @@ class Clustering(DensityEstimation):
             print("total time is, {}".format(secf - seci))
 
     def compute_DecGraph(self):
-        assert self.Rho is not None
+        assert self.log_den is not None
         assert self.X is not None
         self.delta = np.zeros(self.N)
         self.ref = np.zeros(self.N, dtype="int")
@@ -107,7 +107,7 @@ class Clustering(DensityEstimation):
         imax = []
         ncalls = 0
         for i in range(self.N):
-            ll = tt[((self.Rho > self.Rho[i]) & (tt != i))]
+            ll = tt[((self.log_den > self.log_den[i]) & (tt != i))]
             if ll.shape[0] > 0:
                 a1, a2, a3 = np.intersect1d(
                     self.dist_indices[i, :], ll, return_indices=True, assume_unique=True
@@ -118,7 +118,7 @@ class Clustering(DensityEstimation):
                     self.ref[i] = self.dist_indices[i, aa]
                 else:
                     ncalls = ncalls + 1
-                    dd = self.X[((self.Rho > self.Rho[i]) & (tt != i))]
+                    dd = self.X[((self.log_den > self.log_den[i]) & (tt != i))]
                     ds = np.transpose(
                         sp.spatial.distance.cdist([np.transpose(self.X[i, :])], dd)
                     )
@@ -133,14 +133,14 @@ class Clustering(DensityEstimation):
 
     def compute_cluster_DP(self, dens_cut=0.0, delta_cut=0.0, halo=False):
         assert self.delta is not None
-        ordered = np.argsort(-self.Rho)
+        ordered = np.argsort(-self.log_den)
         self.labels = np.zeros(self.N, dtype="int")
         tt = np.arange(self.N)
         center_label = np.zeros(self.N, dtype="int")
         ncluster = -1
         for i in range(self.N):
             j = ordered[i]
-            if (self.Rho[j] > dens_cut) & (self.delta[j] > delta_cut):
+            if (self.log_den[j] > dens_cut) & (self.delta[j] > delta_cut):
                 ncluster = ncluster + 1
                 self.labels[j] = ncluster
                 center_label[j] = ncluster
@@ -157,28 +157,28 @@ class Clustering(DensityEstimation):
                     if self.labels[i] != self.labels[j]:
                         bord[i] = 1
             halo_cutoff = np.zeros(ncluster + 1)
-            halo_cutoff[:] = np.min(self.Rho) - 1
+            halo_cutoff[:] = np.min(self.log_den) - 1
             for j in range(ncluster + 1):
-                td = self.Rho[((bord == 1) & (self.labels == j))]
+                td = self.log_den[((bord == 1) & (self.labels == j))]
                 if td.size != 0:
                     halo_cutoff[j] = np.max(td)
-            halo[tt[(self.Rho < halo_cutoff[self.labels])]] = -1
+            halo[tt[(self.log_den < halo_cutoff[self.labels])]] = -1
             self.labels = halo
 
     def compute_clustering(self, Z=1.65, halo=False):
-        assert self.Rho is not None
+        assert self.log_den is not None
         if self.verb:
             print("Clustering started")
 
-        # Make all values of Rho positives (this is important to help convergence)
-        Rho_min = np.min(self.Rho)
-        Rho_c = self.Rho
+        # Make all values of log_den positives (this is important to help convergence)
+        Rho_min = np.min(self.log_den)
+        Rho_c = self.log_den
         Rho_c = Rho_c - Rho_min + 1
 
         # Putative modes of the PDF as preliminary clusters
         sec = time.time()
         N = self.distances.shape[0]
-        g = Rho_c - self.Rho_err
+        g = Rho_c - self.log_den_err
         centers = []
         for i in range(N):
             t = 0
@@ -267,8 +267,8 @@ class Clustering(DensityEstimation):
                 if Point_bord[i][j] != -1:
                     Rho_bord[i][j] = Rho_c[Point_bord[i][j]]
                     Rho_bord[j][i] = Rho_c[Point_bord[j][i]]
-                    Rho_bord_err[i][j] = self.Rho_err[Point_bord[i][j]]
-                    Rho_bord_err[j][i] = self.Rho_err[Point_bord[j][i]]
+                    Rho_bord_err[i][j] = self.log_den_err[Point_bord[i][j]]
+                    Rho_bord_err[j][i] = self.log_den_err[Point_bord[j][i]]
         for i in range(Nclus):
             Rho_bord[i][i] = -1.0
             Rho_bord_err[i][i] = 0.0
@@ -289,8 +289,8 @@ class Clustering(DensityEstimation):
                 for j in range(i + 1, Nclus):
                     a1 = Rho_c[centers[i]] - Rho_bord[i][j]
                     a2 = Rho_c[centers[j]] - Rho_bord[i][j]
-                    e1 = Z * (self.Rho_err[centers[i]] + Rho_bord_err[i][j])
-                    e2 = Z * (self.Rho_err[centers[j]] + Rho_bord_err[i][j])
+                    e1 = Z * (self.log_den_err[centers[i]] + Rho_bord_err[i][j])
+                    e2 = Z * (self.log_den_err[centers[j]] + Rho_bord_err[i][j])
                     if a1 < e1 or a2 < e2:
                         check = 1
                         pos.append(Rho_bord[i][j])
