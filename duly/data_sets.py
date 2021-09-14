@@ -90,7 +90,7 @@ class DataSets:
 
         for i, d in enumerate(self.data_sets):
             print("computing id of layer ", i)
-            d.return_id_scaling(
+            d.return_id_scaling_r2n(
                 range_max=range_max,
                 d0=d0,
                 d1=d1,

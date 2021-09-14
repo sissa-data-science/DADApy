@@ -8,6 +8,8 @@ from scipy.optimize import curve_fit
 from duly._base import Base
 from duly.utils_ import utils as ut
 
+from duly.utils_.utils import compute_nn_distances
+
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
@@ -37,21 +39,32 @@ class IdEstimation(Base):
         self.intrinsic_dim = None
 
     # ----------------------------------------------------------------------------------------------
-    # 'better' way to perform scaling study of id
-    def return_id_scaling(self, range_max=1024, d0=0.001, d1=1000):
+
+    def return_id_scaling_r2n(self, range_max=1024, d0=0.001, d1=1000):
+        """Compute
+
+        Description
+
+        Args:
+                args:
+
+        Returns:
+
+        """
+
         def get_steps(upper_bound, range_max=range_max):
             range_r2 = min(range_max, upper_bound)
             max_step = int(math.log(range_r2, 2))
             return np.array([2 ** i for i in range(max_step)]), range_r2
 
-        if self.X is None and self.distances is not None:
-            steps, _ = get_steps(upper_bound=self.maxk)
+        if self.distances is not None and range_max < self.maxk:
+            steps, _ = get_steps(upper_bound=range_max)
             mus = self.distances[:, steps[1:]] / self.distances[:, steps[:-1]]
             r2s = self.distances[:, np.array([steps[:-1], steps[1:]])]
 
         elif self.X is not None:
             steps, range_r2 = get_steps(upper_bound=self.N - 1)
-            distances, dist_indices, mus, r2s = self._get_mus_scaling(
+            distances, dist_indices, mus, r2s = self._return_mus_scaling(
                 range_scaling=range_r2
             )
 
@@ -63,30 +76,96 @@ class IdEstimation(Base):
 
         else:
             raise ValueError(
-                "You need a coordinate matrix to perform a scaling analysis"
+                "You need a coordinate matrix to perform a scaling analysis, or decrease range_max"
             )
 
-        # array of ids (as a function of the average distange to a point)
-        ids_scaling = np.empty(mus.shape[1])
+        # array of ids (as a function of the average distance to a point)
+        ids_scaling = np.zeros(mus.shape[1])
         # array of error estimates (via fisher information)
-        ids_scaling_std = np.empty(mus.shape[1])
+        ids_scaling_err = np.zeros(mus.shape[1])
         # array of average 'first' and 'second' neighbor distances, relative to each id estimate
         r2s_scaling = np.mean(r2s, axis=0)
 
         # compute IDs via maximum likelihood (and their error) for all the scales up to range_scaling
         for i in range(mus.shape[1]):
             n1 = 2 ** i
-            id = ut._argmax_loglik(
-                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=1.0e-7
-            )
-            ids_scaling[i] = id
-            ids_scaling_std[i] = (
-                1 / ut._fisher_info_scaling(id, mus[:, i], n1, 2 * n1)
-            ) ** 0.5
 
-        return ids_scaling, ids_scaling_std, r2s_scaling
+            ids_scaling[i], ids_scaling_err[i] = self.return_id_r2n(
+                n1, d0=d0, d1=d1, mus=mus[:, i]
+            )
+
+        return ids_scaling, ids_scaling_err, r2s_scaling
 
     # ----------------------------------------------------------------------------------------------
+
+    def return_id_r2n(self, n1, d0=0.001, d1=1000, mus=None):
+        assert n1 * 2 < self.maxk
+
+        if mus is None:
+            mus = np.log(self.distances[:, n1 * 2] / self.distances[:, n1])
+
+        id = ut._argmax_loglik(self.dtype, d0, d1, mus, n1, 2 * n1, self.N, eps=1.0e-7)
+        id_err = (1 / ut._fisher_info_scaling(id, mus, n1, 2 * n1)) ** 0.5
+
+        return id, id_err
+
+    def _compute_id_subset(
+        self,
+        N_subset,
+        algorithm="base",
+        fraction=0.9,
+    ):
+        nrep = np.round(self.N / N_subset)
+        ids = np.zeros(nrep)
+        r2s = np.zeros((nrep, 2))
+
+        for i in range(nrep):
+            indx = np.random.choice(self.N, size=N_subset, replace=False)
+
+            d, _ = compute_nn_distances(
+                self.X[indx], min(N_subset, self.maxk), self.metric, self.p, self.period
+            )
+
+            id = self.compute_id_2NN(1, fraction, algorithm, return_id=True)
+
+            r2s[i] = np.mean(d[:, np.array([1, 2])])
+            ids[i] = id
+
+        sterr = np.std(ids) / len(ids) ** 0.5
+
+        return (
+            np.mean(ids),
+            sterr,
+            np.mean(r2s, axis=0),
+        )
+
+    def return_id_scaling_2nn(
+        self,
+        N_min=20,
+        algorithm="base",
+        fraction=0.9,
+    ):
+        max_ndec = int(math.log(self.N, 2)) - 1
+        Nsubsets = np.round(self.N / np.array([2 ** i for i in range(max_ndec)]))
+
+        if N_min is not None:
+            Nsubsets = Nsubsets[Nsubsets > N_min]
+
+        ids_scaling = np.zeros(Nsubsets.shape[0])
+        ids_scaling_err = np.zeros(Nsubsets.shape[0])
+        r2s_scaling = np.zeros((Nsubsets.shape[0]))
+
+        for i, N_subset in enumerate(Nsubsets):
+
+            (
+                ids_scaling[i],
+                ids_scaling_err[i],
+                r2s_scaling[i],
+            ) = self._compute_id_subset(
+                N_subset, algorithm=algorithm, fraction=fraction
+            )
+
+        return ids_scaling, ids_scaling_err, r2s_scaling
 
     def compute_id_2NN(
         self, decimation=1, fraction=0.9, algorithm="base", return_id=False
@@ -94,8 +173,8 @@ class IdEstimation(Base):
         """Compute intrinsic dimension using the 2NN algorithm
 
         Args:
-                decimation: fraction of points used in the estimate. The lower the value, the less points used, the farther
-                they are.Can be used to change the scale at which one is looking at the data
+                decimation: fraction of points used in the estimate. The lower the value, the less points used, the
+                farther they are.Can be used to change the scale at which one is looking at the data
                 fraction: fraction of mus that will be considered for the estimate (discard highest mus)
                 algorithm: 'base' to perform the linear fit, 'ml' to perform maximum likelihood
 
@@ -105,7 +184,7 @@ class IdEstimation(Base):
         assert 0.0 < decimation <= 1.0
 
         # remove highest mu values
-        dist_used = self.decimate(decimation, maxk=self.maxk)
+        dist_used = self.return_decimated_distances(decimation, maxk=self.maxk)
 
         mus = np.log(dist_used[:, 2] / dist_used[:, 1])
 

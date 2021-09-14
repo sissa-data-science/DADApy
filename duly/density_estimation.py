@@ -10,7 +10,8 @@ from duly.id_estimation import IdEstimation
 from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
 from duly.cython_ import cython_maximum_likelihood_opt as cml
 from duly.cython_ import cython_grads as cgr
-from duly.cython_ import cython_density as cd
+
+# from duly.cython_ import cython_density as cd
 
 cores = multiprocessing.cpu_count()
 

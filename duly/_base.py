@@ -158,9 +158,21 @@ class Base:
 
     # ----------------------------------------------------------------------------------------------
 
-    # adapted from kneighbors function of sklearn
-    # https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
     def _mus_scaling_reduce_func(self, dist, range_scaling=None):
+        """Compute
+
+        adapted from kneighbors function of sklearn
+        https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
+
+        Description.
+
+        Args:
+                range_scaling
+
+        Returns:
+
+
+        """
 
         max_step = int(math.log(range_scaling, 2))
         steps = np.array([2 ** i for i in range(max_step)])
@@ -185,7 +197,18 @@ class Base:
             np.mean(rs, axis=1),
         )
 
-    def _get_mus_scaling(self, range_scaling):
+    def _return_mus_scaling(self, range_scaling):
+        """Compute
+
+        Description.
+
+        Args:
+                range_scaling
+
+        Returns:
+
+
+        """
 
         reduce_func = partial(
             self._mus_scaling_reduce_func, range_scaling=range_scaling
@@ -197,7 +220,7 @@ class Base:
                 self.X,
                 self.X,
                 reduce_func=reduce_func,
-                metric="euclidean",
+                metric=self.metric,
                 n_jobs=self.njobs,
                 working_memory=1024,
                 **kwds,
@@ -211,39 +234,6 @@ class Base:
             np.vstack(mus),
             np.vstack(rs),
         )
-
-    # ---------------------------------------------------------------------------
-
-    def decimate(self, decimation, maxk=None):
-        """Compute distances for a random subset of points
-
-        Args:
-                decimation (float): fraction of points to use
-
-        Returns:
-                distances of decimated dataset
-
-        """
-        # TODO: do we really need to save self.dist_dec, self.ind_dec in the class?
-
-        assert 0.0 < decimation and decimation <= 1.0
-
-        if decimation == 1.0:
-            if self.distances is None:
-                self.compute_distances(maxk=self.maxk)
-            return self.distances
-        else:
-            if maxk is None:
-                maxk = self.maxk
-
-            Nele_dec = np.rint(self.N * decimation)
-            idxs = rng.choice(self.N, Nele_dec, replace=False)
-            X_temp = self.X[idxs]
-            nbrs = NearestNeighbors(n_neighbors=maxk, p=self.p, n_jobs=self.njobs).fit(
-                X_temp
-            )
-            self.dist_dec, self.ind_dec = nbrs.kneighbors(X_temp)
-            return self.dist_dec
 
     def remove_identical_points_TO_BE_WRITTEN(self):
 
