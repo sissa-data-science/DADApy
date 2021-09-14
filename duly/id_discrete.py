@@ -36,6 +36,7 @@ class IdDiscrete(Base):
         weights=None,
         verbose=False,
         njobs=cores,
+        remove_identical_points=False
     ):
         super().__init__(
             coordinates=coordinates,
@@ -43,6 +44,7 @@ class IdDiscrete(Base):
             maxk=maxk,
             verbose=verbose,
             njobs=njobs,
+            remove_identical_points=remove_identical_points
         )
 
         if weights is None:

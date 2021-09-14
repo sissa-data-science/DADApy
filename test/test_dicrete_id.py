@@ -21,7 +21,7 @@ def test_id_discrete():
     # IDD.distances = dist
     # IDD.dist_indices = ind
 
-    IDD = IdDiscrete(X, maxk=X.shape[0], remove_identical_points=False)
+    IDD = IdDiscrete(X, maxk=X.shape[0])
     IDD.compute_distances(p=1,period=box)
 
     IDD.compute_id_binomial_k(25, False, 0.5)
