@@ -223,7 +223,7 @@ do
 # Cython
 duly/cython_/*.html
 duly/cython_/*.so
-duly/cython_/*.c
+#duly/cython_/*.c
 duly/cython_/.*
 
 # End of https://www.toptal.com/developers/gitignore/api/python,emacs,vim
