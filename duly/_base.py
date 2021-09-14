@@ -3,7 +3,8 @@ import multiprocessing
 from functools import partial
 
 import numpy as np
-#import torch
+
+# import torch
 from scipy.spatial.distance import squareform
 from sklearn.metrics import pairwise_distances_chunked
 from sklearn.neighbors import NearestNeighbors
@@ -11,7 +12,8 @@ from sklearn.neighbors import NearestNeighbors
 from duly.cython_ import cython_periodic_dist as cpd
 from duly.utils_.utils import from_all_distances_to_nndistances
 from duly.utils_.utils import compute_nn_distances
-#from duly.utils_.utils import cast_to64
+
+# from duly.utils_.utils import cast_to64
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -34,7 +36,13 @@ class Base:
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores, remove_identical_points=True
+        self,
+        coordinates=None,
+        distances=None,
+        maxk=None,
+        verbose=False,
+        njobs=cores,
+        remove_identical_points=True,
     ):
 
         self.X = coordinates
@@ -44,7 +52,7 @@ class Base:
         self.dims = None
 
         if coordinates is not None:
-            assert isinstance(self.X, np.ndarray) #or isinstance(self.X, torch.Tensor)
+            assert isinstance(self.X, np.ndarray)  # or isinstance(self.X, torch.Tensor)
             # if isinstance(self.X, torch.Tensor):
             #     self.X = coordinates.numpy()
             #     self.X = cast_to64(self.X)
@@ -53,16 +61,19 @@ class Base:
 
             if remove_identical_points:
                 Nele0 = self.X.shape[0]
-                #removal of overlapping data points
-                self.X = np.unique(self.X, axis = 0)
+                # removal of overlapping data points
+                _, idx = np.unique(self.X, return_index=True)
+                self.X = self.X[np.sort(idx)]
 
                 self.Nele = self.X.shape[0]
                 if self.Nele != Nele0:
-                    print(f'{Nele0-self.Nele}/{Nele0} overlapping datapoints: keeping {self.Nele} unique elements')
+                    print(
+                        f"{Nele0-self.Nele}/{Nele0} overlapping datapoints: keeping {self.Nele} unique elements"
+                    )
             else:
                 self.Nele = self.X.shape[0]
 
-            #self.Nele = coordinates.shape[0]
+            # self.Nele = coordinates.shape[0]
             self.dims = coordinates.shape[1]
             self.distances = None
             # BUG to be solved: the next line
@@ -72,24 +83,38 @@ class Base:
         if distances is not None:
             if isinstance(distances, tuple):
                 assert distances[0].shape[0] == distances[1].shape[0]
-                assert isinstance(distances[0], np.ndarray) #or isinstance(distances[0], torch.Tensor)
-                assert isinstance(distances[1], np.ndarray) #or isinstance(distances[1], torch.Tensor)
-                #is_ndarray = isinstance(distances, np.ndarray)
+                assert isinstance(
+                    distances[0], np.ndarray
+                )  # or isinstance(distances[0], torch.Tensor)
+                assert isinstance(
+                    distances[1], np.ndarray
+                )  # or isinstance(distances[1], torch.Tensor)
+                # is_ndarray = isinstance(distances, np.ndarray)
 
                 if self.maxk is None:
                     self.maxk = distances[0].shape[1] - 1
 
                 self.Nele = distances[0].shape[0]
 
-                self.distances = distances[0][:, : self.maxk + 1] #if is_ndarray else distances[0].numpy().shape[0]
-                #self.distances = cast_to64(self.distances)
+                self.distances = distances[0][
+                    :, : self.maxk + 1
+                ]  # if is_ndarray else distances[0].numpy().shape[0]
+                # self.distances = cast_to64(self.distances)
 
-                self.dist_indices = distances[1][:, : self.maxk + 1] if is_ndarray else distances[1].numpy().shape[0]
+                self.dist_indices = (
+                    distances[1][:, : self.maxk + 1]
+                    if is_ndarray
+                    else distances[1].numpy().shape[0]
+                )
 
             else:
-                assert (distances.shape[0] == distances.shape[1])  # assuming square matrix
-                assert isinstance(distances, np.ndarray) #or isinstance(distances, torch.Tensor)
-                #if isinstance(distances, torch.Tensor): distances = distances.numpy()
+                assert (
+                    distances.shape[0] == distances.shape[1]
+                )  # assuming square matrix
+                assert isinstance(
+                    distances, np.ndarray
+                )  # or isinstance(distances, torch.Tensor)
+                # if isinstance(distances, torch.Tensor): distances = distances.numpy()
 
                 self.Nele = distances.shape[0]
                 if self.maxk is None:
@@ -98,7 +123,7 @@ class Base:
                 self.dist_indices, self.distances = from_all_distances_to_nndistances(
                     distances, self.maxk
                 )
-                #self.distances = cast_to64(self.distances)
+                # self.distances = cast_to64(self.distances)
 
             self.dtype = self.distances.dtype
 
@@ -164,7 +189,6 @@ class Base:
         distances[indx_, 1] = np.finfo(self.dtype).eps
 
         return distances
-
 
     # ----------------------------------------------------------------------------------------------
 
