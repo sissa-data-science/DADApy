@@ -13,7 +13,7 @@ from duly.utils_ import discrete_functions as df
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
-D_MAX = 300.0
+D_MAX = 150.0
 D_MIN = 0.0001
 
 
