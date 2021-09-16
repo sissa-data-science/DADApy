@@ -44,7 +44,7 @@ class Base:
         self.njobs = njobs
         self.dims = None
         self.N = None
-        self.metric = None
+        self.metric = "minkowski"
         self.p = None
         self.period = None
 
