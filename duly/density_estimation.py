@@ -11,7 +11,7 @@ from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
 from duly.cython_ import cython_maximum_likelihood_opt as cml
 from duly.cython_ import cython_grads as cgr
 
-# from duly.cython_ import cython_density as cd
+from duly.cython_ import cython_density as cd
 
 cores = multiprocessing.cpu_count()
 
@@ -100,7 +100,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kNN(self, k=3):
+    def compute_density_kNN(self, k=5):
         """Compute the density of of each point using a simple kNN estimator
 
         Args:
@@ -150,6 +150,12 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_kstar(self, Dthr=23.92812698):
+        """Computes an optimal choice of k for each point.
+        Args:
+            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+            to a p-value of 1e-6.
+        Returns:
+        """
 
         if self.intrinsic_dim is None:
             self.compute_id_2NN()
@@ -270,6 +276,13 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_kstarNN(self):
+        """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
+        Args:
+            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+            to a p-value of 1e-6.
+        Returns:
+        """
+
         if self.kstar is None:
             self.compute_kstar()
 
@@ -461,6 +474,7 @@ class DensityEstimation(IdEstimation):
             )
 
         sec2 = time.time()
+
         if self.verb:
             print(
                 "{0:0.2f} seconds optimizing the likelihood for all the points".format(
@@ -477,23 +491,6 @@ class DensityEstimation(IdEstimation):
 
         if self.verb:
             print("PAk density estimation finished")
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_density_PAk_optimised(self, method="NR"):
-
-        # options for method:
-        #   - "NR"=Newton-Raphson implemented in cython
-        #   - "NM"=Nelder-Mead scipy built-in
-        #   - "For"=Newton-Raphson implemented in Fortran
-
-        # compute optimal k
-        if self.kstar is None:
-            self.compute_kstar()
-
-        self.log_den, self.log_den_err, self.dc = cd._compute_pak(
-            self.intrinsic_dim, self.N, self.maxk, self.kstar, self.distances
-        )
 
     # ----------------------------------------------------------------------------------------------
 
@@ -1382,17 +1379,17 @@ class DensityEstimation(IdEstimation):
         return H
 
 
-# if __name__ == '__main__':
-#     X = np.random.uniform(size=(50, 2))
-#
-#     de = DensityEstimation(coordinates=X)
-#
-#     de.compute_distances(maxk=25)
-#
-#     de.compute_id_2NN(decimation=1)
-#
-#     de.compute_density_kNN(10)
-#
-#     de.compute_grads()
-#
-#     print(de.log_den)
+if __name__ == "__main__":
+    X = np.random.uniform(size=(1000, 2))
+
+    de = DensityEstimation(coordinates=X)
+
+    de.compute_distances(maxk=300)
+
+    de.compute_id_2NN()
+
+    de.compute_density_PAk_optimised()
+
+    # de.compute_grads()
+
+    print(de.log_den)

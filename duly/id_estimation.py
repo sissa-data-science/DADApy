@@ -42,12 +42,13 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def return_id_scaling_r2n(self, range_max=1024, d0=0.001, d1=1000):
-        """Compute
-
-        Description
+        """Compute the id at different scales using the r2n algorithm.
 
         Args:
-                args:
+                range_max: maximum number neighbourhood considered for the id computations, the largest this number the
+                larges is the scale.
+                d0: minimum intrinsic dimension considered in the search
+                d1: maximum intrinsic dimension considered in the search
 
         Returns:
 
@@ -85,21 +86,21 @@ class IdEstimation(Base):
         # array of error estimates (via fisher information)
         ids_scaling_err = np.zeros(mus.shape[1])
         # array of average 'first' and 'second' neighbor distances, relative to each id estimate
-        r2s_scaling = np.mean(r2s, axis=0)
+        r2s_scaling = np.mean(r2s, axis=(0, 1))
 
         # compute IDs via maximum likelihood (and their error) for all the scales up to range_scaling
         for i in range(mus.shape[1]):
             n1 = 2 ** i
 
-            ids_scaling[i], ids_scaling_err[i] = self.return_id_r2n(
-                n1, d0=d0, d1=d1, mus=mus[:, i]
+            ids_scaling[i], ids_scaling_err[i] = self.compute_id_r2n(
+                n1, d0=d0, d1=d1, mus=mus[:, i], return_id=True
             )
 
         return ids_scaling, ids_scaling_err, r2s_scaling
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_id_r2n(self, n1, d0=0.001, d1=1000, mus=None):
+    def compute_id_r2n(self, n1, d0=0.001, d1=1000, mus=None, return_id=False):
         assert n1 * 2 < self.maxk
 
         if mus is None:
@@ -108,7 +109,11 @@ class IdEstimation(Base):
         id = ut._argmax_loglik(self.dtype, d0, d1, mus, n1, 2 * n1, self.N, eps=1.0e-7)
         id_err = (1 / ut._fisher_info_scaling(id, mus, n1, 2 * n1)) ** 0.5
 
-        return id, id_err
+        self.intrinsic_dim = id
+        self.intrinsic_dim_err = id_err
+
+        if return_id:
+            return id, id_err
 
     def compute_id_2NN(
         self, algorithm="base", fraction=0.9, N_subset=None, return_id=False
@@ -204,7 +209,7 @@ class IdEstimation(Base):
                 algorithm=algorithm,
                 fraction=fraction,
                 N_subset=N_subset,
-                return_id=True
+                return_id=True,
             )
 
         return ids_scaling, ids_scaling_err, r2s_scaling
