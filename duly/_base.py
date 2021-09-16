@@ -158,7 +158,7 @@ class Base:
 
     # ----------------------------------------------------------------------------------------------
 
-    def _mus_scaling_reduce_func(self, dist, range_scaling=None):
+    def _mus_scaling_reduce_func(self, dist, start, range_scaling=None):
         """Compute
 
         adapted from kneighbors function of sklearn

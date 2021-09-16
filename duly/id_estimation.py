@@ -116,7 +116,12 @@ class IdEstimation(Base):
             return id, id_err
 
     def compute_id_2NN(
-        self, algorithm="base", fraction=0.9, N_subset=None, return_id=False
+        self,
+        algorithm="base",
+        fraction=0.9,
+        N_subset=None,
+        return_id=False,
+        metric="euclidean",
     ):
         """Compute intrinsic dimension using the 2NN algorithm
 
@@ -130,6 +135,9 @@ class IdEstimation(Base):
         """
         if N_subset is None:
             N_subset = self.N
+
+        if self.metric is None:
+            self.metric = metric
 
         nrep = int(np.round(self.N / N_subset))
         ids = np.zeros(nrep)
