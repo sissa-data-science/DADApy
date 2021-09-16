@@ -41,7 +41,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_id_scaling_r2n(self, range_max=1024, d0=0.001, d1=1000):
+    def return_id_scaling_r2n(self, range_max=1024, d0=0.001, d1=1000, metric = 'euclidean'):
         """Compute
 
         Description
@@ -52,6 +52,8 @@ class IdEstimation(Base):
         Returns:
 
         """
+        if self.metric is None:
+            self.metric=metric
 
         def get_steps(upper_bound, range_max=range_max):
             range_r2 = min(range_max, upper_bound)
@@ -111,7 +113,7 @@ class IdEstimation(Base):
         return id, id_err
 
     def compute_id_2NN(
-        self, algorithm="base", fraction=0.9, N_subset=None, return_id=False
+        self, algorithm="base", fraction=0.9, N_subset=None, return_id=False, metric = 'euclidean'
     ):
         """Compute intrinsic dimension using the 2NN algorithm
 
@@ -125,6 +127,10 @@ class IdEstimation(Base):
         """
         if N_subset is None:
             N_subset = self.N
+
+        if self.metric is None:
+            self.metric = metric
+
 
         nrep = int(np.round(self.N / N_subset))
         ids = np.zeros(nrep)
