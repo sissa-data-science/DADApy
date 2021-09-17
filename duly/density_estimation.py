@@ -26,7 +26,9 @@ class DensityEstimation(IdEstimation):
 
     Attributes:
         kstar (np.array(float)): array containing the chosen number k* of neighbors for each of the N points
-        array_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k* nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
+        neigh_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k* nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
+        nind_list (np.ndarray(int), optional): size nspar x 2 where nspar is the sum over all points i of all kstar[i]. Each row is a couple of indices of the connected graph stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
+        nind_iptr (np.array(int), optional): size N+1. For each elemen i stores the 0-th index in nind_list at which the edges starting from point i start. The last entry is set to nind_list.shape[0].
         common_neighs (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa.
         dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the N points
         log_den (np.array(float), optional): array containing the N log-densities
@@ -34,9 +36,8 @@ class DensityEstimation(IdEstimation):
         grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i
         grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
         check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance matrices of the gradients.
-        Fij_list (list(np.array(float)), optional): list of N arrays containing for each i the k* estimates of deltaF_ij computed from point i
-        Fij_var_list (list(np.array(float)), optional): list of N arrays containing the squared errors on the deltaF_ij's
-
+        Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j.
+        Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared errors on the values in Fij_array.
 
     """
 
@@ -61,6 +62,7 @@ class DensityEstimation(IdEstimation):
         self.log_den_err = None
         self.grads = None
         self.grads_var = None
+        self.check_grads_covmat = False
         self.Fij_array = None
         self.Fij_var_array = None
 
@@ -89,6 +91,7 @@ class DensityEstimation(IdEstimation):
         self.log_den_err = None
         self.grads = None
         self.grads_var = None
+        self.check_grads_covmat = False
         self.Fij_array = None
         self.Fij_var_array = None
 
