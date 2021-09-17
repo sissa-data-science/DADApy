@@ -44,8 +44,8 @@ class Base:
         self.njobs = njobs
         self.dims = None
         self.N = None
-        self.metric = "minkowski"
-        self.p = None
+        self.metric = "euclidean"
+        self.p = 2
         self.period = None
 
         if coordinates is not None:
@@ -111,7 +111,7 @@ class Base:
 
         """
         self.metric = metric
-        self.p = p
+        #self.p = p
         self.period = period
 
         if maxk is not None:
@@ -130,8 +130,12 @@ class Base:
         if self.verb:
             print(f"Computation of the distances up to {self.maxk} NNs started")
 
+        # self.distances, self.dist_indices = compute_nn_distances(
+        #     self.X, self.maxk, self.metric, self.p, self.period
+        # )
+
         self.distances, self.dist_indices = compute_nn_distances(
-            self.X, self.maxk, self.metric, self.p, self.period
+            self.X, self.maxk, self.metric, self.period
         )
 
         if self.verb:
