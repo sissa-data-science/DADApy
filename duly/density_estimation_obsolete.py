@@ -55,12 +55,15 @@ class DensityEstimation(IdEstimation):
         self.neigh_vector_diffs = None
         self.nind_list = None
         self.nind_iptr = None
+        self.nind_mat = None
         self.common_neighs = None
         self.dc = None
         self.log_den = None
         self.log_den_err = None
         self.grads = None
         self.grads_var = None
+        self.Fij_list = None
+        self.Fij_var_list = None
         self.Fij_array = None
         self.Fij_var_array = None
 
@@ -83,12 +86,15 @@ class DensityEstimation(IdEstimation):
         self.neigh_vector_diffs = None
         self.nind_list = None
         self.nind_iptr = None
+        self.nind_mat = None
         self.common_neighs = None
         self.dc = None
         self.log_den = None
         self.log_den_err = None
         self.grads = None
         self.grads_var = None
+        self.Fij_list = None
+        self.Fij_var_list = None
         self.Fij_array = None
         self.Fij_var_array = None
 
@@ -419,66 +425,6 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_dF_PAk(self):
-
-        # check for deltaFij
-        if self.kstar is None:
-            self.compute_kstar()
-
-        # check for deltaFij
-        if self.Fij_array is None:
-            self.compute_deltaFs_grads_semisum()
-
-        if self.verb:
-            print("dF_PAk density estimation started")
-            sec = time.time()
-
-        dc = np.zeros(self.N, dtype=float)
-        log_den = np.zeros(self.N, dtype=float)
-        log_den_err = np.zeros(self.N, dtype=float)
-        prefactor = np.exp(
-            self.intrinsic_dim / 2.0 * np.log(np.pi)
-            - gammaln((self.intrinsic_dim + 2) / 2)
-        )
-
-        log_den_min = 9.9e300
-
-        for i in range(self.N):
-            k = int(self.kstar[i])
-            dc[i] = self.distances[i, k]
-            log_den[i] = np.log(k) - np.log(prefactor)
-
-            # log_den_err[i] = np.sqrt((4 * k + 2) / (k * (k - 1)))
-            corrected_rk = 0.0
-            Fijs = self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-
-            for j in range(1, k):
-                Fij = Fijs[j - 1]
-                rjjm1 = (
-                    self.distances[i, j] ** self.intrinsic_dim
-                    - self.distances[i, j - 1] ** self.intrinsic_dim
-                )
-
-                corrected_rk += rjjm1 * np.exp(Fij)  # * (1+Fij)
-
-            log_den[i] -= np.log(corrected_rk)
-
-            if log_den[i] < log_den_min:
-                log_den_min = log_den[i]
-
-                # Normalise density
-        log_den -= np.log(self.N)
-
-        self.log_den = log_den
-        self.log_den_err = 1.0 / np.sqrt(self.kstar)
-        self.dc = dc
-
-        sec2 = time.time()
-        if self.verb:
-            print("{0:0.2f} seconds for dF_PAk density estimation".format(sec2 - sec))
-
-    # ----------------------------------------------------------------------------------------------
-
     def compute_density_PAk(self):
 
         # compute optimal k
@@ -548,6 +494,272 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def compute_density_kstarNN_gCorr(
+        self, alpha=1.0, gauss_approx=False, Fij_type="grad"
+    ):
+        """
+        finds the minimum of the
+        """
+        from duly.utils_.mlmax_pytorch import maximise
+
+        # Fij_types: 'grad', 'zero', 'PAk'
+        # TODO: we need to implement a gCorr term with the deltaFijs equal to zero
+
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if Fij_type == "zero":
+            # set changes in free energy to zero
+            raise NotImplementedError("still not implemented")
+            # self.Fij_list = []
+            # self.Fij_var_list = []
+            #
+            # Fij_list = self.Fij_list
+            # Fij_var_list = self.Fij_var_list
+
+        elif Fij_type == "grad":
+            # compute changes in free energy
+            if self.Fij_list is None:
+                self.compute_deltaFs_grad()
+            Fij_list = self.Fij_list
+            Fij_var_list = self.Fij_var_list
+
+        else:
+            raise ValueError("please select a valid Fij type")
+
+        if gauss_approx:
+            raise NotImplementedError(
+                "Gaussian approximation not yet implemented (MATTEO DO IT)"
+            )
+
+        else:
+            # compute Vis
+            prefactor = np.exp(
+                self.intrinsic_dim / 2.0 * np.log(np.pi)
+                - gammaln((self.intrinsic_dim + 2) / 2)
+            )
+
+            dc = np.array([self.distances[i, self.kstar[i]] for i in range(self.N)])
+
+            Vis = prefactor * (dc ** self.intrinsic_dim)
+
+            # get good initial conditions for the optimisation
+            Fis = np.array(
+                [np.log(self.kstar[i]) - np.log(Vis[i]) for i in range(self.N)]
+            )
+
+            # optimise the likelihood using pytorch
+            l_, log_den = maximise(
+                Fis, self.kstar, Vis, self.dist_indices, Fij_list, Fij_var_list, alpha
+            )
+
+        # normalise density
+        log_den -= np.log(self.N)
+
+        self.log_den = log_den
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_dF_PAk(self):
+
+        # check for deltaFij
+        if self.kstar is None:
+            self.compute_kstar()
+
+        # check for deltaFij
+        if self.Fij_array is None:
+            self.compute_deltaFs_grads_semisum()
+
+        if self.verb:
+            print("dF_PAk density estimation started")
+            sec = time.time()
+
+        dc = np.zeros(self.N, dtype=float)
+        log_den = np.zeros(self.N, dtype=float)
+        log_den_err = np.zeros(self.N, dtype=float)
+        prefactor = np.exp(
+            self.intrinsic_dim / 2.0 * np.log(np.pi)
+            - gammaln((self.intrinsic_dim + 2) / 2)
+        )
+
+        log_den_min = 9.9e300
+
+        for i in range(self.N):
+            k = int(self.kstar[i])
+            dc[i] = self.distances[i, k]
+            log_den[i] = np.log(k) - np.log(prefactor)
+
+            # log_den_err[i] = np.sqrt((4 * k + 2) / (k * (k - 1)))
+            corrected_rk = 0.0
+            Fijs = self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
+
+            for j in range(1, k):
+                Fij = Fijs[j - 1]
+                rjjm1 = (
+                    self.distances[i, j] ** self.intrinsic_dim
+                    - self.distances[i, j - 1] ** self.intrinsic_dim
+                )
+
+                corrected_rk += rjjm1 * np.exp(Fij)  # * (1+Fij)
+
+            log_den[i] -= np.log(corrected_rk)
+
+            if log_den[i] < log_den_min:
+                log_den_min = log_den[i]
+
+                # Normalise density
+        log_den -= np.log(self.N)
+
+        self.log_den = log_den
+        self.log_den_err = 1.0 / np.sqrt(self.kstar)
+        self.dc = dc
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for dF_PAk density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_gPAk(self, mode="standard"):
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+
+        dc = np.zeros(self.N, dtype=float)
+        log_den = np.zeros(self.N, dtype=float)
+        log_den_err = np.zeros(self.N, dtype=float)
+        prefactor = np.exp(
+            self.intrinsic_dim / 2.0 * np.log(np.pi)
+            - gammaln((self.intrinsic_dim + 2) / 2)
+        )
+
+        log_den_min = 9.9e300
+
+        self.compute_deltaFs_grad()
+        Fij_list = self.Fij_list
+
+        if self.verb:
+            print("gPAk density estimation started")
+
+        if mode == "standard":
+
+            for i in range(self.N):
+                k = int(self.kstar[i])
+                dc[i] = self.distances[i, k]
+                log_den[i] = np.log(k) - np.log(prefactor)
+
+                log_den_err[i] = np.sqrt(
+                    (4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1))
+                )
+                corrected_rk = 0.0
+                Fijs = Fij_list[i]
+
+                for j in range(1, k):
+                    Fij = Fijs[j - 1]
+                    rjjm1 = (
+                        self.distances[i, j] ** self.intrinsic_dim
+                        - self.distances[i, j - 1] ** self.intrinsic_dim
+                    )
+
+                    corrected_rk += rjjm1 * np.exp(Fij)  # * (1+Fij)
+
+                log_den[i] -= np.log(corrected_rk)
+
+                if log_den[i] < log_den_min:
+                    log_den_min = log_den[i]
+
+        elif mode == "gPAk+":
+
+            vi = np.empty(self.maxk, dtype=float)
+
+            for i in range(self.N):
+                k = int(self.kstar[i])
+                dc[i] = self.distances[i, k]
+
+                rr = np.log(self.kstar[i]) - (
+                    np.log(prefactor)
+                    + self.intrinsic_dim * np.log(self.distances[i, self.kstar[i]])
+                )
+
+                log_den_err[i] = 1.0 / np.sqrt(k)
+
+                Fijs = Fij_list[i]
+
+                knn = 0
+                for j in range(1, k + 1):
+
+                    rjjm1 = (
+                        self.distances[i, j] ** self.intrinsic_dim
+                        - self.distances[i, j - 1] ** self.intrinsic_dim
+                    )
+
+                    vi[j - 1] = prefactor * rjjm1
+
+                    if vi[j - 1] < 1.0e-300:
+                        knn = 1
+
+                        break
+                if knn == 0:
+                    log_den[i] = MLmax_gPAk(rr, k, vi, Fijs)
+                else:
+                    log_den[i] = rr
+
+                if log_den[i] < log_den_min:
+                    log_den_min = log_den[i]
+
+        elif mode == "g+PAk":
+            vi = np.empty(self.maxk, dtype=float)
+
+            for i in range(self.N):
+                k = int(self.kstar[i])
+                dc[i] = self.distances[i, k]
+
+                rr = np.log(self.kstar[i]) - (
+                    np.log(prefactor)
+                    + self.intrinsic_dim * np.log(self.distances[i, self.kstar[i]])
+                )
+
+                log_den_err[i] = 1.0 / np.sqrt(k)
+
+                Fijs = Fij_list[i]
+
+                knn = 0
+                for j in range(1, k + 1):
+
+                    rjjm1 = (
+                        self.distances[i, j] ** self.intrinsic_dim
+                        - self.distances[i, j - 1] ** self.intrinsic_dim
+                    )
+
+                    vi[j - 1] = prefactor * rjjm1
+
+                    if vi[j - 1] < 1.0e-300:
+                        knn = 1
+
+                        break
+                if knn == 0:
+                    log_den[i] = MLmax_gpPAk(rr, k, vi, Fijs)
+                else:
+                    log_den[i] = rr
+
+                if log_den[i] < log_den_min:
+                    log_den_min = log_den[i]
+        else:
+            raise ValueError("Please select a valid gPAk mode")
+
+        # Normalise density
+        log_den -= np.log(self.N)
+
+        self.log_den = log_den
+        self.log_den_err = log_den_err
+        self.dc = dc
+
+        if self.verb:
+            print("k-NN density estimation finished")
+
+    # ----------------------------------------------------------------------------------------------
+
     def compute_density_gCorr(self, use_variance=True):
         # TODO: matrix A should be in sparse format!
 
@@ -613,77 +825,6 @@ class DensityEstimation(IdEstimation):
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_density_kstarNN_gCorr(
-        self, alpha=1.0, gauss_approx=False, Fij_type="grad"
-    ):
-        """
-        finds the minimum of the
-        """
-        from duly.utils_.mlmax_pytorch import maximise
-
-        # Fij_types: 'grad', 'zero', 'PAk'
-        # TODO: we need to implement a gCorr term with the deltaFijs equal to zero.
-        # Implementation is obsolete, we should use same ad dF_PAk_gCorr
-
-        # compute optimal k
-        if self.kstar is None:
-            self.compute_kstar()
-
-        if Fij_type == "zero":
-            # set changes in free energy to zero
-            raise NotImplementedError("still not implemented")
-            
-
-        elif Fij_type == "grad":
-            # compute changes in free energy
-            if self.Fij_array is None:
-                self.compute_deltaFs_grads_semisum()
-
-            for i in range(self.N):
-
-                Fij_list.append(
-                    self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-                )
-                Fij_var_list.append(
-                    self.Fij_var_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-                )
-
-        else:
-            raise ValueError("please select a valid Fij type")
-
-        if gauss_approx:
-            raise NotImplementedError(
-                "Gaussian approximation not yet implemented (MATTEO DO IT)"
-            )
-
-        else:
-            # compute Vis
-            prefactor = np.exp(
-                self.intrinsic_dim / 2.0 * np.log(np.pi)
-                - gammaln((self.intrinsic_dim + 2) / 2)
-            )
-
-            dc = np.array([self.distances[i, self.kstar[i]] for i in range(self.N)])
-
-            Vis = prefactor * (dc ** self.intrinsic_dim)
-
-            # get good initial conditions for the optimisation
-            Fis = np.array(
-                [np.log(self.kstar[i]) - np.log(Vis[i]) for i in range(self.N)]
-            )
-
-            # optimise the likelihood using pytorch
-            l_, log_den = maximise(
-                Fis, self.kstar, Vis, self.dist_indices, Fij_list, Fij_var_list, alpha
-            )
-
-        # normalise density
-        log_den -= np.log(self.N)
-
-        self.log_den = log_den
 
     # ----------------------------------------------------------------------------------------------
 
@@ -912,7 +1053,106 @@ class DensityEstimation(IdEstimation):
             )
 
     # ----------------------------------------------------------------------------------------------
-   
+
+    def compute_density_PAk_gCorr_flat(self, alpha=1.0, onlyNN=False):
+        from duly.utils_.mlmax_pytorch import maximise_wPAk_flatF
+
+        """
+        finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
+        computed using the gradients
+        """
+        # TODO: we need to impement the deltaFijs to be computed as a*l (as in PAk)
+
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+
+        dc = np.zeros(self.N, dtype=float)
+        log_den = np.zeros(self.N, dtype=float)
+        log_den_err = np.zeros(self.N, dtype=float)
+
+        prefactor = np.exp(
+            self.intrinsic_dim / 2.0 * np.log(np.pi)
+            - gammaln((self.intrinsic_dim + 2) / 2)
+        )
+
+        vij_list = []
+
+        for i in range(self.N):
+            dc[i] = self.distances[i, self.kstar[i]]
+            rr = np.log(self.kstar[i]) - (
+                np.log(prefactor)
+                + self.intrinsic_dim * np.log(self.distances[i, self.kstar[i]])
+            )
+            log_den[i] = rr
+            vj = np.zeros(self.kstar[i])
+            for j in range(self.kstar[i]):
+                vj[j] = prefactor * (
+                    pow(self.distances[i, j + 1], self.intrinsic_dim)
+                    - pow(self.distances[i, j], self.intrinsic_dim)
+                )
+
+            vij_list.append(vj)
+
+            log_den_err[i] = np.sqrt(
+                (4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1))
+            )
+
+        if self.verb:
+            print("Starting likelihood maximisation")
+        sec = time.time()
+        l_, log_den = maximise_wPAk_flatF(
+            log_den, log_den_err, self.kstar, vij_list, self.dist_indices, alpha, onlyNN
+        )
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for likelihood maximisation".format(sec2 - sec))
+
+        self.log_den = log_den
+        self.log_den -= np.log(self.N)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def return_grads(self):
+        """[OBSOLETE] Returns the gradient of the log density each point using k* nearest neighbors.
+        The gradient is estimated via a linear expansion of the density propagated to the log-density.
+
+        Returns:
+            grads (np.ndarray(float)): for each line i contains the gradient components estimated from from point i
+
+        """
+        # compute optimal k
+        assert self.X is not None
+
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+        d = self.X.shape[1]
+        grads = np.zeros((self.X.shape[0], d))
+
+        for i in range(self.X.shape[0]):
+            xi = self.X[i]
+
+            mean_vec = np.zeros(d)
+            k = int(self.kstar[i])
+
+            for j in range(k):
+                xj = self.X[self.dist_indices[i, j + 1]]
+                xjmxi = xj - xi
+                mean_vec += xjmxi
+
+            mean_vec = mean_vec / k
+            r = np.linalg.norm(xjmxi)
+
+            grads[i, :] = (self.intrinsic_dim + 2) / r ** 2 * mean_vec
+
+        # grads = gc.compute_grads_from_coords(self.X, self.dist_indices, self.kstar,
+        #                                      self.intrinsic_dim)
+
+        return grads
+
+    # ----------------------------------------------------------------------------------------------
+
     def compute_grads(self, comp_covmat=False):
         """Compute the gradient of the log density each point using k* nearest neighbors.
         The gradient is estimated via a linear expansion of the density propagated to the log-density.
@@ -954,6 +1194,98 @@ class DensityEstimation(IdEstimation):
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds computing gradients".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_deltaFs_grad(self, extgrads=None, extgrads_covmat=None):
+        """[OBSOLETE] Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
+        a linear expansion (see `compute_grads`).
+
+        Returns:
+
+        """
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if self.verb:
+            print(
+                "Estimation of the gradient (linear) corrections deltaFij to the log-density started"
+            )
+
+        sec = time.time()
+        if self.X is not None:
+            if extgrads is None:
+                Fij_list, Fij_var_list = cgr.return_deltaFs_from_coords(
+                    self.X, self.dist_indices, self.kstar, self.intrinsic_dim
+                )
+            else:
+                assert extgrads_covmat is not None
+                Fij_list, Fij_var_list = cgr.return_deltaFs_from_coords_and_grads(
+                    self.X, self.dist_indices, self.kstar, extgrads, extgrads_covmat
+                )
+
+        else:
+            print(
+                "Warning, falling back to a very slow implementation of the gradient estimation"
+            )
+            if extgrads is not None:
+                print("NOT using the given external gradients")
+
+            Fij_list = []
+            Fij_var_list = []
+
+            for i in range(self.N):
+                k = int(self.kstar[i])
+
+                rk = self.distances[i, k]
+
+                if i % 100 == 0:
+                    print(i)
+
+                Fijs = np.empty(k, dtype=float)
+                Fijs_var = np.empty(k, dtype=float)
+
+                for j in range(1, k + 1):
+                    rij = self.distances[i, j]
+                    j_idx = self.dist_indices[i, j]
+
+                    Fij = 0
+                    Fij_sq = 0
+
+                    for l in range(1, k + 1):
+                        ril = self.distances[i, l]
+                        l_idx = self.dist_indices[i, l]
+
+                        idx_jl = np.where(self.dist_indices[j_idx] == l_idx)[0][0]
+                        rjl = self.distances[j_idx, idx_jl]
+                        # rjl = np.linalg.norm(self.X[j_idx] - self.X[l_idx])
+                        Fijl = (rij ** 2 + ril ** 2 - rjl ** 2) / 2.0
+
+                        Fij += Fijl
+                        Fij_sq += Fijl ** 2
+
+                    Fij = Fij / k
+                    Fij_sq = Fij_sq / k
+
+                    Fij = ((self.intrinsic_dim + 2) / rk ** 2) * Fij
+
+                    Var_ij = (
+                        (self.intrinsic_dim + 2) / rk ** 2
+                    ) ** 2 * Fij_sq - Fij ** 2
+
+                    Fijs[j - 1] = Fij
+                    Fijs_var[j - 1] = Var_ij
+
+                Fij_list.append(Fijs)
+                Fij_var_list.append(Fijs_var)
+
+        self.Fij_list = Fij_list
+        self.Fij_var_list = Fij_var_list
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 

@@ -219,6 +219,7 @@ do
 
 .DS_Store
 .idea/
+.density_estimation_obsolete.py
 
 # Cython
 duly/cython_/*.html
