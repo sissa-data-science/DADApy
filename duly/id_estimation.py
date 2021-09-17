@@ -133,6 +133,15 @@ class IdEstimation(Base):
         Returns:
 
         """
+        #removal overlapping data
+        N0 = self.X.shape[0]
+        self.X = np.unique(self.X, axis = 0)
+
+        self.N = self.X.shape[0]
+        if self.N != N0:
+            print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+
+
         if N_subset is None:
             N_subset = self.N
 
@@ -165,6 +174,7 @@ class IdEstimation(Base):
                 raise ValueError("Please select a valid algorithm type")
 
             return intrinsic_dim
+
 
         for i in range(nrep):
             idx = np.random.choice(self.N, size=N_subset, replace=False)

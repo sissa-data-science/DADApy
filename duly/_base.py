@@ -111,7 +111,7 @@ class Base:
 
         """
         self.metric = metric
-        #self.p = p
+        self.p = p
         self.period = period
 
         if maxk is not None:
@@ -130,12 +130,9 @@ class Base:
         if self.verb:
             print(f"Computation of the distances up to {self.maxk} NNs started")
 
-        # self.distances, self.dist_indices = compute_nn_distances(
-        #     self.X, self.maxk, self.metric, self.p, self.period
-        # )
 
         self.distances, self.dist_indices = compute_nn_distances(
-            self.X, self.maxk, self.metric, self.period
+            self.X, self.maxk, self.metric, self.p, self.period
         )
 
         if self.verb:
@@ -217,6 +214,13 @@ class Base:
         reduce_func = partial(
             self._mus_scaling_reduce_func, range_scaling=range_scaling
         )
+
+        N0 = self.X.shape[0]
+        self.X = np.unique(self.X, axis = 0)
+
+        self.N = self.X.shape[0]
+        if self.N != N0:
+            print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
 
         kwds = {"squared": True}
         chunked_results = list(

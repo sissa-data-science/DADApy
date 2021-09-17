@@ -32,7 +32,6 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
     return dist_indices, distances
 
 
-#def compute_nn_distances(X, maxk, metric="minkowski", p=2, period=None):
 def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
     if period is None:
 
