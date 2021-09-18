@@ -45,6 +45,29 @@ def return_neigh_ind(np.ndarray[DTYPE_t, ndim = 2] dist_indices,
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
+def return_neigh_distances_array(   np.ndarray[floatTYPE_t, ndim = 2] distances,
+                                    np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                    np.ndarray[DTYPE_t, ndim = 1] kstar):
+    cdef int N = len(kstar)
+    cdef int nspar = kstar.sum() - N
+    cdef np.ndarray[floatTYPE_t, ndim = 1] distarray = np.ndarray((nspar,),dtype=floatTYPE)
+
+    cdef int i, j, ind_spar
+
+    ind_spar = 0
+    for i in range(N):
+        for j in range(1,kstar[i]):
+            distarray[ind_spar] =  distances[i,j]
+            ind_spar += 1
+
+    assert (ind_spar == nspar)
+
+    return distarray
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
 def return_neigh_vector_diffs(np.ndarray[floatTYPE_t, ndim = 2] X,
                               np.ndarray[DTYPE_t, ndim = 2] nind_list):
     cdef int dims = X.shape[1]

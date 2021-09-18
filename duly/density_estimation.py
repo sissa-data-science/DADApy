@@ -25,11 +25,13 @@ class DensityEstimation(IdEstimation):
     Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component. \
 
     Attributes:
-        kstar (np.array(float)): array containing the chosen number k* of neighbors for each of the N points
-        neigh_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k* nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
-        nind_list (np.ndarray(int), optional): size nspar x 2 where nspar is the sum over all points i of all kstar[i]. Each row is a couple of indices of the connected graph stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
+        kstar (np.array(float)): array containing the chosen number k* in the neighbourhood of each of the N points
+        nspar (int): total number of edges in the directed graph defined by kstar (sum over all points of kstar minus N)
+        nind_list (np.ndarray(int), optional): size nspar x 2. Each row is a couple of indices of the connected graph stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
         nind_iptr (np.array(int), optional): size N+1. For each elemen i stores the 0-th index in nind_list at which the edges starting from point i start. The last entry is set to nind_list.shape[0].
         common_neighs (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa.
+        neigh_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k*-1 nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
+        neigh_dists (np.array(float), optional): stores distances from each point to its k*-1 nearest neighbors in the order defined by nind_list
         dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the N points
         log_den (np.array(float), optional): array containing the N log-densities
         log_den_err (np.array(float), optional): array containing the N errors on the log_den
@@ -53,10 +55,12 @@ class DensityEstimation(IdEstimation):
         )
 
         self.kstar = None
-        self.neigh_vector_diffs = None
+        self.nspar = None
         self.nind_list = None
         self.nind_iptr = None
         self.common_neighs = None
+        self.neigh_vector_diffs = None
+        self.neigh_dists = None
         self.dc = None
         self.log_den = None
         self.log_den_err = None
@@ -82,10 +86,12 @@ class DensityEstimation(IdEstimation):
         else:
             self.kstar = np.full(self.N, k, dtype=int)
 
-        self.neigh_vector_diffs = None
+        self.nspar = None
         self.nind_list = None
         self.nind_iptr = None
         self.common_neighs = None
+        self.neigh_vector_diffs = None
+        self.neigh_dists = None
         self.dc = None
         self.log_den = None
         self.log_den_err = None
@@ -160,6 +166,9 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("kstar estimation started, Dthr = {}".format(Dthr))
 
+        sec = time.time()
+
+
         kstar = cd._compute_kstar(
             self.intrinsic_dim,
             self.N,
@@ -170,15 +179,19 @@ class DensityEstimation(IdEstimation):
         )
         self.set_kstar(kstar)
 
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing kstar".format(sec2 - sec))
+
     # ----------------------------------------------------------------------------------------------
 
     def compute_neigh_indices(self):
-        """Compute the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest (excluded).
+        """Computes the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest (excluded).
         The couples of indices are stored in a numpy ndarray of rank 2 and secondary dimension = 2.
         The index of the corresponding AAAAAAAAAAAAA make indpointer which is a np.array of length N which indicates for each i the starting index of the corresponding [i,.] subarray.
 
         """
-        # compute optimal k
+
         if self.kstar is None:
             self.compute_kstar()
 
@@ -192,11 +205,59 @@ class DensityEstimation(IdEstimation):
             self.dist_indices, self.kstar
         )
 
+        self.nspar = len(self.nind_list)
+
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds computing vector differences".format(sec2 - sec))
+            print("{0:0.2f} seconds computing neighbour indices".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
+
+    def compute_neigh_dists(self):
+        """Computes the (directed) neighbour distances graph using kstar[i] neighbours for each point i.
+        Distances are stored in np.array form according to the order of nind_list. 
+
+        """
+
+        if self.distances is None:
+            self.compute_distances()
+
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if self.verb:
+            print("Computation of the neighbour distances started")
+
+        sec = time.time()
+
+        self.neigh_dists = cgr.return_neigh_distances_array(
+            self.distances, self.dist_indices, self.kstar
+        )
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing neighbour distances".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------    
+ 
+    def return_sparse_distance_graph(self):
+        """Returns the (directed) neighbour distances graph using kstar[i] neighbours for each point i in N x N sparse csr_matrix form.
+
+        """
+ 
+        if self.neigh_dists is None:
+            self.compute_neigh_dists()
+
+        dgraph = sparse.lil_matrix((self.N, self.N),dtype=np.float_)
+
+
+        
+        for ind_spar, indices in enumerate(self.nind_list):
+                dgraph[indices[0],indices[1]] = self.neigh_dists[ind_spar]
+
+        return dgraph.tocsr()
+
+    # ----------------------------------------------------------------------------------------------    
 
     def compute_neigh_vector_diffs(
         self,
@@ -991,10 +1052,8 @@ class DensityEstimation(IdEstimation):
             )
         sec = time.time()
 
-        nspar = self.nind_list.shape[0]
-
-        Fij_array = np.zeros(nspar)
-        Fij_var_array = np.zeros(nspar)
+        Fij_array = np.zeros(self.nspar)
+        Fij_var_array = np.zeros(self.nspar)
 
         k1 = self.kstar[self.nind_list[:, 0]]
         k2 = self.kstar[self.nind_list[:, 1]]
