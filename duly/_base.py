@@ -18,15 +18,16 @@ class Base:
     """Base class. A simple container of coordinates and/or distances and of basic methods.
 
     Attributes:
-            N (int): number of data points
-            X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
-    dims (int, optional): embedding dimension of the datapoints
-            maxk (int): maximum number of neighbours to be considered for the calculation of distances
-            distances (float[:,:]): A matrix of dimension N x mask containing distances between points
-            dist_indices (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
-            verb (bool): whether you want the code to speak or shut up
-            njobs (int): number of cores to be used
-            p (int): metric used to compute distances
+        N (int): number of data points
+        X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
+        dims (int, optional): embedding dimension of the datapoints
+        maxk (int): maximum number of neighbours to be considered for the calculation of distances
+        distances (float[:,:]): A matrix of dimension N x mask containing distances between points
+        dist_indices (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
+        verb (bool): whether you want the code to speak or shut up
+        njobs (int): number of cores to be used
+        p (int): metric used to compute distances
+        period (np.array(float), optional): array of shape (dims,) containing periodicity for each coordinate. Default is None
     """
 
     def __init__(
@@ -112,13 +113,17 @@ class Base:
         """
         self.metric = metric
         self.p = p
-        if isinstance(period,np.ndarray) and period.shape == (self.dims,):
-            self.period = period
-        elif isinstance(period,float):
-            self.period = np.full((self.dims), fill_value=period)
-        else:
-            raise ValueError("'period' must be either a float scalar or a numpy array of floats of shape ({},)".format(self.dims))
-
+        if period is not None:
+            if isinstance(period, np.ndarray) and period.shape == (self.dims,):
+                self.period = period
+            elif isinstance(period, (int, float)):
+                self.period = np.full((self.dims), fill_value=period, dtype=float)
+            else:
+                raise ValueError(
+                    "'period' must be either a float scalar or a numpy array of floats of shape ({},)".format(
+                        self.dims
+                    )
+                )
 
         if maxk is not None:
             self.maxk = maxk
@@ -135,7 +140,6 @@ class Base:
 
         if self.verb:
             print(f"Computation of the distances up to {self.maxk} NNs started")
-
 
         self.distances, self.dist_indices = compute_nn_distances(
             self.X, self.maxk, self.metric, self.p, self.period
@@ -222,11 +226,13 @@ class Base:
         )
 
         N0 = self.X.shape[0]
-        self.X = np.unique(self.X, axis = 0)
+        self.X = np.unique(self.X, axis=0)
 
         self.N = self.X.shape[0]
         if self.N != N0:
-            print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+            print(
+                f"{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements"
+            )
 
         kwds = {"squared": True}
         chunked_results = list(

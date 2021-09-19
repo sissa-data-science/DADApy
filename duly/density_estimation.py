@@ -284,7 +284,7 @@ class DensityEstimation(IdEstimation):
             )
         else:
             self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_periodic(
-                self.X, self.nind_list, np.full((self.dims), fill_value=self.period)
+                self.X, self.nind_list, self.period
             )
 
         sec2 = time.time()
