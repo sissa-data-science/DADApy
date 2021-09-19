@@ -107,12 +107,18 @@ class Base:
                 maxk: maximum number of neighbours for which distance is computed and stored
                 metric: type of metric
                 p: type of metric
-                period (float or array): periodicity (only used for periodic distance computation). Default is None.
+                period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
 
         """
         self.metric = metric
         self.p = p
-        self.period = period
+        if isinstance(period,np.ndarray) and period.shape == (self.dims,):
+            self.period = period
+        elif isinstance(period,float):
+            self.period = np.full((self.dims), fill_value=period)
+        else:
+            raise ValueError("'period' must be either a float scalar or a numpy array of floats of shape ({},)".format(self.dims))
+
 
         if maxk is not None:
             self.maxk = maxk
