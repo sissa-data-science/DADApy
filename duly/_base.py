@@ -1,4 +1,5 @@
 import math
+import time
 import multiprocessing
 from functools import partial
 
@@ -111,6 +112,10 @@ class Base:
                 period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
 
         """
+        if self.verb:
+            print("Computation of distances started")
+            sec = time.time()
+
         self.metric = metric
         self.p = p
         if period is not None:
@@ -145,8 +150,9 @@ class Base:
             self.X, self.maxk, self.metric, self.p, self.period
         )
 
+        sec2 = time.time()
         if self.verb:
-            print("Computation of the distances finished")
+            print("{0:0.2f} seconds for computing distances".format(sec2 - sec))
 
     # ---------------------------------------------------------------------------
 

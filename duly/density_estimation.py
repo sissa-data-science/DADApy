@@ -104,6 +104,8 @@ class DensityEstimation(IdEstimation):
 
     def return_density_Gaussian_kde(self, Y_sample=None, smoothing_parameter=None):
         """Returns the logdensity of of each point in Y_sample using a Gaussian kernel density estimator based on the coordinates self.X
+        TODO: improve normalisation of gaussians on periodic range (currently normalisation of Gaussian in range (-inf,inf) 
+        instead of range [-period/2,period/2])
 
         Args:
             Y_sample (np.ndarray(float)): the points at which the Gaussian kernel density should be evaluated. The default is self.X
@@ -129,6 +131,8 @@ class DensityEstimation(IdEstimation):
         if smoothing_parameter is None:
             smoothing_parameter = self.N**(-1./(self.dims+4))
             print("Selected a smoothing parameter according to Scott's Rule of Thumb: h = {}".format(smoothing_parameter))
+        else:
+            print("Smoothing parameter: h = {}".format(smoothing_parameter))
 
         if self.verb:
             print("Gaussian kernel density estimation started")

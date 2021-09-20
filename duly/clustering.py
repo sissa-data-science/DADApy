@@ -51,7 +51,7 @@ class Clustering(DensityEstimation):
         self.ref = None  # Index of the nearest element with higher density
 
     def compute_clustering(self, Z=1.65, halo=False):
-        assert self.log_den is not None
+        assert self.log_den is not None, "Compute density before clustering"
         if self.verb:
             print("Clustering started")
 
@@ -99,7 +99,7 @@ class Clustering(DensityEstimation):
             print("total time is, {}".format(secf - seci))
 
     def compute_DecGraph(self):
-        assert self.log_den is not None
+        assert self.log_den is not None, "Compute density before"
         assert self.X is not None
         self.delta = np.zeros(self.N)
         self.ref = np.zeros(self.N, dtype="int")
@@ -166,7 +166,7 @@ class Clustering(DensityEstimation):
             self.cluster_assignment = halo
 
     def compute_clustering_pure_python(self, Z=1.65, halo=False):
-        assert self.log_den is not None
+        assert self.log_den is not None, "Compute density before clustering"
         if self.verb:
             print("Clustering started")
 
