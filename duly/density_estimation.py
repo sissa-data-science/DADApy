@@ -10,7 +10,6 @@ from duly.id_estimation import IdEstimation
 from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
 from duly.cython_ import cython_maximum_likelihood_opt as cml
 from duly.cython_ import cython_grads as cgr
-
 from duly.cython_ import cython_density as cd
 
 cores = multiprocessing.cpu_count()
@@ -100,6 +99,50 @@ class DensityEstimation(IdEstimation):
         self.check_grads_covmat = False
         self.Fij_array = None
         self.Fij_var_array = None
+
+    # ----------------------------------------------------------------------------------------------
+
+    def return_density_Gaussian_kde(self, Y_sample=None, smoothing_parameter=None):
+        """Returns the logdensity of of each point in Y_sample using a Gaussian kernel density estimator based on the coordinates self.X
+
+        Args:
+            Y_sample (np.ndarray(float)): the points at which the Gaussian kernel density should be evaluated. The default is self.X
+            smoothing_parameter (float): default is given by Scott's Rule of Thumb ( self.N**(-1./(self.dims+4)) )
+
+        Returns:
+
+        """
+        sec = time.time()
+
+        assert Y_sample.shape[1] == self.dims, "The sample has dimension {} instead of required {}".format(Y_sample.shape[1],self.dims)
+
+        if self.period is not None:
+            for dim in range(self.dims):
+                assert np.max(Y_sample[:,dim]) <= self.period[dim] and np.min(Y_sample[:,dim]) >= 0. , "Periodic coordinates must be in range [0,period]"
+        
+        # assign default sample dataset
+        if Y_sample is None:
+            Y_sample = self.X
+            print("Selected as sample database self.X")
+
+        # assign default smoothing parameter
+        if smoothing_parameter is None:
+            smoothing_parameter = self.N**(-1./(self.dims+4))
+            print("Selected a smoothing parameter according to Scott's Rule of Thumb: h = {}".format(smoothing_parameter))
+
+        if self.verb:
+            print("Gaussian kernel density estimation started")
+
+        if self.period is None:
+            density = cd._return_Gaussian_kde(self.X,Y_sample,smoothing_parameter)
+        else:
+            density = cd._return_Gaussian_kde_periodic(self.X,Y_sample,smoothing_parameter,self.period)
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds estimating Gaussian kernel density".format(sec2 - sec))
+
+        return np.log(density)
 
     # ----------------------------------------------------------------------------------------------
 

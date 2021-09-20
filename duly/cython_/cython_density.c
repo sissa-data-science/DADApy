@@ -1712,10 +1712,14 @@ static const char __pyx_k_j[] = "j";
 static const char __pyx_k_dL[] = "dL";
 static const char __pyx_k_dc[] = "dc";
 static const char __pyx_k_np[] = "np";
+static const char __pyx_k_nx[] = "nx";
+static const char __pyx_k_ny[] = "ny";
+static const char __pyx_k_pi[] = "pi";
 static const char __pyx_k_rr[] = "rr";
 static const char __pyx_k_vi[] = "vi";
 static const char __pyx_k_Rho[] = "Rho";
 static const char __pyx_k_cml[] = "cml";
+static const char __pyx_k_dim[] = "dim";
 static const char __pyx_k_int[] = "int";
 static const char __pyx_k_knn[] = "knn";
 static const char __pyx_k_vvi[] = "vvi";
@@ -1723,24 +1727,33 @@ static const char __pyx_k_vvj[] = "vvj";
 static const char __pyx_k_Dthr[] = "Dthr";
 static const char __pyx_k_Nele[] = "Nele";
 static const char __pyx_k_bool[] = "bool";
+static const char __pyx_k_dims[] = "dims";
 static const char __pyx_k_ksel[] = "ksel";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_maxk[] = "maxk";
 static const char __pyx_k_name[] = "__name__";
+static const char __pyx_k_temp[] = "temp";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_DTYPE[] = "DTYPE";
 static const char __pyx_k_dtype[] = "dtype";
 static const char __pyx_k_empty[] = "empty";
-static const char __pyx_k_float[] = "float";
+static const char __pyx_k_float[] = "float_";
 static const char __pyx_k_kstar[] = "kstar";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
+static const char __pyx_k_temp2[] = "temp2";
+static const char __pyx_k_zeros[] = "zeros";
 static const char __pyx_k_id_sel[] = "id_sel";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_nrmaxl[] = "_nrmaxl";
+static const char __pyx_k_period[] = "period";
 static const char __pyx_k_Rho_err[] = "Rho_err";
 static const char __pyx_k_Rho_min[] = "Rho_min";
+static const char __pyx_k_density[] = "density";
+static const char __pyx_k_float_2[] = "float";
 static const char __pyx_k_gammaln[] = "gammaln";
+static const char __pyx_k_X_source[] = "X_source";
+static const char __pyx_k_Y_sample[] = "Y_sample";
 static const char __pyx_k_boolTYPE[] = "boolTYPE";
 static const char __pyx_k_distances[] = "distances";
 static const char __pyx_k_floatTYPE[] = "floatTYPE";
@@ -1753,10 +1766,14 @@ static const char __pyx_k_id_selected[] = "id_selected";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
 static const char __pyx_k_dist_indices[] = "dist_indices";
 static const char __pyx_k_compute_kstar[] = "_compute_kstar";
+static const char __pyx_k_normalisation[] = "normalisation";
 static const char __pyx_k_scipy_special[] = "scipy.special";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_cython_density_pyx[] = "cython_density.pyx";
+static const char __pyx_k_return_Gaussian_kde[] = "_return_Gaussian_kde";
+static const char __pyx_k_smoothing_parameter[] = "smoothing_parameter";
 static const char __pyx_k_duly_cython__cython_density[] = "duly.cython_.cython_density";
+static const char __pyx_k_return_Gaussian_kde_periodic[] = "_return_Gaussian_kde_periodic";
 static const char __pyx_k_cython_maximum_likelihood_opt[] = "cython_maximum_likelihood_opt";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
 static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
@@ -1776,6 +1793,8 @@ static PyObject *__pyx_n_s_Rho_err;
 static PyObject *__pyx_n_s_Rho_min;
 static PyObject *__pyx_n_s_RuntimeError;
 static PyObject *__pyx_n_s_ValueError;
+static PyObject *__pyx_n_s_X_source;
+static PyObject *__pyx_n_s_Y_sample;
 static PyObject *__pyx_n_s_bool;
 static PyObject *__pyx_n_s_boolTYPE;
 static PyObject *__pyx_n_s_cline_in_traceback;
@@ -1786,6 +1805,9 @@ static PyObject *__pyx_kp_s_cython_density_pyx;
 static PyObject *__pyx_n_s_cython_maximum_likelihood_opt;
 static PyObject *__pyx_n_s_dL;
 static PyObject *__pyx_n_s_dc;
+static PyObject *__pyx_n_s_density;
+static PyObject *__pyx_n_s_dim;
+static PyObject *__pyx_n_s_dims;
 static PyObject *__pyx_n_s_dist_indices;
 static PyObject *__pyx_n_s_distances;
 static PyObject *__pyx_n_s_dtype;
@@ -1794,6 +1816,7 @@ static PyObject *__pyx_n_s_duly_cython__cython_density;
 static PyObject *__pyx_n_s_empty;
 static PyObject *__pyx_n_s_float;
 static PyObject *__pyx_n_s_floatTYPE;
+static PyObject *__pyx_n_s_float_2;
 static PyObject *__pyx_n_s_gammaln;
 static PyObject *__pyx_n_s_i;
 static PyObject *__pyx_n_s_id_sel;
@@ -1807,22 +1830,36 @@ static PyObject *__pyx_n_s_kstar;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_maxk;
 static PyObject *__pyx_n_s_name;
+static PyObject *__pyx_n_s_normalisation;
 static PyObject *__pyx_n_s_np;
 static PyObject *__pyx_n_s_nrmaxl;
 static PyObject *__pyx_n_s_numpy;
 static PyObject *__pyx_kp_s_numpy_core_multiarray_failed_to;
 static PyObject *__pyx_kp_s_numpy_core_umath_failed_to_impor;
+static PyObject *__pyx_n_s_nx;
+static PyObject *__pyx_n_s_ny;
+static PyObject *__pyx_n_s_period;
+static PyObject *__pyx_n_s_pi;
 static PyObject *__pyx_n_s_prefactor;
 static PyObject *__pyx_n_s_range;
+static PyObject *__pyx_n_s_return_Gaussian_kde;
+static PyObject *__pyx_n_s_return_Gaussian_kde_periodic;
 static PyObject *__pyx_n_s_rr;
 static PyObject *__pyx_n_s_scipy_special;
+static PyObject *__pyx_n_s_smoothing_parameter;
+static PyObject *__pyx_n_s_temp;
+static PyObject *__pyx_n_s_temp2;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_vi;
 static PyObject *__pyx_n_s_vvi;
 static PyObject *__pyx_n_s_vvj;
+static PyObject *__pyx_n_s_zeros;
 static PyObject *__pyx_pf_4duly_7cython__14cython_density__compute_kstar(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_id_sel, __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_Nele, __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_maxk, __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_Dthr, PyArrayObject *__pyx_v_dist_indices, PyArrayObject *__pyx_v_distances); /* proto */
 static PyObject *__pyx_pf_4duly_7cython__14cython_density_2_compute_pak(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_id_selected, __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_Nele, __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_maxk, PyArrayObject *__pyx_v_kstar, PyArrayObject *__pyx_v_distances); /* proto */
+static PyObject *__pyx_pf_4duly_7cython__14cython_density_4_return_Gaussian_kde_periodic(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_X_source, PyArrayObject *__pyx_v_Y_sample, __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_smoothing_parameter, PyArrayObject *__pyx_v_period); /* proto */
+static PyObject *__pyx_pf_4duly_7cython__14cython_density_6_return_Gaussian_kde(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_X_source, PyArrayObject *__pyx_v_Y_sample, __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_smoothing_parameter); /* proto */
+static PyObject *__pyx_int_2;
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__2;
 static PyObject *__pyx_tuple__3;
@@ -1830,8 +1867,12 @@ static PyObject *__pyx_tuple__4;
 static PyObject *__pyx_tuple__5;
 static PyObject *__pyx_tuple__6;
 static PyObject *__pyx_tuple__8;
+static PyObject *__pyx_tuple__10;
+static PyObject *__pyx_tuple__12;
 static PyObject *__pyx_codeobj__7;
 static PyObject *__pyx_codeobj__9;
+static PyObject *__pyx_codeobj__11;
+static PyObject *__pyx_codeobj__13;
 /* Late includes */
 
 /* "duly/cython_/cython_density.pyx":25
@@ -3044,6 +3085,8 @@ static PyObject *__pyx_pf_4duly_7cython__14cython_density_2_compute_pak(CYTHON_U
  *         Rho[i] -= log(Nele)
  * 
  *     return Rho, Rho_err, dc             # <<<<<<<<<<<<<<
+ * 
+ *     # ----------------------------------------------------------------------------------------------
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 110, __pyx_L1_error)
@@ -3104,6 +3147,872 @@ static PyObject *__pyx_pf_4duly_7cython__14cython_density_2_compute_pak(CYTHON_U
   __Pyx_XDECREF((PyObject *)__pyx_v_dc);
   __Pyx_XDECREF((PyObject *)__pyx_v_Rho);
   __Pyx_XDECREF((PyObject *)__pyx_v_Rho_err);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "duly/cython_/cython_density.pyx":116
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde_periodic(  np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                                     np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                                     floatTYPE_t smoothing_parameter,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4duly_7cython__14cython_density_5_return_Gaussian_kde_periodic(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4duly_7cython__14cython_density_5_return_Gaussian_kde_periodic = {"_return_Gaussian_kde_periodic", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_4duly_7cython__14cython_density_5_return_Gaussian_kde_periodic, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4duly_7cython__14cython_density_5_return_Gaussian_kde_periodic(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyArrayObject *__pyx_v_X_source = 0;
+  PyArrayObject *__pyx_v_Y_sample = 0;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_smoothing_parameter;
+  PyArrayObject *__pyx_v_period = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("_return_Gaussian_kde_periodic (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_X_source,&__pyx_n_s_Y_sample,&__pyx_n_s_smoothing_parameter,&__pyx_n_s_period,0};
+    PyObject* values[4] = {0,0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        CYTHON_FALLTHROUGH;
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_X_source)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Y_sample)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("_return_Gaussian_kde_periodic", 1, 4, 4, 1); __PYX_ERR(0, 116, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_smoothing_parameter)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("_return_Gaussian_kde_periodic", 1, 4, 4, 2); __PYX_ERR(0, 116, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  3:
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_period)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("_return_Gaussian_kde_periodic", 1, 4, 4, 3); __PYX_ERR(0, 116, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_Gaussian_kde_periodic") < 0)) __PYX_ERR(0, 116, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+    }
+    __pyx_v_X_source = ((PyArrayObject *)values[0]);
+    __pyx_v_Y_sample = ((PyArrayObject *)values[1]);
+    __pyx_v_smoothing_parameter = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_smoothing_parameter == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 118, __pyx_L3_error)
+    __pyx_v_period = ((PyArrayObject *)values[3]);
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("_return_Gaussian_kde_periodic", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 116, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("duly.cython_.cython_density._return_Gaussian_kde_periodic", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_X_source), __pyx_ptype_5numpy_ndarray, 1, "X_source", 0))) __PYX_ERR(0, 116, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_Y_sample), __pyx_ptype_5numpy_ndarray, 1, "Y_sample", 0))) __PYX_ERR(0, 117, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_period), __pyx_ptype_5numpy_ndarray, 1, "period", 0))) __PYX_ERR(0, 119, __pyx_L1_error)
+  __pyx_r = __pyx_pf_4duly_7cython__14cython_density_4_return_Gaussian_kde_periodic(__pyx_self, __pyx_v_X_source, __pyx_v_Y_sample, __pyx_v_smoothing_parameter, __pyx_v_period);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4duly_7cython__14cython_density_4_return_Gaussian_kde_periodic(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_X_source, PyArrayObject *__pyx_v_Y_sample, __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_smoothing_parameter, PyArrayObject *__pyx_v_period) {
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_i;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_j;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_dim;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_temp;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_temp2;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_nx;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_ny;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_dims;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_normalisation;
+  PyArrayObject *__pyx_v_density = 0;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_X_source;
+  __Pyx_Buffer __pyx_pybuffer_X_source;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_Y_sample;
+  __Pyx_Buffer __pyx_pybuffer_Y_sample;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_density;
+  __Pyx_Buffer __pyx_pybuffer_density;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_period;
+  __Pyx_Buffer __pyx_pybuffer_period;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  double __pyx_t_3;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  PyArrayObject *__pyx_t_7 = NULL;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_8;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_9;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_10;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_11;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_12;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_13;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_14;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_15;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_16;
+  Py_ssize_t __pyx_t_17;
+  Py_ssize_t __pyx_t_18;
+  Py_ssize_t __pyx_t_19;
+  Py_ssize_t __pyx_t_20;
+  int __pyx_t_21;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("_return_Gaussian_kde_periodic", 0);
+  __pyx_pybuffer_density.pybuffer.buf = NULL;
+  __pyx_pybuffer_density.refcount = 0;
+  __pyx_pybuffernd_density.data = NULL;
+  __pyx_pybuffernd_density.rcbuffer = &__pyx_pybuffer_density;
+  __pyx_pybuffer_X_source.pybuffer.buf = NULL;
+  __pyx_pybuffer_X_source.refcount = 0;
+  __pyx_pybuffernd_X_source.data = NULL;
+  __pyx_pybuffernd_X_source.rcbuffer = &__pyx_pybuffer_X_source;
+  __pyx_pybuffer_Y_sample.pybuffer.buf = NULL;
+  __pyx_pybuffer_Y_sample.refcount = 0;
+  __pyx_pybuffernd_Y_sample.data = NULL;
+  __pyx_pybuffernd_Y_sample.rcbuffer = &__pyx_pybuffer_Y_sample;
+  __pyx_pybuffer_period.pybuffer.buf = NULL;
+  __pyx_pybuffer_period.refcount = 0;
+  __pyx_pybuffernd_period.data = NULL;
+  __pyx_pybuffernd_period.rcbuffer = &__pyx_pybuffer_period;
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_X_source.rcbuffer->pybuffer, (PyObject*)__pyx_v_X_source, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__14cython_density_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 116, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_X_source.diminfo[0].strides = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_X_source.diminfo[0].shape = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_X_source.diminfo[1].strides = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_X_source.diminfo[1].shape = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Y_sample.rcbuffer->pybuffer, (PyObject*)__pyx_v_Y_sample, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__14cython_density_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 116, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_Y_sample.diminfo[0].strides = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_Y_sample.diminfo[0].shape = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_Y_sample.diminfo[1].strides = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_Y_sample.diminfo[1].shape = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_period.rcbuffer->pybuffer, (PyObject*)__pyx_v_period, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__14cython_density_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 116, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_period.diminfo[0].strides = __pyx_pybuffernd_period.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_period.diminfo[0].shape = __pyx_pybuffernd_period.rcbuffer->pybuffer.shape[0];
+
+  /* "duly/cython_/cython_density.pyx":125
+ *     cdef floatTYPE_t temp, temp2
+ * 
+ *     cdef DTYPE_t nx = X_source.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t ny = Y_sample.shape[0]
+ *     cdef DTYPE_t dims = X_source.shape[1]
+ */
+  __pyx_v_nx = (__pyx_v_X_source->dimensions[0]);
+
+  /* "duly/cython_/cython_density.pyx":126
+ * 
+ *     cdef DTYPE_t nx = X_source.shape[0]
+ *     cdef DTYPE_t ny = Y_sample.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t dims = X_source.shape[1]
+ * 
+ */
+  __pyx_v_ny = (__pyx_v_Y_sample->dimensions[0]);
+
+  /* "duly/cython_/cython_density.pyx":127
+ *     cdef DTYPE_t nx = X_source.shape[0]
+ *     cdef DTYPE_t ny = Y_sample.shape[0]
+ *     cdef DTYPE_t dims = X_source.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)
+ */
+  __pyx_v_dims = (__pyx_v_X_source->dimensions[1]);
+
+  /* "duly/cython_/cython_density.pyx":129
+ *     cdef DTYPE_t dims = X_source.shape[1]
+ * 
+ *     cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)             # <<<<<<<<<<<<<<
+ * 
+ *     cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_pi); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = PyNumber_Multiply(__pyx_int_2, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_3 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 129, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_v_normalisation = (__pyx_v_nx * pow((pow(__pyx_t_3, 0.5) * __pyx_v_smoothing_parameter), __pyx_v_dims));
+
+  /* "duly/cython_/cython_density.pyx":131
+ *     cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)
+ * 
+ *     cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(ny):
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyInt_From_npy_long(__pyx_v_ny); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
+  __pyx_t_1 = 0;
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_GIVEREF(__pyx_t_4);
+  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_4);
+  __pyx_t_4 = 0;
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_t_7 = ((PyArrayObject *)__pyx_t_6);
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_density.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__14cython_density_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
+      __pyx_v_density = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_density.rcbuffer->pybuffer.buf = NULL;
+      __PYX_ERR(0, 131, __pyx_L1_error)
+    } else {__pyx_pybuffernd_density.diminfo[0].strides = __pyx_pybuffernd_density.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_density.diminfo[0].shape = __pyx_pybuffernd_density.rcbuffer->pybuffer.shape[0];
+    }
+  }
+  __pyx_t_7 = 0;
+  __pyx_v_density = ((PyArrayObject *)__pyx_t_6);
+  __pyx_t_6 = 0;
+
+  /* "duly/cython_/cython_density.pyx":133
+ *     cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)
+ * 
+ *     for i in range(ny):             # <<<<<<<<<<<<<<
+ *         for j in range(nx):
+ *             temp2 = 0.
+ */
+  __pyx_t_8 = __pyx_v_ny;
+  __pyx_t_9 = __pyx_t_8;
+  for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
+    __pyx_v_i = __pyx_t_10;
+
+    /* "duly/cython_/cython_density.pyx":134
+ * 
+ *     for i in range(ny):
+ *         for j in range(nx):             # <<<<<<<<<<<<<<
+ *             temp2 = 0.
+ *             for dim in range(dims):
+ */
+    __pyx_t_11 = __pyx_v_nx;
+    __pyx_t_12 = __pyx_t_11;
+    for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
+      __pyx_v_j = __pyx_t_13;
+
+      /* "duly/cython_/cython_density.pyx":135
+ *     for i in range(ny):
+ *         for j in range(nx):
+ *             temp2 = 0.             # <<<<<<<<<<<<<<
+ *             for dim in range(dims):
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ */
+      __pyx_v_temp2 = 0.;
+
+      /* "duly/cython_/cython_density.pyx":136
+ *         for j in range(nx):
+ *             temp2 = 0.
+ *             for dim in range(dims):             # <<<<<<<<<<<<<<
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ *                 if temp > period[dim]/2.:
+ */
+      __pyx_t_14 = __pyx_v_dims;
+      __pyx_t_15 = __pyx_t_14;
+      for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
+        __pyx_v_dim = __pyx_t_16;
+
+        /* "duly/cython_/cython_density.pyx":137
+ *             temp2 = 0.
+ *             for dim in range(dims):
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]             # <<<<<<<<<<<<<<
+ *                 if temp > period[dim]/2.:
+ *                     temp -= period[dim]
+ */
+        __pyx_t_17 = __pyx_v_j;
+        __pyx_t_18 = __pyx_v_dim;
+        if (__pyx_t_17 < 0) __pyx_t_17 += __pyx_pybuffernd_X_source.diminfo[0].shape;
+        if (__pyx_t_18 < 0) __pyx_t_18 += __pyx_pybuffernd_X_source.diminfo[1].shape;
+        __pyx_t_19 = __pyx_v_i;
+        __pyx_t_20 = __pyx_v_dim;
+        if (__pyx_t_19 < 0) __pyx_t_19 += __pyx_pybuffernd_Y_sample.diminfo[0].shape;
+        if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_Y_sample.diminfo[1].shape;
+        __pyx_v_temp = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_X_source.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_X_source.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_X_source.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_Y_sample.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_Y_sample.diminfo[1].strides)));
+
+        /* "duly/cython_/cython_density.pyx":138
+ *             for dim in range(dims):
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ *                 if temp > period[dim]/2.:             # <<<<<<<<<<<<<<
+ *                     temp -= period[dim]
+ *                 if temp < -period[dim]/2.:
+ */
+        __pyx_t_20 = __pyx_v_dim;
+        if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_period.diminfo[0].shape;
+        __pyx_t_21 = ((__pyx_v_temp > ((*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_period.diminfo[0].strides)) / 2.)) != 0);
+        if (__pyx_t_21) {
+
+          /* "duly/cython_/cython_density.pyx":139
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ *                 if temp > period[dim]/2.:
+ *                     temp -= period[dim]             # <<<<<<<<<<<<<<
+ *                 if temp < -period[dim]/2.:
+ *                     temp += period[dim]
+ */
+          __pyx_t_20 = __pyx_v_dim;
+          if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_period.diminfo[0].shape;
+          __pyx_v_temp = (__pyx_v_temp - (*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_period.diminfo[0].strides)));
+
+          /* "duly/cython_/cython_density.pyx":138
+ *             for dim in range(dims):
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ *                 if temp > period[dim]/2.:             # <<<<<<<<<<<<<<
+ *                     temp -= period[dim]
+ *                 if temp < -period[dim]/2.:
+ */
+        }
+
+        /* "duly/cython_/cython_density.pyx":140
+ *                 if temp > period[dim]/2.:
+ *                     temp -= period[dim]
+ *                 if temp < -period[dim]/2.:             # <<<<<<<<<<<<<<
+ *                     temp += period[dim]
+ *                 temp2 += temp*temp
+ */
+        __pyx_t_20 = __pyx_v_dim;
+        if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_period.diminfo[0].shape;
+        __pyx_t_21 = ((__pyx_v_temp < ((-(*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_period.diminfo[0].strides))) / 2.)) != 0);
+        if (__pyx_t_21) {
+
+          /* "duly/cython_/cython_density.pyx":141
+ *                     temp -= period[dim]
+ *                 if temp < -period[dim]/2.:
+ *                     temp += period[dim]             # <<<<<<<<<<<<<<
+ *                 temp2 += temp*temp
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+ */
+          __pyx_t_20 = __pyx_v_dim;
+          if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_period.diminfo[0].shape;
+          __pyx_v_temp = (__pyx_v_temp + (*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_period.diminfo[0].strides)));
+
+          /* "duly/cython_/cython_density.pyx":140
+ *                 if temp > period[dim]/2.:
+ *                     temp -= period[dim]
+ *                 if temp < -period[dim]/2.:             # <<<<<<<<<<<<<<
+ *                     temp += period[dim]
+ *                 temp2 += temp*temp
+ */
+        }
+
+        /* "duly/cython_/cython_density.pyx":142
+ *                 if temp < -period[dim]/2.:
+ *                     temp += period[dim]
+ *                 temp2 += temp*temp             # <<<<<<<<<<<<<<
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+ * 
+ */
+        __pyx_v_temp2 = (__pyx_v_temp2 + (__pyx_v_temp * __pyx_v_temp));
+      }
+
+      /* "duly/cython_/cython_density.pyx":143
+ *                     temp += period[dim]
+ *                 temp2 += temp*temp
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation             # <<<<<<<<<<<<<<
+ * 
+ *     return density
+ */
+      __pyx_t_20 = __pyx_v_i;
+      if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_density.diminfo[0].shape;
+      *__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_density.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_density.diminfo[0].strides) += (exp((((-0.5 * __pyx_v_temp2) / __pyx_v_smoothing_parameter) / __pyx_v_smoothing_parameter)) / __pyx_v_normalisation);
+    }
+  }
+
+  /* "duly/cython_/cython_density.pyx":145
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+ * 
+ *     return density             # <<<<<<<<<<<<<<
+ * 
+ * # ----------------------------------------------------------------------------------------------
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(((PyObject *)__pyx_v_density));
+  __pyx_r = ((PyObject *)__pyx_v_density);
+  goto __pyx_L0;
+
+  /* "duly/cython_/cython_density.pyx":116
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde_periodic(  np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                                     np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                                     floatTYPE_t smoothing_parameter,
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_X_source.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_Y_sample.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_density.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_period.rcbuffer->pybuffer);
+  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
+  __Pyx_AddTraceback("duly.cython_.cython_density._return_Gaussian_kde_periodic", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  goto __pyx_L2;
+  __pyx_L0:;
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_X_source.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_Y_sample.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_density.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_period.rcbuffer->pybuffer);
+  __pyx_L2:;
+  __Pyx_XDECREF((PyObject *)__pyx_v_density);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "duly/cython_/cython_density.pyx":151
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde(   np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                             np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                             floatTYPE_t smoothing_parameter
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4duly_7cython__14cython_density_7_return_Gaussian_kde(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4duly_7cython__14cython_density_7_return_Gaussian_kde = {"_return_Gaussian_kde", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_4duly_7cython__14cython_density_7_return_Gaussian_kde, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4duly_7cython__14cython_density_7_return_Gaussian_kde(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyArrayObject *__pyx_v_X_source = 0;
+  PyArrayObject *__pyx_v_Y_sample = 0;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_smoothing_parameter;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("_return_Gaussian_kde (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_X_source,&__pyx_n_s_Y_sample,&__pyx_n_s_smoothing_parameter,0};
+    PyObject* values[3] = {0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_X_source)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_Y_sample)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("_return_Gaussian_kde", 1, 3, 3, 1); __PYX_ERR(0, 151, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_smoothing_parameter)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("_return_Gaussian_kde", 1, 3, 3, 2); __PYX_ERR(0, 151, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_Gaussian_kde") < 0)) __PYX_ERR(0, 151, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+    }
+    __pyx_v_X_source = ((PyArrayObject *)values[0]);
+    __pyx_v_Y_sample = ((PyArrayObject *)values[1]);
+    __pyx_v_smoothing_parameter = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_smoothing_parameter == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 153, __pyx_L3_error)
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("_return_Gaussian_kde", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 151, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("duly.cython_.cython_density._return_Gaussian_kde", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_X_source), __pyx_ptype_5numpy_ndarray, 1, "X_source", 0))) __PYX_ERR(0, 151, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_Y_sample), __pyx_ptype_5numpy_ndarray, 1, "Y_sample", 0))) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_r = __pyx_pf_4duly_7cython__14cython_density_6_return_Gaussian_kde(__pyx_self, __pyx_v_X_source, __pyx_v_Y_sample, __pyx_v_smoothing_parameter);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4duly_7cython__14cython_density_6_return_Gaussian_kde(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_X_source, PyArrayObject *__pyx_v_Y_sample, __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_smoothing_parameter) {
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_i;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_j;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_dim;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_temp;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_temp2;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_nx;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_ny;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_v_dims;
+  __pyx_t_4duly_7cython__14cython_density_floatTYPE_t __pyx_v_normalisation;
+  PyArrayObject *__pyx_v_density = 0;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_X_source;
+  __Pyx_Buffer __pyx_pybuffer_X_source;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_Y_sample;
+  __Pyx_Buffer __pyx_pybuffer_Y_sample;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_density;
+  __Pyx_Buffer __pyx_pybuffer_density;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  double __pyx_t_3;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  PyArrayObject *__pyx_t_7 = NULL;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_8;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_9;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_10;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_11;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_12;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_13;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_14;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_15;
+  __pyx_t_4duly_7cython__14cython_density_DTYPE_t __pyx_t_16;
+  Py_ssize_t __pyx_t_17;
+  Py_ssize_t __pyx_t_18;
+  Py_ssize_t __pyx_t_19;
+  Py_ssize_t __pyx_t_20;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("_return_Gaussian_kde", 0);
+  __pyx_pybuffer_density.pybuffer.buf = NULL;
+  __pyx_pybuffer_density.refcount = 0;
+  __pyx_pybuffernd_density.data = NULL;
+  __pyx_pybuffernd_density.rcbuffer = &__pyx_pybuffer_density;
+  __pyx_pybuffer_X_source.pybuffer.buf = NULL;
+  __pyx_pybuffer_X_source.refcount = 0;
+  __pyx_pybuffernd_X_source.data = NULL;
+  __pyx_pybuffernd_X_source.rcbuffer = &__pyx_pybuffer_X_source;
+  __pyx_pybuffer_Y_sample.pybuffer.buf = NULL;
+  __pyx_pybuffer_Y_sample.refcount = 0;
+  __pyx_pybuffernd_Y_sample.data = NULL;
+  __pyx_pybuffernd_Y_sample.rcbuffer = &__pyx_pybuffer_Y_sample;
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_X_source.rcbuffer->pybuffer, (PyObject*)__pyx_v_X_source, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__14cython_density_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 151, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_X_source.diminfo[0].strides = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_X_source.diminfo[0].shape = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_X_source.diminfo[1].strides = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_X_source.diminfo[1].shape = __pyx_pybuffernd_X_source.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Y_sample.rcbuffer->pybuffer, (PyObject*)__pyx_v_Y_sample, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__14cython_density_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 151, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_Y_sample.diminfo[0].strides = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_Y_sample.diminfo[0].shape = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_Y_sample.diminfo[1].strides = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_Y_sample.diminfo[1].shape = __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.shape[1];
+
+  /* "duly/cython_/cython_density.pyx":159
+ *     cdef floatTYPE_t temp, temp2
+ * 
+ *     cdef DTYPE_t nx = X_source.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t ny = Y_sample.shape[0]
+ *     cdef DTYPE_t dims = X_source.shape[1]
+ */
+  __pyx_v_nx = (__pyx_v_X_source->dimensions[0]);
+
+  /* "duly/cython_/cython_density.pyx":160
+ * 
+ *     cdef DTYPE_t nx = X_source.shape[0]
+ *     cdef DTYPE_t ny = Y_sample.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef DTYPE_t dims = X_source.shape[1]
+ * 
+ */
+  __pyx_v_ny = (__pyx_v_Y_sample->dimensions[0]);
+
+  /* "duly/cython_/cython_density.pyx":161
+ *     cdef DTYPE_t nx = X_source.shape[0]
+ *     cdef DTYPE_t ny = Y_sample.shape[0]
+ *     cdef DTYPE_t dims = X_source.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)
+ */
+  __pyx_v_dims = (__pyx_v_X_source->dimensions[1]);
+
+  /* "duly/cython_/cython_density.pyx":163
+ *     cdef DTYPE_t dims = X_source.shape[1]
+ * 
+ *     cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)             # <<<<<<<<<<<<<<
+ * 
+ *     cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_pi); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = PyNumber_Multiply(__pyx_int_2, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_3 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 163, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_v_normalisation = (__pyx_v_nx * pow((pow(__pyx_t_3, 0.5) * __pyx_v_smoothing_parameter), __pyx_v_dims));
+
+  /* "duly/cython_/cython_density.pyx":165
+ *     cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)
+ * 
+ *     cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)             # <<<<<<<<<<<<<<
+ * 
+ *     for i in range(ny):
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyInt_From_npy_long(__pyx_v_ny); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
+  __pyx_t_1 = 0;
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_GIVEREF(__pyx_t_4);
+  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_4);
+  __pyx_t_4 = 0;
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 165, __pyx_L1_error)
+  __pyx_t_7 = ((PyArrayObject *)__pyx_t_6);
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_density.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__14cython_density_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
+      __pyx_v_density = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_density.rcbuffer->pybuffer.buf = NULL;
+      __PYX_ERR(0, 165, __pyx_L1_error)
+    } else {__pyx_pybuffernd_density.diminfo[0].strides = __pyx_pybuffernd_density.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_density.diminfo[0].shape = __pyx_pybuffernd_density.rcbuffer->pybuffer.shape[0];
+    }
+  }
+  __pyx_t_7 = 0;
+  __pyx_v_density = ((PyArrayObject *)__pyx_t_6);
+  __pyx_t_6 = 0;
+
+  /* "duly/cython_/cython_density.pyx":167
+ *     cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)
+ * 
+ *     for i in range(ny):             # <<<<<<<<<<<<<<
+ *         for j in range(nx):
+ *             temp2 = 0.
+ */
+  __pyx_t_8 = __pyx_v_ny;
+  __pyx_t_9 = __pyx_t_8;
+  for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
+    __pyx_v_i = __pyx_t_10;
+
+    /* "duly/cython_/cython_density.pyx":168
+ * 
+ *     for i in range(ny):
+ *         for j in range(nx):             # <<<<<<<<<<<<<<
+ *             temp2 = 0.
+ *             for dim in range(dims):
+ */
+    __pyx_t_11 = __pyx_v_nx;
+    __pyx_t_12 = __pyx_t_11;
+    for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
+      __pyx_v_j = __pyx_t_13;
+
+      /* "duly/cython_/cython_density.pyx":169
+ *     for i in range(ny):
+ *         for j in range(nx):
+ *             temp2 = 0.             # <<<<<<<<<<<<<<
+ *             for dim in range(dims):
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ */
+      __pyx_v_temp2 = 0.;
+
+      /* "duly/cython_/cython_density.pyx":170
+ *         for j in range(nx):
+ *             temp2 = 0.
+ *             for dim in range(dims):             # <<<<<<<<<<<<<<
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ *                 temp2 += temp*temp
+ */
+      __pyx_t_14 = __pyx_v_dims;
+      __pyx_t_15 = __pyx_t_14;
+      for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
+        __pyx_v_dim = __pyx_t_16;
+
+        /* "duly/cython_/cython_density.pyx":171
+ *             temp2 = 0.
+ *             for dim in range(dims):
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]             # <<<<<<<<<<<<<<
+ *                 temp2 += temp*temp
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+ */
+        __pyx_t_17 = __pyx_v_j;
+        __pyx_t_18 = __pyx_v_dim;
+        if (__pyx_t_17 < 0) __pyx_t_17 += __pyx_pybuffernd_X_source.diminfo[0].shape;
+        if (__pyx_t_18 < 0) __pyx_t_18 += __pyx_pybuffernd_X_source.diminfo[1].shape;
+        __pyx_t_19 = __pyx_v_i;
+        __pyx_t_20 = __pyx_v_dim;
+        if (__pyx_t_19 < 0) __pyx_t_19 += __pyx_pybuffernd_Y_sample.diminfo[0].shape;
+        if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_Y_sample.diminfo[1].shape;
+        __pyx_v_temp = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_X_source.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_X_source.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_X_source.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_Y_sample.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_Y_sample.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_Y_sample.diminfo[1].strides)));
+
+        /* "duly/cython_/cython_density.pyx":172
+ *             for dim in range(dims):
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ *                 temp2 += temp*temp             # <<<<<<<<<<<<<<
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+ * 
+ */
+        __pyx_v_temp2 = (__pyx_v_temp2 + (__pyx_v_temp * __pyx_v_temp));
+      }
+
+      /* "duly/cython_/cython_density.pyx":173
+ *                 temp = X_source[j, dim] - Y_sample[i, dim]
+ *                 temp2 += temp*temp
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation             # <<<<<<<<<<<<<<
+ * 
+ *     return density
+ */
+      __pyx_t_20 = __pyx_v_i;
+      if (__pyx_t_20 < 0) __pyx_t_20 += __pyx_pybuffernd_density.diminfo[0].shape;
+      *__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__14cython_density_floatTYPE_t *, __pyx_pybuffernd_density.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_density.diminfo[0].strides) += (exp((((-0.5 * __pyx_v_temp2) / __pyx_v_smoothing_parameter) / __pyx_v_smoothing_parameter)) / __pyx_v_normalisation);
+    }
+  }
+
+  /* "duly/cython_/cython_density.pyx":175
+ *             density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+ * 
+ *     return density             # <<<<<<<<<<<<<<
+ * 
+ * # ----------------------------------------------------------------------------------------------
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(((PyObject *)__pyx_v_density));
+  __pyx_r = ((PyObject *)__pyx_v_density);
+  goto __pyx_L0;
+
+  /* "duly/cython_/cython_density.pyx":151
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde(   np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                             np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                             floatTYPE_t smoothing_parameter
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_X_source.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_Y_sample.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_density.rcbuffer->pybuffer);
+  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
+  __Pyx_AddTraceback("duly.cython_.cython_density._return_Gaussian_kde", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  goto __pyx_L2;
+  __pyx_L0:;
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_X_source.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_Y_sample.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_density.rcbuffer->pybuffer);
+  __pyx_L2:;
+  __Pyx_XDECREF((PyObject *)__pyx_v_density);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -4759,6 +5668,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_Rho_min, __pyx_k_Rho_min, sizeof(__pyx_k_Rho_min), 0, 0, 1, 1},
   {&__pyx_n_s_RuntimeError, __pyx_k_RuntimeError, sizeof(__pyx_k_RuntimeError), 0, 0, 1, 1},
   {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
+  {&__pyx_n_s_X_source, __pyx_k_X_source, sizeof(__pyx_k_X_source), 0, 0, 1, 1},
+  {&__pyx_n_s_Y_sample, __pyx_k_Y_sample, sizeof(__pyx_k_Y_sample), 0, 0, 1, 1},
   {&__pyx_n_s_bool, __pyx_k_bool, sizeof(__pyx_k_bool), 0, 0, 1, 1},
   {&__pyx_n_s_boolTYPE, __pyx_k_boolTYPE, sizeof(__pyx_k_boolTYPE), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
@@ -4769,6 +5680,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_cython_maximum_likelihood_opt, __pyx_k_cython_maximum_likelihood_opt, sizeof(__pyx_k_cython_maximum_likelihood_opt), 0, 0, 1, 1},
   {&__pyx_n_s_dL, __pyx_k_dL, sizeof(__pyx_k_dL), 0, 0, 1, 1},
   {&__pyx_n_s_dc, __pyx_k_dc, sizeof(__pyx_k_dc), 0, 0, 1, 1},
+  {&__pyx_n_s_density, __pyx_k_density, sizeof(__pyx_k_density), 0, 0, 1, 1},
+  {&__pyx_n_s_dim, __pyx_k_dim, sizeof(__pyx_k_dim), 0, 0, 1, 1},
+  {&__pyx_n_s_dims, __pyx_k_dims, sizeof(__pyx_k_dims), 0, 0, 1, 1},
   {&__pyx_n_s_dist_indices, __pyx_k_dist_indices, sizeof(__pyx_k_dist_indices), 0, 0, 1, 1},
   {&__pyx_n_s_distances, __pyx_k_distances, sizeof(__pyx_k_distances), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
@@ -4777,6 +5691,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_empty, __pyx_k_empty, sizeof(__pyx_k_empty), 0, 0, 1, 1},
   {&__pyx_n_s_float, __pyx_k_float, sizeof(__pyx_k_float), 0, 0, 1, 1},
   {&__pyx_n_s_floatTYPE, __pyx_k_floatTYPE, sizeof(__pyx_k_floatTYPE), 0, 0, 1, 1},
+  {&__pyx_n_s_float_2, __pyx_k_float_2, sizeof(__pyx_k_float_2), 0, 0, 1, 1},
   {&__pyx_n_s_gammaln, __pyx_k_gammaln, sizeof(__pyx_k_gammaln), 0, 0, 1, 1},
   {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
   {&__pyx_n_s_id_sel, __pyx_k_id_sel, sizeof(__pyx_k_id_sel), 0, 0, 1, 1},
@@ -4790,20 +5705,31 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_maxk, __pyx_k_maxk, sizeof(__pyx_k_maxk), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
+  {&__pyx_n_s_normalisation, __pyx_k_normalisation, sizeof(__pyx_k_normalisation), 0, 0, 1, 1},
   {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
   {&__pyx_n_s_nrmaxl, __pyx_k_nrmaxl, sizeof(__pyx_k_nrmaxl), 0, 0, 1, 1},
   {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
   {&__pyx_kp_s_numpy_core_multiarray_failed_to, __pyx_k_numpy_core_multiarray_failed_to, sizeof(__pyx_k_numpy_core_multiarray_failed_to), 0, 0, 1, 0},
   {&__pyx_kp_s_numpy_core_umath_failed_to_impor, __pyx_k_numpy_core_umath_failed_to_impor, sizeof(__pyx_k_numpy_core_umath_failed_to_impor), 0, 0, 1, 0},
+  {&__pyx_n_s_nx, __pyx_k_nx, sizeof(__pyx_k_nx), 0, 0, 1, 1},
+  {&__pyx_n_s_ny, __pyx_k_ny, sizeof(__pyx_k_ny), 0, 0, 1, 1},
+  {&__pyx_n_s_period, __pyx_k_period, sizeof(__pyx_k_period), 0, 0, 1, 1},
+  {&__pyx_n_s_pi, __pyx_k_pi, sizeof(__pyx_k_pi), 0, 0, 1, 1},
   {&__pyx_n_s_prefactor, __pyx_k_prefactor, sizeof(__pyx_k_prefactor), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
+  {&__pyx_n_s_return_Gaussian_kde, __pyx_k_return_Gaussian_kde, sizeof(__pyx_k_return_Gaussian_kde), 0, 0, 1, 1},
+  {&__pyx_n_s_return_Gaussian_kde_periodic, __pyx_k_return_Gaussian_kde_periodic, sizeof(__pyx_k_return_Gaussian_kde_periodic), 0, 0, 1, 1},
   {&__pyx_n_s_rr, __pyx_k_rr, sizeof(__pyx_k_rr), 0, 0, 1, 1},
   {&__pyx_n_s_scipy_special, __pyx_k_scipy_special, sizeof(__pyx_k_scipy_special), 0, 0, 1, 1},
+  {&__pyx_n_s_smoothing_parameter, __pyx_k_smoothing_parameter, sizeof(__pyx_k_smoothing_parameter), 0, 0, 1, 1},
+  {&__pyx_n_s_temp, __pyx_k_temp, sizeof(__pyx_k_temp), 0, 0, 1, 1},
+  {&__pyx_n_s_temp2, __pyx_k_temp2, sizeof(__pyx_k_temp2), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
   {&__pyx_n_s_vi, __pyx_k_vi, sizeof(__pyx_k_vi), 0, 0, 1, 1},
   {&__pyx_n_s_vvi, __pyx_k_vvi, sizeof(__pyx_k_vvi), 0, 0, 1, 1},
   {&__pyx_n_s_vvj, __pyx_k_vvj, sizeof(__pyx_k_vvj), 0, 0, 1, 1},
+  {&__pyx_n_s_zeros, __pyx_k_zeros, sizeof(__pyx_k_zeros), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
@@ -4898,6 +5824,30 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
   __pyx_codeobj__9 = (PyObject*)__Pyx_PyCode_New(5, 0, 15, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__8, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_density_pyx, __pyx_n_s_compute_pak, 59, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__9)) __PYX_ERR(0, 59, __pyx_L1_error)
+
+  /* "duly/cython_/cython_density.pyx":116
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde_periodic(  np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                                     np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                                     floatTYPE_t smoothing_parameter,
+ */
+  __pyx_tuple__10 = PyTuple_Pack(14, __pyx_n_s_X_source, __pyx_n_s_Y_sample, __pyx_n_s_smoothing_parameter, __pyx_n_s_period, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_dim, __pyx_n_s_temp, __pyx_n_s_temp2, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_dims, __pyx_n_s_normalisation, __pyx_n_s_density); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 116, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(4, 0, 14, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_density_pyx, __pyx_n_s_return_Gaussian_kde_periodic, 116, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 116, __pyx_L1_error)
+
+  /* "duly/cython_/cython_density.pyx":151
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde(   np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                             np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                             floatTYPE_t smoothing_parameter
+ */
+  __pyx_tuple__12 = PyTuple_Pack(13, __pyx_n_s_X_source, __pyx_n_s_Y_sample, __pyx_n_s_smoothing_parameter, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_dim, __pyx_n_s_temp, __pyx_n_s_temp2, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_dims, __pyx_n_s_normalisation, __pyx_n_s_density); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__12);
+  __Pyx_GIVEREF(__pyx_tuple__12);
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(3, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_density_pyx, __pyx_n_s_return_Gaussian_kde, 151, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 151, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -4907,6 +5857,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
 
 static CYTHON_SMALL_CODE int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) __PYX_ERR(0, 1, __pyx_L1_error);
+  __pyx_int_2 = PyInt_FromLong(2); if (unlikely(!__pyx_int_2)) __PYX_ERR(0, 1, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -5288,7 +6239,7 @@ if (!__Pyx_RefNanny) {
  */
   __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_floatTYPE, __pyx_t_1) < 0) __PYX_ERR(0, 15, __pyx_L1_error)
@@ -5331,6 +6282,30 @@ if (!__Pyx_RefNanny) {
   __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4duly_7cython__14cython_density_3_compute_pak, NULL, __pyx_n_s_duly_cython__cython_density); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_pak, __pyx_t_2) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "duly/cython_/cython_density.pyx":116
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde_periodic(  np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                                     np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                                     floatTYPE_t smoothing_parameter,
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4duly_7cython__14cython_density_5_return_Gaussian_kde_periodic, NULL, __pyx_n_s_duly_cython__cython_density); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 116, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_Gaussian_kde_periodic, __pyx_t_2) < 0) __PYX_ERR(0, 116, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "duly/cython_/cython_density.pyx":151
+ * @cython.boundscheck(False)
+ * @cython.cdivision(True)
+ * def _return_Gaussian_kde(   np.ndarray[floatTYPE_t, ndim = 2] X_source,             # <<<<<<<<<<<<<<
+ *                             np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+ *                             floatTYPE_t smoothing_parameter
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4duly_7cython__14cython_density_7_return_Gaussian_kde, NULL, __pyx_n_s_duly_cython__cython_density); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_Gaussian_kde, __pyx_t_2) < 0) __PYX_ERR(0, 151, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "duly/cython_/cython_density.pyx":1

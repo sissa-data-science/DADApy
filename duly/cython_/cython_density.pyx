@@ -108,3 +108,70 @@ def _compute_pak(floatTYPE_t id_selected,
         Rho[i] -= log(Nele)
 
     return Rho, Rho_err, dc
+
+    # ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def _return_Gaussian_kde_periodic(  np.ndarray[floatTYPE_t, ndim = 2] X_source,
+                                    np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+                                    floatTYPE_t smoothing_parameter,
+                                    np.ndarray[floatTYPE_t, ndim = 1] period
+):
+
+    cdef DTYPE_t i, j, dim
+    cdef floatTYPE_t temp, temp2
+    
+    cdef DTYPE_t nx = X_source.shape[0]
+    cdef DTYPE_t ny = Y_sample.shape[0]
+    cdef DTYPE_t dims = X_source.shape[1]
+
+    cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)
+
+    cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)
+
+    for i in range(ny):
+        for j in range(nx):
+            temp2 = 0.
+            for dim in range(dims):
+                temp = X_source[j, dim] - Y_sample[i, dim]
+                if temp > period[dim]/2.:
+                    temp -= period[dim]
+                if temp < -period[dim]/2.:
+                    temp += period[dim]
+                temp2 += temp*temp
+            density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+
+    return density
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def _return_Gaussian_kde(   np.ndarray[floatTYPE_t, ndim = 2] X_source,
+                            np.ndarray[floatTYPE_t, ndim = 2] Y_sample,
+                            floatTYPE_t smoothing_parameter
+):
+
+    cdef DTYPE_t i, j, dim
+    cdef floatTYPE_t temp, temp2
+    
+    cdef DTYPE_t nx = X_source.shape[0]
+    cdef DTYPE_t ny = Y_sample.shape[0]
+    cdef DTYPE_t dims = X_source.shape[1]
+
+    cdef floatTYPE_t normalisation = nx*pow(pow(2*np.pi,0.5)*smoothing_parameter,dims)
+
+    cdef np.ndarray[floatTYPE_t, ndim = 1] density = np.zeros((ny,),dtype=np.float_)
+
+    for i in range(ny):
+        for j in range(nx):
+            temp2 = 0.
+            for dim in range(dims):
+                temp = X_source[j, dim] - Y_sample[i, dim]
+                temp2 += temp*temp
+            density[i]+=exp( -0.5*temp2/smoothing_parameter/smoothing_parameter )/normalisation
+
+    return density
+
+# ----------------------------------------------------------------------------------------------
