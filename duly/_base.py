@@ -135,7 +135,7 @@ class Base:
         if self.verb and period is not None:
             print(
                 "Computing periodic distances.",
-                "The coordinates are assumed to be in the range (0, {})".format(period),
+                "The coordinates are assumed to be in the range [0, period]",
             )
 
         if self.verb:
