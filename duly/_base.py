@@ -215,12 +215,12 @@ class Base:
             self._mus_scaling_reduce_func, range_scaling=range_scaling
         )
 
-        N0 = self.X.shape[0]
-        self.X = np.unique(self.X, axis = 0)
-
-        self.N = self.X.shape[0]
-        if self.N != N0:
-            print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+        # N0 = self.X.shape[0]
+        # self.X = np.unique(self.X, axis = 0)
+        #
+        # self.N = self.X.shape[0]
+        # if self.N != N0:
+        #     print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
 
         kwds = {"squared": True}
         chunked_results = list(

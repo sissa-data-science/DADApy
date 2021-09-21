@@ -134,13 +134,12 @@ class IdEstimation(Base):
 
         """
         #removal overlapping data
-        N0 = self.X.shape[0]
-        self.X = np.unique(self.X, axis = 0)
-
-        self.N = self.X.shape[0]
-        if self.N != N0:
-            print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
-
+        # N0 = self.X.shape[0]
+        # self.X = np.unique(self.X, axis = 0)
+        #
+        # self.N = self.X.shape[0]
+        # if self.N != N0:
+        #     print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
 
         if N_subset is None:
             N_subset = self.N
