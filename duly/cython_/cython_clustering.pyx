@@ -293,6 +293,6 @@ def _compute_clustering(floatTYPE_t Z,
     out_bord = np.copy(Rho_bord_m)
     sec2 = time.time()
     if verb: print(
-        "{0:0.2f} seconds for final operatins".format(sec2 - sec))
+        "{0:0.2f} seconds for final operations".format(sec2 - sec))
     return clstruct_m, Nclus_m, labels, centers_m, out_bord, Rho_min, Rho_bord_err_m
 

@@ -116,16 +116,16 @@ class DensityEstimation(IdEstimation):
         """
         sec = time.time()
 
+        # assign default sample dataset
+        if Y_sample is None:
+            Y_sample = self.X
+            print("Selected as sample database self.X")
+
         assert Y_sample.shape[1] == self.dims, "The sample has dimension {} instead of required {}".format(Y_sample.shape[1],self.dims)
 
         if self.period is not None:
             for dim in range(self.dims):
                 assert np.max(Y_sample[:,dim]) <= self.period[dim] and np.min(Y_sample[:,dim]) >= 0. , "Periodic coordinates must be in range [0,period]"
-        
-        # assign default sample dataset
-        if Y_sample is None:
-            Y_sample = self.X
-            print("Selected as sample database self.X")
 
         # assign default smoothing parameter
         if smoothing_parameter is None:

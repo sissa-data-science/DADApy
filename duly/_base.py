@@ -51,7 +51,7 @@ class Base:
         self.period = None
 
         if coordinates is not None:
-            assert isinstance(self.X, np.ndarray)
+            assert isinstance(self.X, np.ndarray), "Coordinates must be in numpy ndarray format"
 
             self.dtype = self.X.dtype
 
@@ -232,11 +232,13 @@ class Base:
         )
 
         # N0 = self.X.shape[0]
-        # self.X = np.unique(self.X, axis = 0)
-        #
+        # self.X = np.unique(self.X, axis=0)
+
         # self.N = self.X.shape[0]
         # if self.N != N0:
-        #     print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+        #     print(
+        #         f"{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements"
+        #     )
 
         kwds = {"squared": True}
         chunked_results = list(
