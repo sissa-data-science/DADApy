@@ -1,4 +1,5 @@
 import math
+import time
 import multiprocessing
 from functools import partial
 
@@ -18,15 +19,16 @@ class Base:
     """Base class. A simple container of coordinates and/or distances and of basic methods.
 
     Attributes:
-            N (int): number of data points
-            X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
-    dims (int, optional): embedding dimension of the datapoints
-            maxk (int): maximum number of neighbours to be considered for the calculation of distances
-            distances (float[:,:]): A matrix of dimension N x mask containing distances between points
-            dist_indices (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
-            verb (bool): whether you want the code to speak or shut up
-            njobs (int): number of cores to be used
-            p (int): metric used to compute distances
+        N (int): number of data points
+        X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
+        dims (int, optional): embedding dimension of the datapoints
+        maxk (int): maximum number of neighbours to be considered for the calculation of distances
+        distances (float[:,:]): A matrix of dimension N x mask containing distances between points
+        dist_indices (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
+        verb (bool): whether you want the code to speak or shut up
+        njobs (int): number of cores to be used
+        p (int): metric used to compute distances
+        period (np.array(float), optional): array of shape (dims,) containing periodicity for each coordinate. Default is None
     """
 
     def __init__(
@@ -107,12 +109,26 @@ class Base:
                 maxk: maximum number of neighbours for which distance is computed and stored
                 metric: type of metric
                 p: type of metric
-                period (float or array): periodicity (only used for periodic distance computation). Default is None.
+                period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
 
         """
+        if self.verb:
+            print("Computation of distances started")
+            sec = time.time()
+
         self.metric = metric
         self.p = p
-        self.period = period
+        if period is not None:
+            if isinstance(period, np.ndarray) and period.shape == (self.dims,):
+                self.period = period
+            elif isinstance(period, (int, float)):
+                self.period = np.full((self.dims), fill_value=period, dtype=float)
+            else:
+                raise ValueError(
+                    "'period' must be either a float scalar or a numpy array of floats of shape ({},)".format(
+                        self.dims
+                    )
+                )
 
         if maxk is not None:
             self.maxk = maxk
@@ -124,19 +140,19 @@ class Base:
         if self.verb and period is not None:
             print(
                 "Computing periodic distances.",
-                "The coordinates are assumed to be in the range (0, {})".format(period),
+                "The coordinates are assumed to be in the range [0, period]",
             )
 
         if self.verb:
             print(f"Computation of the distances up to {self.maxk} NNs started")
 
-
         self.distances, self.dist_indices = compute_nn_distances(
             self.X, self.maxk, self.metric, self.p, self.period
         )
 
+        sec2 = time.time()
         if self.verb:
-            print("Computation of the distances finished")
+            print("{0:0.2f} seconds for computing distances".format(sec2 - sec))
 
     # ---------------------------------------------------------------------------
 
