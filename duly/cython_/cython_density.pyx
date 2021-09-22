@@ -120,7 +120,7 @@ def _return_Gaussian_kde_periodic(  np.ndarray[floatTYPE_t, ndim = 2] X_source,
 ):
 
     cdef DTYPE_t i, j, dim
-    cdef floatTYPE_t temp, normalisation, sm2
+    cdef floatTYPE_t temp, temp2, normalisation, sm2
     
     cdef DTYPE_t nx = X_source.shape[0]
     cdef DTYPE_t ny = Y_sample.shape[0]
@@ -134,16 +134,17 @@ def _return_Gaussian_kde_periodic(  np.ndarray[floatTYPE_t, ndim = 2] X_source,
         normalisation = nx*pow(sqrt2pi*smoothing_parameter[j],dims)
         sm2 = smoothing_parameter[j]*smoothing_parameter[j]
         for i in range(ny):
+            temp2 = 0.
             for dim in range(dims):
                 temp = X_source[j, dim] - Y_sample[i, dim]
                 if temp > period[dim]/2.:
                     temp -= period[dim]
                 if temp < -period[dim]/2.:
                     temp += period[dim]
-            density[i]+=exp( -0.5*temp*temp/sm2 )/ normalisation
+                temp2 += temp*temp
+            density[i]+=exp( -0.5*temp2/sm2 )/ normalisation
 
     return density
-
 # ----------------------------------------------------------------------------------------------
 
 @cython.boundscheck(False)
@@ -154,7 +155,7 @@ def _return_Gaussian_kde(   np.ndarray[floatTYPE_t, ndim = 2] X_source,
 ):
 
     cdef DTYPE_t i, j, dim
-    cdef floatTYPE_t temp, normalisation, sm2
+    cdef floatTYPE_t temp, temp2, normalisation, sm2
     
     cdef DTYPE_t nx = X_source.shape[0]
     cdef DTYPE_t ny = Y_sample.shape[0]
@@ -168,9 +169,11 @@ def _return_Gaussian_kde(   np.ndarray[floatTYPE_t, ndim = 2] X_source,
         normalisation = nx*pow(sqrt2pi*smoothing_parameter[j],dims)
         sm2 = smoothing_parameter[j]*smoothing_parameter[j]
         for i in range(ny):
+            temp2 = 0.
             for dim in range(dims):
                 temp = X_source[j, dim] - Y_sample[i, dim]
-            density[i]+=exp( -0.5*temp*temp/sm2 )/ normalisation
+                temp2 += temp*temp
+            density[i]+=exp( -0.5*temp2/sm2 )/ normalisation
 
     return density
 
