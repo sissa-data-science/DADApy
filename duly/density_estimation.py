@@ -467,7 +467,7 @@ class DensityEstimation(IdEstimation):
                     # AAAAAAA : this is not sufficient to compute dc, needs to be implemented. At the moment
                     assert self.dc is not None, "Current Implementation of compute_kstar() does not compute dc. Use compute_density_kstarNN before in order to select adaptive bandwidth"
                 smoothing_parameter = self.dc/2
-                if self.verb is True:
+                if self.verb:
                     print("Selected an adaptive smoothing parameter as dc[i]/2 for each point")
         if smoothing_parameter is not None:
             # if is np.ndarray check shape
@@ -485,7 +485,7 @@ class DensityEstimation(IdEstimation):
         else:
             # assign a smoothing parameter according to Scott's Rule of Thumb
             smoothing_parameter = self.N**(-1./(self.dims+4))
-            if self.verb is True:
+            if self.verb:
                 print("Selected a smoothing parameter according to Scott's Rule of Thumb: h = {}".format(smoothing_parameter))
         
         if self.verb:
@@ -696,7 +696,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_gCorr(self, use_variance=True):
+    def compute_density_gCorr(self, use_variance=True,comp_err=True):
         # TODO: matrix A should be in sparse format!
 
         # compute changes in free energy
@@ -745,15 +745,28 @@ class DensityEstimation(IdEstimation):
             supp_deltaF.sum(axis=1)
         ).reshape((self.N,))
 
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
+
         log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+        if self.verb:
+            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        sec2 = time.time()
 
         self.log_den = log_den
         # self.log_den_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
-        self.A = A.todense()
-        self.B = slin.pinvh(self.A)
-        # self.B = slin.inv(self.A)
+        
+        if comp_err is True:
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            # self.B = slin.inv(self.A)
+            self.log_den_err = np.sqrt(np.diag(self.B))
 
-        self.log_den_err = np.sqrt(np.diag(self.B))
+        if self.verb:
+            print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+        sec2 = time.time()
 
         # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
         # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
@@ -835,7 +848,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_dF_PAk_gCorr(self, use_variance=True, alpha=1.0):
+    def compute_density_dF_PAk_gCorr(self, use_variance=True, alpha=1.0, comp_err=True):
 
         # check for deltaFij
         if self.Fij_array is None:
@@ -914,9 +927,11 @@ class DensityEstimation(IdEstimation):
         log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
         self.log_den = log_den
-        self.A = A.todense()
-        self.B = slin.pinvh(self.A)
-        self.log_den_err = np.sqrt(np.diag(self.B))
+
+        if comp_err is True:
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            self.log_den_err = np.sqrt(np.diag(self.B))
 
         sec2 = time.time()
         if self.verb:
@@ -929,7 +944,7 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_PAk_gCorr(
-        self, gauss_approx=True, alpha=1.0, log_den_PAk=None, log_den_PAk_err=None
+        self, gauss_approx=True, alpha=1.0, log_den_PAk=None, log_den_PAk_err=None, comp_err=True
     ):
         """
         finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
@@ -1004,11 +1019,29 @@ class DensityEstimation(IdEstimation):
                 + (1.0 - alpha) * self.log_den / self.log_den_err ** 2
             )
 
+            sec2 = time.time()
+            if self.verb:
+                print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
+
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
-            self.A = A.todense()
-            self.B = slin.pinvh(self.A)
-            self.log_den_err = np.sqrt(np.diag(self.B))
+
+            if self.verb:
+                print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+            sec2 = time.time()
+
+            self.log_den = log_den
+
+            if comp_err is True:
+                self.A = A.todense()
+                self.B = slin.pinvh(self.A)
+                # self.B = slin.inv(self.A)
+                self.log_den_err = np.sqrt(np.diag(self.B))
+
+            if self.verb:
+                print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+            sec2 = time.time()
+
             # self.log_den_err = np.sqrt(diag/(np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,)))
 
         else:
