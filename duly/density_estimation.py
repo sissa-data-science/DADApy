@@ -27,6 +27,7 @@ class DensityEstimation(IdEstimation):
     - compute dc when compute_kstar or when set_kstar and nowhere else
     - implement self.kstar and self.fixedk of a bool attribute self.iskfixed which is True when kstar is an array of identical integers
 
+
     Attributes:
         kstar (np.array(float)): array containing the chosen number k* in the neighbourhood of each of the N points
         nspar (int): total number of edges in the directed graph defined by kstar (sum over all points of kstar minus N)
@@ -43,6 +44,19 @@ class DensityEstimation(IdEstimation):
         check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance matrices of the gradients.
         Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j.
         Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared errors on the values in Fij_array.
+
+    
+    Bello sto stile di documentazione:
+    
+    Parameters
+    ----------
+    X : {float, np.ndarray, or theano symbolic variable}
+        X coordinate. If you supply an array, x and y need to be the same shape,
+        and the potential will be calculated at each (x,y pair)
+    y : {float, np.ndarray, or theano symbolic variable}
+        Y coordinate. If you supply an array, x and y need to be the same shape,
+        and the potential will be calculated at each (x,y pair)
+
 
     """
 
@@ -423,7 +437,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_density_Gaussian_kde(self, Y_sample=None, smoothing_parameter=None, adaptive=False):
+    def return_density_Gaussian_kde(self, Y_sample=None, smoothing_parameter=None, adaptive=False, return_only_gradient=False):
         """Returns the logdensity of of each point in Y_sample using a Gaussian kernel density estimator based on the coordinates self.X.
 
 
@@ -434,6 +448,7 @@ class DensityEstimation(IdEstimation):
             Y_sample (np.ndarray(float)): the points at which the Gaussian kernel density should be evaluated. The default is self.X
             smoothing_parameter (float or np.ndarray(float)): default is given by Scott's Rule of Thumb ( self.N**(-1./(self.dims+4)) )
             adaptive (bool): if set to 'True', bandwidth is set to half the distance of the k*-th neighbour of a point, k* beingselected adaptively
+            return_only_gradient (bool): if set to 'True', only returns the gradient of the logdensity
 
         Returns:
 
@@ -492,15 +507,24 @@ class DensityEstimation(IdEstimation):
             print("Gaussian kernel density estimation started")
 
         if self.period is None:
-            density = cd._return_Gaussian_kde(self.X,Y_sample,smoothing_parameter)
+            if return_only_gradient is False:
+                density = cd._return_Gaussian_kde(self.X,Y_sample,smoothing_parameter)
+            else:
+                gradients = cd._return_gradient_Gaussian_kde(self.X,Y_sample,smoothing_parameter)
         else:
-            density = cd._return_Gaussian_kde_periodic(self.X,Y_sample,smoothing_parameter,self.period)
+            if return_only_gradient is False:
+                density = cd._return_Gaussian_kde_periodic(self.X,Y_sample,smoothing_parameter,self.period)
+            else:
+                gradients = cd._return_gradient_Gaussian_kde_periodic(self.X,Y_sample,smoothing_parameter,self.period)
 
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds estimating Gaussian kernel density".format(sec2 - sec))
 
-        return np.log(density)
+        if return_only_gradient is False:
+            return np.log(density)
+        else:
+            return gradients
 
     # ----------------------------------------------------------------------------------------------
 
