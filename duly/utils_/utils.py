@@ -32,19 +32,18 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
     return dist_indices, distances
 
 
-def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
+def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=None):
     if period is None:
 
-        #nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, p=p).fit(X)
+        # nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, p=p).fit(X)
         nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric).fit(X)
 
-        distances, dist_indices = nbrs.kneighbors(X)
+        distances, dist_indices = nbrs.kneighbors(X_new)
 
         if metric == "hamming":
             distances *= X.shape[1]
 
     else:
-
 
         distances, dist_indices = compute_NN_PBC(
             X,
@@ -53,6 +52,13 @@ def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
             p=p,
         )
 
+    return distances, dist_indices
+
+
+def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
+    distances, dist_indices = compute_cross_nn_distances(
+        X, X, maxk, metric=metric, p=p, period=period
+    )
     return distances, dist_indices
 
 

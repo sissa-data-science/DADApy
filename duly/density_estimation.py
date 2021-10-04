@@ -7,10 +7,11 @@ from scipy import sparse
 from scipy import linalg as slin
 
 from duly.id_estimation import IdEstimation
-from duly.utils_.mlmax import MLmax_gPAk, MLmax_gpPAk
 from duly.cython_ import cython_maximum_likelihood_opt as cml
 from duly.cython_ import cython_grads as cgr
 from duly.cython_ import cython_density as cd
+from duly.utils_.utils import compute_cross_nn_distances
+from duly.utils_.density_estimation import return_density_kstarNN, return_density_PAk
 
 cores = multiprocessing.cpu_count()
 
@@ -829,10 +830,10 @@ class DensityEstimation(IdEstimation):
 
             for i in range(self.N):
 
-                Fij_list.append(
+                self.Fij_list.append(
                     self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
                 )
-                Fij_var_list.append(
+                self.Fij_var_list.append(
                     self.Fij_var_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
                 )
 
@@ -1248,6 +1249,74 @@ class DensityEstimation(IdEstimation):
         H = -np.mean(self.log_den)
 
         return H
+
+
+    def return_interpolated_density_kNN(self, X_new, k):
+
+        cross_distances, cross_dist_indices = compute_cross_nn_distances(
+            X_new, self.X, self.maxk, self.metric, self.p, self.period
+        )
+
+        kstar = np.ones(X_new.shape[0], dtype=int) * k
+
+        log_den, log_den_err, dc = return_density_kstarNN(
+            cross_distances, self.intrinsic_dim, kstar
+        )
+
+        return log_den, log_den_err
+
+    def return_interpolated_density_kstarNN(self, X_new, Dthr=23.92812698):
+
+        cross_distances, cross_dist_indices = compute_cross_nn_distances(
+            X_new, self.X, self.maxk, self.metric, self.p, self.period
+        )
+
+        kstar = cd._compute_kstar_interp(
+            self.intrinsic_dim,
+            X_new.shape[0],
+            self.maxk,
+            Dthr,
+            cross_dist_indices,
+            cross_distances,
+            self.distances,
+        )
+
+        log_den, log_den_err, dc = return_density_kstarNN(
+            cross_distances, self.intrinsic_dim, kstar
+        )
+
+        # correction for interpolation
+        log_den = log_den - np.log(kstar) + np.log(kstar - 1)
+        log_den_err = log_den_err * np.sqrt(kstar / (kstar - 1))
+
+        return log_den, log_den_err
+
+    def return_interpolated_density_PAk(self, X_new, Dthr=23.92812698):
+
+        assert self.intrinsic_dim is not None
+        assert self.X is not None
+
+        cross_distances, cross_dist_indices = compute_cross_nn_distances(
+            X_new, self.X, self.maxk, self.metric, self.p, self.period
+        )
+
+        kstar = cd._compute_kstar_interp(
+            self.intrinsic_dim,
+            X_new.shape[0],
+            self.maxk,
+            Dthr,
+            cross_dist_indices,
+            cross_distances,
+            self.distances,
+        )
+
+        log_den, log_den_err, dc = return_density_PAk(
+            cross_distances, self.intrinsic_dim, kstar, self.maxk
+        )
+
+        # correction for interpolation missing!
+
+        return log_den, log_den_err
 
 
 if __name__ == "__main__":
