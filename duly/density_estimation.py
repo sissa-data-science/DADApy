@@ -186,7 +186,6 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
 
-
         kstar = cd._compute_kstar(
             self.intrinsic_dim,
             self.N,
@@ -233,7 +232,7 @@ class DensityEstimation(IdEstimation):
 
     def compute_neigh_dists(self):
         """Computes the (directed) neighbour distances graph using kstar[i] neighbours for each point i.
-        Distances are stored in np.array form according to the order of nind_list. 
+        Distances are stored in np.array form according to the order of nind_list.
 
         """
 
@@ -256,26 +255,22 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("{0:0.2f} seconds computing neighbour distances".format(sec2 - sec))
 
-    # ----------------------------------------------------------------------------------------------    
- 
-    def return_sparse_distance_graph(self):
-        """Returns the (directed) neighbour distances graph using kstar[i] neighbours for each point i in N x N sparse csr_matrix form.
+    # ----------------------------------------------------------------------------------------------
 
-        """
- 
+    def return_sparse_distance_graph(self):
+        """Returns the (directed) neighbour distances graph using kstar[i] neighbours for each point i in N x N sparse csr_matrix form."""
+
         if self.neigh_dists is None:
             self.compute_neigh_dists()
 
-        dgraph = sparse.lil_matrix((self.N, self.N),dtype=np.float_)
+        dgraph = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
 
-
-        
         for ind_spar, indices in enumerate(self.nind_list):
-                dgraph[indices[0],indices[1]] = self.neigh_dists[ind_spar]
+            dgraph[indices[0], indices[1]] = self.neigh_dists[ind_spar]
 
         return dgraph.tocsr()
 
-    # ----------------------------------------------------------------------------------------------    
+    # ----------------------------------------------------------------------------------------------
 
     def compute_neigh_vector_diffs(
         self,
@@ -309,9 +304,9 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("{0:0.2f} seconds computing vector differences".format(sec2 - sec))
 
-    # ----------------------------------------------------------------------------------------------
+        # ----------------------------------------------------------------------------------------------
 
-    #def return_neigh_vector_diffs(self, i, j):
+        # def return_neigh_vector_diffs(self, i, j):
         """Return the vector difference between points i and j.
 
         Args:
@@ -320,6 +315,7 @@ class DensityEstimation(IdEstimation):
         Returns:
             self.X[j] - self.X[i]
         """
+
     #    return self.neigh_vector_diffs[self.nind_mat[i, j]]
 
     # ----------------------------------------------------------------------------------------------
@@ -438,11 +434,17 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_density_Gaussian_kde(self, Y_sample=None, smoothing_parameter=None, adaptive=False, return_only_gradient=False):
+    def return_density_Gaussian_kde(
+        self,
+        Y_sample=None,
+        smoothing_parameter=None,
+        adaptive=False,
+        return_only_gradient=False,
+    ):
         """Returns the logdensity of of each point in Y_sample using a Gaussian kernel density estimator based on the coordinates self.X.
 
 
-        TODO: improve normalisation of gaussians on periodic range (currently normalisation of Gaussian in range (-inf,inf) 
+        TODO: improve normalisation of gaussians on periodic range (currently normalisation of Gaussian in range (-inf,inf)
         instead of range [-period/2,period/2])
 
         Args:
@@ -461,14 +463,19 @@ class DensityEstimation(IdEstimation):
             Y_sample = self.X
             print("Selected as sample database self.X")
 
-        assert Y_sample.shape[1] == self.dims, "The sample has dimension {} instead of required {}".format(Y_sample.shape[1],self.dims)
+        assert (
+            Y_sample.shape[1] == self.dims
+        ), "The sample has dimension {} instead of required {}".format(
+            Y_sample.shape[1], self.dims
+        )
 
         # check right periodicity of Y_sample
         if self.period is not None:
             for dim in range(self.dims):
-                assert np.max(Y_sample[:,dim]) <= self.period[dim] and np.min(Y_sample[:,dim]) >= 0. , "Periodic coordinates must be in range [0,period]"
-
-
+                assert (
+                    np.max(Y_sample[:, dim]) <= self.period[dim]
+                    and np.min(Y_sample[:, dim]) >= 0.0
+                ), "Periodic coordinates must be in range [0,period]"
 
         # manage smoothing parameter
         if adaptive is True:
@@ -476,22 +483,30 @@ class DensityEstimation(IdEstimation):
             if smoothing_parameter is not None:
                 raise ValueError(
                     "'Either 'smoothing_parameter' must be 'None' or 'adaptive' set to 'False'"
-                    )
+                )
             else:
                 if self.dc is None:
                     self.compute_kstar()
                     # AAAAAAA : this is not sufficient to compute dc, needs to be implemented. At the moment
-                    assert self.dc is not None, "Current Implementation of compute_kstar() does not compute dc. Use compute_density_kstarNN before in order to select adaptive bandwidth"
-                smoothing_parameter = self.dc/2
+                    assert (
+                        self.dc is not None
+                    ), "Current Implementation of compute_kstar() does not compute dc. Use compute_density_kstarNN before in order to select adaptive bandwidth"
+                smoothing_parameter = self.dc / 2
                 if self.verb:
-                    print("Selected an adaptive smoothing parameter as dc[i]/2 for each point")
+                    print(
+                        "Selected an adaptive smoothing parameter as dc[i]/2 for each point"
+                    )
         if smoothing_parameter is not None:
             # if is np.ndarray check shape
             if isinstance(smoothing_parameter, np.ndarray):
-                assert smoothing_parameter.shape == (self.N,), "smoothing_parameter should have size ({},)".format(self.N)
+                assert smoothing_parameter.shape == (
+                    self.N,
+                ), "smoothing_parameter should have size ({},)".format(self.N)
             # if scalar make array
             elif isinstance(smoothing_parameter, (int, float)):
-                smoothing_parameter = np.full((self.N,), fill_value=smoothing_parameter, dtype=float)
+                smoothing_parameter = np.full(
+                    (self.N,), fill_value=smoothing_parameter, dtype=float
+                )
             else:
                 raise ValueError(
                     "'smoothing_parameter' must be either a float scalar or a numpy array of floats of shape ({},)".format(
@@ -500,27 +515,39 @@ class DensityEstimation(IdEstimation):
                 )
         else:
             # assign a smoothing parameter according to Scott's Rule of Thumb
-            smoothing_parameter = self.N**(-1./(self.dims+4))
+            smoothing_parameter = self.N ** (-1.0 / (self.dims + 4))
             if self.verb:
-                print("Selected a smoothing parameter according to Scott's Rule of Thumb: h = {}".format(smoothing_parameter))
-        
+                print(
+                    "Selected a smoothing parameter according to Scott's Rule of Thumb: h = {}".format(
+                        smoothing_parameter
+                    )
+                )
+
         if self.verb:
             print("Gaussian kernel density estimation started")
 
         if self.period is None:
             if return_only_gradient is False:
-                density = cd._return_Gaussian_kde(self.X,Y_sample,smoothing_parameter)
+                density = cd._return_Gaussian_kde(self.X, Y_sample, smoothing_parameter)
             else:
-                gradients = cd._return_gradient_Gaussian_kde(self.X,Y_sample,smoothing_parameter)
+                gradients = cd._return_gradient_Gaussian_kde(
+                    self.X, Y_sample, smoothing_parameter
+                )
         else:
             if return_only_gradient is False:
-                density = cd._return_Gaussian_kde_periodic(self.X,Y_sample,smoothing_parameter,self.period)
+                density = cd._return_Gaussian_kde_periodic(
+                    self.X, Y_sample, smoothing_parameter, self.period
+                )
             else:
-                gradients = cd._return_gradient_Gaussian_kde_periodic(self.X,Y_sample,smoothing_parameter,self.period)
+                gradients = cd._return_gradient_Gaussian_kde_periodic(
+                    self.X, Y_sample, smoothing_parameter, self.period
+                )
 
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds estimating Gaussian kernel density".format(sec2 - sec))
+            print(
+                "{0:0.2f} seconds estimating Gaussian kernel density".format(sec2 - sec)
+            )
 
         if return_only_gradient is False:
             return np.log(density)
@@ -721,7 +748,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_gCorr(self, use_variance=True,comp_err=True):
+    def compute_density_gCorr(self, use_variance=True, comp_err=True):
         # TODO: matrix A should be in sparse format!
 
         # compute changes in free energy
@@ -782,7 +809,7 @@ class DensityEstimation(IdEstimation):
 
         self.log_den = log_den
         # self.log_den_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
-        
+
         if comp_err is True:
             self.A = A.todense()
             self.B = slin.pinvh(self.A)
@@ -821,7 +848,6 @@ class DensityEstimation(IdEstimation):
         if Fij_type == "zero":
             # set changes in free energy to zero
             raise NotImplementedError("still not implemented")
-            
 
         elif Fij_type == "grad":
             # compute changes in free energy
@@ -969,7 +995,12 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_PAk_gCorr(
-        self, gauss_approx=True, alpha=1.0, log_den_PAk=None, log_den_PAk_err=None, comp_err=True
+        self,
+        gauss_approx=True,
+        alpha=1.0,
+        log_den_PAk=None,
+        log_den_PAk_err=None,
+        comp_err=True,
     ):
         """
         finds the maximum likelihood solution of PAk likelihood + gCorr likelihood with deltaFijs
@@ -1050,9 +1081,10 @@ class DensityEstimation(IdEstimation):
 
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
-
             if self.verb:
-                print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+                print(
+                    "{0:0.2f} seconds to solve linear system".format(time.time() - sec2)
+                )
             sec2 = time.time()
 
             self.log_den = log_den
@@ -1118,7 +1150,7 @@ class DensityEstimation(IdEstimation):
             )
 
     # ----------------------------------------------------------------------------------------------
-   
+
     def compute_grads(self, comp_covmat=False):
         """Compute the gradient of the log density each point using k* nearest neighbors.
         The gradient is estimated via a linear expansion of the density propagated to the log-density.
@@ -1250,7 +1282,6 @@ class DensityEstimation(IdEstimation):
 
         return H
 
-
     def return_interpolated_density_kNN(self, X_new, k):
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
@@ -1307,7 +1338,7 @@ class DensityEstimation(IdEstimation):
         )
 
         log_den, log_den_err, dc = return_density_PAk(
-            cross_distances, self.intrinsic_dim, kstar, self.maxk,interpolation=True
+            cross_distances, self.intrinsic_dim, kstar, self.maxk, interpolation=True
         )
 
         return log_den, log_den_err
