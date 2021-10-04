@@ -3,8 +3,7 @@ from scipy.special import gammaln
 from duly.cython_ import cython_maximum_likelihood_opt as cml
 
 
-def return_density_kstarNN(distances, intrinsic_dim, kstar):
-
+def return_density_kstarNN(distances, intrinsic_dim, kstar, interpolation = False):
     N = distances.shape[0]
     dc = np.zeros(N, dtype=float)
     log_den = np.zeros(N, dtype=float)
@@ -14,10 +13,12 @@ def return_density_kstarNN(distances, intrinsic_dim, kstar):
     )
     log_den_min = 9.9e300
 
+    if interpolation == True: kstar = kstar - 1
+
     for i in range(N):
         dc[i] = distances[i, kstar[i]]
         log_den[i] = np.log(kstar[i]) - (
-            np.log(prefactor) + intrinsic_dim * np.log(distances[i, kstar[i]])
+                np.log(prefactor) + intrinsic_dim * np.log(distances[i, kstar[i]])
         )
 
         log_den_err[i] = 1.0 / np.sqrt(kstar[i])
@@ -33,8 +34,7 @@ def return_density_kstarNN(distances, intrinsic_dim, kstar):
     return log_den, log_den_err, dc
 
 
-def return_density_PAk(distances, intrinsic_dim, kstar, maxk):
-
+def return_density_PAk(distances, intrinsic_dim, kstar, maxk, interpolation=False):
     N = distances.shape[0]
 
     dc = np.zeros(N, dtype=float)
@@ -45,18 +45,20 @@ def return_density_PAk(distances, intrinsic_dim, kstar, maxk):
     )
     log_den_min = 9.9e300
 
+    if interpolation == True: kstar = kstar - 1
+
     for i in range(N):
         vi = np.zeros(maxk, dtype=float)
         dc[i] = distances[i, kstar[i]]
         rr = np.log(kstar[i]) - (
-            np.log(prefactor) + intrinsic_dim * np.log(distances[i, kstar[i]])
+                np.log(prefactor) + intrinsic_dim * np.log(distances[i, kstar[i]])
         )
         knn = 0
         for j in range(kstar[i]):
             # to avoid easy overflow
             vi[j] = prefactor * (
-                pow(distances[i, j + 1], intrinsic_dim)
-                - pow(distances[i, j], intrinsic_dim)
+                    pow(distances[i, j + 1], intrinsic_dim)
+                    - pow(distances[i, j], intrinsic_dim)
             )
 
             if vi[j] < 1.0e-300:

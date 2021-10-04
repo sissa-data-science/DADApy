@@ -1282,12 +1282,8 @@ class DensityEstimation(IdEstimation):
         )
 
         log_den, log_den_err, dc = return_density_kstarNN(
-            cross_distances, self.intrinsic_dim, kstar
+            cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
-
-        # correction for interpolation
-        log_den = log_den - np.log(kstar) + np.log(kstar - 1)
-        log_den_err = log_den_err * np.sqrt(kstar / (kstar - 1))
 
         return log_den, log_den_err
 
@@ -1311,10 +1307,8 @@ class DensityEstimation(IdEstimation):
         )
 
         log_den, log_den_err, dc = return_density_PAk(
-            cross_distances, self.intrinsic_dim, kstar, self.maxk
+            cross_distances, self.intrinsic_dim, kstar, self.maxk,interpolation=True
         )
-
-        # correction for interpolation missing!
 
         return log_den, log_den_err
 
