@@ -22,7 +22,7 @@ def compute_all_distances(X, n_jobs=cores):
 
 def compute_NN_PBC(X, k_max, box_size=None, p=2, cutoff=np.inf):
     tree = KD(X, boxsize=box_size)
-    dist, ind = tree.query(X, k=k_max + 1, p=p, distance_upper_bound=cutoff)
+    dist, ind = tree.query(X, k=k_max, p=p, distance_upper_bound=cutoff)
     return dist, ind
 
 
@@ -57,7 +57,7 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=N
 
 def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
     distances, dist_indices = compute_cross_nn_distances(
-        X, X, maxk, metric=metric, p=p, period=period
+        X, X, maxk+1, metric=metric, p=p, period=period
     )
     return distances, dist_indices
 
