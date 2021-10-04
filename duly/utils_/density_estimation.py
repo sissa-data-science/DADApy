@@ -53,7 +53,9 @@ def return_density_PAk(distances, intrinsic_dim, kstar, maxk, interpolation=Fals
         )
     else:
         logkstars = np.log(kstar - 1, dtype=float)
-        log_den_err = np.sqrt((4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)))
+        log_den_err = np.sqrt(
+            (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
+        )
 
     for i in range(N):
         vi = np.zeros(maxk, dtype=float)
@@ -78,8 +80,6 @@ def return_density_PAk(distances, intrinsic_dim, kstar, maxk, interpolation=Fals
             log_den[i] = rr
         if log_den[i] < log_den_min:
             log_den_min = log_den[i]
-
-        log_den_err[i] = np.sqrt((4 * kstar[i] + 2) / (kstar[i] * (kstar[i] - 1)))
 
     # Normalise density
     log_den -= np.log(N)
