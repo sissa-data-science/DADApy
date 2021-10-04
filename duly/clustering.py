@@ -65,7 +65,7 @@ class Clustering(DensityEstimation):
 
         N = self.distances.shape[0]
         g = log_den_c - self.log_den_err
-        # centers are point of max density  (max(g) ) within their optimal neighbolog_denod (defined by kstar)
+        # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
 
         out = cf._compute_clustering(
@@ -91,6 +91,7 @@ class Clustering(DensityEstimation):
         out_bord = out[4]
         log_den_min = out[5]
         self.log_den_bord_err = out[6]
+        self.bord_indices = out[7]
 
         self.log_den_bord = out_bord + log_den_min - 1 - np.log(N)
 

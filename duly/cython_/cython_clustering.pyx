@@ -42,6 +42,7 @@ def _compute_clustering(floatTYPE_t Z,
     cdef np.ndarray[DTYPE_t, ndim = 1]  _centers_ = np.repeat(-1, Nele)
     cdef DTYPE_t len_centers = 0
 
+# This for looks for the centers. A point is a center if its g is bigger than the one of all its neighbors
     for i in range(Nele):
         t = 0
         for j in range(1, kstar[i] + 1):
@@ -54,6 +55,8 @@ def _compute_clustering(floatTYPE_t Z,
 
     cdef np.ndarray[DTYPE_t, ndim = 1]  to_remove = np.repeat(-1, len_centers)
     cdef DTYPE_t len_to_remove = 0
+
+# This  part  checks that there are no centers within the neighborhood of points with higher density.
 
     for i in range(Nele):
         for k in range(len_centers):
@@ -129,6 +132,15 @@ def _compute_clustering(floatTYPE_t Z,
         for j in range(Nclus):
             Point_bord[i, j] = -1
 
+    #
+    # i and j are points belonging to the clusters c(i) and c(j)
+    #
+    # Point i is a border point between c(i) and c(j) if: 
+    #                   a) It has in its neighborhood a point j belonging to other cluster.
+    #                   b) There are no other points belonging to c(i) nearer from point j
+    #                   c) It has the maximum density among the points that fulfill a) & b)
+    #
+
     for c in range(Nclus):
         for p1 in clstruct[c]:
             for k in range(1, kstar[p1] + 1):
@@ -153,6 +165,8 @@ def _compute_clustering(floatTYPE_t Z,
                     Point_bord[cp, c] = p1
                     Point_bord[c, cp] = p1
 
+    # Symmetrize matrix
+
     for i in range(Nclus - 1):
         for j in range(i + 1, Nclus):
             if (Point_bord[i, j] != -1):
@@ -175,6 +189,7 @@ def _compute_clustering(floatTYPE_t Z,
     cdef np.ndarray[DTYPE_t, ndim = 1]  clsurv = np.ones(Nclus, dtype=int)
 
     # sec = time.time()
+    # Here we start the merging process through multimodality test.
     secp = 0
 
     while (check == 1):
@@ -261,8 +276,9 @@ def _compute_clustering(floatTYPE_t Z,
             clstruct_m.append(clstruct[j])
             centers_m.append(centers[j])
 
-    Rho_bord_m = np.zeros((Nclus_m, Nclus_m), dtype=float)
+    Point_bord_m = np.zeros((Nclus_m, Nclus_m), dtype=int)
     Rho_bord_err_m = np.zeros((Nclus_m, Nclus_m), dtype=float)
+    Rho_bord_m = np.zeros((Nclus_m, Nclus_m), dtype=float)
 
     for j in range(Nclus):
         if (clsurv[j] == 1):
@@ -272,6 +288,7 @@ def _compute_clustering(floatTYPE_t Z,
                     kk = nnum[k]
                     Rho_bord_m[jj][kk] = Rho_bord[j][k]
                     Rho_bord_err_m[jj][kk] = Rho_bord_err[j][k]
+                    Point_bord_m[jj][kk]=Point_bord[j][k]
 
     Last_cls = np.empty(Nele, dtype=int)
     for j in range(Nclus_m):
@@ -294,5 +311,5 @@ def _compute_clustering(floatTYPE_t Z,
     sec2 = time.time()
     if verb: print(
         "{0:0.2f} seconds for final operations".format(sec2 - sec))
-    return clstruct_m, Nclus_m, labels, centers_m, out_bord, Rho_min, Rho_bord_err_m
+    return clstruct_m, Nclus_m, labels, centers_m, out_bord, Rho_min, Rho_bord_err_m, Point_bord_m
 
