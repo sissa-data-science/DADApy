@@ -3,12 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Distance-based Unsupervised Learning in pYthon (DULY)
+Distance-based Analysis of DAta-manifolds in python (DADApy)
 ===================================================================
 
-DULY is a Python package for "Distance-based Unsupervised Learning in pYthon".
+DADApy is a python package for distance-based analysis of data-manifolds.
 
-The code can be found on GitHub at https://github.com/sissa-data-science/DULY.
+The code can be found on GitHub at https://github.com/sissa-data-science/DADApy.
 
 .. toctree::
    :maxdepth: 2
