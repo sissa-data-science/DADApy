@@ -5,10 +5,10 @@ import numpy as np
 import scipy.special as sp
 from scipy.optimize import curve_fit
 
-from duly._base import Base
-from duly.utils_ import utils as ut
+from dadapy._base import Base
+from dadapy.utils_ import utils as ut
 
-from duly.utils_.utils import compute_nn_distances
+from dadapy.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -166,7 +166,6 @@ class IdEstimation(Base):
                 raise ValueError("Please select a valid algorithm type")
 
             return intrinsic_dim
-
 
         for i in range(nrep):
             idx = np.random.choice(self.N, size=N_subset, replace=False)

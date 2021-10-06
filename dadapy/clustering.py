@@ -3,8 +3,8 @@ import time
 import numpy as np
 import scipy as sp
 
-from duly.cython_ import cython_clustering as cf
-from duly.density_estimation import DensityEstimation
+from dadapy.cython_ import cython_clustering as cf
+from dadapy.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()
 

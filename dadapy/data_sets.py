@@ -1,6 +1,6 @@
 import numpy as np
 
-from duly.data import Data
+from dadapy.data import Data
 
 
 class DataSets:

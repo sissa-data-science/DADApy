@@ -16,4 +16,4 @@ Install the latest version from the Github repository via
 
 .. code-block:: bash
 
-	pip install git+https://github.com/sissa-data-science/DULY
+	pip install git+https://github.com/sissa-data-science/DADApy

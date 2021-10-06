@@ -1,4 +1,4 @@
-import duly.utils_.utils as ut
+import dadapy.utils_.utils as ut
 import numpy as np
 from scipy.optimize import minimize
 

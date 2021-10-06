@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pytest
 
-from duly import DensityEstimation
+from dadapy import DensityEstimation
 
 
 def test_density_estimation_basics():

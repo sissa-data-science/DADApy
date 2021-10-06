@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from duly import MetricComparisons
+from dadapy import MetricComparisons
 
 
 def test_information_imbalance_basics():

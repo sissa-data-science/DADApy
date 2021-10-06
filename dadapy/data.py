@@ -3,8 +3,8 @@ import os
 
 import numpy as np
 
-from duly.clustering import Clustering
-from duly.metric_comparisons import MetricComparisons
+from dadapy.clustering import Clustering
+from dadapy.metric_comparisons import MetricComparisons
 
 cores = multiprocessing.cpu_count()
 np.set_printoptions(precision=2)
