@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pytest
 
-from duly import Clustering
+from dadapy import Clustering
 
 
 def test_clustering_basics():

@@ -15,18 +15,18 @@ import sys
 
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath("../.."))
-sys.path.insert(0, os.path.abspath("../duly"))
-sys.path.insert(0, os.path.abspath("../../duly"))
+sys.path.insert(0, os.path.abspath("../dadapy"))
+sys.path.insert(0, os.path.abspath("../../dadapy"))
 
 sys.path.insert(0, os.path.abspath("../cython_"))
-sys.path.insert(0, os.path.abspath("../../duly/cython_"))
+sys.path.insert(0, os.path.abspath("../../dadapy/cython_"))
 
 sys.path.insert(0, os.path.abspath("../examples"))
 sys.path.insert(0, os.path.abspath("../../examples"))
 
 # -- Project information -----------------------------------------------------
 
-project = "duly"
+project = "dadapy"
 copyright = "2021, Glielmo et al."
 author = "Aldo Glielmo, Matteo Carli, Diego Doimo, Iuri Macocco, Maria D'Errico, Alex Rodrriguez, Alessandro Laio"
 
@@ -68,7 +68,7 @@ autodoc_mock_imports = [
     "cython_clustering",
     "cython_maximum_likelihood_opt",
     "cython_grads",
-    "duly.cython_clustering",
-    "duly.cython_maximum_likelihood_opt",
-    "duly.cython_grads",
+    "dadapy.cython_clustering",
+    "dadapy.cython_maximum_likelihood_opt",
+    "dadapy.cython_grads",
 ]

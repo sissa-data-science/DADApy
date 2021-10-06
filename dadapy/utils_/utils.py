@@ -57,7 +57,7 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=N
 
 def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
     distances, dist_indices = compute_cross_nn_distances(
-        X, X, maxk+1, metric=metric, p=p, period=period
+        X, X, maxk + 1, metric=metric, p=p, period=period
     )
     return distances, dist_indices
 

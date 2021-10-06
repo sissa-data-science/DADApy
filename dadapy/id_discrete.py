@@ -5,10 +5,10 @@ import numpy as np
 # import scipy.special as sp
 from scipy.optimize import minimize_scalar as SMin
 
-from duly._base import Base
-from duly.utils_ import discrete_functions as df
+from dadapy._base import Base
+from dadapy.utils_ import discrete_functions as df
 
-# from duly.utils_ import utils as ut
+# from dadapy.utils_ import utils as ut
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()

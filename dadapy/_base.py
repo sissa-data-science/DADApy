@@ -8,8 +8,8 @@ import numpy as np
 from sklearn.metrics import pairwise_distances_chunked
 from sklearn.neighbors import NearestNeighbors
 
-from duly.utils_.utils import from_all_distances_to_nndistances
-from duly.utils_.utils import compute_nn_distances
+from dadapy.utils_.utils import from_all_distances_to_nndistances
+from dadapy.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -51,7 +51,9 @@ class Base:
         self.period = None
 
         if coordinates is not None:
-            assert isinstance(self.X, np.ndarray), "Coordinates must be in numpy ndarray format"
+            assert isinstance(
+                self.X, np.ndarray
+            ), "Coordinates must be in numpy ndarray format"
 
             self.dtype = self.X.dtype
 

@@ -1,6 +1,6 @@
 import pytest
 
-from duly.id_discrete import *
+from dadapy.id_discrete import *
 
 
 def test_id_discrete():
@@ -30,7 +30,7 @@ def test_id_discrete():
     assert pytest.approx(d, IDD.id_estimated_binom)
 
 
-from duly.utils_ import discrete_functions as df
+from dadapy.utils_ import discrete_functions as df
 
 """
 def test_id_volumes():

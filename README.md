@@ -12,9 +12,10 @@ For more details and tutorials, visit the homepage at:
 [https://duly.readthedocs.io/](https://duly.readthedocs.io/)
 
 # Quick Example
+
 ```python
 import numpy as np
-from duly.data import Data
+from dadapy.data import Data
 
 # a simple 3D gaussian dataset
 X = np.random.normal(0, 1, (1000, 3))
@@ -74,7 +75,7 @@ The package contains Cython-generated C extensions that are automatically compil
 The latest stable release is (not yet!) available through pip: (add the `--user` flag if root access is not available
 
 ```sh
-pip install duly
+pip install dadapy
 ```
 
 To install the latest development version, clone the source code from github

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import gammaln
-from duly.cython_ import cython_maximum_likelihood_opt as cml
+from dadapy.cython_ import cython_maximum_likelihood_opt as cml
 
 
 def return_density_kstarNN(distances, intrinsic_dim, kstar, interpolation=False):

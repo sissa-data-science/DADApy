@@ -3,9 +3,9 @@ import multiprocessing
 import numpy as np
 from joblib import Parallel, delayed
 
-import duly.utils_.utils as ut
-from duly._base import Base
-from duly.utils_.utils import compute_nn_distances
+import dadapy.utils_.utils as ut
+from dadapy._base import Base
+from dadapy.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 

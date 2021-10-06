@@ -6,12 +6,12 @@ from scipy.special import gammaln
 from scipy import sparse
 from scipy import linalg as slin
 
-from duly.id_estimation import IdEstimation
-from duly.cython_ import cython_maximum_likelihood_opt as cml
-from duly.cython_ import cython_grads as cgr
-from duly.cython_ import cython_density as cd
-from duly.utils_.utils import compute_cross_nn_distances
-from duly.utils_.density_estimation import return_density_kstarNN, return_density_PAk
+from dadapy.id_estimation import IdEstimation
+from dadapy.cython_ import cython_maximum_likelihood_opt as cml
+from dadapy.cython_ import cython_grads as cgr
+from dadapy.cython_ import cython_density as cd
+from dadapy.utils_.utils import compute_cross_nn_distances
+from dadapy.utils_.density_estimation import return_density_kstarNN, return_density_PAk
 
 cores = multiprocessing.cpu_count()
 
@@ -835,7 +835,7 @@ class DensityEstimation(IdEstimation):
         """
         finds the minimum of the
         """
-        from duly.utils_.mlmax_pytorch import maximise
+        from dadapy.utils_.mlmax_pytorch import maximise
 
         # Fij_types: 'grad', 'zero', 'PAk'
         # TODO: we need to implement a gCorr term with the deltaFijs equal to zero.
@@ -1104,7 +1104,7 @@ class DensityEstimation(IdEstimation):
         else:
             if self.verb:
                 print("Solving via SGD")
-            from duly.utils_.mlmax_pytorch import maximise_wPAk
+            from dadapy.utils_.mlmax_pytorch import maximise_wPAk
 
             for i in range(self.N):
 
