@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/sissa-data-science/DULY/master/logo/dummy_logo.png" width="200">
+<img src="https://raw.githubusercontent.com/sissa-data-science/DADApy/master/logo/dummy_logo.png" width="200">
 
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -9,7 +9,7 @@ DULy is a Python package for the characterisation of manifolds in high dimension
 
 # Homepage
 For more details and tutorials, visit the homepage at:
-[https://duly.readthedocs.io/](https://duly.readthedocs.io/)
+[https://dadapy.readthedocs.io/](https://dadapy.readthedocs.io/)
 
 # Quick Example
 
@@ -82,7 +82,7 @@ To install the latest development version, clone the source code from github
 and install with pip from local file:
 
 ```sh
-git clone https://github.com/sissa-data-science/DULY.git
-cd DULY
+git clone https://github.com/sissa-data-science/DADApy.git
+cd DADApy
 pip install .
 ```
