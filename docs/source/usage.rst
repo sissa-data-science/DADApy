@@ -1,7 +1,7 @@
 Typical usage of the package
 ============================
 
-A typical usage of Duly involves the initialisation of a Data object either with a set of coordinates or with a set of
+A typical usage of Dadapy involves the initialisation of a Data object either with a set of coordinates or with a set of
 distances between points.
 After the initialisation a series of computations are performed by calling the class method relative to specific
 algorithm wanted.
@@ -40,11 +40,11 @@ The results of the computations are typically available as attributes of the obj
     # using a more sophisticated estimator
     data.compute_density_PAk()
 
-    plt.hist(data.Rho)
+    plt.hist(data.log_den)
 
     # find the statistically significant peaks
     # of the density profile computed previously
     data.compute_clustering(Z = 1.5)
 
-    print(data.Nclus_m)
+    print(data.N_clusters)
 
