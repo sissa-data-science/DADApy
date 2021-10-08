@@ -171,7 +171,7 @@ class IdEstimation(Base):
             idx = np.random.choice(self.N, size=N_subset, replace=False)
 
             d, _ = compute_nn_distances(
-                self.X[idx], min(N_subset, self.maxk), self.metric, self.p, self.period
+                self.X[idx], min(N_subset-1, self.maxk), self.metric, self.p, self.period
             )
 
             mus = np.log(d[:, 2] / d[:, 1])
