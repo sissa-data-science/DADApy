@@ -101,7 +101,6 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_r2n(self, n1, d0=0.001, d1=1000, mus=None, return_id=False):
-        assert n1 * 2 < self.maxk
 
         if mus is None:
             mus = np.log(self.distances[:, n1 * 2] / self.distances[:, n1])
