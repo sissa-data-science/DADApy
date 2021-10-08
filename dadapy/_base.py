@@ -54,7 +54,7 @@ class Base:
         self.data_structure = data_structure
 
         if coordinates is not None:
-            assert isinstance(self.X, np.ndarray),
+            assert isinstance(self.X, np.ndarray)
             "Coordinates must be in numpy ndarray format"
 
             self.dtype = self.X.dtype
