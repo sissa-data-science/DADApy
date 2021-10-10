@@ -130,6 +130,7 @@ class IdEstimation(Base):
                 N_subset: Can be used to change the scale at which one is looking at the data
 
         Returns:
+                
 
         """
 
