@@ -717,7 +717,7 @@ class DensityEstimation(IdEstimation):
                     break
 
             if knn == 0:
-                log_den[i] = cml._nrmaxl(rr, self.kstar[i], vi, self.maxk)
+                log_den[i] = cml._nrmaxl(rr, self.kstar[i], vi)
             else:
                 log_den[i] = rr
             if log_den[i] < log_den_min:

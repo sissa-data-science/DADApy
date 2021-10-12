@@ -342,7 +342,7 @@ class Clustering(DensityEstimation):
                 cluster_centers.append(centers[j])
         Point_bord_m = np.zeros((N_clusters, N_clusters), dtype=int)
         log_den_bord_m = np.zeros((N_clusters, N_clusters), dtype=float)
-        log_den_bord_err = np.zeros((N_clusters, N_clusters), dtype=float)
+        log_den_bord_err_m = np.zeros((N_clusters, N_clusters), dtype=float)
         for j in range(Nclus):
             if clsurv[j] == 1:
                 jj = nnum[j]
