@@ -101,8 +101,7 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_r2n(self, n1, d0=0.001, d1=1000, mus=None, return_id=False):
-        assert n1 * 2 < self.maxk
-
+        
         if mus is None:
             mus = np.log(self.distances[:, n1 * 2] / self.distances[:, n1])
 
@@ -133,13 +132,6 @@ class IdEstimation(Base):
         Returns:
 
         """
-        # removal overlapping data
-        # N0 = self.X.shape[0]
-        # self.X = np.unique(self.X, axis = 0)
-        #
-        # self.N = self.X.shape[0]
-        # if self.N != N0:
-        #     print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
 
         if N_subset is None:
             N_subset = self.N
@@ -178,7 +170,7 @@ class IdEstimation(Base):
             idx = np.random.choice(self.N, size=N_subset, replace=False)
 
             d, _ = compute_nn_distances(
-                self.X[idx], min(N_subset, self.maxk), self.metric, self.p, self.period
+                self.X[idx], min(N_subset-1, self.maxk), self.metric, self.p, self.period
             )
 
             mus = np.log(d[:, 2] / d[:, 1])
