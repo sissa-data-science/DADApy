@@ -15,8 +15,7 @@ ctypedef np.float64_t floatTYPE_t
 @cython.cdivision(True)
 def _nrmaxl(floatTYPE_t rinit,
             DTYPE_t kstar_i,
-            np.ndarray[floatTYPE_t, ndim = 1] vi,
-            DTYPE_t maxk):
+            np.ndarray[floatTYPE_t, ndim = 1] vi):
 
     # declarations
     cdef DTYPE_t j,niter

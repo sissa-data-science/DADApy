@@ -699,7 +699,7 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
         for i in range(self.N):
-            vi = np.zeros(self.maxk, dtype=float)
+            vi = np.zeros(self.kstar[i], dtype=float)
             dc[i] = self.distances[i, self.kstar[i]]
             rr = np.log(self.kstar[i]) - (
                 np.log(prefactor)
@@ -712,10 +712,10 @@ class DensityEstimation(IdEstimation):
                     pow(self.distances[i, j + 1], self.intrinsic_dim)
                     - pow(self.distances[i, j], self.intrinsic_dim)
                 )
-
                 if vi[j] < 1.0e-300:
                     knn = 1
                     break
+
             if knn == 0:
                 log_den[i] = cml._nrmaxl(rr, self.kstar[i], vi, self.maxk)
             else:
