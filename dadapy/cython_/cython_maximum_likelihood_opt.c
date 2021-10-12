@@ -602,8 +602,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__duly__cython___cython_maximum_likelihood_opt
-#define __PYX_HAVE_API__duly__cython___cython_maximum_likelihood_opt
+#define __PYX_HAVE__dadapy__cython___cython_maximum_likelihood_opt
+#define __PYX_HAVE_API__dadapy__cython___cython_maximum_likelihood_opt
 /* Early includes */
 #include <string.h>
 #include <stdio.h>
@@ -1073,23 +1073,23 @@ typedef npy_double __pyx_t_5numpy_double_t;
  */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
-/* "duly/cython_/cython_maximum_likelihood_opt.pyx":11
+/* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":11
  * boolTYPE = np.bool
  * 
  * ctypedef np.int_t DTYPE_t             # <<<<<<<<<<<<<<
  * ctypedef np.float64_t floatTYPE_t
  * 
  */
-typedef __pyx_t_5numpy_int_t __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t;
+typedef __pyx_t_5numpy_int_t __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t;
 
-/* "duly/cython_/cython_maximum_likelihood_opt.pyx":12
+/* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":12
  * 
  * ctypedef np.int_t DTYPE_t
  * ctypedef np.float64_t floatTYPE_t             # <<<<<<<<<<<<<<
  * 
  * @cython.boundscheck(False)
  */
-typedef __pyx_t_5numpy_float64_t __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t;
+typedef __pyx_t_5numpy_float64_t __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t;
 /* Declarations.proto */
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -1755,13 +1755,13 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 
 /* Module declarations from 'libc.math' */
 
-/* Module declarations from 'duly.cython_.cython_maximum_likelihood_opt' */
-static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t = { "floatTYPE_t", NULL, sizeof(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t), { 0 }, 0, 'R', 0, 0 };
-#define __Pyx_MODULE_NAME "duly.cython_.cython_maximum_likelihood_opt"
-extern int __pyx_module_is_main_duly__cython___cython_maximum_likelihood_opt;
-int __pyx_module_is_main_duly__cython___cython_maximum_likelihood_opt = 0;
+/* Module declarations from 'dadapy.cython_.cython_maximum_likelihood_opt' */
+static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t = { "floatTYPE_t", NULL, sizeof(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t), { 0 }, 0, 'R', 0, 0 };
+#define __Pyx_MODULE_NAME "dadapy.cython_.cython_maximum_likelihood_opt"
+extern int __pyx_module_is_main_dadapy__cython___cython_maximum_likelihood_opt;
+int __pyx_module_is_main_dadapy__cython___cython_maximum_likelihood_opt = 0;
 
-/* Implementation of 'duly.cython_.cython_maximum_likelihood_opt' */
+/* Implementation of 'dadapy.cython_.cython_maximum_likelihood_opt' */
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_RuntimeError;
 static PyObject *__pyx_builtin_ValueError;
@@ -1788,7 +1788,6 @@ static const char __pyx_k_Cov2[] = "Cov2";
 static const char __pyx_k_bool[] = "bool";
 static const char __pyx_k_func[] = "func";
 static const char __pyx_k_main[] = "__main__";
-static const char __pyx_k_maxk[] = "maxk";
 static const char __pyx_k_name[] = "__name__";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_time[] = "time";
@@ -1821,7 +1820,7 @@ static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype cod
 static const char __pyx_k_Format_string_allocated_too_shor[] = "Format string allocated too short, see comment in numpy.pxd";
 static const char __pyx_k_Non_native_byte_order_not_suppor[] = "Non-native byte order not supported";
 static const char __pyx_k_cython_maximum_likelihood_opt_py[] = "cython_maximum_likelihood_opt.pyx";
-static const char __pyx_k_duly_cython__cython_maximum_like[] = "duly.cython_.cython_maximum_likelihood_opt";
+static const char __pyx_k_dadapy_cython__cython_maximum_li[] = "dadapy.cython_.cython_maximum_likelihood_opt";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
 static const char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
 static PyObject *__pyx_n_s_A;
@@ -1842,8 +1841,8 @@ static PyObject *__pyx_n_s_bool;
 static PyObject *__pyx_n_s_boolTYPE;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_kp_s_cython_maximum_likelihood_opt_py;
+static PyObject *__pyx_n_s_dadapy_cython__cython_maximum_li;
 static PyObject *__pyx_n_s_detinv;
-static PyObject *__pyx_n_s_duly_cython__cython_maximum_like;
 static PyObject *__pyx_n_s_eps;
 static PyObject *__pyx_n_s_fepsilon;
 static PyObject *__pyx_n_s_finfo;
@@ -1859,7 +1858,6 @@ static PyObject *__pyx_n_s_jf;
 static PyObject *__pyx_n_s_kstar_i;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_matinv2;
-static PyObject *__pyx_n_s_maxk;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_niter;
 static PyObject *__pyx_n_s_np;
@@ -1882,8 +1880,8 @@ static PyObject *__pyx_n_s_tt;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_vi;
 static PyObject *__pyx_n_s_zeros;
-static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_A, PyArrayObject *__pyx_v_B); /* proto */
-static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_rinit, __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_kstar_i, PyArrayObject *__pyx_v_vi, CYTHON_UNUSED __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_maxk); /* proto */
+static PyObject *__pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_A, PyArrayObject *__pyx_v_B); /* proto */
+static PyObject *__pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt__nrmaxl(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_rinit, __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_kstar_i, PyArrayObject *__pyx_v_vi); /* proto */
 static PyObject *__pyx_int_2;
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__2;
@@ -1897,22 +1895,21 @@ static PyObject *__pyx_codeobj__3;
 static PyObject *__pyx_codeobj__10;
 /* Late includes */
 
-/* "duly/cython_/cython_maximum_likelihood_opt.pyx":16
+/* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":16
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def _nrmaxl(floatTYPE_t rinit,             # <<<<<<<<<<<<<<
  *             DTYPE_t kstar_i,
- *             np.ndarray[floatTYPE_t, ndim = 1] vi,
+ *             np.ndarray[floatTYPE_t, ndim = 1] vi):
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmaxl(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmaxl = {"_nrmaxl", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmaxl, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmaxl(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_rinit;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_kstar_i;
+static PyObject *__pyx_pw_6dadapy_7cython__29cython_maximum_likelihood_opt_1_nrmaxl(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_6dadapy_7cython__29cython_maximum_likelihood_opt_1_nrmaxl = {"_nrmaxl", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_6dadapy_7cython__29cython_maximum_likelihood_opt_1_nrmaxl, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_6dadapy_7cython__29cython_maximum_likelihood_opt_1_nrmaxl(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_rinit;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_kstar_i;
   PyArrayObject *__pyx_v_vi = 0;
-  CYTHON_UNUSED __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_maxk;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -1920,14 +1917,12 @@ static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmax
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_nrmaxl (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_rinit,&__pyx_n_s_kstar_i,&__pyx_n_s_vi,&__pyx_n_s_maxk,0};
-    PyObject* values[4] = {0,0,0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_rinit,&__pyx_n_s_kstar_i,&__pyx_n_s_vi,0};
+    PyObject* values[3] = {0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
-        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-        CYTHON_FALLTHROUGH;
         case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
         CYTHON_FALLTHROUGH;
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
@@ -1946,47 +1941,39 @@ static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmax
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_kstar_i)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_nrmaxl", 1, 4, 4, 1); __PYX_ERR(0, 16, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_nrmaxl", 1, 3, 3, 1); __PYX_ERR(0, 16, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_vi)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_nrmaxl", 1, 4, 4, 2); __PYX_ERR(0, 16, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  3:
-        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_maxk)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("_nrmaxl", 1, 4, 4, 3); __PYX_ERR(0, 16, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_nrmaxl", 1, 3, 3, 2); __PYX_ERR(0, 16, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_nrmaxl") < 0)) __PYX_ERR(0, 16, __pyx_L3_error)
       }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
     __pyx_v_rinit = __pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_rinit == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 16, __pyx_L3_error)
     __pyx_v_kstar_i = __Pyx_PyInt_As_npy_long(values[1]); if (unlikely((__pyx_v_kstar_i == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L3_error)
     __pyx_v_vi = ((PyArrayObject *)values[2]);
-    __pyx_v_maxk = __Pyx_PyInt_As_npy_long(values[3]); if (unlikely((__pyx_v_maxk == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 19, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_nrmaxl", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 16, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_nrmaxl", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 16, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("duly.cython_.cython_maximum_likelihood_opt._nrmaxl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("dadapy.cython_.cython_maximum_likelihood_opt._nrmaxl", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vi), __pyx_ptype_5numpy_ndarray, 1, "vi", 0))) __PYX_ERR(0, 18, __pyx_L1_error)
-  __pyx_r = __pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl(__pyx_self, __pyx_v_rinit, __pyx_v_kstar_i, __pyx_v_vi, __pyx_v_maxk);
+  __pyx_r = __pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt__nrmaxl(__pyx_self, __pyx_v_rinit, __pyx_v_kstar_i, __pyx_v_vi);
 
   /* function exit code */
   goto __pyx_L0;
@@ -1997,7 +1984,7 @@ static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmax
   return __pyx_r;
 }
 
-/* "duly/cython_/cython_maximum_likelihood_opt.pyx":33
+/* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":32
  * 
  *     #useful subroutine
  *     def _matinv2(np.ndarray[floatTYPE_t, ndim = 2] A, np.ndarray[floatTYPE_t, ndim = 2] B):             # <<<<<<<<<<<<<<
@@ -2006,9 +1993,9 @@ static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmax
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2 = {"_matinv2", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2 = {"_matinv2", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_A = 0;
   PyArrayObject *__pyx_v_B = 0;
   int __pyx_lineno = 0;
@@ -2040,11 +2027,11 @@ static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_B)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_matinv2", 1, 2, 2, 1); __PYX_ERR(0, 33, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_matinv2", 1, 2, 2, 1); __PYX_ERR(0, 32, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_matinv2") < 0)) __PYX_ERR(0, 33, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_matinv2") < 0)) __PYX_ERR(0, 32, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -2057,15 +2044,15 @@ static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_matinv2", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 33, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_matinv2", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 32, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("duly.cython_.cython_maximum_likelihood_opt._nrmaxl._matinv2", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("dadapy.cython_.cython_maximum_likelihood_opt._nrmaxl._matinv2", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_A), __pyx_ptype_5numpy_ndarray, 1, "A", 0))) __PYX_ERR(0, 33, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_B), __pyx_ptype_5numpy_ndarray, 1, "B", 0))) __PYX_ERR(0, 33, __pyx_L1_error)
-  __pyx_r = __pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(__pyx_self, __pyx_v_A, __pyx_v_B);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_A), __pyx_ptype_5numpy_ndarray, 1, "A", 0))) __PYX_ERR(0, 32, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_B), __pyx_ptype_5numpy_ndarray, 1, "B", 0))) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_r = __pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(__pyx_self, __pyx_v_A, __pyx_v_B);
 
   /* function exit code */
   goto __pyx_L0;
@@ -2076,8 +2063,8 @@ static PyObject *__pyx_pw_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_A, PyArrayObject *__pyx_v_B) {
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_detinv;
+static PyObject *__pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_A, PyArrayObject *__pyx_v_B) {
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_detinv;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_A;
   __Pyx_Buffer __pyx_pybuffer_A;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_B;
@@ -2106,16 +2093,16 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   __pyx_pybuffernd_B.rcbuffer = &__pyx_pybuffer_B;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_A.rcbuffer->pybuffer, (PyObject*)__pyx_v_A, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 33, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_A.rcbuffer->pybuffer, (PyObject*)__pyx_v_A, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 32, __pyx_L1_error)
   }
   __pyx_pybuffernd_A.diminfo[0].strides = __pyx_pybuffernd_A.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_A.diminfo[0].shape = __pyx_pybuffernd_A.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_A.diminfo[1].strides = __pyx_pybuffernd_A.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_A.diminfo[1].shape = __pyx_pybuffernd_A.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_B.rcbuffer->pybuffer, (PyObject*)__pyx_v_B, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 33, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_B.rcbuffer->pybuffer, (PyObject*)__pyx_v_B, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 32, __pyx_L1_error)
   }
   __pyx_pybuffernd_B.diminfo[0].strides = __pyx_pybuffernd_B.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_B.diminfo[0].shape = __pyx_pybuffernd_B.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_B.diminfo[1].strides = __pyx_pybuffernd_B.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_B.diminfo[1].shape = __pyx_pybuffernd_B.rcbuffer->pybuffer.shape[1];
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":38
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":37
  *         #cdef np.ndarray[floatTYPE_t, ndim = 2] B = np.zeros((2, 2))
  * 
  *         detinv = 1./(A[0,0]*A[1,1] - A[0,1]*A[1,0])             # <<<<<<<<<<<<<<
@@ -2138,9 +2125,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   __pyx_t_8 = 0;
   if (__pyx_t_7 < 0) __pyx_t_7 += __pyx_pybuffernd_A.diminfo[0].shape;
   if (__pyx_t_8 < 0) __pyx_t_8 += __pyx_pybuffernd_A.diminfo[1].shape;
-  __pyx_v_detinv = (1. / (((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_2, __pyx_pybuffernd_A.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_A.diminfo[1].strides))) - ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_A.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_A.diminfo[1].strides)))));
+  __pyx_v_detinv = (1. / (((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_2, __pyx_pybuffernd_A.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_3, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_4, __pyx_pybuffernd_A.diminfo[1].strides))) - ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_A.diminfo[1].strides)) * (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_A.diminfo[1].strides)))));
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":39
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":38
  * 
  *         detinv = 1./(A[0,0]*A[1,1] - A[0,1]*A[1,0])
  *         B[0,0] = +detinv * A[1,1]             # <<<<<<<<<<<<<<
@@ -2155,9 +2142,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   __pyx_t_5 = 0;
   if (__pyx_t_6 < 0) __pyx_t_6 += __pyx_pybuffernd_B.diminfo[0].shape;
   if (__pyx_t_5 < 0) __pyx_t_5 += __pyx_pybuffernd_B.diminfo[1].shape;
-  *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_6, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_5, __pyx_pybuffernd_B.diminfo[1].strides) = (__pyx_v_detinv * (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_7, __pyx_pybuffernd_A.diminfo[1].strides)));
+  *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_6, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_5, __pyx_pybuffernd_B.diminfo[1].strides) = (__pyx_v_detinv * (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_7, __pyx_pybuffernd_A.diminfo[1].strides)));
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":40
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":39
  *         detinv = 1./(A[0,0]*A[1,1] - A[0,1]*A[1,0])
  *         B[0,0] = +detinv * A[1,1]
  *         B[1,0] = -detinv * A[1,0]             # <<<<<<<<<<<<<<
@@ -2172,9 +2159,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   __pyx_t_6 = 0;
   if (__pyx_t_5 < 0) __pyx_t_5 += __pyx_pybuffernd_B.diminfo[0].shape;
   if (__pyx_t_6 < 0) __pyx_t_6 += __pyx_pybuffernd_B.diminfo[1].shape;
-  *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_B.diminfo[1].strides) = ((-__pyx_v_detinv) * (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_A.diminfo[1].strides)));
+  *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_B.diminfo[1].strides) = ((-__pyx_v_detinv) * (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_A.diminfo[1].strides)));
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":41
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":40
  *         B[0,0] = +detinv * A[1,1]
  *         B[1,0] = -detinv * A[1,0]
  *         B[0,1] = -detinv * A[0,1]             # <<<<<<<<<<<<<<
@@ -2189,9 +2176,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   __pyx_t_5 = 1;
   if (__pyx_t_6 < 0) __pyx_t_6 += __pyx_pybuffernd_B.diminfo[0].shape;
   if (__pyx_t_5 < 0) __pyx_t_5 += __pyx_pybuffernd_B.diminfo[1].shape;
-  *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_6, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_5, __pyx_pybuffernd_B.diminfo[1].strides) = ((-__pyx_v_detinv) * (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_7, __pyx_pybuffernd_A.diminfo[1].strides)));
+  *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_6, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_5, __pyx_pybuffernd_B.diminfo[1].strides) = ((-__pyx_v_detinv) * (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_7, __pyx_pybuffernd_A.diminfo[1].strides)));
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":42
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":41
  *         B[1,0] = -detinv * A[1,0]
  *         B[0,1] = -detinv * A[0,1]
  *         B[1,1] = +detinv * A[0,0]             # <<<<<<<<<<<<<<
@@ -2206,9 +2193,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   __pyx_t_6 = 1;
   if (__pyx_t_5 < 0) __pyx_t_5 += __pyx_pybuffernd_B.diminfo[0].shape;
   if (__pyx_t_6 < 0) __pyx_t_6 += __pyx_pybuffernd_B.diminfo[1].shape;
-  *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_B.diminfo[1].strides) = (__pyx_v_detinv * (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_A.diminfo[1].strides)));
+  *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_B.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_B.diminfo[0].strides, __pyx_t_6, __pyx_pybuffernd_B.diminfo[1].strides) = (__pyx_v_detinv * (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_A.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_A.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_A.diminfo[1].strides)));
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":33
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":32
  * 
  *     #useful subroutine
  *     def _matinv2(np.ndarray[floatTYPE_t, ndim = 2] A, np.ndarray[floatTYPE_t, ndim = 2] B):             # <<<<<<<<<<<<<<
@@ -2227,7 +2214,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_A.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_B.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("duly.cython_.cython_maximum_likelihood_opt._nrmaxl._matinv2", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("dadapy.cython_.cython_maximum_likelihood_opt._nrmaxl._matinv2", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -2239,34 +2226,34 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmax
   return __pyx_r;
 }
 
-/* "duly/cython_/cython_maximum_likelihood_opt.pyx":16
+/* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":16
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def _nrmaxl(floatTYPE_t rinit,             # <<<<<<<<<<<<<<
  *             DTYPE_t kstar_i,
- *             np.ndarray[floatTYPE_t, ndim = 1] vi,
+ *             np.ndarray[floatTYPE_t, ndim = 1] vi):
  */
 
-static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_rinit, __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_kstar_i, PyArrayObject *__pyx_v_vi, CYTHON_UNUSED __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_maxk) {
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_j;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_niter;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_a;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_b;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_L0;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_stepmax;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_ga;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_gb;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_jf;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_t;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_s;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_tt;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_func;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_sigma;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_sa;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_sb;
+static PyObject *__pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt__nrmaxl(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_rinit, __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_kstar_i, PyArrayObject *__pyx_v_vi) {
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_j;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_v_niter;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_a;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_b;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_L0;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_stepmax;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_ga;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_gb;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_jf;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_t;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_s;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_tt;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_func;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_sigma;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_sa;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_sb;
   PyArrayObject *__pyx_v_Cov2 = 0;
   PyArrayObject *__pyx_v_Covinv2 = 0;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_fepsilon;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_v_fepsilon;
   PyObject *__pyx_v__matinv2 = 0;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_Cov2;
   __Pyx_Buffer __pyx_pybuffer_Cov2;
@@ -2281,21 +2268,19 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   PyObject *__pyx_t_3 = NULL;
   PyArrayObject *__pyx_t_4 = NULL;
   PyArrayObject *__pyx_t_5 = NULL;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_t_6;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_t_7;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_t_8;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_t_9;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_t_6;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_t_7;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_t_8;
+  __pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_DTYPE_t __pyx_t_9;
   Py_ssize_t __pyx_t_10;
   Py_ssize_t __pyx_t_11;
   Py_ssize_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   int __pyx_t_14;
   int __pyx_t_15;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_t_16;
-  __pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t __pyx_t_17;
+  double __pyx_t_16;
+  double __pyx_t_17;
   double __pyx_t_18;
-  double __pyx_t_19;
-  double __pyx_t_20;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -2314,20 +2299,20 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   __pyx_pybuffernd_vi.rcbuffer = &__pyx_pybuffer_vi;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vi.rcbuffer->pybuffer, (PyObject*)__pyx_v_vi, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 16, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vi.rcbuffer->pybuffer, (PyObject*)__pyx_v_vi, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 16, __pyx_L1_error)
   }
   __pyx_pybuffernd_vi.diminfo[0].strides = __pyx_pybuffernd_vi.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vi.diminfo[0].shape = __pyx_pybuffernd_vi.rcbuffer->pybuffer.shape[0];
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":26
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":25
  *     cdef floatTYPE_t a,b,L0,stepmax,ga,gb,jf,t,s,tt,func,sigma,sa,sb
  * 
  *     cdef np.ndarray[floatTYPE_t, ndim = 2] Cov2 = np.zeros((2, 2))             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[floatTYPE_t, ndim = 2] Covinv2 = np.zeros((2, 2))
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 26, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 26, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -2342,16 +2327,16 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   }
   __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_tuple_) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_tuple_);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 26, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 26, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 25, __pyx_L1_error)
   __pyx_t_4 = ((PyArrayObject *)__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Cov2.rcbuffer->pybuffer, (PyObject*)__pyx_t_4, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Cov2.rcbuffer->pybuffer, (PyObject*)__pyx_t_4, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_Cov2 = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 26, __pyx_L1_error)
+      __PYX_ERR(0, 25, __pyx_L1_error)
     } else {__pyx_pybuffernd_Cov2.diminfo[0].strides = __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_Cov2.diminfo[0].shape = __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_Cov2.diminfo[1].strides = __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_Cov2.diminfo[1].shape = __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -2359,16 +2344,16 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   __pyx_v_Cov2 = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":27
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":26
  * 
  *     cdef np.ndarray[floatTYPE_t, ndim = 2] Cov2 = np.zeros((2, 2))
  *     cdef np.ndarray[floatTYPE_t, ndim = 2] Covinv2 = np.zeros((2, 2))             # <<<<<<<<<<<<<<
  * 
  *     cdef floatTYPE_t fepsilon=np.finfo(float).eps
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 26, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 26, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_t_3 = NULL;
@@ -2383,16 +2368,16 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_tuple_) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_tuple_);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 26, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 27, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 26, __pyx_L1_error)
   __pyx_t_5 = ((PyArrayObject *)__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Covinv2.rcbuffer->pybuffer, (PyObject*)__pyx_t_5, &__Pyx_TypeInfo_nn___pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_Covinv2.rcbuffer->pybuffer, (PyObject*)__pyx_t_5, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_Covinv2 = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 27, __pyx_L1_error)
+      __PYX_ERR(0, 26, __pyx_L1_error)
     } else {__pyx_pybuffernd_Covinv2.diminfo[0].strides = __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_Covinv2.diminfo[0].shape = __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_Covinv2.diminfo[1].strides = __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_Covinv2.diminfo[1].shape = __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -2400,16 +2385,16 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   __pyx_v_Covinv2 = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":29
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":28
  *     cdef np.ndarray[floatTYPE_t, ndim = 2] Covinv2 = np.zeros((2, 2))
  * 
  *     cdef floatTYPE_t fepsilon=np.finfo(float).eps             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_finfo); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_finfo); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -2424,29 +2409,29 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   }
   __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, ((PyObject *)(&PyFloat_Type))) : __Pyx_PyObject_CallOneArg(__pyx_t_3, ((PyObject *)(&PyFloat_Type)));
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 29, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_eps); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_eps); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_6 = __pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_6 == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_t_6 = __pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_6 == ((npy_float64)-1)) && PyErr_Occurred())) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_fepsilon = __pyx_t_6;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":33
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":32
  * 
  *     #useful subroutine
  *     def _matinv2(np.ndarray[floatTYPE_t, ndim = 2] A, np.ndarray[floatTYPE_t, ndim = 2] B):             # <<<<<<<<<<<<<<
  *     # Performs a direct calculation of the inverse of a 22 matrix.
  *         cdef floatTYPE_t detinv
  */
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2, 0, __pyx_n_s_nrmaxl_locals__matinv2, NULL, __pyx_n_s_duly_cython__cython_maximum_like, __pyx_d, ((PyObject *)__pyx_codeobj__3)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl_1_matinv2, 0, __pyx_n_s_nrmaxl_locals__matinv2, NULL, __pyx_n_s_dadapy_cython__cython_maximum_li, __pyx_d, ((PyObject *)__pyx_codeobj__3)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 32, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_v__matinv2 = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":45
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":44
  * 
  *     # function
  *     b=rinit             # <<<<<<<<<<<<<<
@@ -2455,7 +2440,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
   __pyx_v_b = __pyx_v_rinit;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":46
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":45
  *     # function
  *     b=rinit
  *     L0=0.             # <<<<<<<<<<<<<<
@@ -2464,7 +2449,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
   __pyx_v_L0 = 0.;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":47
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":46
  *     b=rinit
  *     L0=0.
  *     a=0.             # <<<<<<<<<<<<<<
@@ -2473,7 +2458,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
   __pyx_v_a = 0.;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":48
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":47
  *     L0=0.
  *     a=0.
  *     stepmax=0.1*abs(b)             # <<<<<<<<<<<<<<
@@ -2482,7 +2467,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
   __pyx_v_stepmax = (0.1 * fabs(__pyx_v_b));
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":49
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":48
  *     a=0.
  *     stepmax=0.1*abs(b)
  *     gb=float(kstar_i)             # <<<<<<<<<<<<<<
@@ -2491,7 +2476,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
   __pyx_v_gb = ((double)__pyx_v_kstar_i);
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":50
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":49
  *     stepmax=0.1*abs(b)
  *     gb=float(kstar_i)
  *     ga= float(kstar_i + 1) * float(kstar_i) / 2.             # <<<<<<<<<<<<<<
@@ -2500,7 +2485,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
   __pyx_v_ga = ((((double)(__pyx_v_kstar_i + 1)) * ((double)__pyx_v_kstar_i)) / 2.);
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":53
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":52
  * 
  * 
  *     for j in range(kstar_i):             # <<<<<<<<<<<<<<
@@ -2512,7 +2497,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
     __pyx_v_j = __pyx_t_9;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":54
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":53
  * 
  *     for j in range(kstar_i):
  *         jf=float(j+1)             # <<<<<<<<<<<<<<
@@ -2521,7 +2506,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_jf = ((double)(__pyx_v_j + 1));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":55
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":54
  *     for j in range(kstar_i):
  *         jf=float(j+1)
  *         t=b+a*jf             # <<<<<<<<<<<<<<
@@ -2530,7 +2515,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_t = (__pyx_v_b + (__pyx_v_a * __pyx_v_jf));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":56
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":55
  *         jf=float(j+1)
  *         t=b+a*jf
  *         s=exp(t)             # <<<<<<<<<<<<<<
@@ -2539,7 +2524,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_s = exp(__pyx_v_t);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":57
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":56
  *         t=b+a*jf
  *         s=exp(t)
  *         tt=vi[j]*s             # <<<<<<<<<<<<<<
@@ -2548,9 +2533,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_t_10 = __pyx_v_j;
     if (__pyx_t_10 < 0) __pyx_t_10 += __pyx_pybuffernd_vi.diminfo[0].shape;
-    __pyx_v_tt = ((*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_vi.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_vi.diminfo[0].strides)) * __pyx_v_s);
+    __pyx_v_tt = ((*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_vi.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_vi.diminfo[0].strides)) * __pyx_v_s);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":58
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":57
  *         s=exp(t)
  *         tt=vi[j]*s
  *         L0=L0+t-tt             # <<<<<<<<<<<<<<
@@ -2559,7 +2544,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_L0 = ((__pyx_v_L0 + __pyx_v_t) - __pyx_v_tt);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":59
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":58
  *         tt=vi[j]*s
  *         L0=L0+t-tt
  *         gb=gb-tt             # <<<<<<<<<<<<<<
@@ -2568,7 +2553,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_gb = (__pyx_v_gb - __pyx_v_tt);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":60
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":59
  *         L0=L0+t-tt
  *         gb=gb-tt
  *         ga=ga-jf*tt             # <<<<<<<<<<<<<<
@@ -2577,7 +2562,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_ga = (__pyx_v_ga - (__pyx_v_jf * __pyx_v_tt));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":61
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":60
  *         gb=gb-tt
  *         ga=ga-jf*tt
  *         Cov2[0,0]=Cov2[0,0]-tt             # <<<<<<<<<<<<<<
@@ -2592,9 +2577,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_13 = 0;
     if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
     if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-    *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - __pyx_v_tt);
+    *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - __pyx_v_tt);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":62
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":61
  *         ga=ga-jf*tt
  *         Cov2[0,0]=Cov2[0,0]-tt
  *         Cov2[0,1]=Cov2[0,1]-jf*tt             # <<<<<<<<<<<<<<
@@ -2609,14 +2594,14 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_12 = 1;
     if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
     if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-    *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - (__pyx_v_jf * __pyx_v_tt));
+    *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - (__pyx_v_jf * __pyx_v_tt));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":63
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":62
  *         Cov2[0,0]=Cov2[0,0]-tt
  *         Cov2[0,1]=Cov2[0,1]-jf*tt
  *         Cov2[1,1]=Cov2[1,1]-jf*jf*tt             # <<<<<<<<<<<<<<
  *     Cov2[1,0]=Cov2[0,1]
- *     #Covinv2=np.linalg.inv(Cov2)
+ * 
  */
     __pyx_t_10 = 1;
     __pyx_t_11 = 1;
@@ -2626,15 +2611,15 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_13 = 1;
     if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
     if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-    *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - ((__pyx_v_jf * __pyx_v_jf) * __pyx_v_tt));
+    *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - ((__pyx_v_jf * __pyx_v_jf) * __pyx_v_tt));
   }
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":64
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":63
  *         Cov2[0,1]=Cov2[0,1]-jf*tt
  *         Cov2[1,1]=Cov2[1,1]-jf*jf*tt
  *     Cov2[1,0]=Cov2[0,1]             # <<<<<<<<<<<<<<
- *     #Covinv2=np.linalg.inv(Cov2)
- *     #Covinv2=_matinv2(Cov2)
+ * 
+ *     _matinv2(Cov2,Covinv2)
  */
   __pyx_t_11 = 0;
   __pyx_t_10 = 1;
@@ -2644,21 +2629,21 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
   __pyx_t_12 = 0;
   if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
   if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-  *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides));
+  *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides));
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":67
- *     #Covinv2=np.linalg.inv(Cov2)
- *     #Covinv2=_matinv2(Cov2)
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":65
+ *     Cov2[1,0]=Cov2[0,1]
+ * 
  *     _matinv2(Cov2,Covinv2)             # <<<<<<<<<<<<<<
  *     func=100.
  *     niter=0
  */
-  __pyx_t_3 = __pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(__pyx_v__matinv2, ((PyArrayObject *)__pyx_v_Cov2), ((PyArrayObject *)__pyx_v_Covinv2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_3 = __pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(__pyx_v__matinv2, ((PyArrayObject *)__pyx_v_Cov2), ((PyArrayObject *)__pyx_v_Covinv2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 65, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":68
- *     #Covinv2=_matinv2(Cov2)
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":66
+ * 
  *     _matinv2(Cov2,Covinv2)
  *     func=100.             # <<<<<<<<<<<<<<
  *     niter=0
@@ -2666,24 +2651,24 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
   __pyx_v_func = 100.;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":69
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":67
  *     _matinv2(Cov2,Covinv2)
  *     func=100.
  *     niter=0             # <<<<<<<<<<<<<<
  * 
- *     while ( (func>1e-8) and (niter < 10000) ):
+ *     while ( ((func)>1e-3) and (niter < 10000) ):
  */
   __pyx_v_niter = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":71
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":69
  *     niter=0
  * 
- *     while ( (func>1e-8) and (niter < 10000) ):             # <<<<<<<<<<<<<<
+ *     while ( ((func)>1e-3) and (niter < 10000) ):             # <<<<<<<<<<<<<<
  *         sb=(Covinv2[0,0]*gb+Covinv2[0,1]*ga)
  *         sa=(Covinv2[1,0]*gb+Covinv2[1,1]*ga)
  */
   while (1) {
-    __pyx_t_15 = ((__pyx_v_func > 1e-8) != 0);
+    __pyx_t_15 = ((__pyx_v_func > 1e-3) != 0);
     if (__pyx_t_15) {
     } else {
       __pyx_t_14 = __pyx_t_15;
@@ -2694,9 +2679,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_L7_bool_binop_done:;
     if (!__pyx_t_14) break;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":72
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":70
  * 
- *     while ( (func>1e-8) and (niter < 10000) ):
+ *     while ( ((func)>1e-3) and (niter < 10000) ):
  *         sb=(Covinv2[0,0]*gb+Covinv2[0,1]*ga)             # <<<<<<<<<<<<<<
  *         sa=(Covinv2[1,0]*gb+Covinv2[1,1]*ga)
  *         niter=niter+1
@@ -2709,10 +2694,10 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_13 = 1;
     if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Covinv2.diminfo[0].shape;
     if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Covinv2.diminfo[1].shape;
-    __pyx_v_sb = (((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_gb) + ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_ga));
+    __pyx_v_sb = (((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_gb) + ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_ga));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":73
- *     while ( (func>1e-8) and (niter < 10000) ):
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":71
+ *     while ( ((func)>1e-3) and (niter < 10000) ):
  *         sb=(Covinv2[0,0]*gb+Covinv2[0,1]*ga)
  *         sa=(Covinv2[1,0]*gb+Covinv2[1,1]*ga)             # <<<<<<<<<<<<<<
  *         niter=niter+1
@@ -2726,9 +2711,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_10 = 1;
     if (__pyx_t_11 < 0) __pyx_t_11 += __pyx_pybuffernd_Covinv2.diminfo[0].shape;
     if (__pyx_t_10 < 0) __pyx_t_10 += __pyx_pybuffernd_Covinv2.diminfo[1].shape;
-    __pyx_v_sa = (((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_gb) + ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_ga));
+    __pyx_v_sa = (((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_gb) + ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Covinv2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Covinv2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Covinv2.diminfo[1].strides)) * __pyx_v_ga));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":74
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":72
  *         sb=(Covinv2[0,0]*gb+Covinv2[0,1]*ga)
  *         sa=(Covinv2[1,0]*gb+Covinv2[1,1]*ga)
  *         niter=niter+1             # <<<<<<<<<<<<<<
@@ -2737,7 +2722,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_niter = (__pyx_v_niter + 1);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":75
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":73
  *         sa=(Covinv2[1,0]*gb+Covinv2[1,1]*ga)
  *         niter=niter+1
  *         sigma=0.1             # <<<<<<<<<<<<<<
@@ -2746,7 +2731,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_sigma = 0.1;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":76
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":74
  *         niter=niter+1
  *         sigma=0.1
  *         if (abs(sigma*sb) > stepmax) :             # <<<<<<<<<<<<<<
@@ -2756,7 +2741,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_14 = ((fabs((__pyx_v_sigma * __pyx_v_sb)) > __pyx_v_stepmax) != 0);
     if (__pyx_t_14) {
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":77
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":75
  *         sigma=0.1
  *         if (abs(sigma*sb) > stepmax) :
  *             sigma=abs(stepmax/sb)             # <<<<<<<<<<<<<<
@@ -2765,7 +2750,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_v_sigma = fabs((__pyx_v_stepmax / __pyx_v_sb));
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":76
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":74
  *         niter=niter+1
  *         sigma=0.1
  *         if (abs(sigma*sb) > stepmax) :             # <<<<<<<<<<<<<<
@@ -2774,7 +2759,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     }
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":78
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":76
  *         if (abs(sigma*sb) > stepmax) :
  *             sigma=abs(stepmax/sb)
  *         b=b-sigma*sb             # <<<<<<<<<<<<<<
@@ -2783,44 +2768,44 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     __pyx_v_b = (__pyx_v_b - (__pyx_v_sigma * __pyx_v_sb));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":79
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":77
  *             sigma=abs(stepmax/sb)
  *         b=b-sigma*sb
  *         a=a-sigma*sa             # <<<<<<<<<<<<<<
  *         L0=0.
- *         gb=float(kstar_i)
+ *         gb= float(kstar_i)
  */
     __pyx_v_a = (__pyx_v_a - (__pyx_v_sigma * __pyx_v_sa));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":80
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":78
  *         b=b-sigma*sb
  *         a=a-sigma*sa
  *         L0=0.             # <<<<<<<<<<<<<<
- *         gb=float(kstar_i)
+ *         gb= float(kstar_i)
  *         ga= float(kstar_i + 1) * float(kstar_i) / 2.
  */
     __pyx_v_L0 = 0.;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":81
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":79
  *         a=a-sigma*sa
  *         L0=0.
- *         gb=float(kstar_i)             # <<<<<<<<<<<<<<
+ *         gb= float(kstar_i)             # <<<<<<<<<<<<<<
  *         ga= float(kstar_i + 1) * float(kstar_i) / 2.
  *         Cov2[0,0]=0. #gbb
  */
     __pyx_v_gb = ((double)__pyx_v_kstar_i);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":82
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":80
  *         L0=0.
- *         gb=float(kstar_i)
+ *         gb= float(kstar_i)
  *         ga= float(kstar_i + 1) * float(kstar_i) / 2.             # <<<<<<<<<<<<<<
  *         Cov2[0,0]=0. #gbb
  *         Cov2[0,1]=0. #gab
  */
     __pyx_v_ga = ((((double)(__pyx_v_kstar_i + 1)) * ((double)__pyx_v_kstar_i)) / 2.);
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":83
- *         gb=float(kstar_i)
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":81
+ *         gb= float(kstar_i)
  *         ga= float(kstar_i + 1) * float(kstar_i) / 2.
  *         Cov2[0,0]=0. #gbb             # <<<<<<<<<<<<<<
  *         Cov2[0,1]=0. #gab
@@ -2830,9 +2815,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_11 = 0;
     if (__pyx_t_10 < 0) __pyx_t_10 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
     if (__pyx_t_11 < 0) __pyx_t_11 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-    *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides) = 0.;
+    *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides) = 0.;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":84
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":82
  *         ga= float(kstar_i + 1) * float(kstar_i) / 2.
  *         Cov2[0,0]=0. #gbb
  *         Cov2[0,1]=0. #gab             # <<<<<<<<<<<<<<
@@ -2843,9 +2828,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_10 = 1;
     if (__pyx_t_11 < 0) __pyx_t_11 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
     if (__pyx_t_10 < 0) __pyx_t_10 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-    *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides) = 0.;
+    *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides) = 0.;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":85
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":83
  *         Cov2[0,0]=0. #gbb
  *         Cov2[0,1]=0. #gab
  *         Cov2[1,1]=0. #gaa             # <<<<<<<<<<<<<<
@@ -2856,9 +2841,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_11 = 1;
     if (__pyx_t_10 < 0) __pyx_t_10 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
     if (__pyx_t_11 < 0) __pyx_t_11 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-    *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides) = 0.;
+    *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides) = 0.;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":86
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":84
  *         Cov2[0,1]=0. #gab
  *         Cov2[1,1]=0. #gaa
  *         for j in range(kstar_i):             # <<<<<<<<<<<<<<
@@ -2870,7 +2855,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
       __pyx_v_j = __pyx_t_9;
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":87
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":85
  *         Cov2[1,1]=0. #gaa
  *         for j in range(kstar_i):
  *             jf=float(j+1)             # <<<<<<<<<<<<<<
@@ -2879,7 +2864,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_v_jf = ((double)(__pyx_v_j + 1));
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":88
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":86
  *         for j in range(kstar_i):
  *             jf=float(j+1)
  *             t=b+a*jf             # <<<<<<<<<<<<<<
@@ -2888,7 +2873,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_v_t = (__pyx_v_b + (__pyx_v_a * __pyx_v_jf));
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":89
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":87
  *             jf=float(j+1)
  *             t=b+a*jf
  *             s=exp(t)             # <<<<<<<<<<<<<<
@@ -2897,7 +2882,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_v_s = exp(__pyx_v_t);
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":90
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":88
  *             t=b+a*jf
  *             s=exp(t)
  *             tt=vi[j]*s             # <<<<<<<<<<<<<<
@@ -2906,9 +2891,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_t_11 = __pyx_v_j;
       if (__pyx_t_11 < 0) __pyx_t_11 += __pyx_pybuffernd_vi.diminfo[0].shape;
-      __pyx_v_tt = ((*__Pyx_BufPtrStrided1d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_vi.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_vi.diminfo[0].strides)) * __pyx_v_s);
+      __pyx_v_tt = ((*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_vi.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_vi.diminfo[0].strides)) * __pyx_v_s);
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":91
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":89
  *             s=exp(t)
  *             tt=vi[j]*s
  *             L0=L0+t-tt             # <<<<<<<<<<<<<<
@@ -2917,7 +2902,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_v_L0 = ((__pyx_v_L0 + __pyx_v_t) - __pyx_v_tt);
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":92
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":90
  *             tt=vi[j]*s
  *             L0=L0+t-tt
  *             gb=gb-tt             # <<<<<<<<<<<<<<
@@ -2926,7 +2911,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_v_gb = (__pyx_v_gb - __pyx_v_tt);
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":93
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":91
  *             L0=L0+t-tt
  *             gb=gb-tt
  *             ga=ga-jf*tt             # <<<<<<<<<<<<<<
@@ -2935,7 +2920,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
       __pyx_v_ga = (__pyx_v_ga - (__pyx_v_jf * __pyx_v_tt));
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":94
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":92
  *             gb=gb-tt
  *             ga=ga-jf*tt
  *             Cov2[0,0]=Cov2[0,0]-tt             # <<<<<<<<<<<<<<
@@ -2950,9 +2935,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
       __pyx_t_13 = 0;
       if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
       if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-      *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - __pyx_v_tt);
+      *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - __pyx_v_tt);
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":95
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":93
  *             ga=ga-jf*tt
  *             Cov2[0,0]=Cov2[0,0]-tt
  *             Cov2[0,1]=Cov2[0,1]-jf*tt             # <<<<<<<<<<<<<<
@@ -2967,9 +2952,9 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
       __pyx_t_12 = 1;
       if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
       if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-      *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - (__pyx_v_jf * __pyx_v_tt));
+      *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - (__pyx_v_jf * __pyx_v_tt));
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":96
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":94
  *             Cov2[0,0]=Cov2[0,0]-tt
  *             Cov2[0,1]=Cov2[0,1]-jf*tt
  *             Cov2[1,1]=Cov2[1,1]-jf*jf*tt             # <<<<<<<<<<<<<<
@@ -2984,10 +2969,10 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
       __pyx_t_13 = 1;
       if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
       if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-      *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - ((__pyx_v_jf * __pyx_v_jf) * __pyx_v_tt));
+      *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[1].strides) = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[1].strides)) - ((__pyx_v_jf * __pyx_v_jf) * __pyx_v_tt));
     }
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":97
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":95
  *             Cov2[0,1]=Cov2[0,1]-jf*tt
  *             Cov2[1,1]=Cov2[1,1]-jf*jf*tt
  *         Cov2[1,0]=Cov2[0,1]             # <<<<<<<<<<<<<<
@@ -3002,24 +2987,24 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_t_12 = 0;
     if (__pyx_t_13 < 0) __pyx_t_13 += __pyx_pybuffernd_Cov2.diminfo[0].shape;
     if (__pyx_t_12 < 0) __pyx_t_12 += __pyx_pybuffernd_Cov2.diminfo[1].shape;
-    *__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(__pyx_t_4duly_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides));
+    *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_Cov2.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7cython__29cython_maximum_likelihood_opt_floatTYPE_t *, __pyx_pybuffernd_Cov2.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_Cov2.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_Cov2.diminfo[1].strides));
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":100
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":98
  *         #Covinv2=np.linalg.inv(Cov2)
  *         #Covinv2=_matinv2(Cov2)
  *         _matinv2(Cov2,Covinv2)             # <<<<<<<<<<<<<<
  *         if ((abs(a) <= fepsilon ) or (abs(b) <= fepsilon )):
- *             func=max(gb,ga)
+ *             func=max(abs(gb),abs(ga))
  */
-    __pyx_t_3 = __pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(__pyx_v__matinv2, ((PyArrayObject *)__pyx_v_Cov2), ((PyArrayObject *)__pyx_v_Covinv2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 100, __pyx_L1_error)
+    __pyx_t_3 = __pyx_pf_6dadapy_7cython__29cython_maximum_likelihood_opt_7_nrmaxl__matinv2(__pyx_v__matinv2, ((PyArrayObject *)__pyx_v_Cov2), ((PyArrayObject *)__pyx_v_Covinv2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 98, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":101
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":99
  *         #Covinv2=_matinv2(Cov2)
  *         _matinv2(Cov2,Covinv2)
  *         if ((abs(a) <= fepsilon ) or (abs(b) <= fepsilon )):             # <<<<<<<<<<<<<<
- *             func=max(gb,ga)
+ *             func=max(abs(gb),abs(ga))
  *         else:
  */
     __pyx_t_15 = ((fabs(__pyx_v_a) <= __pyx_v_fepsilon) != 0);
@@ -3033,34 +3018,34 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __pyx_L13_bool_binop_done:;
     if (__pyx_t_14) {
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":102
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":100
  *         _matinv2(Cov2,Covinv2)
  *         if ((abs(a) <= fepsilon ) or (abs(b) <= fepsilon )):
- *             func=max(gb,ga)             # <<<<<<<<<<<<<<
+ *             func=max(abs(gb),abs(ga))             # <<<<<<<<<<<<<<
  *         else:
  *             func=max(abs(gb/b),abs(ga/a))
  */
-      __pyx_t_6 = __pyx_v_ga;
-      __pyx_t_16 = __pyx_v_gb;
-      if (((__pyx_t_6 > __pyx_t_16) != 0)) {
-        __pyx_t_17 = __pyx_t_6;
+      __pyx_t_16 = fabs(__pyx_v_ga);
+      __pyx_t_17 = fabs(__pyx_v_gb);
+      if (((__pyx_t_16 > __pyx_t_17) != 0)) {
+        __pyx_t_18 = __pyx_t_16;
       } else {
-        __pyx_t_17 = __pyx_t_16;
+        __pyx_t_18 = __pyx_t_17;
       }
-      __pyx_v_func = __pyx_t_17;
+      __pyx_v_func = __pyx_t_18;
 
-      /* "duly/cython_/cython_maximum_likelihood_opt.pyx":101
+      /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":99
  *         #Covinv2=_matinv2(Cov2)
  *         _matinv2(Cov2,Covinv2)
  *         if ((abs(a) <= fepsilon ) or (abs(b) <= fepsilon )):             # <<<<<<<<<<<<<<
- *             func=max(gb,ga)
+ *             func=max(abs(gb),abs(ga))
  *         else:
  */
       goto __pyx_L12;
     }
 
-    /* "duly/cython_/cython_maximum_likelihood_opt.pyx":104
- *             func=max(gb,ga)
+    /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":102
+ *             func=max(abs(gb),abs(ga))
  *         else:
  *             func=max(abs(gb/b),abs(ga/a))             # <<<<<<<<<<<<<<
  *     #Cov2=-Cov2
@@ -3068,35 +3053,35 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
  */
     /*else*/ {
       __pyx_t_18 = fabs((__pyx_v_ga / __pyx_v_a));
-      __pyx_t_19 = fabs((__pyx_v_gb / __pyx_v_b));
-      if (((__pyx_t_18 > __pyx_t_19) != 0)) {
-        __pyx_t_20 = __pyx_t_18;
+      __pyx_t_16 = fabs((__pyx_v_gb / __pyx_v_b));
+      if (((__pyx_t_18 > __pyx_t_16) != 0)) {
+        __pyx_t_17 = __pyx_t_18;
       } else {
-        __pyx_t_20 = __pyx_t_19;
+        __pyx_t_17 = __pyx_t_16;
       }
-      __pyx_v_func = __pyx_t_20;
+      __pyx_v_func = __pyx_t_17;
     }
     __pyx_L12:;
   }
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":111
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":109
  *     #print("N iterations: ", niter)
  *     #print(func)
  *     return b             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_b); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 111, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_b); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 109, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_r = __pyx_t_3;
   __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":16
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":16
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def _nrmaxl(floatTYPE_t rinit,             # <<<<<<<<<<<<<<
  *             DTYPE_t kstar_i,
- *             np.ndarray[floatTYPE_t, ndim = 1] vi,
+ *             np.ndarray[floatTYPE_t, ndim = 1] vi):
  */
 
   /* function exit code */
@@ -3112,7 +3097,7 @@ static PyObject *__pyx_pf_4duly_7cython__29cython_maximum_likelihood_opt__nrmaxl
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_Covinv2.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_vi.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("duly.cython_.cython_maximum_likelihood_opt._nrmaxl", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("dadapy.cython_.cython_maximum_likelihood_opt._nrmaxl", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -4784,8 +4769,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_boolTYPE, __pyx_k_boolTYPE, sizeof(__pyx_k_boolTYPE), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
   {&__pyx_kp_s_cython_maximum_likelihood_opt_py, __pyx_k_cython_maximum_likelihood_opt_py, sizeof(__pyx_k_cython_maximum_likelihood_opt_py), 0, 0, 1, 0},
+  {&__pyx_n_s_dadapy_cython__cython_maximum_li, __pyx_k_dadapy_cython__cython_maximum_li, sizeof(__pyx_k_dadapy_cython__cython_maximum_li), 0, 0, 1, 1},
   {&__pyx_n_s_detinv, __pyx_k_detinv, sizeof(__pyx_k_detinv), 0, 0, 1, 1},
-  {&__pyx_n_s_duly_cython__cython_maximum_like, __pyx_k_duly_cython__cython_maximum_like, sizeof(__pyx_k_duly_cython__cython_maximum_like), 0, 0, 1, 1},
   {&__pyx_n_s_eps, __pyx_k_eps, sizeof(__pyx_k_eps), 0, 0, 1, 1},
   {&__pyx_n_s_fepsilon, __pyx_k_fepsilon, sizeof(__pyx_k_fepsilon), 0, 0, 1, 1},
   {&__pyx_n_s_finfo, __pyx_k_finfo, sizeof(__pyx_k_finfo), 0, 0, 1, 1},
@@ -4801,7 +4786,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_kstar_i, __pyx_k_kstar_i, sizeof(__pyx_k_kstar_i), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_matinv2, __pyx_k_matinv2, sizeof(__pyx_k_matinv2), 0, 0, 1, 1},
-  {&__pyx_n_s_maxk, __pyx_k_maxk, sizeof(__pyx_k_maxk), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_niter, __pyx_k_niter, sizeof(__pyx_k_niter), 0, 0, 1, 1},
   {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
@@ -4827,7 +4811,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 53, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 52, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 777, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 781, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 959, __pyx_L1_error)
@@ -4840,28 +4824,28 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":26
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":25
  *     cdef floatTYPE_t a,b,L0,stepmax,ga,gb,jf,t,s,tt,func,sigma,sa,sb
  * 
  *     cdef np.ndarray[floatTYPE_t, ndim = 2] Cov2 = np.zeros((2, 2))             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[floatTYPE_t, ndim = 2] Covinv2 = np.zeros((2, 2))
  * 
  */
-  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_2, __pyx_int_2); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 26, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_2, __pyx_int_2); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":33
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":32
  * 
  *     #useful subroutine
  *     def _matinv2(np.ndarray[floatTYPE_t, ndim = 2] A, np.ndarray[floatTYPE_t, ndim = 2] B):             # <<<<<<<<<<<<<<
  *     # Performs a direct calculation of the inverse of a 22 matrix.
  *         cdef floatTYPE_t detinv
  */
-  __pyx_tuple__2 = PyTuple_Pack(3, __pyx_n_s_A, __pyx_n_s_B, __pyx_n_s_detinv); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(3, __pyx_n_s_A, __pyx_n_s_B, __pyx_n_s_detinv); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 32, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
-  __pyx_codeobj__3 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__2, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_maximum_likelihood_opt_py, __pyx_n_s_matinv2, 33, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__3)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_codeobj__3 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__2, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_maximum_likelihood_opt_py, __pyx_n_s_matinv2, 32, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__3)) __PYX_ERR(0, 32, __pyx_L1_error)
 
   /* "../../../../anaconda3/envs/py37/lib/python3.7/site-packages/numpy/__init__.pxd":777
  * 
@@ -4918,17 +4902,17 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":16
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":16
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def _nrmaxl(floatTYPE_t rinit,             # <<<<<<<<<<<<<<
  *             DTYPE_t kstar_i,
- *             np.ndarray[floatTYPE_t, ndim = 1] vi,
+ *             np.ndarray[floatTYPE_t, ndim = 1] vi):
  */
-  __pyx_tuple__9 = PyTuple_Pack(25, __pyx_n_s_rinit, __pyx_n_s_kstar_i, __pyx_n_s_vi, __pyx_n_s_maxk, __pyx_n_s_j, __pyx_n_s_niter, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_L0, __pyx_n_s_stepmax, __pyx_n_s_ga, __pyx_n_s_gb, __pyx_n_s_jf, __pyx_n_s_t, __pyx_n_s_s, __pyx_n_s_tt, __pyx_n_s_func, __pyx_n_s_sigma, __pyx_n_s_sa, __pyx_n_s_sb, __pyx_n_s_Cov2, __pyx_n_s_Covinv2, __pyx_n_s_fepsilon, __pyx_n_s_matinv2, __pyx_n_s_matinv2); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_tuple__9 = PyTuple_Pack(24, __pyx_n_s_rinit, __pyx_n_s_kstar_i, __pyx_n_s_vi, __pyx_n_s_j, __pyx_n_s_niter, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_L0, __pyx_n_s_stepmax, __pyx_n_s_ga, __pyx_n_s_gb, __pyx_n_s_jf, __pyx_n_s_t, __pyx_n_s_s, __pyx_n_s_tt, __pyx_n_s_func, __pyx_n_s_sigma, __pyx_n_s_sa, __pyx_n_s_sb, __pyx_n_s_Cov2, __pyx_n_s_Covinv2, __pyx_n_s_fepsilon, __pyx_n_s_matinv2, __pyx_n_s_matinv2); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 16, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(4, 0, 25, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_maximum_likelihood_opt_py, __pyx_n_s_nrmaxl, 16, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(3, 0, 24, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_maximum_likelihood_opt_py, __pyx_n_s_nrmaxl, 16, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 16, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5215,14 +5199,14 @@ if (!__Pyx_RefNanny) {
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_duly__cython___cython_maximum_likelihood_opt) {
+  if (__pyx_module_is_main_dadapy__cython___cython_maximum_likelihood_opt) {
     if (PyObject_SetAttr(__pyx_m, __pyx_n_s_name, __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "duly.cython_.cython_maximum_likelihood_opt")) {
-      if (unlikely(PyDict_SetItemString(modules, "duly.cython_.cython_maximum_likelihood_opt", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "dadapy.cython_.cython_maximum_likelihood_opt")) {
+      if (unlikely(PyDict_SetItemString(modules, "dadapy.cython_.cython_maximum_likelihood_opt", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -5243,7 +5227,7 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":2
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":2
  * import cython
  * import numpy as np             # <<<<<<<<<<<<<<
  * import time
@@ -5254,7 +5238,7 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 2, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":3
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":3
  * import cython
  * import numpy as np
  * import time             # <<<<<<<<<<<<<<
@@ -5266,7 +5250,7 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_time, __pyx_t_1) < 0) __PYX_ERR(0, 3, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":7
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":7
  * from libc.math cimport exp
  * 
  * DTYPE = np.int             # <<<<<<<<<<<<<<
@@ -5281,7 +5265,7 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_2) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":8
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":8
  * 
  * DTYPE = np.int
  * floatTYPE = np.float             # <<<<<<<<<<<<<<
@@ -5296,7 +5280,7 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_floatTYPE, __pyx_t_1) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":9
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":9
  * DTYPE = np.int
  * floatTYPE = np.float
  * boolTYPE = np.bool             # <<<<<<<<<<<<<<
@@ -5311,19 +5295,19 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_boolTYPE, __pyx_t_2) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":16
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":16
  * @cython.boundscheck(False)
  * @cython.cdivision(True)
  * def _nrmaxl(floatTYPE_t rinit,             # <<<<<<<<<<<<<<
  *             DTYPE_t kstar_i,
- *             np.ndarray[floatTYPE_t, ndim = 1] vi,
+ *             np.ndarray[floatTYPE_t, ndim = 1] vi):
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_4duly_7cython__29cython_maximum_likelihood_opt_1_nrmaxl, NULL, __pyx_n_s_duly_cython__cython_maximum_like); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7cython__29cython_maximum_likelihood_opt_1_nrmaxl, NULL, __pyx_n_s_dadapy_cython__cython_maximum_li); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 16, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_nrmaxl, __pyx_t_2) < 0) __PYX_ERR(0, 16, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "duly/cython_/cython_maximum_likelihood_opt.pyx":1
+  /* "dadapy/cython_/cython_maximum_likelihood_opt.pyx":1
  * import cython             # <<<<<<<<<<<<<<
  * import numpy as np
  * import time
@@ -5349,11 +5333,11 @@ if (!__Pyx_RefNanny) {
   __Pyx_XDECREF(__pyx_t_2);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init duly.cython_.cython_maximum_likelihood_opt", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init dadapy.cython_.cython_maximum_likelihood_opt", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_CLEAR(__pyx_m);
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init duly.cython_.cython_maximum_likelihood_opt");
+    PyErr_SetString(PyExc_ImportError, "init dadapy.cython_.cython_maximum_likelihood_opt");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

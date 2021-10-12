@@ -16,16 +16,21 @@ class Clustering(DensityEstimation):
 
     Attributes:
 
-        N_clusters (int) : number of clusters found
-        cluster_assignment (list(int)): cluster assignment. A list of length N containg the cluster assignment of each point
-        as an integer from 0 to N_clusters-1.
-        cluster_centers (int): Indices of the centroids of each cluster (density peak)
-        cluster_indices (list(list(int))): a list of lists. Each sublist contains the indices belonging to the
-        corresponding cluster.
-        log_den_bord (array(float)): an array of dimensions N_clusters x N_clusters containg the estimated log density
-        of the the saddle point between each couple of peaks.
-        log_den_bord_err (array(float)): an array of dimensions N_clusters x N_clusters containg the estimated error
-        on the log density of the saddle point between each couple of peaks.
+        N_clusters: {int}
+            Number of clusters found
+        cluster_assignment: {list(int)}
+            A list of length N containg the cluster assignment of each point as an integer from 0 to N_clusters-1.
+        cluster_centers: {list(int)}
+            Indices of the centroids of each cluster (density peak)
+        cluster_indices: {list(list(int))}
+            A list of lists. Each sublist contains the indices belonging to the corresponding cluster.
+        log_den_bord: {np.ndarray(float)}
+            A matrix of dimensions N_clusters x N_clusters containg the estimated log density of the the saddle point between each couple of peaks.
+        log_den_bord_err: {np.ndarray(float)}
+            A matrix of dimensions N_clusters x N_clusters containg the estimated error on the log density of the saddle point between each couple of peaks.
+        bord_indices: {np.ndarray(float)}
+            A matrix of dimensions N_clusters x N_clusters containg the indices of the the saddle point between each couple of peaks.
+        
 
     """
 
@@ -46,6 +51,7 @@ class Clustering(DensityEstimation):
         self.cluster_centers = None
         self.log_den_bord_err = None
         self.log_den_bord = None
+        self.bord_indices = None
 
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
@@ -58,12 +64,10 @@ class Clustering(DensityEstimation):
         # Make all values of log_den positives (this is important to help convergence)
         log_den_min = np.min(self.log_den)
 
-        log_den_c = self.log_den
-        log_den_c = log_den_c - log_den_min + 1
+        log_den_c = self.log_den - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
 
-        N = self.distances.shape[0]
         g = log_den_c - self.log_den_err
         # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
@@ -79,7 +83,7 @@ class Clustering(DensityEstimation):
             log_den_min,
             log_den_c,
             g,
-            N,
+            self.N,
         )
 
         secf = time.time()
@@ -173,12 +177,11 @@ class Clustering(DensityEstimation):
 
         # Make all values of log_den positives (this is important to help convergence)
         log_den_min = np.min(self.log_den)
-        log_den_c = self.log_den
-        log_den_c = log_den_c - log_den_min + 1
+        log_den_c = self.log_den - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
         sec = time.time()
-        N = self.distances.shape[0]
+        N = self.N
         g = log_den_c - self.log_den_err
         centers = []
         for i in range(N):
@@ -337,8 +340,9 @@ class Clustering(DensityEstimation):
                 N_clusters = N_clusters + 1
                 cluster_indices.append(clstruct[j])
                 cluster_centers.append(centers[j])
+        Point_bord_m = np.zeros((N_clusters, N_clusters), dtype=int)
         log_den_bord_m = np.zeros((N_clusters, N_clusters), dtype=float)
-        log_den_bord_err = np.zeros((N_clusters, N_clusters), dtype=float)
+        log_den_bord_err_m = np.zeros((N_clusters, N_clusters), dtype=float)
         for j in range(Nclus):
             if clsurv[j] == 1:
                 jj = nnum[j]
@@ -347,6 +351,7 @@ class Clustering(DensityEstimation):
                         kk = nnum[k]
                         log_den_bord_m[jj][kk] = log_den_bord[j][k]
                         log_den_bord_err[jj][kk] = log_den_bord_err[j][k]
+                        Point_bord_m[jj][kk]=Point_bord[j][k]
         Last_cls = np.empty(N, dtype=int)
         for j in range(N_clusters):
             for k in cluster_indices[j]:
@@ -369,8 +374,10 @@ class Clustering(DensityEstimation):
         self.cluster_assignment = cluster_assignment
         self.cluster_centers = cluster_centers
         self.log_den_bord = (
-            out_bord + log_den_min - 1 - np.log(N)
+            #out_bord + log_den_min - 1 - np.log(N)
+            out_bord + log_den_min - 1
         )  # remove wrong normalisation introduced earlier
         self.log_den_bord_err = log_den_bord_err
+        self.bord_indices = Point_bord_m
         if self.verb:
             print("Clustering finished, {} clusters found".format(self.N_clusters))
