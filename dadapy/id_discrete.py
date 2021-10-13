@@ -6,27 +6,25 @@ import numpy as np
 from scipy.optimize import minimize_scalar as SMin
 
 from dadapy._base import Base
-from dadapy.utils_ import discrete_functions as df
+import dadapy.utils_.discrete_functions as df
 
 # from dadapy.utils_ import utils as ut
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
-D_MAX = 150.0
-D_MIN = 0.0001
-
-
 class IdDiscrete(Base):
-    """Estimates the intrinsic dimension of a dataset choosing among various routines.
+    """Estimates the intrinsic dimension of a dataset with discrete features using a binomial likelihood.
 
     Inherits from class Base.
 
     Attributes:
 
-            id_selected (int): (rounded) selected intrinsic dimension after each estimate. Parameter used for density estimation
-            id_estimated_D (float):id estimated using Diego's routine
-            id_estimated_2NN (float): 2NN id estimate
+        id_estimated_binom (float): id estimated using the binomial likelihood
+        lk (int or int[:]): radii of the external shell
+        ln (int or int[:]): radii of the internal shell
+        k (int or or int[:]): total number of points within the external shell
+        n (int or or int[:]): total number of points within the internal shell
 
     """
 
@@ -122,7 +120,9 @@ class IdDiscrete(Base):
             )
 
         # checks-out
-        if self.maxk < self.N:
+        if self.maxk == self.N-1:
+            self.mask = np.ones(self.N, dtype=bool)
+        else:
             # if not all possible NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
             # or distances[:,-1]<lk, it is likely that there are other points within lk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
@@ -138,9 +138,6 @@ class IdDiscrete(Base):
                     + "the statistics a mask is provided to remove them from the calculation of the "
                     + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
                 )
-
-        else:
-            self.mask = np.ones(self.N, dtype=bool)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -206,7 +203,7 @@ class IdDiscrete(Base):
             self.id_estimated_binom = SMin(
                 df.compute_binomial_logL,
                 args=(self.lk, k_eff - 1, self.ln, n_eff - 1, True, ww),
-                bounds=(D_MIN, D_MAX),
+                bounds=(df.D_MIN, df.D_MAX),
                 method="bounded",
             ).x
 
@@ -226,7 +223,7 @@ class IdDiscrete(Base):
                 self.id_estimated_binom_std,
                 self.posterior_domain,
                 self.posterior,
-            ) = _beta_prior_d(
+            ) = df._beta_prior_d(
                 k_tot, n_tot, self.lk, self.ln, plot=plot, verbose=self.verb
             )
         else:
@@ -265,8 +262,7 @@ class IdDiscrete(Base):
         else:
             assert (
                 k_eff <= self.maxk
-            ), "A k_eff > maxk was selected,\
-                recompute the distances with the proper amount on NN to see points up to that k_eff"
+            ), "A k_eff > maxk was selected, recompute the distances with the proper amount on NN to see points up to that k_eff"
 
         # routine
         self.lk, self.k, self.ln, self.n = (
@@ -325,8 +321,8 @@ class IdDiscrete(Base):
             print(
                 "BE CAREFUL: "
                 + str(sum(~self.mask))
-                + " points would have Rk set to 0\
-                   and thus will be kept out of the statistics. Consider increasing k."
+                + " points would have Rk set to 0 "
+                + "and thus will be kept out of the statistics. Consider increasing k."
             )
 
     # --------------------------------------------------------------------------------------
@@ -354,6 +350,8 @@ class IdDiscrete(Base):
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
         assert 0 < ratio < 1, "set a proper value for the ratio"
+
+        assert k_shell < self.maxk, "asking for a much too large number of shells"
 
         self.lk, self.k, self.ln, self.n = (
             np.zeros(self.N),
@@ -402,8 +400,8 @@ class IdDiscrete(Base):
             print(
                 "BE CAREFUL: "
                 + str(sum(~self.mask))
-                + " points would have Rk set to 0\
-                   and thus will be kept out of the statistics. Consider increasing k."
+                + " points would have Rk set to 0 "
+                + "and thus will be kept out of the statistics. Consider increasing k."
             )
 
     # --------------------------------------------------------------------------------------
@@ -432,13 +430,9 @@ class IdDiscrete(Base):
         assert 0 < ratio < 1, "set a proper value for the ratio"
 
         if shell:
-            assert k < self.maxk, "asking for a much too large number of shells"
             self.fix_k_shell(k, ratio)
 
         else:
-            assert (
-                k < self.maxk
-            ), "You first need to recompute the distances with the proper number of NN"
             self.fix_k(k, ratio)
 
         n_eff = self.n[self.mask]
@@ -479,10 +473,41 @@ class IdDiscrete(Base):
                 True,
                 ww,
             ),
-            bounds=(D_MIN, D_MAX),
+            bounds=(df.D_MIN, df.D_MAX),
             method="bounded",
         ).x
 
+    # ----------------------------------------------------------------------------------------------
+
+    def Cramer_Rao(self,lk=None,ln=None,id=None,N=None,k=None):
+        """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
+
+        Args:
+            lk (int): radius of the external shell
+            ln (int): radius of the internal shell
+            id (float): intrinsic dimension
+            N (int): number of points of the dataset
+            k (float): average number of neighbours in the external shell
+
+        """
+        if lk is None:
+            lk = self.lk
+        if ln is None:
+            ln = self.ln
+        if id is None:
+            assert self.id_estimated_binom is not None
+            id = self.id_estimated_binom
+        if N is None:
+            N = self.N
+        if k is None:
+            if isinstance(self.k,np.ndarray):
+                k = self.k.mean()-1
+            else:
+                k = self.k -1
+
+        P = df.compute_discrete_volume(ln,id)/df.compute_discrete_volume(lk,id)
+
+        return P*(1-P)/(N*df.compute_jacobian(lk,ln,id)**2*k)
     # ----------------------------------------------------------------------------------------------
 
     def set_id(self, d):
@@ -492,8 +517,8 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def set_lk_ln(self, lk, ln):
-        assert isinstance(ln, (np.int, int)) and ln > 0, "select a proper integer ln>0"
-        assert isinstance(lk, (np.int, int)) and lk > 0, "select a proper integer lk>0"
+        assert isinstance(ln, (np.int, np.int8, np.int16, np.int32, np.int64, int)) and ln > 0, "select a proper integer ln>0"
+        assert isinstance(lk, (np.int, np.int8, np.int16, np.int32, np.int64, int)) and lk > 0, "select a proper integer lk>0"
         assert lk > ln, "select lk and ln, s.t. lk > ln"
         self.ln = ln
         self.lk = lk
@@ -509,96 +534,6 @@ class IdDiscrete(Base):
 
 # ----------------------------------------------------------------------------------------------
 
-
-def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
-    """Compute the posterior distribution of d given the input aggregates
-    Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
-    However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
-    consequence one has to change variable to have the distribution over d
-
-    Args:
-            k (nd.array(int)): number of points within the external shells
-            n (nd.array(int)): number of points within the internal shells
-            lk (int): outer shell radius
-            lk (int): inner shell radius
-            a0 (float): beta distribution parameter, default =1 for flat prior
-            b0 (float): prior initializer, default =1 for flat prior
-            plot (bool, default=False): plot the posterior
-    Returns:
-            E_d_emp (float): mean value of the posterior
-            S_d_emp (float): std of the posterior
-            d_range (ndarray(float)): domain of the posterior
-            P (ndarray(float)): probability of the posterior
-    """
-    from scipy.special import beta as beta_f
-    from scipy.stats import beta as beta_d
-
-    a = a0 + n.sum()
-    b = b0 + k.sum() - n.sum()
-    posterior = beta_d(a, b)
-
-    def p_d(d):
-        Vk = df.compute_discrete_volume(lk, d)
-        Vn = df.compute_discrete_volume(ln, d)
-        dVk_dd = df.compute_derivative_discrete_vol(lk, d)
-        dVn_dd = df.compute_derivative_discrete_vol(ln, d)
-        x = Vn / Vk
-        dx_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
-        return abs(posterior.pdf(x) * dx_dd)
-
-    # in principle we don't know where the distribution is peaked, so
-    # we perform a blind search over the domain
-    dx = 1.0
-    d_left = D_MIN
-    d_right = D_MAX + dx + d_left
-    d_range = np.arange(d_left, d_right, dx)
-    P = np.array([p_d(di) for di in d_range]) * dx
-    counter = 0
-    mask = P != 0
-    elements = mask.sum()
-    # if less than 3 points !=0 are found, reduce the interval
-    while elements < 3:
-        dx /= 10
-        d_range = np.arange(d_left, d_right, dx)
-        P = np.array([p_d(di) for di in d_range]) * dx
-        mask = P != 0
-        elements = mask.sum()
-        counter += 1
-
-    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
-    # I choose 1000 points but such quantity can be varied according to necessity
-    ind = np.where(mask)[0]
-    d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
-    d_right = d_range[ind[-1]] + 0.5 * dx
-    d_range = np.linspace(d_left, d_right, 1000)
-    dx = (d_right - d_left) / 1000
-    P = np.array([p_d(di) for di in d_range]) * dx
-    P = P.reshape(P.shape[0])
-
-    #    if verbose:
-    #        print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
-
-    if plot:
-        import matplotlib.pyplot as plt
-
-        plt.figure()
-        plt.plot(d_range, P)
-        plt.xlabel("d")
-        plt.ylabel("P(d)")
-        plt.title("posterior of d")
-        plt.show()
-
-    E_d_emp = np.dot(d_range, P)
-    S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
-    print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
-    #   theoretical results, valid only in the continuum case
-    #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
-    #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
-
-    return E_d_emp, S_d_emp, d_range, P
-
-
-# --------------------------------------------------------------------------------------
 
 # if __name__ == '__main__':
 #     X = rng.uniform(size = (1000, 2))
