@@ -525,7 +525,7 @@ class IdEstimation(Base):
             ), "You have to compute the id using the binomial estimator first!"
             d = self.intrinsic_dim_binom
         if k is None:
-            k = self.maxk
+            k = self.k
         if r is None:
             r = self.r
         if N is None:

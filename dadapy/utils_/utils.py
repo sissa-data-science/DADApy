@@ -6,6 +6,8 @@ from scipy.spatial import cKDTree as KD
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
+import scipy.special as sp
+
 cores = multiprocessing.cpu_count()
 
 
