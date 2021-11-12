@@ -97,7 +97,7 @@ class Clustering(DensityEstimation):
         self.log_den_bord_err = out[6]
         self.bord_indices = out[7]
 
-        self.log_den_bord = out_bord + log_den_min - 1 - np.log(N)
+        self.log_den_bord = out_bord + log_den_min - 1 - np.log(self.N)
 
         if self.verb:
             print("Clustering finished, {} clusters found".format(self.N_clusters))
