@@ -105,7 +105,6 @@ class IdEstimation(Base):
         if mus is None:
             mus = np.log(self.distances[:, n1 * 2] / self.distances[:, n1])
 
-        print(self.dtype)
         id = ut._argmax_loglik(self.dtype, d0, d1, mus, n1, 2 * n1, self.N, eps=1.0e-7)
         id_err = (1 / ut._fisher_info_scaling(id, mus, n1, 2 * n1)) ** 0.5
 
