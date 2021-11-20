@@ -15,8 +15,7 @@ ctypedef np.float64_t floatTYPE_t
 @cython.cdivision(True)
 def _nrmaxl(floatTYPE_t rinit,
             DTYPE_t kstar_i,
-            np.ndarray[floatTYPE_t, ndim = 1] vi,
-            DTYPE_t maxk):
+            np.ndarray[floatTYPE_t, ndim = 1] vi):
 
     # declarations
     cdef DTYPE_t j,niter
@@ -62,13 +61,12 @@ def _nrmaxl(floatTYPE_t rinit,
         Cov2[0,1]=Cov2[0,1]-jf*tt
         Cov2[1,1]=Cov2[1,1]-jf*jf*tt
     Cov2[1,0]=Cov2[0,1]
-    #Covinv2=np.linalg.inv(Cov2)
-    #Covinv2=_matinv2(Cov2)
+
     _matinv2(Cov2,Covinv2)
     func=100.
     niter=0
 
-    while ( (func>1e-8) and (niter < 10000) ):
+    while ( ((func)>1e-3) and (niter < 10000) ):
         sb=(Covinv2[0,0]*gb+Covinv2[0,1]*ga)
         sa=(Covinv2[1,0]*gb+Covinv2[1,1]*ga)
         niter=niter+1
@@ -78,7 +76,7 @@ def _nrmaxl(floatTYPE_t rinit,
         b=b-sigma*sb
         a=a-sigma*sa
         L0=0.
-        gb=float(kstar_i)
+        gb= float(kstar_i)
         ga= float(kstar_i + 1) * float(kstar_i) / 2.
         Cov2[0,0]=0. #gbb
         Cov2[0,1]=0. #gab
@@ -99,7 +97,7 @@ def _nrmaxl(floatTYPE_t rinit,
         #Covinv2=_matinv2(Cov2)
         _matinv2(Cov2,Covinv2)
         if ((abs(a) <= fepsilon ) or (abs(b) <= fepsilon )):
-            func=max(gb,ga)
+            func=max(abs(gb),abs(ga))
         else:
             func=max(abs(gb/b),abs(ga/a))
     #Cov2=-Cov2

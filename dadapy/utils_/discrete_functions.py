@@ -1,20 +1,22 @@
 import dadapy.utils_.utils as ut
 import numpy as np
-
-# load, just once and for all, the coefficients for the polynomials in d at fixed L
-import pkg_resources
 import scipy
 
 # --------------------------------------------------------------------------------------
 
+# bounds for numerical estimation, change if needed
+D_MAX = 100.0
+D_MIN = 0.0001
 
+# TODO: find a proper way to load the data with a relative path
+# load, just once and for all, the coefficients for the polynomials in d at fixed L
+import pkg_resources
 DATA_PATH = pkg_resources.resource_filename("dadapy.utils_", "/discrete_volumes/")
 coeff = np.loadtxt(DATA_PATH + "L_coefficients_float.dat", dtype=np.float64)
 
 # V_exact_int = np.loadtxt(DATA_PATH + 'V_exact.dat',dtype=np.uint64)
 
 # --------------------------------------------------------------------------------------
-
 
 def compute_discrete_volume(L, d, O1=False):
     """Enumerate the points contained in a region of radius L according to Manhattan metric
@@ -72,7 +74,6 @@ def compute_discrete_volume(L, d, O1=False):
 
 # --------------------------------------------------------------------------------------
 
-
 def compute_derivative_discrete_vol(l, d):
     """compute derivative of discrete volumes with respect to dimension
 
@@ -122,6 +123,31 @@ def compute_derivative_discrete_vol(l, d):
 
 # --------------------------------------------------------------------------------------
 
+def compute_jacobian(lk,ln,d):
+    """Compute jacobian of the ratio of volumes wrt d
+
+    Given that the probability of the binomial process is p = V(ln,d)/V(lk,d), in order to
+    obtain relationships for d (like deriving the LogLikelihood or computing the posterior) 
+    one needs to compute the differential dp/dd
+
+    Args:
+            lk (int): radius of external volume
+            ln (int): radius of internal volume
+            d (float): embedding dimension
+
+    Returns:
+            dp_dd (ndarray(float) or float): differential
+
+    """
+    #p = Vn / Vk
+    Vk = compute_discrete_volume(lk, d)
+    Vn = compute_discrete_volume(ln, d)
+    dVk_dd = compute_derivative_discrete_vol(lk, d)
+    dVn_dd = compute_derivative_discrete_vol(ln, d)
+    dp_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
+    return dp_dd
+
+# --------------------------------------------------------------------------------------
 
 def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
     """Compute the binomial log likelihood given Rk,Rn,k,n
@@ -163,3 +189,91 @@ def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
     return -LogL.sum()
+
+# --------------------------------------------------------------------------------------
+
+def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
+    """Compute the posterior distribution of d given the input aggregates
+    Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
+    However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
+    consequence one has to change variable to have the distribution over d
+
+    Args:
+            k (nd.array(int)): number of points within the external shells
+            n (nd.array(int)): number of points within the internal shells
+            lk (int): outer shell radius
+            lk (int): inner shell radius
+            a0 (float): beta distribution parameter, default =1 for flat prior
+            b0 (float): prior initializer, default =1 for flat prior
+            plot (bool, default=False): plot the posterior
+    Returns:
+            E_d_emp (float): mean value of the posterior
+            S_d_emp (float): std of the posterior
+            d_range (ndarray(float)): domain of the posterior
+            P (ndarray(float)): probability of the posterior
+    """
+    from scipy.special import beta as beta_f
+    from scipy.stats import beta as beta_d
+
+    a = a0 + n.sum()
+    b = b0 + k.sum() - n.sum()
+    posterior = beta_d(a, b)
+
+    def p_d(d):
+        p = compute_discrete_volume(ln,d) / compute_discrete_volume(lk,d)
+        dp_dd = compute_jacobian(lk,ln,d)
+        return abs(posterior.pdf(p) * dp_dd)
+
+    # in principle we don't know where the distribution is peaked, so
+    # we perform a blind search over the domain
+    dx = 1.0
+    d_left = D_MIN
+    d_right = D_MAX + dx + d_left
+    d_range = np.arange(d_left, d_right, dx)
+    P = np.array([p_d(di) for di in d_range]) * dx
+    counter = 0
+    mask = P != 0
+    elements = mask.sum()
+    # if less than 3 points !=0 are found, reduce the interval
+    while elements < 3:
+        dx /= 10
+        d_range = np.arange(d_left, d_right, dx)
+        P = np.array([p_d(di) for di in d_range]) * dx
+        mask = P != 0
+        elements = mask.sum()
+        counter += 1
+
+    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
+    # I choose 1000 points but such quantity can be varied according to necessity
+    ind = np.where(mask)[0]
+    d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
+    d_right = d_range[ind[-1]] + 0.5 * dx
+    d_range = np.linspace(d_left, d_right, 1000)
+    dx = d_range[1]-d_range[0]
+    P = np.array([p_d(di) for di in d_range]) * dx
+    P = P.reshape(P.shape[0])
+
+    #    if verbose:
+    #        print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
+
+    if plot:
+        import matplotlib.pyplot as plt
+
+        plt.figure()
+        plt.plot(d_range, P)
+        plt.xlabel("d")
+        plt.ylabel("P(d)")
+        plt.title("posterior of d")
+        plt.show()
+
+    E_d_emp = np.dot(d_range, P)
+    S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
+    print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
+    #   theoretical results, valid only in the continuum case
+    #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
+    #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
+
+    return E_d_emp, S_d_emp, d_range, P
+
+
+# --------------------------------------------------------------------------------------

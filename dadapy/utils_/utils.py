@@ -6,6 +6,8 @@ from scipy.spatial import cKDTree as KD
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
+import scipy.special as sp
+
 cores = multiprocessing.cpu_count()
 
 
@@ -155,7 +157,7 @@ def _loglik(d, mus, n1, n2, N):
 def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
     # mu can't be == 1 add some noise
     indx = np.nonzero(mus == 1)
-    mus[indx] += np.finfo(dtype).eps
+    mus[indx] += 1e-10#np.finfo(dtype).eps
 
     l1 = _loglik(d1, mus, n1, n2, N)
     while abs(d0 - d1) > eps:
@@ -355,6 +357,7 @@ def _align_arrays(set1, err1, set2, err2=None):
 
     return offset, set1 - offset
 
+# --------------------------------------------------------------------------------------
 
 def _compute_pull_variables(set1, err1, set2, err2=None):
     """Computes the pull distribution between two sets of error-affected measures.
@@ -381,3 +384,82 @@ def _compute_pull_variables(set1, err1, set2, err2=None):
         assert set1.shape == set2.shape == err1.shape == err2.shape
         den = np.sqrt(np.square(err1) + np.square(err2))
         return (set1 - set2) / den
+
+# --------------------------------------------------------------------------------------
+
+def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
+    """Compute the posterior distribution of d given the input aggregates
+    Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
+    However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
+    consequence one has to change variable to have the distribution over d
+
+    Args:
+            k (nd.array(int) or int): number of points within the external shells
+            n (nd.array(int)): number of points within the internal shells
+            r (float): ratio between shells' radii
+            a0 (float): beta distribution parameter, default =1 for flat prior
+            b0 (float): prior initialiser, default =1 for flat prior
+            plot (bool,default=False): plot the posterior and give a numerical estimate other than the analytical one
+    Returns:
+            mean_bayes (float): mean value of the posterior
+            std_bayes (float): std of the posterior
+    """
+    from scipy.special import beta as beta_f
+    from scipy.stats import beta as beta_d
+
+    D_MAX = 100.0
+    D_MIN = 0.0001
+
+    a = a0 + n.sum()
+    if isinstance(k, (np.int, int)):
+        b = b0 + k * n.shape[0] - n.sum()
+    else:
+        b = b0 + k.sum() - n.sum()
+    posterior = beta_d(a, b)
+
+    if plot:
+        import matplotlib.pyplot as plt
+
+        def p_d(d):
+            return abs(posterior.pdf(r ** d) * (r ** d) * np.log(r))
+
+        dx = 0.1
+        d_left = D_MIN
+        d_right = D_MAX + dx + d_left
+        d_range = np.arange(d_left, d_right, dx)
+        P = np.array([p_d(di) for di in d_range]) * dx
+        mask = P != 0
+        elements = mask.sum()
+        counter = 0
+        # if less than 3 points !=0 are found, reduce the interval
+        while elements < 3:
+            dx /= 10
+            d_range = np.arange(d_left, d_right, dx)
+            P = np.array([p_d(di) for di in d_range]) * dx
+            mask = P != 0
+            elements = mask.sum()
+            counter += 1
+
+        # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
+        # I choose 1000 points but such quantity can be varied according to necessity
+        ind = np.where(mask)[0]
+        d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
+        d_right = d_range[ind[-1]] + 0.5 * dx
+        d_range = np.linspace(d_left, d_right, 1000)
+        dx = d_range[1]-d_range[0]
+        P = np.array([p_d(di) for di in d_range]) * dx
+
+        plt.plot(d_range, P)
+        plt.xlabel("d")
+        plt.ylabel("P(d)")
+        E_d_emp = (d_range * P).sum()
+        S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
+        print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
+
+    E_d = (sp.digamma(a) - sp.digamma(a + b)) / np.log(r)
+    S_d = np.sqrt((sp.polygamma(1, a) - sp.polygamma(1, a + b)) / np.log(r) ** 2)
+
+    if plot:
+        return E_d, S_d, d_range, P
+    else:
+        return E_d, S_d, None, None

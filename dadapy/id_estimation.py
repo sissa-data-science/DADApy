@@ -114,6 +114,8 @@ class IdEstimation(Base):
         if return_id:
             return id, id_err
 
+    # ----------------------------------------------------------------------------------------------
+
     def compute_id_2NN(
         self,
         algorithm="base",
@@ -144,6 +146,7 @@ class IdEstimation(Base):
         ids = np.zeros(nrep)
         r2s = np.zeros((nrep, 2))
 
+        #-----
         def _compute_id_2NN_single(mus, fraction):
 
             N = mus.shape[0]
@@ -166,6 +169,7 @@ class IdEstimation(Base):
                 raise ValueError("Please select a valid algorithm type")
 
             return intrinsic_dim
+        #-----
 
         for i in range(nrep):
             idx = np.random.choice(self.N, size=N_subset, replace=False)
@@ -195,6 +199,8 @@ class IdEstimation(Base):
                 stderr,
                 np.mean(r2s),
             )
+
+    # ----------------------------------------------------------------------------------------------
 
     def return_id_scaling_2NN(
         self,
@@ -296,25 +302,24 @@ class IdEstimation(Base):
         self.n = (self.distances <= self.rn).sum(axis=1)
 
         # checks-out
-        if self.maxk < self.N:
+        if self.maxk == self.N-1:
+            self.mask = np.ones(self.N, dtype=bool)
+        else:
             # if not all possible NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
-            # or distances[:,-1]<rk, it is likely that there are other points within rk that are not being
+            # or distances[:,-1]<lk, it is likely that there are other points within lk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
             # in the calculation of likelihood
-            self.mask = self.distances[:, -1] > self.rk  # or self.k == self.maxk
+            self.mask = self.distances[:, -1] > self.lk  # or self.k == self.maxk
 
             if np.any(~self.mask):
                 print(
                     "NB: for "
                     + str(sum(~(self.mask)))
                     + " points, the counting of k could be wrong, "
-                    + "as more points might be present within the selected rk. In order not to affect "
+                    + "as more points might be present within the selected Rk. In order not to affect "
                     + "the statistics a mask is provided to remove them from the calculation of the "
-                    + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering rk."
+                    + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
                 )
-
-        else:
-            self.mask = np.ones(self.N, dtype=bool)
 
     # ----------------------------------------------------------------------------------------------
 
@@ -385,7 +390,7 @@ class IdEstimation(Base):
                 self.id_estimated_binom_std,
                 self.posterior_domain,
                 self.posterior,
-            ) = _beta_prior(k_eff - 1, n_eff - 1, self.r, plot=plot)
+            ) = ut._beta_prior(k_eff - 1, n_eff - 1, self.r, plot=plot)
         else:
             print("select a proper method for id computation")
             return 0
@@ -497,15 +502,23 @@ class IdEstimation(Base):
                 self.id_estimated_binom_std,
                 self.posterior_domain,
                 self.posterior,
-            ) = _beta_prior(k - 1, n_eff - 1, self.r, plot=plot)
+            ) = ut._beta_prior(k - 1, n_eff - 1, self.r, plot=plot)
         else:
             print("select a proper method for id computation")
             return 0
 
     # ----------------------------------------------------------------------------------------------
 
-    # theoretical lower bound limit for the variance on the continuous estimator
-    def CramerRao(self, d=None, k=None, r=None, N=None):
+    def binomial_CramerRao(self, d=None, k=None, r=None, N=None):
+        """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
+
+        Args:
+            d (float): intrinsic dimension
+            k (float): average number of neighbours in the external shell
+            r (float): ratio among internal and external radii
+            N (int): number of points of the dataset
+
+        """
 
         if d is None:
             assert (
@@ -513,7 +526,7 @@ class IdEstimation(Base):
             ), "You have to compute the id using the binomial estimator first!"
             d = self.intrinsic_dim_binom
         if k is None:
-            k = self.maxk
+            k = self.k
         if r is None:
             r = self.r
         if N is None:
@@ -538,81 +551,3 @@ class IdEstimation(Base):
 
 
 # ----------------------------------------------------------------------------------------------
-
-
-def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
-    """Compute the posterior distribution of d given the input aggregates
-    Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
-    However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
-    consequence one has to change variable to have the distribution over d
-
-    Args:
-            k (nd.array(int) or int): number of points within the external shells
-            n (nd.array(int)): number of points within the internal shells
-            r (float): ratio between shells' radii
-            a0 (float): beta distribution parameter, default =1 for flat prior
-            b0 (float): prior initialiser, default =1 for flat prior
-            plot (bool,default=False): plot the posterior and give a numerical estimate other than the analytical one
-    Returns:
-            mean_bayes (float): mean value of the posterior
-            std_bayes (float): std of the posterior
-    """
-    from scipy.special import beta as beta_f
-    from scipy.stats import beta as beta_d
-
-    D_MAX = 300.0
-    D_MIN = 0.0001
-
-    a = a0 + n.sum()
-    if isinstance(k, (np.int, int)):
-        b = b0 + k * n.shape[0] - n.sum()
-    else:
-        b = b0 + k.sum() - n.sum()
-    posterior = beta_d(a, b)
-
-    if plot:
-        import matplotlib.pyplot as plt
-
-        def p_d(d):
-            return abs(posterior.pdf(r ** d) * (r ** d) * np.log(r))
-
-        dx = 0.1
-        d_left = D_MIN
-        d_right = D_MAX + dx + d_left
-        d_range = np.arange(d_left, d_right, dx)
-        P = np.array([p_d(di) for di in d_range]) * dx
-        mask = P != 0
-        elements = mask.sum()
-        counter = 0
-        # if less than 3 points !=0 are found, reduce the interval
-        while elements < 3:
-            dx /= 10
-            d_range = np.arange(d_left, d_right, dx)
-            P = np.array([p_d(di) for di in d_range]) * dx
-            mask = P != 0
-            elements = mask.sum()
-            counter += 1
-
-        # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
-        # I choose 1000 points but such quantity can be varied according to necessity
-        ind = np.where(mask)[0]
-        d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
-        d_right = d_range[ind[-1]] + 0.5 * dx
-        d_range = np.linspace(d_left, d_right, 1000)
-        dx = (d_right - d_left) / 1000
-        P = np.array([p_d(di) for di in d_range]) * dx
-
-        plt.plot(d_range, P)
-        plt.xlabel("d")
-        plt.ylabel("P(d)")
-        E_d_emp = (d_range * P).sum()
-        S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
-        print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
-
-    E_d = (sp.digamma(a) - sp.digamma(a + b)) / np.log(r)
-    S_d = np.sqrt((sp.polygamma(1, a) - sp.polygamma(1, a + b)) / np.log(r) ** 2)
-
-    if plot:
-        return E_d, S_d, d_range, P
-    else:
-        return E_d, S_d, None, None
