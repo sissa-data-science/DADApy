@@ -30,7 +30,7 @@ class Clustering(DensityEstimation):
             A matrix of dimensions N_clusters x N_clusters containg the estimated error on the log density of the saddle point between each couple of peaks.
         bord_indices: {np.ndarray(float)}
             A matrix of dimensions N_clusters x N_clusters containg the indices of the the saddle point between each couple of peaks.
-        
+
 
     """
 
@@ -56,8 +56,26 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering(self, Z=1.65, halo=False):
-        assert self.log_den is not None, "Compute density before clustering"
+    def compute_clustering(self, Z=1.65, halo=False, density_algorithm = 'PAK', k = None):
+        #assert self.log_den is not None, "Compute density before clustering"
+
+        if self.log_den is None:
+
+            if density_algorithm == 'PAK':
+                #if self.verb: print('PAK density estimation started')
+                self.compute_density_PAk()
+                #if self.verb: print('PAK density estimation finished')
+
+            elif density_algorithm == 'kNN':
+                assert k is not None, "provide k to estimate the density with kNN"
+                #if self.verb: print('kNN density estimation finished')
+                self.compute_density_kNN(k = k)
+                #if self.verb: print('kNN density estimation finished')
+
+            else:
+                raise NameError('density estimators name must be "PAK" or "kNN" ')
+
+
         if self.verb:
             print("Clustering started")
 
@@ -170,8 +188,25 @@ class Clustering(DensityEstimation):
             halo[tt[(self.log_den < halo_cutoff[self.cluster_assignment])]] = -1
             self.cluster_assignment = halo
 
-    def compute_clustering_pure_python(self, Z=1.65, halo=False):
-        assert self.log_den is not None, "Compute density before clustering"
+    def compute_clustering_pure_python(self, Z=1.65, halo=False, density_algorithm = 'PAK', k = None):
+        #assert self.log_den is not None, "Compute density before clustering"
+
+        if self.log_den is None:
+
+            if density_algorithm == 'PAK':
+                #if self.verb: print('PAK density estimation started')
+                self.compute_density_PAk()
+                #if self.verb: print('PAK density estimation finished')
+
+            elif density_algorithm == 'kNN':
+                assert k is not None, "provide k to estimate the density with kNN"
+                #if self.verb: print('kNN density estimation finished')
+                self.compute_density_kNN(k = k)
+                #if self.verb: print('kNN density estimation finished')
+
+            else:
+                raise NameError('density estimators name must be "PAK" or "kNN" ')
+                
         if self.verb:
             print("Clustering started")
 

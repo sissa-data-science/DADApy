@@ -69,28 +69,6 @@ def cast_to64(myarray):
         myarray = myarray.astype("float64")
     return myarray
 
-
-# --------------------------------------------------------------------------------------
-
-# helper function of compute_id_diego
-
-# TODO ADD AUTOMATIC ROOT FINDER
-# def _negative_log_likelihood(self, d, mus, n1, n2, N):
-#
-# 	A = math.log(d)
-# 	B = (n2-n1-1)*np.sum(mus**-d - 1.)
-# 	C = ((n2-1)*d+1)*np.sum(np.log(mus))
-#
-# 	return -(A+B-C)
-#
-# def _argmax_lik(self, d0, mus, n1, n2, N, eps = 1.e-7):
-#
-# 	indx = np.nonzero(mus == 1)
-# 	mus[indx] += np.finfo(self.dtype).eps
-# 	max_log_lik = minimize(self._negative_log_likelihood, x0 = d0, args = (mus, n1, n2, N),
-# 							method='L-BFGS-B', tol = 1.e-7, bounds = (0, 1000))
-# 	return max_log_lik.x
-
 # --------------------------------------------------------------------------------------
 
 import re

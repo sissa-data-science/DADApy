@@ -116,6 +116,30 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
+    #-----
+    def _compute_id_2NN_single(self, mus, fraction, algorithm='base'):
+
+        N = mus.shape[0]
+        N_eff = int(N * fraction)
+
+        mus_reduced = np.sort(mus)[:N_eff]
+
+        if algorithm == "ml":
+            intrinsic_dim = N / np.sum(mus)
+
+        elif algorithm == "base":
+            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
+
+            def func(x, m):
+                return m * x
+
+            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
+
+        else:
+            raise ValueError("Please select a valid algorithm type")
+
+        return intrinsic_dim
+
     def compute_id_2NN(
         self,
         algorithm="base",
@@ -123,6 +147,7 @@ class IdEstimation(Base):
         N_subset=None,
         return_id=False,
         metric="euclidean",
+        save_distances = True,
     ):
         """Compute intrinsic dimension using the 2NN algorithm
 
@@ -135,53 +160,35 @@ class IdEstimation(Base):
 
 
         """
-
         if N_subset is None:
             N_subset = self.N
 
-        if self.metric is None:
-            self.metric = metric
+        if N_subset==self.N:
+            #distances must be store since the may be needed for density estimation
+
+            save_distances = True
+
+        if self.metric is None: self.metric = metric
 
         nrep = int(np.round(self.N / N_subset))
         ids = np.zeros(nrep)
         r2s = np.zeros((nrep, 2))
 
-        #-----
-        def _compute_id_2NN_single(mus, fraction):
-
-            N = mus.shape[0]
-            N_eff = int(N * fraction)
-
-            mus_reduced = np.sort(mus)[:N_eff]
-
-            if algorithm == "ml":
-                intrinsic_dim = N / np.sum(mus)
-
-            elif algorithm == "base":
-                y = -np.log(1 - np.arange(1, N_eff + 1) / N)
-
-                def func(x, m):
-                    return m * x
-
-                intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
-
-            else:
-                raise ValueError("Please select a valid algorithm type")
-
-            return intrinsic_dim
-        #-----
-
         for i in range(nrep):
             idx = np.random.choice(self.N, size=N_subset, replace=False)
 
-            d, _ = compute_nn_distances(
+            distances, dist_indices = compute_nn_distances(
                 self.X[idx], min(N_subset-1, self.maxk), self.metric, self.p, self.period
             )
 
-            mus = np.log(d[:, 2] / d[:, 1])
-            id = _compute_id_2NN_single(mus, fraction)
+            if save_distances:
+                self.distances = distances
+                self.dist_indices = dist_indices
 
-            r2s[i] = np.mean(d[:, np.array([1, 2])])
+            mus = np.log(distances[:, 2] / distances[:, 1])
+            id = self._compute_id_2NN_single(mus, fraction, algorithm)
+
+            r2s[i] = np.mean(distances[:, np.array([1, 2])])
             ids[i] = id
 
         id = np.mean(ids)
@@ -225,6 +232,7 @@ class IdEstimation(Base):
                 fraction=fraction,
                 N_subset=N_subset,
                 return_id=True,
+                save_distances = False
             )
 
         return ids_scaling, ids_scaling_err, r2s_scaling
