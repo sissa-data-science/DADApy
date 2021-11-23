@@ -58,6 +58,7 @@ def _compute_clustering(floatTYPE_t Z,
     cdef np.ndarray[DTYPE_t, ndim = 1]  to_remove = np.repeat(-1, len_centers)
     cdef DTYPE_t len_to_remove = 0
 
+    if verb: print("part one finished")
 # This  part  checks that there are no centers within the neighborhood of points with higher density.
     for i in range(Nele):
         for k in range(len_centers):
@@ -68,11 +69,16 @@ def _compute_clustering(floatTYPE_t Z,
                         len_to_remove += 1
                         break
 
+    if verb: print("part two finished")
 
+    print(len_centers, len_to_remove)
     cdef np.ndarray[DTYPE_t, ndim = 1]  centers = np.empty(len_centers - len_to_remove, dtype=int)
     cdef DTYPE_t cindx = 0
 
+
+
     for i in range(len_centers):
+        print(i)
         flag = 0
         for j in range(len_to_remove):
             if _centers_[i] == to_remove[j]:
@@ -82,6 +88,7 @@ def _compute_clustering(floatTYPE_t Z,
             centers[cindx] = _centers_[i]
             cindx += 1
 
+    if verb: print("part tree finished")
     #the selected centers can't belong to the neighborhood of points with higher density
     cdef np.ndarray[DTYPE_t, ndim = 1]  cluster_init_ = np.repeat(-1, Nele)
     Nclus = len_centers - len_to_remove

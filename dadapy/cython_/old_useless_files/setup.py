@@ -1,5 +1,4 @@
 from distutils.core import setup
-
 import numpy
 from Cython.Build import cythonize
 
