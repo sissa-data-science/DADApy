@@ -62,19 +62,14 @@ class Clustering(DensityEstimation):
         if self.log_den is None:
 
             if density_algorithm == 'PAK':
-                #if self.verb: print('PAK density estimation started')
                 self.compute_density_PAk()
-                #if self.verb: print('PAK density estimation finished')
 
             elif density_algorithm == 'kNN':
                 assert k is not None, "provide k to estimate the density with kNN"
-                #if self.verb: print('kNN density estimation finished')
                 self.compute_density_kNN(k = k)
-                #if self.verb: print('kNN density estimation finished')
 
             else:
                 raise NameError('density estimators name must be "PAK" or "kNN" ')
-
 
         if self.verb:
             print("Clustering started")
@@ -85,8 +80,8 @@ class Clustering(DensityEstimation):
         log_den_c = self.log_den - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
-
         g = log_den_c - self.log_den_err
+        
         # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
 
@@ -206,7 +201,7 @@ class Clustering(DensityEstimation):
 
             else:
                 raise NameError('density estimators name must be "PAK" or "kNN" ')
-                
+
         if self.verb:
             print("Clustering started")
 
