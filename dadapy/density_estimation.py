@@ -129,10 +129,10 @@ class DensityEstimation(IdEstimation):
 
         """
         if self.intrinsic_dim is None:
-            self.compute_id_2NN()
+            _ = self.return_id_2NN()
 
         if self.verb:
-            print("k-NN density estimation started (k={})".format(k))
+            print(f"k-NN density estimation started (k={k})")
 
         # kstar = np.full(self.N, k, dtype=int)
         self.set_kstar(k)
@@ -178,7 +178,7 @@ class DensityEstimation(IdEstimation):
         """
 
         if self.intrinsic_dim is None:
-            self.compute_id_2NN()
+            _ = self.return_id_2NN()
 
         if self.verb:
             print(f"kstar estimation started, Dthr = {Dthr}")
@@ -1346,7 +1346,7 @@ if __name__ == "__main__":
 
     de.compute_distances(maxk=300)
 
-    de.compute_id_2NN()
+    _ = de.return_id_2NN()
 
     de.compute_density_PAk_optimised()
 

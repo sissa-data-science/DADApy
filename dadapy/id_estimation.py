@@ -26,8 +26,7 @@ class IdEstimation(Base):
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
-    ):
+        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores):
         super().__init__(
             coordinates=coordinates,
             distances=distances,
@@ -41,17 +40,106 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_id_scaling_r2n(self, range_max=1024, d0=0.001, d1=1000):
-        """Compute the id at different scales using the r2n algorithm.
+    def _compute_id_2NN(self, mus, fraction, algorithm='base'):
 
-        Args:
-                range_max: maximum number neighbourhood considered for the id computations, the largest this number the
-                larges is the scale.
-                d0: minimum intrinsic dimension considered in the search
-                d1: maximum intrinsic dimension considered in the search
+        N = mus.shape[0]
+        N_eff = int(N * fraction)
+        mus_reduced = np.sort(mus)[:N_eff]
+
+        #TOFIX maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
+        if algorithm == "ml":
+            intrinsic_dim = N/ np.sum(mus)
+
+        elif algorithm == "base":
+            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
+
+            def func(x, m):
+                return m * x
+
+            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
+
+        else:
+            raise ValueError("Please select a valid algorithm type")
+
+        return intrinsic_dim
+
+    def return_id_2NN(
+    #need to have a function that return the id without shuffling the data,
+    #I moved the (random) bootstrap of the samples done when decimating the dataset to
+    #'return id scaling' where it should stay (also conceptually)
+        self,
+        X = None,
+        algorithm="base",
+        fraction=0.9,
+        metric="euclidean",
+        save_distances = False
+    ):
+        """Compute intrinsic dimension using the 2NN algorithm
+
+        Parameters:
+        ----------
+        X: ndarray
+            default None; The array...
+        algorithm: string
+            'base' to perform the linear fit, 'ml' to perform maximum likelihood
+        fraction: float
+            fraction of mus that will be considered for the estimate (discard highest mus)
+        save_distances: bool
+            defualt False; if True will save the computed distance matrix.
 
         Returns:
+        --------
+        id, rs: (float, float)
+            the estimated intrinsic dimension (id) and the average nearest neighbor distance (rs)
 
+        """
+        if X is None:
+            X = self.X
+            save_distances=True
+
+        N_subset = X.shape[0]
+
+        if self.metric is None:
+            self.metric = metric
+
+        distances, dist_indices = compute_nn_distances(
+                X, min(N_subset-1, self.maxk), self.metric, self.p, self.period
+            )
+
+        if save_distances:
+            self.distances = distances
+            self.dist_indices = dist_indices
+
+        mus = np.log(distances[:, 2] / distances[:, 1])
+        id = self._compute_id_2NN(mus, fraction, algorithm)
+        rs= np.mean(distances[:, np.array([1, 2])])
+
+        self.intrinsic_dim = id
+        #self.intrinsic_dim_err = stderr
+
+        if self.verb:
+            print(f"ID estimation finished: selecting ID of {self.intrinsic_dim}")
+        return id, np.mean(rs)
+
+    # ----------------------------------------------------------------------------------------------
+    def return_id_scaling(self, range_max=1024, d0=0.001, d1=1000):
+        """Compute the id at different scales using the r2n algorithm.
+
+        Parameters:
+        ----------
+        range_max: int
+            maximum nearest neighbor rank considered for the id computations
+        d0: float
+            minimum intrinsic dimension considered in the search
+        d1: float
+            maximum intrinsic dimension considered in the search
+
+        Returns:
+        -------
+        Y: ndarray
+            Y[0]: vector of intrinsic dimensions
+            Y[1]: vector of error estrimates
+            Y[2]: vector of average distances of the neighbors involved in the estimates
         """
 
         def get_steps(upper_bound, range_max=range_max):
@@ -86,128 +174,18 @@ class IdEstimation(Base):
         # array of error estimates (via fisher information)
         ids_scaling_err = np.zeros(mus.shape[1])
         # array of average 'first' and 'second' neighbor distances, relative to each id estimate
-        r2s_scaling = np.mean(r2s, axis=(0, 1))
+        rs_scaling = np.mean(r2s, axis=(0, 1))
 
         # compute IDs via maximum likelihood (and their error) for all the scales up to range_scaling
         for i in range(mus.shape[1]):
             n1 = 2 ** i
+            id = ut._argmax_loglik(self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=1.0e-7)
+            ids_scaling[i] = id
+            ids_scaling_err[i] = (1 / ut._fisher_info_scaling(id, mus[:, i], n1, 2 * n1)) ** 0.5
 
-            ids_scaling[i], ids_scaling_err[i] = self.compute_id_r2n(
-                n1, d0=d0, d1=d1, mus=mus[:, i], return_id=True
-            )
+        return ids_scaling, ids_scaling_err, rs_scaling
 
-        return ids_scaling, ids_scaling_err, r2s_scaling
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_id_r2n(self, n1, d0=0.001, d1=1000, mus=None, return_id=False):
-
-        if mus is None:
-            mus = np.log(self.distances[:, n1 * 2] / self.distances[:, n1])
-
-        id = ut._argmax_loglik(self.dtype, d0, d1, mus, n1, 2 * n1, self.N, eps=1.0e-7)
-        id_err = (1 / ut._fisher_info_scaling(id, mus, n1, 2 * n1)) ** 0.5
-
-        self.intrinsic_dim = id
-        self.intrinsic_dim_err = id_err
-
-        if return_id:
-            return id, id_err
-
-    # ----------------------------------------------------------------------------------------------
-
-    #-----
-    def _compute_id_2NN_single(self, mus, fraction, algorithm='base'):
-
-        N = mus.shape[0]
-        N_eff = int(N * fraction)
-
-        mus_reduced = np.sort(mus)[:N_eff]
-
-        if algorithm == "ml":
-            intrinsic_dim = N / np.sum(mus)
-
-        elif algorithm == "base":
-            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
-
-            def func(x, m):
-                return m * x
-
-            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
-
-        else:
-            raise ValueError("Please select a valid algorithm type")
-
-        return intrinsic_dim
-
-    def compute_id_2NN(
-        self,
-        algorithm="base",
-        fraction=0.9,
-        N_subset=None,
-        return_id=False,
-        metric="euclidean",
-        save_distances = True,
-    ):
-        """Compute intrinsic dimension using the 2NN algorithm
-
-        Args:
-                algorithm: 'base' to perform the linear fit, 'ml' to perform maximum likelihood
-                fraction: fraction of mus that will be considered for the estimate (discard highest mus)
-                N_subset: Can be used to change the scale at which one is looking at the data
-
-        Returns:
-
-
-        """
-        if N_subset is None:
-            N_subset = self.N
-
-        if N_subset==self.N:
-            #distances must be store since the may be needed for density estimation
-
-            save_distances = True
-
-        if self.metric is None: self.metric = metric
-
-        nrep = int(np.round(self.N / N_subset))
-        ids = np.zeros(nrep)
-        r2s = np.zeros((nrep, 2))
-
-        for i in range(nrep):
-            idx = np.random.choice(self.N, size=N_subset, replace=False)
-
-            distances, dist_indices = compute_nn_distances(
-                self.X[idx], min(N_subset-1, self.maxk), self.metric, self.p, self.period
-            )
-
-            if save_distances:
-                self.distances = distances
-                self.dist_indices = dist_indices
-
-            mus = np.log(distances[:, 2] / distances[:, 1])
-            id = self._compute_id_2NN_single(mus, fraction, algorithm)
-
-            r2s[i] = np.mean(distances[:, np.array([1, 2])])
-            ids[i] = id
-
-        id = np.mean(ids)
-        stderr = np.std(ids) / len(ids) ** 0.5
-
-        if self.verb:
-            print(f"ID estimation finished: selecting ID of {id} +- {stderr}")
-
-        self.intrinsic_dim = id
-        self.intrinsic_dim_err = stderr
-
-        if return_id:
-            return (
-                id,
-                stderr,
-                np.mean(r2s),
-            )
-
-    # ----------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
     def return_id_scaling_2NN(
         self,
@@ -215,6 +193,7 @@ class IdEstimation(Base):
         algorithm="base",
         fraction=0.9,
     ):
+
         max_ndec = int(math.log(self.N, 2)) - 1
         Nsubsets = np.round(self.N / np.array([2 ** i for i in range(max_ndec)]))
         Nsubsets = Nsubsets.astype(int)
@@ -227,13 +206,20 @@ class IdEstimation(Base):
         r2s_scaling = np.zeros((Nsubsets.shape[0]))
 
         for i, N_subset in enumerate(Nsubsets):
-            ids_scaling[i], ids_scaling_err[i], r2s_scaling[i] = self.compute_id_2NN(
-                algorithm=algorithm,
-                fraction=fraction,
-                N_subset=N_subset,
-                return_id=True,
-                save_distances = False
-            )
+            nrep = int(np.round(self.N / N_subset))
+            ids = np.zeros(nrep)
+            rs = np.zeros(nrep)
+
+            for j in range(nrep):
+                idx = np.random.choice(self.N, size=N_subset, replace=False)
+                ids[j], rs[j] = self.return_id_2NN(
+                        X = self.X[idx],
+                        algorithm = algorithm,
+                        save_distances = False)
+
+            ids_scaling[i] = np.mean(ids)
+            ids_scaling_err[i] = np.std(ids) / len(ids) ** 0.5
+            rs_scaling[i] = np.mean(rs)
 
         return ids_scaling, ids_scaling_err, r2s_scaling
 
@@ -559,3 +545,99 @@ class IdEstimation(Base):
 
 
 # ----------------------------------------------------------------------------------------------
+
+    # def _compute_id_2NN_single(self, mus, fraction, algorithm='base'):
+    #
+    #     N = mus.shape[0]
+    #     N_eff = int(N * fraction)
+    #
+    #     mus_reduced = np.sort(mus)[:N_eff]
+    #
+    #     if algorithm == "ml":
+    #         intrinsic_dim = N / np.sum(mus)
+    #
+    #     elif algorithm == "base":
+    #         y = -np.log(1 - np.arange(1, N_eff + 1) / N)
+    #
+    #         def func(x, m):
+    #             return m * x
+    #
+    #         intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
+    #
+    #     else:
+    #         raise ValueError("Please select a valid algorithm type")
+    #
+    #     return intrinsic_dim
+    #
+    # def compute_id_2NN(
+    #     self,
+    #     algorithm="base",
+    #     fraction=0.9,
+    #     N_subset=None,
+    #     return_id=False,
+    #     metric="euclidean",
+    #     save_distances = True,
+    # ):
+    #     """Compute intrinsic dimension using the 2NN algorithm
+    #
+    #     Args:
+    #             algorithm: 'base' to perform the linear fit, 'ml' to perform maximum likelihood
+    #             fraction: fraction of mus that will be considered for the estimate (discard highest mus)
+    #             N_subset: Can be used to change the scale at which one is looking at the data
+    #
+    #     Returns:
+    #
+    #
+    #     """
+    #     if N_subset is None:
+    #         N_subset = self.N
+    #
+    #     if N_subset==self.N:
+    #         #distances must be store since the may be needed for density estimation
+    #
+    #         save_distances = True
+    #
+    #     if self.metric is None: self.metric = metric
+    #
+    #     nrep = int(np.round(self.N / N_subset))
+    #     ids = np.zeros(nrep)
+    #     r2s = np.zeros((nrep, 2))
+    #
+    #     for i in range(nrep):
+    #         idx = np.random.choice(self.N, size=N_subset, replace=False)
+    #
+    #         distances, dist_indices = compute_nn_distances(
+    #             self.X[idx], min(N_subset-1, self.maxk), self.metric, self.p, self.period
+    #         )
+    #
+    #         if save_distances:
+    #             self.distances = distances
+    #             self.dist_indices = dist_indices
+    #
+    #         mus = np.log(distances[:, 2] / distances[:, 1])
+    #         id = self._compute_id_2NN_single(mus, fraction, algorithm)
+    #
+    #         r2s[i] = np.mean(distances[:, np.array([1, 2])])
+    #         ids[i] = id
+    #
+    #     id = np.mean(ids)
+    #     stderr = np.std(ids) / len(ids) ** 0.5
+    #
+    #     if self.verb:
+    #         print(f"ID estimation finished: selecting ID of {id} +- {stderr}")
+    #
+    #     self.intrinsic_dim = id
+    #     self.intrinsic_dim_err = stderr
+    #
+    #
+    #     if return_id:
+    #         return (
+    #             id,
+    #             stderr,
+    #             np.mean(r2s),
+    #         )
+
+
+
+
+ #-----

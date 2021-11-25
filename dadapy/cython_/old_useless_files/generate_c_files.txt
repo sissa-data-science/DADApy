@@ -1,4 +1,0 @@
-cython cython_maximum_likelihood_opt.pyx
-cython cython_density.pyx
-cython cython_grads.pyx
-cython cython_clustering.pyx

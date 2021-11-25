@@ -59,26 +59,42 @@ def _compute_clustering(floatTYPE_t Z,
     cdef DTYPE_t len_to_remove = 0
 
     if verb: print("part one finished")
+
+    for i in range(len_centers):
+        print(_centers_[i])
+
 # This  part  checks that there are no centers within the neighborhood of points with higher density.
-    for i in range(Nele):
-        for k in range(len_centers):
-            for j in range(kstar[i]):
+    for k in range(len_centers):
+        #print(k)
+        for i in range(Nele):
+            for j in range(1, kstar[i]+1):
                 if (dist_indices[i, j] == _centers_[k]):
+                    #print(i, j)
                     if (g[i] > g[_centers_[k]]):
                         to_remove[len_to_remove] = _centers_[k]
+
                         len_to_remove += 1
+                        #print(len_to_remove)
                         break
+            break
+
+    # for i in range(Nele):
+    #     for k in range(len_centers):
+    #         #for j in range(kstar[i]+1):
+    #         for j in range(1, kstar[i]+1):
+    #             if (dist_indices[i, j] == _centers_[k]):
+    #                 if (g[i] > g[_centers_[k]]):
+    #                     to_remove[len_to_remove] = _centers_[k]
+    #                     len_to_remove += 1
+    #                     break
 
     if verb: print("part two finished")
 
-    print(len_centers, len_to_remove)
+    print(len_centers, len(to_remove))
     cdef np.ndarray[DTYPE_t, ndim = 1]  centers = np.empty(len_centers - len_to_remove, dtype=int)
     cdef DTYPE_t cindx = 0
 
-
-
     for i in range(len_centers):
-        print(i)
         flag = 0
         for j in range(len_to_remove):
             if _centers_[i] == to_remove[j]:
@@ -89,6 +105,7 @@ def _compute_clustering(floatTYPE_t Z,
             cindx += 1
 
     if verb: print("part tree finished")
+    print(len(centers))
     #the selected centers can't belong to the neighborhood of points with higher density
     cdef np.ndarray[DTYPE_t, ndim = 1]  cluster_init_ = np.repeat(-1, Nele)
     Nclus = len_centers - len_to_remove

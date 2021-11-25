@@ -106,13 +106,13 @@ class Base:
 
             #removing overlapping data_points/zero distances
 
-            if self.data_structure != "discrete" and coordinates is not None:
-                N0 = self.X.shape[0]
-                self.X, self.inverse_indices = np.unique(self.X, axis = 0, return_inverse = True)
-
-                self.N = self.X.shape[0]
-                if self.N != N0:
-                     print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+            # if self.data_structure != "discrete" and coordinates is not None:
+            #     N0 = self.X.shape[0]
+            #     self.X, self.inverse_indices = np.unique(self.X, axis = 0, return_inverse = True)
+            #
+            #     self.N = self.X.shape[0]
+            #     if self.N != N0:
+            #          print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
 
                 #the original matrix can be obtained with self.X[self.inverse_indices]
                 #TODO randomize the entries of the self.X array and build an array of inverse indices

@@ -70,6 +70,7 @@ setup(
 #         include_dirs=[get_numpy_include()],
 #     )
 # ]
+
 #
 # setup(
 #     name="dadapy",
@@ -86,7 +87,6 @@ setup(
 
 
 ### COMPILE FROM CYTHON ### NOT WORKING
-
 
 # exts = [Extension(name='dadapy.cython_functions',
 #                   sources=["cython_/cython_functions.pyx", "cython_/cython_functions.c"],

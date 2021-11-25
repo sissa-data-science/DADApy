@@ -81,7 +81,7 @@ class Clustering(DensityEstimation):
 
         # Putative modes of the PDF as preliminary clusters
         g = log_den_c - self.log_den_err
-        
+
         # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
 
@@ -113,8 +113,8 @@ class Clustering(DensityEstimation):
         self.log_den_bord = out_bord + log_den_min - 1 - np.log(self.N)
 
         if self.verb:
-            print("Clustering finished, {} clusters found".format(self.N_clusters))
-            print("total time is, {}".format(secf - seci))
+            print(f"Clustering finished, {self.N_clusters} clusters found")
+            print(f"total time is, {secf - seci}")
 
     def compute_DecGraph(self):
         assert self.log_den is not None, "Compute density before"
@@ -222,12 +222,25 @@ class Clustering(DensityEstimation):
                     break
             if t == 0:
                 centers.append(i)
+
+        print(len(centers))
+        for i in range(len(centers)):
+            print(centers[i])
+
+        count = 0
         for i in centers:
             l, m = np.where(self.dist_indices == i)
             for j in range(l.shape[0]):
                 if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
+                    print(i)
                     centers.remove(i)
+                    count+=1
                     break
+        print('centers to remove =', count)
+
+
+
+
         cluster_init = []
         for j in range(N):
             cluster_init.append(-1)
