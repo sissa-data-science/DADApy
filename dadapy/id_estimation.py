@@ -89,7 +89,7 @@ class IdEstimation(Base):
 
         Returns:
         --------
-        id, rs: (float, float)
+        id, rs: float, float
             the estimated intrinsic dimension (id) and the average nearest neighbor distance (rs)
 
         """
@@ -103,8 +103,7 @@ class IdEstimation(Base):
             self.metric = metric
 
         distances, dist_indices = compute_nn_distances(
-                X, min(N_subset-1, self.maxk), self.metric, self.p, self.period
-            )
+                X, min(N_subset-1, self.maxk), self.metric, self.p, self.period)
 
         if save_distances:
             self.distances = distances
@@ -136,10 +135,12 @@ class IdEstimation(Base):
 
         Returns:
         -------
-        Y: ndarray
-            Y[0]: vector of intrinsic dimensions
-            Y[1]: vector of error estrimates
-            Y[2]: vector of average distances of the neighbors involved in the estimates
+        ids_scaling: ndarray
+            vector of intrinsic dimensions
+        ids_scaling_err: ndarray
+            vector of error estimates
+        rs_scaling: ndarray
+            vector of average distances of the neighbors involved in the estimates
         """
 
         def get_steps(upper_bound, range_max=range_max):
@@ -185,8 +186,7 @@ class IdEstimation(Base):
 
         return ids_scaling, ids_scaling_err, rs_scaling
 
-#------------------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------
     def return_id_scaling_2NN(
         self,
         N_min=10,
