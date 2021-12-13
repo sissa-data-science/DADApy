@@ -30,7 +30,7 @@ class Clustering(DensityEstimation):
             A matrix of dimensions N_clusters x N_clusters containg the estimated error on the log density of the saddle point between each couple of peaks.
         bord_indices: {np.ndarray(float)}
             A matrix of dimensions N_clusters x N_clusters containg the indices of the the saddle point between each couple of peaks.
-        
+
 
     """
 
