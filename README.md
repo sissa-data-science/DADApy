@@ -4,7 +4,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
-DULy is a Python package for the characterisation of manifolds in high dimensional spaces.
+DADApy is a Python package for the characterisation of manifolds in high dimensional spaces.
 
 
 # Homepage
