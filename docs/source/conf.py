@@ -71,4 +71,7 @@ autodoc_mock_imports = [
     "dadapy.cython_clustering",
     "dadapy.cython_maximum_likelihood_opt",
     "dadapy.cython_grads",
+    "dadapy.cython_.cython_clustering",
+    "dadapy.cython_.cython_maximum_likelihood_opt",
+    "dadapy.cython_.cython_grads",
 ]
