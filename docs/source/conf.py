@@ -24,6 +24,8 @@ sys.path.insert(0, os.path.abspath("../../dadapy/cython_"))
 sys.path.insert(0, os.path.abspath("../examples"))
 sys.path.insert(0, os.path.abspath("../../examples"))
 
+sys.path.insert(0, os.path.abspath("../../dadapy/utils_"))
+
 # -- Project information -----------------------------------------------------
 
 project = "dadapy"
