@@ -63,15 +63,16 @@ ext_modules += [
 
 setup(
     name="dadapy",
+    url="https://dadapy.readthedocs.io/",
+    description="A Python package for Distance-based Analysis of DAta-manifolds.",
+    long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
     packages=["dadapy", "dadapy.utils_"],
-    install_requires=["numpy", "scipy", "scikit-learn", "Cython", "pytest"],
+    install_requires=["numpy", "scipy", "scikit-learn", "pytest"],
     cmdclass=cmdclass,
     ext_modules=ext_modules,
 )
 
-
-
-#COMPILE FROM CYTHON WORKING
+# COMPILE FROM CYTHON WORKING
 # from setuptools import setup, Extension
 # from Cython.Build import cythonize
 #
@@ -87,24 +88,7 @@ setup(
 # )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 ### COMPILE FROM CYTHON ### NOT WORKING
-
-
-
-
-
 
 
 # exts = [Extension(name='dadapy.cython_functions',
