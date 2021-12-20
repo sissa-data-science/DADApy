@@ -24,6 +24,8 @@ sys.path.insert(0, os.path.abspath("../../dadapy/cython_"))
 sys.path.insert(0, os.path.abspath("../examples"))
 sys.path.insert(0, os.path.abspath("../../examples"))
 
+sys.path.insert(0, os.path.abspath("../../dadapy/utils_"))
+
 # -- Project information -----------------------------------------------------
 
 project = "dadapy"
@@ -64,11 +66,9 @@ html_static_path = ["_static"]
 
 
 autodoc_mock_imports = [
-    "cython_",
-    "cython_clustering",
-    "cython_maximum_likelihood_opt",
-    "cython_grads",
-    "dadapy.cython_clustering",
-    "dadapy.cython_maximum_likelihood_opt",
-    "dadapy.cython_grads",
+    "dadapy.cython_.cython_clustering",
+    "dadapy.cython_.cython_maximum_likelihood_opt",
+    "dadapy.cython_.cython_grads",
+    "dadapy.cython_.cython_periodic_dist",
+    "dadapy.cython_.cython_density"
 ]
