@@ -1,38 +1,27 @@
 import multiprocessing
-
 import numpy as np
 from scipy.spatial import cKDTree as KD
-
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
-
 import scipy.special as sp
-
 cores = multiprocessing.cpu_count()
 
 
 # --------------------------------------------------------------------------------------
-
-
 def compute_all_distances(X, n_jobs=cores):
     dists = pairwise_distances(X, Y=None, metric="euclidean", n_jobs=n_jobs)
     return dists
 
-
 # --------------------------------------------------------------------------------------
-
-
 def compute_NN_PBC(X, k_max, box_size=None, p=2, cutoff=np.inf):
     tree = KD(X, boxsize=box_size)
     dist, ind = tree.query(X, k=k_max, p=p, distance_upper_bound=cutoff)
     return dist, ind
 
-
 def from_all_distances_to_nndistances(pdist_matrix, maxk):
     dist_indices = np.asarray(np.argsort(pdist_matrix, axis=1)[:, 0 : maxk + 1])
     distances = np.asarray(np.take_along_axis(pdist_matrix, dist_indices, axis=1))
     return dist_indices, distances
-
 
 def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=None):
     if period is None:

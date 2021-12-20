@@ -223,20 +223,20 @@ class Clustering(DensityEstimation):
             if t == 0:
                 centers.append(i)
 
-        print(len(centers))
-        for i in range(len(centers)):
-            print(centers[i])
+        #print(len(centers))
+        #for i in range(len(centers)):
+            #print(centers[i])
 
         count = 0
         for i in centers:
             l, m = np.where(self.dist_indices == i)
             for j in range(l.shape[0]):
                 if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
-                    print(i)
+                    #print(i)
                     centers.remove(i)
                     count+=1
                     break
-        print('centers to remove =', count)
+        #print('centers to remove =', count)
 
 
 
