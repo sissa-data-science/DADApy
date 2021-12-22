@@ -104,19 +104,6 @@ class Base:
 
             self.dtype = self.distances.dtype
 
-            #removing overlapping data_points/zero distances
-
-            # if self.data_structure != "discrete" and coordinates is not None:
-            #     N0 = self.X.shape[0]
-            #     self.X, self.inverse_indices = np.unique(self.X, axis = 0, return_inverse = True)
-            #
-            #     self.N = self.X.shape[0]
-            #     if self.N != N0:
-            #          print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
-
-                #the original matrix can be obtained with self.X[self.inverse_indices]
-                #TODO randomize the entries of the self.X array and build an array of inverse indices
-
     # ----------------------------------------------------------------------------------------------
 
     def compute_distances(self, maxk=None, metric="minkowski", p=2, period=None):
@@ -228,7 +215,7 @@ class Base:
             dist[:, : self.maxk + 1],
             neigh_ind[:, : self.maxk + 1],
             mus,
-            np.mean(rs, axis=1),
+            rs,
         )
 
     def _return_mus_scaling(self, range_scaling):
@@ -262,6 +249,7 @@ class Base:
         )
 
         neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
+
         return (
             np.vstack(neigh_dist),
             np.vstack(neigh_ind),
@@ -284,3 +272,17 @@ class Base:
             )
             if self.distances is not None:
                 self.distances, self.dist_indices = None, None
+
+
+            #removing overlapping data_points/zero distances
+
+            # if self.data_structure != "discrete" and coordinates is not None:
+            #     N0 = self.X.shape[0]
+            #     self.X, self.inverse_indices = np.unique(self.X, axis = 0, return_inverse = True)
+            #
+            #     self.N = self.X.shape[0]
+            #     if self.N != N0:
+            #          print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+
+                #the original matrix can be obtained with self.X[self.inverse_indices]
+                #TODO randomize the entries of the self.X array and build an array of inverse indices

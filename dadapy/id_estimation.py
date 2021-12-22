@@ -39,8 +39,8 @@ class IdEstimation(Base):
         self.intrinsic_dim_err = None
 
     # ----------------------------------------------------------------------------------------------
-
     def _compute_id_2NN(self, mus, fraction, algorithm='base'):
+        """Helper of return return_id_2NN"""
 
         N = mus.shape[0]
         N_eff = int(N * fraction)
@@ -65,7 +65,7 @@ class IdEstimation(Base):
 
     def return_id_2NN(
     #need to have a function that return the id without shuffling the data,
-    #I moved the (random) bootstrap of the samples done when decimating the dataset to
+    #I moved the (random) bootstrap of the samples done with decimation to
     #'return id scaling' where it should stay (also conceptually)
         self,
         X = None,
@@ -91,7 +91,6 @@ class IdEstimation(Base):
         --------
         id, rs: float, float
             the estimated intrinsic dimension (id) and the average nearest neighbor distance (rs)
-
         """
         if X is None:
             X = self.X
@@ -121,8 +120,8 @@ class IdEstimation(Base):
         return id, np.mean(rs)
 
     # ----------------------------------------------------------------------------------------------
-    def return_id_scaling(self, range_max=1024, d0=0.001, d1=1000):
-        """Compute the id at different scales using the r2n algorithm.
+    def return_id_scaling_gride(self, range_max=1024, d0=0.001, d1=1000):
+        """Compute the id at different scales using the Gride algorithm.
 
         Parameters:
         ----------
@@ -143,21 +142,31 @@ class IdEstimation(Base):
             vector of average distances of the neighbors involved in the estimates
         """
 
-        def get_steps(upper_bound, range_max=range_max):
-            range_r2 = min(range_max, upper_bound)
-            max_step = int(math.log(range_r2, 2))
-            return np.array([2 ** i for i in range(max_step)]), range_r2
+        max_rank = min(self.N, range_max)
+        if self.distances is not None:
+            max_rank = min(max_rank, self.maxk+1)
+            print(f'distance already computed up to {max_rank}. max rank set to {max_rank}')
+        max_step = int(math.log(max_rank, 2))
+        nn_ranks = np.array([2 ** i for i in range(max_step)])
 
-        if self.distances is not None and range_max < self.maxk:
-            steps, _ = get_steps(upper_bound=range_max)
-            mus = self.distances[:, steps[1:]] / self.distances[:, steps[:-1]]
-            r2s = self.distances[:, np.array([steps[:-1], steps[1:]])]
+        # def get_steps(upper_bound, range_max=range_max):
+        #     range_r2 = min(range_max, upper_bound)
+        #     max_step = int(math.log(range_r2, 2))
+        #     return np.array([2 ** i for i in range(max_step)]), range_r2
+
+        #if self.distances is not None and range_max < self.maxk+1:
+        if self.distances is not None:
+            #steps, _ = get_steps(upper_bound=range_max)
+            mus = self.distances[:, nn_ranks[1:]] / self.distances[:, nn_ranks[:-1]]
+            rs = self.distances[:, np.array([nn_ranks[:-1], nn_ranks[1:]])]
 
         elif self.X is not None:
-            steps, range_r2 = get_steps(upper_bound=self.N - 1)
-            distances, dist_indices, mus, r2s = self._return_mus_scaling(
-                range_scaling=range_r2
-            )
+            #steps, range_r2 = get_steps(upper_bound=self.N)
+            distances, dist_indices, mus, rs = self._return_mus_scaling(range_scaling=max_rank)
+            #returns:
+            #distances, dist_indices of shape (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
+            #mus of shape (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
+            #rs of shape (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data for kth in nn_ranks
 
             # if distances have not been computed save them
             if self.distances is None:
@@ -165,19 +174,14 @@ class IdEstimation(Base):
                 self.dist_indices = dist_indices
                 self.N = distances.shape[0]
 
-        else:
-            raise ValueError(
-                "You need a coordinate matrix to perform a scaling analysis, or decrease range_max"
-            )
-
         # array of ids (as a function of the average distance to a point)
         ids_scaling = np.zeros(mus.shape[1])
         # array of error estimates (via fisher information)
         ids_scaling_err = np.zeros(mus.shape[1])
-        # array of average 'first' and 'second' neighbor distances, relative to each id estimate
-        rs_scaling = np.mean(r2s, axis=(0, 1))
+        "average of the kth and 2*kth neighbor distances taken over all datapoints for each id estimate"
+        rs_scaling = np.mean(rs, axis=(0, 1))
 
-        # compute IDs via maximum likelihood (and their error) for all the scales up to range_scaling
+        # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
         for i in range(mus.shape[1]):
             n1 = 2 ** i
             id = ut._argmax_loglik(self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=1.0e-7)
@@ -203,7 +207,7 @@ class IdEstimation(Base):
 
         ids_scaling = np.zeros(Nsubsets.shape[0])
         ids_scaling_err = np.zeros(Nsubsets.shape[0])
-        r2s_scaling = np.zeros((Nsubsets.shape[0]))
+        rs_scaling = np.zeros((Nsubsets.shape[0]))
 
         for i, N_subset in enumerate(Nsubsets):
             nrep = int(np.round(self.N / N_subset))
@@ -221,7 +225,7 @@ class IdEstimation(Base):
             ids_scaling_err[i] = np.std(ids) / len(ids) ** 0.5
             rs_scaling[i] = np.mean(rs)
 
-        return ids_scaling, ids_scaling_err, r2s_scaling
+        return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
 
@@ -237,7 +241,6 @@ class IdEstimation(Base):
             )
 
         distances_used = self.distances
-
         sum_log_mus = np.sum(np.log(distances_used[:, 2] / distances_used[:, 1]))
 
         alpha_post = alpha + self.N
@@ -636,8 +639,3 @@ class IdEstimation(Base):
     #             stderr,
     #             np.mean(r2s),
     #         )
-
-
-
-
- #-----
