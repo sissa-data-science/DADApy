@@ -357,6 +357,8 @@ class IdEstimation(Base):
         # routine
         self.fix_rk()
 
+#        self.mask = self.mask*(self.n>1.)
+
         n_eff = self.n[self.mask]
         k_eff = self.k[self.mask]
 
@@ -368,6 +370,7 @@ class IdEstimation(Base):
                 subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
                 n_eff = n_eff[subset]
                 k_eff = k_eff[subset]
+
 
         E_n = n_eff.mean()
         if E_n == 1.0:
@@ -427,7 +430,7 @@ class IdEstimation(Base):
 
         # routine
         self.k = k_eff
-        self.rk = self.distances[:, self.k]  # k NN -> k-1 position in the array
+        self.rk = self.distances[:, self.k] 
         self.rn = self.rk * self.r
         self.n = (self.distances <= self.rn.reshape(self.N, 1)).sum(axis=1)
 
