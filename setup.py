@@ -12,7 +12,7 @@ setup(
     packages=["dadapy", "dadapy.utils_"],
     #dependencies
     #install_requires=["numpy", "scipy", "scikit-learn", "Cython", "pytest"],
-    install_requires=["numpy", "scipy", "scikit-learn", "pytest"],
+    install_requires=["cython", "numpy", "scipy", "scikit-learn", "pytest"],
     cmdclass=cmdclass,
     ext_modules = ext_modules,
 )
