@@ -1,7 +1,8 @@
 import pytest
 
-from dadapy.id_discrete import *
-
+import numpy as np
+from dadapy.id_discrete import IdDiscrete
+rng = np.random.default_rng()
 
 def test_id_discrete():
     """Test the discrete id estimator"""
@@ -30,9 +31,9 @@ def test_id_discrete():
     assert pytest.approx(d, IDD.id_estimated_binom)
 
 
+"""
 from dadapy.utils_ import discrete_functions as df
 
-"""
 def test_id_volumes():
 
 	L_max,d_max = df.coeff.shape[0],21
