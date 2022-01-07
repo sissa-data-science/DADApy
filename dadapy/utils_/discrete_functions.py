@@ -10,11 +10,11 @@ D_MIN = np.finfo(np.float32).eps
 
 # TODO: find a proper way to load the data with a relative path
 # load, just once and for all, the coefficients for the polynomials in d at fixed L
-import pkg_resources
-DATA_PATH = pkg_resources.resource_filename("dadapy.utils_", "/discrete_volumes/")
-coeff = np.loadtxt(DATA_PATH + "L_coefficients_float.dat", dtype=np.float64)
+import os
+volumes_path = os.path.join(os.path.split(__file__)[0], "discrete_volumes")
+coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
 
-# V_exact_int = np.loadtxt(DATA_PATH + 'V_exact.dat',dtype=np.uint64)
+# V_exact_int = np.loadtxt(volume_path + '/V_exact.dat',dtype=np.uint64)
 
 # --------------------------------------------------------------------------------------
 
