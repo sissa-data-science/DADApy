@@ -16,20 +16,18 @@ class Clustering(DensityEstimation):
 
     Attributes:
 
-        N_clusters: {int}
-            Number of clusters found
-        cluster_assignment: {list(int)}
-            A list of length N containg the cluster assignment of each point as an integer from 0 to N_clusters-1.
-        cluster_centers: {list(int)}
-            Indices of the centroids of each cluster (density peak)
-        cluster_indices: {list(list(int))}
-            A list of lists. Each sublist contains the indices belonging to the corresponding cluster.
-        log_den_bord: {np.ndarray(float)}
-            A matrix of dimensions N_clusters x N_clusters containg the estimated log density of the the saddle point between each couple of peaks.
-        log_den_bord_err: {np.ndarray(float)}
-            A matrix of dimensions N_clusters x N_clusters containg the estimated error on the log density of the saddle point between each couple of peaks.
-        bord_indices: {np.ndarray(float)}
-            A matrix of dimensions N_clusters x N_clusters containg the indices of the the saddle point between each couple of peaks.
+        N_clusters (int): Number of clusters found
+        cluster_assignment (list(int)): A list of length N containing the cluster assignment of each point as an
+            integer from 0 to N_clusters-1.
+        cluster_centers (list(int)): Indices of the centroids of each cluster (density peak)
+        cluster_indices (list(list(int))): A list of lists. Each sublist contains the indices belonging to the
+            corresponding cluster.
+        log_den_bord (np.ndarray(float)): A matrix of dimensions N_clusters x N_clusters containing the estimated log
+            density of the saddle point between each couple of peaks.
+        log_den_bord_err (np.ndarray(float)): A matrix of dimensions N_clusters x N_clusters containing the estimated
+            error on the log density of the saddle point between each couple of peaks.
+        bord_indices (np.ndarray(float)): A matrix of dimensions N_clusters x N_clusters containing the indices of
+            the saddle point between each couple of peaks.
 
 
     """
@@ -56,8 +54,37 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering(self, Z=1.65, halo=False):
-        assert self.log_den is not None, "Compute density before clustering"
+    def compute_clustering(self, Z=1.65, halo=False, density_algorithm = 'PAK', k = None):
+        """Compute clustering according to the algorithm DPA
+
+        The only free parameter is the merging factor Z, which controls how the different density peaks are merged
+        together. The higher the Z, the more aggressive the merging, the smaller the number of clusters.
+        The calculation is optimized though cython
+
+        Args:
+            Z(float): merging parameter
+            halo (bool): compute (or not) the halo points
+            density_algorithm (str): method to compute the local density.
+                Use 'PAK' for adaptive neighbourhood, 'kNN' for fixed neighbourhood
+            k (int): eventual number of neighbour if using kNN algorithm
+
+        References:
+            M. d’Errico, E. Facco, A. Laio, A. Rodriguez, Automatic topography  of  high-dimensional  data  sets  by
+                non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
+
+        """
+        if self.log_den is None:
+
+            if density_algorithm == 'PAK':
+                self.compute_density_PAk()
+
+            elif density_algorithm == 'kNN':
+                assert k is not None, "provide k to estimate the density with kNN"
+                self.compute_density_kNN(k = k)
+
+            else:
+                raise NameError('density estimators name must be "PAK" or "kNN" ')
+
         if self.verb:
             print("Clustering started")
 
@@ -67,8 +94,8 @@ class Clustering(DensityEstimation):
         log_den_c = self.log_den - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
-
         g = log_den_c - self.log_den_err
+
         # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
 
@@ -100,10 +127,11 @@ class Clustering(DensityEstimation):
         self.log_den_bord = out_bord + log_den_min - 1 - np.log(self.N)
 
         if self.verb:
-            print("Clustering finished, {} clusters found".format(self.N_clusters))
-            print("total time is, {}".format(secf - seci))
+            print(f"Clustering finished, {self.N_clusters} clusters found")
+            print(f"total time is, {secf - seci}")
 
     def compute_DecGraph(self):
+
         assert self.log_den is not None, "Compute density before"
         assert self.X is not None
         self.delta = np.zeros(self.N)
@@ -137,6 +165,17 @@ class Clustering(DensityEstimation):
         print("Number of points for which self.delta needed call to cdist=", ncalls)
 
     def compute_cluster_DP(self, dens_cut=0.0, delta_cut=0.0, halo=False):
+        """Compute clustering using the Density Peak algorithm
+
+        Args:
+            dens_cut (float):
+            delta_cut (float):
+            halo (bool): use or not halo points
+
+        References:
+            A. Rodriguez, A. Laio, Clustering by fast search and find of density peaks,
+            Science 344 (6191) (2014) 1492–1496.
+        """
         assert self.delta is not None
         ordered = np.argsort(-self.log_den)
         self.cluster_assignment = np.zeros(self.N, dtype="int")
@@ -170,8 +209,28 @@ class Clustering(DensityEstimation):
             halo[tt[(self.log_den < halo_cutoff[self.cluster_assignment])]] = -1
             self.cluster_assignment = halo
 
-    def compute_clustering_pure_python(self, Z=1.65, halo=False):
-        assert self.log_den is not None, "Compute density before clustering"
+    def compute_clustering_pure_python(self, Z=1.65, halo=False, density_algorithm = 'PAK', k = None):
+        """Same as compute_clustering, but without the cython optimization
+        """
+
+        #assert self.log_den is not None, "Compute density before clustering"
+
+        if self.log_den is None:
+
+            if density_algorithm == 'PAK':
+                #if self.verb: print('PAK density estimation started')
+                self.compute_density_PAk()
+                #if self.verb: print('PAK density estimation finished')
+
+            elif density_algorithm == 'kNN':
+                assert k is not None, "provide k to estimate the density with kNN"
+                #if self.verb: print('kNN density estimation finished')
+                self.compute_density_kNN(k = k)
+                #if self.verb: print('kNN density estimation finished')
+
+            else:
+                raise NameError('density estimators name must be "PAK" or "kNN" ')
+
         if self.verb:
             print("Clustering started")
 
@@ -192,12 +251,23 @@ class Clustering(DensityEstimation):
                     break
             if t == 0:
                 centers.append(i)
+
+        #print(len(centers))
+        #for i in range(len(centers)):
+            #print(centers[i])
+
+        count = 0
         for i in centers:
             l, m = np.where(self.dist_indices == i)
             for j in range(l.shape[0]):
                 if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
+                    #print(i)
                     centers.remove(i)
+                    count+=1
                     break
+        #print('centers to remove =', count)
+
+
         cluster_init = []
         for j in range(N):
             cluster_init.append(-1)

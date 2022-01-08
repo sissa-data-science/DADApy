@@ -1,40 +1,90 @@
 import multiprocessing
-
 import numpy as np
-from scipy.spatial import cKDTree as KD
-
+from scipy.spatial import cKDTree
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
-
 import scipy.special as sp
+import re
 
 cores = multiprocessing.cpu_count()
 
 
-# --------------------------------------------------------------------------------------
+def compute_all_distances(X, n_jobs=cores, metric="euclidean"):
+    """Compute the distances among all available points of the dataset X
 
+    Args:
+        X (np.ndarray): array of dimension N x D
+        n_jobs (int): number of cores to use for the computation
+        metric (str): metric used to compute the distances
 
-def compute_all_distances(X, n_jobs=cores):
-    dists = pairwise_distances(X, Y=None, metric="euclidean", n_jobs=n_jobs)
+    Returns:
+        (np.ndarray(float)): N x N array containing the distances between the N points
+
+    """
+
+    dists = pairwise_distances(X, Y=None, n_jobs=n_jobs, metric=metric)
     return dists
 
 
-# --------------------------------------------------------------------------------------
+def compute_NN_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
+    """Compute the neighbours of each point taking into account periodic boundaries conditions and eventual cutoff
 
+    Args:
+        X (np.ndarray): array of dimension N x D
+        maxk (int): number of neighbours to save
+        box_size (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
+        p (int): Minkowski p-norm used
+        cutoff (float): set an upper bound to the distances. Over such threshold a np.inf will occur
 
-def compute_NN_PBC(X, k_max, box_size=None, p=2, cutoff=np.inf):
-    tree = KD(X, boxsize=box_size)
-    dist, ind = tree.query(X, k=k_max, p=p, distance_upper_bound=cutoff)
+    Returns:
+        dist (np.ndarray(float)): N x maxk array containing the distances from each point to the first maxk nn
+        ind (np.ndarray(int)): N x maxk array containing the indices of the neighbours of each point
+
+    """
+
+    tree = cKDTree(X, boxsize=box_size)
+    dist, ind = tree.query(X, k=maxk, p=p, distance_upper_bound=cutoff)
     return dist, ind
 
 
 def from_all_distances_to_nndistances(pdist_matrix, maxk):
-    dist_indices = np.asarray(np.argsort(pdist_matrix, axis=1)[:, 0 : maxk + 1])
+    """Save the first maxk neighbours starting from the matrix of the distances
+
+    Args:
+        pdist_matrix (np.ndarray(float)): N x N matrix of distances
+        maxk (int): number of neighbours to save
+
+    Returns:
+        distances (np.ndarray(float)): N x maxk matrix, distances of the neighbours of each point
+        dist_indices (np.ndarray(int)): N x maxk matrix, indices of the neighbours of each point
+
+    """
+
+    dist_indices = np.asarray(np.argsort(pdist_matrix, axis=1)[:, 0:maxk + 1])
     distances = np.asarray(np.take_along_axis(pdist_matrix, dist_indices, axis=1))
-    return dist_indices, distances
+    return distances, dist_indices
 
 
 def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=None):
+    """Compute distances, up to neighbour maxk, between points of X_new and points of X.
+
+    The element distances[i,j] represents the distance between point i in dataset X and its j-th neighbour in dataset
+    X_new, whose index is dist_indices[i,j]
+
+    Args:
+        X_new (np.array(float)): dataset from which distances are computed
+        X (np.array(float)): starting dataset of points, from which distances are computed
+        maxk (int): number of neighbours to save
+        metric (str): metric used to compute the distances
+        p (int): Minkowski p-norm used (alternative to metric, necessary only if period!=None)
+        period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
+
+    Returns:
+        distances (np.ndarray(int)): N x maxk matrix, indices of the neighbours of each point
+        dist_indices (np.ndarray(float)): N x maxk matrix, distances of the neighbours of each point
+
+    """
+
     if period is None:
 
         # nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, p=p).fit(X)
@@ -42,25 +92,33 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=N
 
         distances, dist_indices = nbrs.kneighbors(X_new)
 
+        # in case of hamming distance, make them integer
         if metric == "hamming":
             distances *= X.shape[1]
 
     else:
-
-        distances, dist_indices = compute_NN_PBC(
-            X,
-            maxk,
-            box_size=period,
-            p=p,
-        )
+        distances, dist_indices = compute_NN_PBC(X, maxk, box_size=period, p=p)
 
     return distances, dist_indices
 
 
 def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
-    distances, dist_indices = compute_cross_nn_distances(
-        X, X, maxk + 1, metric=metric, p=p, period=period
-    )
+    """For each point, compute the distances from its first maxk nearest neighbours
+
+    Args:
+        X (np.ndarray): points array of dimension N x D
+        maxk (int): number of neighbours to save
+        metric (str): metric used to compute the distances
+        p (int): Minkowski p-norm used (alternative to metric, necessary if period!=None)
+        period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
+
+    Returns:
+        distances (np.ndarray(int)): N x maxk matrix, indices of the neighbours of each point
+        dist_indices (np.ndarray(float)): N x maxk matrix, distances of the neighbours of each point
+
+    """
+
+    distances, dist_indices = compute_cross_nn_distances(X, X, maxk + 1, metric=metric, p=p, period=period)
     return distances, dist_indices
 
 
@@ -69,32 +127,8 @@ def cast_to64(myarray):
         myarray = myarray.astype("float64")
     return myarray
 
-
 # --------------------------------------------------------------------------------------
-
-# helper function of compute_id_diego
-
-# TODO ADD AUTOMATIC ROOT FINDER
-# def _negative_log_likelihood(self, d, mus, n1, n2, N):
-#
-# 	A = math.log(d)
-# 	B = (n2-n1-1)*np.sum(mus**-d - 1.)
-# 	C = ((n2-1)*d+1)*np.sum(np.log(mus))
-#
-# 	return -(A+B-C)
-#
-# def _argmax_lik(self, d0, mus, n1, n2, N, eps = 1.e-7):
-#
-# 	indx = np.nonzero(mus == 1)
-# 	mus[indx] += np.finfo(self.dtype).eps
-# 	max_log_lik = minimize(self._negative_log_likelihood, x0 = d0, args = (mus, n1, n2, N),
-# 							method='L-BFGS-B', tol = 1.e-7, bounds = (0, 1000))
-# 	return max_log_lik.x
-
-# --------------------------------------------------------------------------------------
-
-import re
-
+# Some useful function to properly sort lists
 
 def atoi(text):
     return int(text) if text.isdigit() else text
@@ -121,9 +155,8 @@ def float_keys(text):
 # files = glob.glob(dirr+'*.ext')
 # files.sort(key = natural_keys)
 
-
 # --------------------------------------------------------------------------------------
-
+# Stirling and binomial approximations
 
 def stirling(n):
     return (
@@ -146,7 +179,7 @@ def log_binom_stirling(k, n):
 
 
 # --------------------------------------------------------------------------------------
-
+# Helper functions
 
 def _loglik(d, mus, n1, n2, N):
     one_m_mus_d = 1.0 - mus ** (-d)
@@ -157,7 +190,7 @@ def _loglik(d, mus, n1, n2, N):
 def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
     # mu can't be == 1 add some noise
     indx = np.nonzero(mus == 1)
-    mus[indx] += 1e-10#np.finfo(dtype).eps
+    mus[indx] += 1e-10  # np.finfo(dtype).eps
 
     l1 = _loglik(d1, mus, n1, n2, N)
     while abs(d0 - d1) > eps:
@@ -196,9 +229,26 @@ def _fisher_info_scaling(id_ml, mus, n1, n2):
 #     sum = np.sum(((1 - n) / one_m_mus_d + 2. * n - 1.) * np.log(mu))
 #     return sum - N / d
 
+def _compute_binomial_cramerrao(d, k, r, n):
+    """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
+
+    Args:
+        d (float): intrinsic dimension
+        k (float, np.ndarray(float)): number of neighbours within the external shell
+        r (float): ratio among internal and external radii
+        n (int): number of points of the dataset
+
+    Returns:
+        CramerRao lower bound (float)
+    """
+    if isinstance(k, np.ndarray):
+        k = k.mean()
+
+    return (r ** (-d) - 1) / (k * n * np.log(r) ** 2)
+
 
 # --------------------------------------------------------------------------------------
-# Functions used in the metric_compasisons module
+# Functions used in the metric_comparisons module
 # --------------------------------------------------------------------------------------
 
 
@@ -206,12 +256,13 @@ def _return_ranks(dist_indices_1, dist_indices_2, k=1):
     """Finds all the ranks according to distance 2 of the kth neighbours according to distance 1.
 
     Args:
-        dist_indices_1 (int[:,:]): nearest neighbours according to distance1
-        dist_indices_2 (int[:,:]): nearest neighbours according to distance2
+        dist_indices_1 (np.ndarray(int)): N x maxk matrix, nearest neighbours according to distance1
+        dist_indices_2 (np.ndarray(int))): N x maxk_2 matrix, nearest neighbours according to distance2
         k (int): order of nearest neighbour considered for the calculation of the conditional ranks, default is 1
 
     Returns:
         np.array(int): ranks according to distance 2 of the first neighbour in distance 1
+
     """
     assert dist_indices_1.shape[0] == dist_indices_2.shape[0]
 
@@ -237,13 +288,14 @@ def _return_imbalance(dist_indices_1, dist_indices_2, k=1, dtype="mean"):
     """Compute the information imbalance between two precomputed distance measures.
 
     Args:
-        dist_indices_1 (int[:,:]): nearest neighbours according to distance1
-        dist_indices_2 (int[:,:]): nearest neighbours according to distance2
-        k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
+        dist_indices_1 (np.ndarray(int): nearest neighbours according to distance1
+        dist_indices_2 (np.ndarray(int): nearest neighbours according to distance2
+        k (int): order of nearest neighbour considered for the calculation of the imbalance, default = 1
         dtype (str): type of information imbalance computation, default is 'mean'
 
     Returns:
         (float): information imbalance from distance 1 to distance 2
+
     """
     assert dist_indices_1.shape[0] == dist_indices_2.shape[0]
 
@@ -337,7 +389,7 @@ def _align_arrays(set1, err1, set2, err2=None):
         err1 (np.array(float)): array containing the statistical errors on the values set1.
         set2 (np.array(float)): array containing the reference set of values, to which set1 will be aligned.
         err2 (np.array(float), optional): array containing the statistical errors on the values set2. If not given,
-        set2 is assumed to contain errorless measures
+                                          set2 is assumed to contain errorless measures
 
         Returns:
             new_set2 (np.array(float)): set1 - offset
@@ -356,13 +408,13 @@ def _align_arrays(set1, err1, set2, err2=None):
     offset = np.average(diffs, weights=w)
 
     return offset, set1 - offset
-
 # --------------------------------------------------------------------------------------
+
 
 def _compute_pull_variables(set1, err1, set2, err2=None):
     """Computes the pull distribution between two sets of error-affected measures.
 
-    For each value i the pull vairable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
+    For each value i the pull variable is defined as chi[i] = (set1[i]-set2[i])/sqrt(err1[i]^2+err2[i]^2).\
     If err2 is not given, set2 is assumed to contain errorless measures.
 
     Args:
@@ -385,7 +437,6 @@ def _compute_pull_variables(set1, err1, set2, err2=None):
         den = np.sqrt(np.square(err1) + np.square(err2))
         return (set1 - set2) / den
 
-# --------------------------------------------------------------------------------------
 
 def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
     """Compute the posterior distribution of d given the input aggregates
@@ -394,15 +445,17 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
     consequence one has to change variable to have the distribution over d
 
     Args:
-            k (nd.array(int) or int): number of points within the external shells
-            n (nd.array(int)): number of points within the internal shells
-            r (float): ratio between shells' radii
-            a0 (float): beta distribution parameter, default =1 for flat prior
-            b0 (float): prior initialiser, default =1 for flat prior
-            plot (bool,default=False): plot the posterior and give a numerical estimate other than the analytical one
+        k (nd.array(int) or int): number of points within the external shells
+        n (nd.array(int)): number of points within the internal shells
+        r (float): ratio between shells' radii
+        a0 (float): beta distribution parameter, default =1 for flat prior
+        b0 (float): prior initializer, default =1 for flat prior
+        plot (bool,default=False): plot the posterior and give a numerical estimate other than the analytical one
     Returns:
-            mean_bayes (float): mean value of the posterior
-            std_bayes (float): std of the posterior
+        mean_bayes (float): mean value of the posterior
+        std_bayes (float): std of the posterior
+        d_range (np.ndarray(float), optional): domain of the posterior (if plot==True)
+        P (np.ndarray(float), optional): values of the posterior on the domain d_range (if plot==True)
     """
     from scipy.special import beta as beta_f
     from scipy.stats import beta as beta_d

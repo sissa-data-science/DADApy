@@ -15,6 +15,7 @@ cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
 
+
 class Base:
     """Base class. A simple container of coordinates and/or distances and of basic methods.
 
@@ -23,11 +24,11 @@ class Base:
         X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
         dims (int, optional): embedding dimension of the datapoints
         maxk (int): maximum number of neighbours to be considered for the calculation of distances
-        distances (float[:,:]): A matrix of dimension N x mask containing distances between points
-        dist_indices (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
+        distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+        dist_indices (np.ndarray(int)): A matrix of dimension N x mask containing the indices of the nearest neighbours
         verb (bool): whether you want the code to speak or shut up
         njobs (int): number of cores to be used
-        p (int): metric used to compute distances
+        metric (str): metric used to compute distances
         period (np.array(float), optional): array of shape (dims,) containing periodicity for each coordinate. Default is None
     """
 
@@ -36,6 +37,7 @@ class Base:
         coordinates=None,
         distances=None,
         maxk=None,
+        data_structure="continuous",
         verbose=False,
         njobs=cores,
     ):
@@ -49,11 +51,11 @@ class Base:
         self.metric = "euclidean"
         self.p = 2
         self.period = None
+        self.data_structure = data_structure
 
         if coordinates is not None:
-            assert isinstance(
-                self.X, np.ndarray
-            ), "Coordinates must be in numpy ndarray format"
+            assert isinstance(self.X, np.ndarray)
+            "Coordinates must be in numpy ndarray format"
 
             self.dtype = self.X.dtype
 
@@ -96,9 +98,7 @@ class Base:
                 if self.maxk is None:
                     self.maxk = distances.shape[1] - 1
 
-                self.dist_indices, self.distances = from_all_distances_to_nndistances(
-                    distances, self.maxk
-                )
+                self.distances, self.dist_indices = from_all_distances_to_nndistances(distances, self.maxk)
 
             self.dtype = self.distances.dtype
 
@@ -108,10 +108,10 @@ class Base:
         """Compute distaces between points up to the maxk nearest neighbour
 
         Args:
-                maxk: maximum number of neighbours for which distance is computed and stored
-                metric: type of metric
-                p: type of metric
-                period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
+            maxk: maximum number of neighbours for which distance is computed and stored
+            metric: type of metric
+            p: type of metric
+            period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
 
         """
         if self.verb:
@@ -186,7 +186,7 @@ class Base:
         Description.
 
         Args:
-                range_scaling
+            range_scaling
 
         Returns:
 
@@ -213,7 +213,7 @@ class Base:
             dist[:, : self.maxk + 1],
             neigh_ind[:, : self.maxk + 1],
             mus,
-            np.mean(rs, axis=1),
+            rs,
         )
 
     def _return_mus_scaling(self, range_scaling):
@@ -222,7 +222,7 @@ class Base:
         Description.
 
         Args:
-                range_scaling
+            range_scaling
 
         Returns:
 
@@ -232,15 +232,6 @@ class Base:
         reduce_func = partial(
             self._mus_scaling_reduce_func, range_scaling=range_scaling
         )
-
-        # N0 = self.X.shape[0]
-        # self.X = np.unique(self.X, axis=0)
-
-        # self.N = self.X.shape[0]
-        # if self.N != N0:
-        #     print(
-        #         f"{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements"
-        #     )
 
         kwds = {"squared": True}
         chunked_results = list(
@@ -256,6 +247,7 @@ class Base:
         )
 
         neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
+
         return (
             np.vstack(neigh_dist),
             np.vstack(neigh_ind),
@@ -278,3 +270,17 @@ class Base:
             )
             if self.distances is not None:
                 self.distances, self.dist_indices = None, None
+
+
+            #removing overlapping data_points/zero distances
+
+            # if self.data_structure != "discrete" and coordinates is not None:
+            #     N0 = self.X.shape[0]
+            #     self.X, self.inverse_indices = np.unique(self.X, axis = 0, return_inverse = True)
+            #
+            #     self.N = self.X.shape[0]
+            #     if self.N != N0:
+            #          print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+
+                #the original matrix can be obtained with self.X[self.inverse_indices]
+                #TODO randomize the entries of the self.X array and build an array of inverse indices

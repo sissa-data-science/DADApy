@@ -13,6 +13,7 @@ ctypedef np.float64_t floatTYPE_t
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
+
 def _compute_clustering(floatTYPE_t Z,
                         bint halo,
                         np.ndarray[DTYPE_t, ndim = 1] kstar,
@@ -42,6 +43,7 @@ def _compute_clustering(floatTYPE_t Z,
     cdef np.ndarray[DTYPE_t, ndim = 1]  _centers_ = np.repeat(-1, Nele)
     cdef DTYPE_t len_centers = 0
 
+    if verb: print("init succeded")
 # This for looks for the centers. A point is a center if its g is bigger than the one of all its neighbors
     for i in range(Nele):
         t = 0
@@ -56,17 +58,39 @@ def _compute_clustering(floatTYPE_t Z,
     cdef np.ndarray[DTYPE_t, ndim = 1]  to_remove = np.repeat(-1, len_centers)
     cdef DTYPE_t len_to_remove = 0
 
+    if verb: print("part one finished")
+
+    for i in range(len_centers):
+        print(_centers_[i])
+
 # This  part  checks that there are no centers within the neighborhood of points with higher density.
-    for i in range(Nele):
-        for k in range(len_centers):
-            for j in range(kstar[i]):
+    for k in range(len_centers):
+        #print(k)
+        for i in range(Nele):
+            for j in range(1, kstar[i]+1):
                 if (dist_indices[i, j] == _centers_[k]):
+                    #print(i, j)
                     if (g[i] > g[_centers_[k]]):
                         to_remove[len_to_remove] = _centers_[k]
+
                         len_to_remove += 1
+                        #print(len_to_remove)
                         break
+            break
 
+    # for i in range(Nele):
+    #     for k in range(len_centers):
+    #         #for j in range(kstar[i]+1):
+    #         for j in range(1, kstar[i]+1):
+    #             if (dist_indices[i, j] == _centers_[k]):
+    #                 if (g[i] > g[_centers_[k]]):
+    #                     to_remove[len_to_remove] = _centers_[k]
+    #                     len_to_remove += 1
+    #                     break
 
+    if verb: print("part two finished")
+
+    print(len_centers, len(to_remove))
     cdef np.ndarray[DTYPE_t, ndim = 1]  centers = np.empty(len_centers - len_to_remove, dtype=int)
     cdef DTYPE_t cindx = 0
 
@@ -80,6 +104,8 @@ def _compute_clustering(floatTYPE_t Z,
             centers[cindx] = _centers_[i]
             cindx += 1
 
+    if verb: print("part tree finished")
+    print(len(centers))
     #the selected centers can't belong to the neighborhood of points with higher density
     cdef np.ndarray[DTYPE_t, ndim = 1]  cluster_init_ = np.repeat(-1, Nele)
     Nclus = len_centers - len_to_remove
@@ -134,7 +160,7 @@ def _compute_clustering(floatTYPE_t Z,
     #
     # i and j are points belonging to the clusters c(i) and c(j)
     #
-    # Point i is a border point between c(i) and c(j) if: 
+    # Point i is a border point between c(i) and c(j) if:
     #                   a) It has in its neighborhood a point j belonging to other cluster.
     #                   b) There are no other points belonging to c(i) nearer from point j
     #                   c) It has the maximum density among the points that fulfill a) & b)
@@ -311,4 +337,3 @@ def _compute_clustering(floatTYPE_t Z,
     if verb: print(
         "{0:0.2f} seconds for final operations".format(sec2 - sec))
     return clstruct_m, Nclus_m, labels, centers_m, out_bord, Rho_min, Rho_bord_err_m, Point_bord_m
-

@@ -23,7 +23,7 @@ class DensityEstimation(IdEstimation):
     Can compute the log-density and its error at each point choosing among various kNN-based methods. \
     Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component. \
     Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component. \
-    
+
     TODO:
     - compute dc when compute_kstar or when set_kstar and nowhere else
     - implement self.kstar and self.fixedk of a bool attribute self.iskfixed which is True when kstar is an array of identical integers
@@ -46,9 +46,9 @@ class DensityEstimation(IdEstimation):
         Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j.
         Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared errors on the values in Fij_array.
 
-    
+
     Bello sto stile di documentazione:
-    
+
     Parameters
     ----------
     X : {float, np.ndarray, or theano symbolic variable}
@@ -57,8 +57,6 @@ class DensityEstimation(IdEstimation):
     y : {float, np.ndarray, or theano symbolic variable}
         Y coordinate. If you supply an array, x and y need to be the same shape,
         and the potential will be calculated at each (x,y pair)
-
-
     """
 
     def __init__(
@@ -121,7 +119,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kNN(self, k=5):
+    def compute_density_kNN(self, k=10):
         """Compute the density of of each point using a simple kNN estimator
 
         Args:
@@ -130,10 +128,11 @@ class DensityEstimation(IdEstimation):
         Returns:
 
         """
-        assert self.intrinsic_dim is not None
+        if self.intrinsic_dim is None:
+            _ = self.return_id_2NN()
 
         if self.verb:
-            print("k-NN density estimation started (k={})".format(k))
+            print(f"k-NN density estimation started (k={k})")
 
         # kstar = np.full(self.N, k, dtype=int)
         self.set_kstar(k)
@@ -171,7 +170,7 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_kstar(self, Dthr=23.92812698):
-        """Computes an optimal choice of k for each point.
+        """Computes an optimal choice of k for each point. Cython optimized version.
         Args:
             Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
             to a p-value of 1e-6.
@@ -179,10 +178,10 @@ class DensityEstimation(IdEstimation):
         """
 
         if self.intrinsic_dim is None:
-            self.compute_id_2NN()
+            _ = self.return_id_2NN()
 
         if self.verb:
-            print("kstar estimation started, Dthr = {}".format(Dthr))
+            print(f"kstar estimation started, Dthr = {Dthr}")
 
         sec = time.time()
 
@@ -272,9 +271,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_vector_diffs(
-        self,
-    ):
+    def compute_neigh_vector_diffs(self):
         """Compute the vector differences from each point to its k* nearest neighbors.
         The resulting vectors are stored in a numpy ndarray of rank 2 and secondary dimension = dims.
         The index of  scipy sparse csr_matrix format.
@@ -732,9 +729,7 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print(
                 "{0:0.2f} seconds optimizing the likelihood for all the points".format(
-                    sec2 - sec
-                )
-            )
+                    sec2 - sec))
 
         # Normalise density
         log_den -= np.log(self.N)
@@ -1351,7 +1346,7 @@ if __name__ == "__main__":
 
     de.compute_distances(maxk=300)
 
-    de.compute_id_2NN()
+    _ = de.return_id_2NN()
 
     de.compute_density_PAk_optimised()
 
