@@ -15,7 +15,6 @@ cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
 
-
 class Base:
     """Base class. A simple container of coordinates and/or distances and of basic methods.
 
@@ -98,13 +97,15 @@ class Base:
                 if self.maxk is None:
                     self.maxk = min(100, distances.shape[1] - 1)
 
-                self.distances, self.dist_indices = from_all_distances_to_nndistances(distances, self.maxk)
+                self.distances, self.dist_indices = from_all_distances_to_nndistances(
+                    distances, self.maxk
+                )
 
             self.dtype = self.distances.dtype
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_distances(self, maxk=None, metric="minkowski", p=2, period=None):
+    def compute_distances(self, maxk=None, metric="euclidean", period=None):
         """Compute distaces between points up to the maxk nearest neighbour
 
         Args:
@@ -119,7 +120,7 @@ class Base:
             sec = time.time()
 
         self.metric = metric
-        self.p = p
+
         if period is not None:
             if isinstance(period, np.ndarray) and period.shape == (self.dims,):
                 self.period = period
@@ -131,6 +132,7 @@ class Base:
                         self.dims
                     )
                 )
+            print(self.period)
 
         if maxk is not None:
             self.maxk = maxk
@@ -149,7 +151,7 @@ class Base:
             print(f"Computation of the distances up to {self.maxk} NNs started")
 
         self.distances, self.dist_indices = compute_nn_distances(
-            self.X, self.maxk, self.metric, self.p, self.period
+            self.X, self.maxk, self.metric, self.period
         )
 
         sec2 = time.time()
@@ -271,8 +273,7 @@ class Base:
             if self.distances is not None:
                 self.distances, self.dist_indices = None, None
 
-
-            #removing overlapping data_points/zero distances
+            # removing overlapping data_points/zero distances
 
             # if self.data_structure != "discrete" and coordinates is not None:
             #     N0 = self.X.shape[0]
@@ -282,5 +283,21 @@ class Base:
             #     if self.N != N0:
             #          print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
 
-                #the original matrix can be obtained with self.X[self.inverse_indices]
-                #TODO randomize the entries of the self.X array and build an array of inverse indices
+            # the original matrix can be obtained with self.X[self.inverse_indices]
+            # TODO randomize the entries of the self.X array and build an array of inverse indices
+
+
+if __name__ == "__main__":
+    from numpy.random import default_rng
+
+    rng = default_rng(0)
+
+    X = np.array([[0, 0, 0], [0.5, 0, 0], [0.9, 0, 0]])
+
+    d = Base(X, verbose=True)
+
+    d.compute_distances()
+    print(d.distances, d.dist_indices)
+
+    d.compute_distances(period=1.1, metric="manhattan")
+    print(d.distances, d.dist_indices)

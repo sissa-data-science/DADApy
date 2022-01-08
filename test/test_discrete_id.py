@@ -16,7 +16,7 @@ def test_id_discrete():
     X = rng.integers(0, box, size=(N, d))
 
     IDD = IdDiscrete(X, maxk=X.shape[0])
-    IDD.compute_distances(p=1, period=box)
+    IDD.compute_distances(metric='manhattan', period=box)
 
     IDD.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
 

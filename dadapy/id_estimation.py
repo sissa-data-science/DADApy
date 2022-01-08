@@ -128,7 +128,6 @@ class IdEstimation(Base):
                     X_decimated,
                     maxk=3,  # only compute first 2 nn
                     metric=self.metric,
-                    p=self.p,
                     period=self.period,
                 )
 
