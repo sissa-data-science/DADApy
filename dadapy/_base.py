@@ -129,9 +129,7 @@ class Base:
                 self.period = np.full((self.dims), fill_value=period, dtype=float)
             else:
                 raise ValueError(
-                    "'period' must be either a float scalar or a numpy array of floats of shape ({},)".format(
-                        self.dims
-                    )
+                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)")
                 )
 
         if maxk is not None:
@@ -159,25 +157,6 @@ class Base:
             print("{0:0.2f} seconds for computing distances".format(sec2 - sec))
 
     # ---------------------------------------------------------------------------
-
-    # better to use this formulation which can be applied to _mus_scaling_reduce_func
-    def _remove_zero_dists(self, distances):
-
-        # TO IMPROVE/CHANGE
-        # to_remove = distances[:, 2] < np.finfo(self.dtype).eps
-        # distances = distances[~to_remove]
-        # indices = indices[~to_remove]
-
-        # TO TEST
-
-        # find all points with any zero distance
-        indx_ = np.nonzero(distances[:, 1] < np.finfo(self.dtype).eps)[0]
-        # set nearest distance to eps:
-        distances[indx_, 1] = np.finfo(self.dtype).eps
-
-        return distances
-
-    # ----------------------------------------------------------------------------------------------
 
     def _mus_scaling_reduce_func(self, dist, start, range_scaling=None):
         """Compute
@@ -207,7 +186,12 @@ class Base:
 
         dist = np.sqrt(dist[sample_range, neigh_ind])
 
-        dist = self._remove_zero_dists(dist)
+        "replace 0 distances with eps. here we do not remove datapoints!!!"
+        indx_ = np.nonzero(dist[:, 1] < np.finfo(self.dtype).eps)[0]
+        # set nearest distance to eps:
+        dist[indx_, 1] = np.finfo(self.dtype).eps
+        #######dist = self._remove_zero_dists(dist)
+
         mus = dist[:, steps[1:]] / dist[:, steps[:-1]]
         rs = dist[:, np.array([steps[:-1], steps[1:]])]
 
@@ -257,6 +241,26 @@ class Base:
             np.vstack(rs),
         )
 
+
+################################################################################
+    # def _remove_zero_dists(self, distances):
+    #
+    #     # TO IMPROVE/CHANGE
+    #     # to_remove = distances[:, 2] < np.finfo(self.dtype).eps
+    #     # distances = distances[~to_remove]
+    #     # indices = indices[~to_remove]
+    #
+    #     # TO TEST
+    #
+    #     # find all points with any zero distance
+    #     indx_ = np.nonzero(distances[:, 1] < np.finfo(self.dtype).eps)[0]
+    #     # set nearest distance to eps:
+    #     distances[indx_, 1] = np.finfo(self.dtype).eps
+    #
+    #     return distances
+
+
+    """TODO"""
     def remove_identical_points_TO_BE_WRITTEN(self):
 
         N0 = self.X.shape[0]

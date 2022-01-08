@@ -163,10 +163,11 @@ class IdEstimation(Base):
         elif self.X is not None:
             #steps, range_r2 = get_steps(upper_bound=self.N)
             distances, dist_indices, mus, rs = self._return_mus_scaling(range_scaling=max_rank)
+            "TODO add test on the shape of distances if range max is > max rank (should be self.N x self.N)"
             #returns:
             #distances, dist_indices of shape (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
             #mus of shape (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
-            #rs of shape (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data for kth in nn_ranks
+            #rs of shape (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data for each k in nn_ranks
 
             # if distances have not been computed save them
             if self.distances is None:
