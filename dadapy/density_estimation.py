@@ -1279,9 +1279,8 @@ class DensityEstimation(IdEstimation):
 
     def return_interpolated_density_kNN(self, X_new, k):
 
-        cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.p, self.period
-        )
+        cross_distances, cross_dist_indices = compute_cross_nn_distances(X_new, self.X, self.maxk, self.metric,
+                                                                         self.period)
 
         kstar = np.ones(X_new.shape[0], dtype=int) * k
 
@@ -1293,9 +1292,8 @@ class DensityEstimation(IdEstimation):
 
     def return_interpolated_density_kstarNN(self, X_new, Dthr=23.92812698):
 
-        cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.p, self.period
-        )
+        cross_distances, cross_dist_indices = compute_cross_nn_distances(X_new, self.X, self.maxk, self.metric,
+                                                                         self.period)
 
         kstar = cd._compute_kstar_interp(
             self.intrinsic_dim,
@@ -1318,9 +1316,8 @@ class DensityEstimation(IdEstimation):
         assert self.intrinsic_dim is not None
         assert self.X is not None
 
-        cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.p, self.period
-        )
+        cross_distances, cross_dist_indices = compute_cross_nn_distances(X_new, self.X, self.maxk, self.metric,
+                                                                         self.period)
 
         kstar = cd._compute_kstar_interp(
             self.intrinsic_dim,

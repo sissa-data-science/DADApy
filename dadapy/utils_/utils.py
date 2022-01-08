@@ -65,7 +65,7 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
     return distances, dist_indices
 
 
-def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=None):
+def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None):
     """Compute distances, up to neighbour maxk, between points of X_new and points of X.
 
     The element distances[i,j] represents the distance between point i in dataset X and its j-th neighbour in dataset
@@ -76,7 +76,6 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=N
         X (np.array(float)): starting dataset of points, from which distances are computed
         maxk (int): number of neighbours to save
         metric (str): metric used to compute the distances
-        p (int): Minkowski p-norm used (alternative to metric, necessary only if period!=None)
         period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
 
     Returns:
@@ -97,19 +96,25 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=N
             distances *= X.shape[1]
 
     else:
+        if metric == 'euclidean' or metric == 'minkowski':
+            p = 2
+        elif metric == 'manhattan':
+            p = 1
+        else:
+            raise KeyError('periodic distance computation is supported only for euclidean and manhattan metrics')
+
         distances, dist_indices = compute_NN_PBC(X, maxk, box_size=period, p=p)
 
     return distances, dist_indices
 
 
-def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
+def compute_nn_distances(X, maxk, metric="euclidean", period=None):
     """For each point, compute the distances from its first maxk nearest neighbours
 
     Args:
         X (np.ndarray): points array of dimension N x D
         maxk (int): number of neighbours to save
         metric (str): metric used to compute the distances
-        p (int): Minkowski p-norm used (alternative to metric, necessary if period!=None)
         period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
 
     Returns:
@@ -118,7 +123,7 @@ def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
 
     """
 
-    distances, dist_indices = compute_cross_nn_distances(X, X, maxk + 1, metric=metric, p=p, period=period)
+    distances, dist_indices = compute_cross_nn_distances(X, X, maxk + 1, metric=metric, period=period)
     return distances, dist_indices
 
 
