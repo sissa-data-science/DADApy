@@ -129,7 +129,7 @@ class DensityEstimation(IdEstimation):
 
         """
         if self.intrinsic_dim is None:
-            _ = self.return_id_2NN()
+            _ = self.compute_id_2NN()
 
         if self.verb:
             print(f"k-NN density estimation started (k={k})")
@@ -178,7 +178,7 @@ class DensityEstimation(IdEstimation):
         """
 
         if self.intrinsic_dim is None:
-            _ = self.return_id_2NN()
+            _ = self.compute_id_2NN()
 
         if self.verb:
             print(f"kstar estimation started, Dthr = {Dthr}")
@@ -884,7 +884,7 @@ class DensityEstimation(IdEstimation):
 
             # optimise the likelihood using pytorch
             l_, log_den = maximise(
-                Fis, self.kstar, Vis, self.dist_indices, Fij_list, Fij_var_list, alpha
+                Fis, self.kstar, Vis, self.dist_indices, self.Fij_list, self.Fij_var_list, alpha
             )
 
         # normalise density
@@ -1346,7 +1346,7 @@ if __name__ == "__main__":
 
     de.compute_distances(maxk=300)
 
-    _ = de.return_id_2NN()
+    _ = de.compute_id_2NN()
 
     de.compute_density_PAk_optimised()
 
