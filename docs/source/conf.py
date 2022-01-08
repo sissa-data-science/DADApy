@@ -43,7 +43,7 @@ release = "0.1"
 # ones.
 extensions = ["sphinx.ext.autodoc", "nbsphinx", "nbsphinx_link", "sphinx.ext.napoleon"]
 
-napoleon_custom_sections = [('Returns', 'params_style')]
+napoleon_custom_sections = [("Returns", "params_style")]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -64,13 +64,16 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
 
+# html_static_path = ["_static"]
+html_static_path = (
+    []
+)  # _static is included by default and this eliminates an annoying warning
 
 autodoc_mock_imports = [
     "dadapy.cython_.cython_clustering",
     "dadapy.cython_.cython_maximum_likelihood_opt",
     "dadapy.cython_.cython_grads",
     "dadapy.cython_.cython_periodic_dist",
-    "dadapy.cython_.cython_density"
+    "dadapy.cython_.cython_density",
 ]
