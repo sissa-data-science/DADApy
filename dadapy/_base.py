@@ -24,11 +24,11 @@ class Base:
         X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
         dims (int, optional): embedding dimension of the datapoints
         maxk (int): maximum number of neighbours to be considered for the calculation of distances
-        distances (float[:,:]): A matrix of dimension N x mask containing distances between points
-        dist_indices (int[:,:]): A matrix of dimension N x mask containing the indices of the nearest neighbours
+        distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+        dist_indices (np.ndarray(int)): A matrix of dimension N x mask containing the indices of the nearest neighbours
         verb (bool): whether you want the code to speak or shut up
         njobs (int): number of cores to be used
-        p (int): metric used to compute distances
+        metric (str): metric used to compute distances
         period (np.array(float), optional): array of shape (dims,) containing periodicity for each coordinate. Default is None
     """
 
@@ -98,9 +98,7 @@ class Base:
                 if self.maxk is None:
                     self.maxk = distances.shape[1] - 1
 
-                self.dist_indices, self.distances = from_all_distances_to_nndistances(
-                    distances, self.maxk
-                )
+                self.distances, self.dist_indices = from_all_distances_to_nndistances(distances, self.maxk)
 
             self.dtype = self.distances.dtype
 
@@ -110,10 +108,10 @@ class Base:
         """Compute distaces between points up to the maxk nearest neighbour
 
         Args:
-                maxk: maximum number of neighbours for which distance is computed and stored
-                metric: type of metric
-                p: type of metric
-                period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
+            maxk: maximum number of neighbours for which distance is computed and stored
+            metric: type of metric
+            p: type of metric
+            period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
 
         """
         if self.verb:

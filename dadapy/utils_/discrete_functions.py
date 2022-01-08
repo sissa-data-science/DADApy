@@ -5,16 +5,16 @@ import scipy
 # --------------------------------------------------------------------------------------
 
 # bounds for numerical estimation, change if needed
-D_MAX = 100.0
-D_MIN = 0.0001
+D_MAX = 50.0
+D_MIN = np.finfo(np.float32).eps
 
 # TODO: find a proper way to load the data with a relative path
 # load, just once and for all, the coefficients for the polynomials in d at fixed L
-import pkg_resources
-DATA_PATH = pkg_resources.resource_filename("dadapy.utils_", "/discrete_volumes/")
-coeff = np.loadtxt(DATA_PATH + "L_coefficients_float.dat", dtype=np.float64)
+import os
+volumes_path = os.path.join(os.path.split(__file__)[0], "discrete_volumes")
+coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
 
-# V_exact_int = np.loadtxt(DATA_PATH + 'V_exact.dat',dtype=np.uint64)
+# V_exact_int = np.loadtxt(volume_path + '/V_exact.dat',dtype=np.uint64)
 
 # --------------------------------------------------------------------------------------
 
@@ -87,12 +87,13 @@ def compute_derivative_discrete_vol(l, d):
     """
 
     # exact formula with polynomials, for small L
-    assert isinstance(l, (int, np.int))
+#    assert isinstance(l, (int, np.int))
     if l < coeff.shape[0]:
+        l = int(l)
 
         D = d ** np.arange(-1, coeff.shape[1] - 1, dtype=np.double)
 
-        coeff_d = coeff[l] * np.arange(coeff.shape[1])
+        coeff_d = coeff[l] * np.arange(coeff.shape[1])  #usual coefficient * coeff from first deriv
         return np.dot(coeff_d, D)
 
         # faster version in case of array l, use 'if all(l<coeff.shape[0])'
@@ -140,8 +141,8 @@ def compute_jacobian(lk,ln,d):
 
     """
     #p = Vn / Vk
-    Vk = compute_discrete_volume(lk, d)
-    Vn = compute_discrete_volume(ln, d)
+    Vk = compute_discrete_volume(lk, d)[0]
+    Vn = compute_discrete_volume(ln, d)[0]
     dVk_dd = compute_derivative_discrete_vol(lk, d)
     dVn_dd = compute_derivative_discrete_vol(ln, d)
     dp_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
@@ -176,21 +177,59 @@ def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
     if np.any(p == 0):
         print("something went wrong in the calculation of p: check radii and d used")
 
-    log_binom = np.log(scipy.special.binom(k, n))
+    # the binomial coefficient is present within the definition of the likelihood,\
+    # however it enters additively into the LogL. As such it does not modify its shape.\
+    # Neglected if we need only to maximize the LogL
+
+    # log_binom = np.log(scipy.special.binom(k, n))
 
     # for big values of k and n (~1000) the binomial coefficients explode -> use
     # its logarithmic definition through Stirling apporximation
-    if np.any(log_binom == np.inf):
-        mask = np.where(log_binom == np.inf)[0]
-        log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
+    
+    # if np.any(log_binom == np.inf):
+    #     mask = np.where(log_binom == np.inf)[0]
+    #     log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
 
-    LogL = log_binom + n * np.log(p) + (k - n) * np.log(1.0 - p)
+    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) #+ log_binom
     # add weights cotribution
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
     return -LogL.sum()
 
 # --------------------------------------------------------------------------------------
+
+def Cramer_Rao(d,ln,lk,N,k):
+    """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
+
+    Args:
+        d (float): space dimension
+        ln (int): radius of the external shell
+        lk (int): radius of the internal shell
+        N (int): number of points of the dataset
+        k (float): average number of neighbours in the external shell
+
+    """
+
+    P = compute_discrete_volume(ln,d)[0]/compute_discrete_volume(lk,d)[0]
+
+    return P*(1-P)/(np.float64(N)*compute_jacobian(lk,ln,d)**2*k)
+
+# --------------------------------------------------------------------------------------
+
+def eq_to_find0(d,ln,lk,n,k):
+    return compute_discrete_volume(ln,d)/compute_discrete_volume(lk,d)-n/k
+
+# --------------------------------------------------------------------------------------
+
+def find_d(ln,lk,n,k):
+    if n<0.00001:    #i.e. i'm dealing with an isolated point, there's no statistics on n
+        return 0
+#    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
+#        return 0
+    return scipy.optimize.root_scalar(eq_to_find0,args=(ln,lk,n,k),bracket=(D_MIN,D_MAX)).root
+
+# --------------------------------------------------------------------------------------
+
 
 def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
     """Compute the posterior distribution of d given the input aggregates
@@ -268,7 +307,8 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
 
     E_d_emp = np.dot(d_range, P)
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
-    print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
+    if plot:
+        print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
     #   theoretical results, valid only in the continuum case
     #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
     #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )

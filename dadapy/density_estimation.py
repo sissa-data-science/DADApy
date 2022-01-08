@@ -170,7 +170,7 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_kstar(self, Dthr=23.92812698):
-        """Computes an optimal choice of k for each point.
+        """Computes an optimal choice of k for each point. Cython optimized version.
         Args:
             Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
             to a p-value of 1e-6.

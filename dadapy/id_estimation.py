@@ -21,8 +21,8 @@ class IdEstimation(Base):
 
     Attributes:
 
-            intrinsic_dim (int): (rounded) computed intrinsic dimension of the data manifold.
-
+        intrinsic_dim (float): computed intrinsic dimension of the data manifold.
+        intrinsic_dim_err (float): error on the id estimation
     """
 
     def __init__(
@@ -39,14 +39,31 @@ class IdEstimation(Base):
         self.intrinsic_dim_err = None
 
     # ----------------------------------------------------------------------------------------------
+
     def _compute_id_2NN(self, mus, fraction, algorithm='base'):
-        """Helper of return return_id_2NN"""
+        """Helper of return return_id_2NN. Computes the id using the 2NN algorithm
+
+        Args:
+            mus (np.ndarray(float)): ratio of the distances of first- and second-nearest neighbours
+            fraction (float): fraction of mus to take into account, discard the highest values
+            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
+
+        Returns:
+
+            intrinsic_dim (float): the estimation of the intrinsic dimension
+
+        References:
+
+            E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the in-trinsic dimension of datasets by a minimal
+            neighborhood information, Scientific reports 7 (1) (2017) 1–8
+
+        """
 
         N = mus.shape[0]
         N_eff = int(N * fraction)
         mus_reduced = np.sort(mus)[:N_eff]
 
-        #TOFIX maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
+        # TO FIX: maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
         if algorithm == "ml":
             intrinsic_dim = N/ np.sum(mus)
 
@@ -63,6 +80,8 @@ class IdEstimation(Base):
 
         return intrinsic_dim
 
+    # ----------------------------------------------------------------------------------------------
+
     def return_id_2NN(
     #need to have a function that return the id without shuffling the data,
     #I moved the (random) bootstrap of the samples done with decimation to
@@ -76,21 +95,16 @@ class IdEstimation(Base):
     ):
         """Compute intrinsic dimension using the 2NN algorithm
 
-        Parameters:
-        ----------
-        X: ndarray
-            default None; The array...
-        algorithm: string
-            'base' to perform the linear fit, 'ml' to perform maximum likelihood
-        fraction: float
-            fraction of mus that will be considered for the estimate (discard highest mus)
-        save_distances: bool
-            defualt False; if True will save the computed distance matrix.
+        Args:
+            X (ndarray(float)): dataset of points N x D, default None, in such case use self.X
+            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
+            fraction (float): fraction of mus that will be considered for the estimate (discard highest mus)
+            save_distances (bool): default False; if True will save the computed distance matrix.
 
         Returns:
-        --------
-        id, rs: float, float
-            the estimated intrinsic dimension (id) and the average nearest neighbor distance (rs)
+            id (float): the estimated intrinsic dimension
+            rs (float): the average nearest neighbor distance (rs)
+
         """
         if X is None:
             X = self.X
@@ -123,23 +137,20 @@ class IdEstimation(Base):
     def return_id_scaling_gride(self, range_max=1024, d0=0.001, d1=1000):
         """Compute the id at different scales using the Gride algorithm.
 
-        Parameters:
-        ----------
-        range_max: int
-            maximum nearest neighbor rank considered for the id computations
-        d0: float
-            minimum intrinsic dimension considered in the search
-        d1: float
-            maximum intrinsic dimension considered in the search
+        Args:
+            range_max (int): maximum nearest neighbor rank considered for the id computations
+            d0 (float): minimum intrinsic dimension considered in the search
+            d1 (float): maximum intrinsic dimension considered in the search
 
         Returns:
-        -------
-        ids_scaling: ndarray
-            vector of intrinsic dimensions
-        ids_scaling_err: ndarray
-            vector of error estimates
-        rs_scaling: ndarray
-            vector of average distances of the neighbors involved in the estimates
+
+            ids_scaling (ndarray(float)): array of intrinsic dimensions
+            ids_scaling_err (ndarray(float)): array of error estimates
+            rs_scaling (ndarray(float)): array of average distances of the neighbors involved in the estimates
+
+        References:
+            F.  Denti,  D.  Doimo,  A.  Laio,  A.  Mira,  Distributional  results for  model-based  intrinsic  dimension
+              estimators, arXiv preprint arXiv:2104.13832 (2021).
         """
 
         max_rank = min(self.N, range_max)
@@ -231,15 +242,18 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_gammaprior(self, alpha=2, beta=5):
+        """Compute the intrinsic dimension using a bayesian formulation of 2nn
+
+        Args:
+            alpha (float): parameter of the prior
+            beta (float): other prior parameter
+
+        """
         if self.distances is None:
             self.compute_distances()
 
         if self.verb:
-            print(
-                "ID estimation started, using alpha = {} and beta = {}".format(
-                    alpha, alpha
-                )
-            )
+            print("ID estimation started, using alpha = {} and beta = {}".format(alpha, alpha))
 
         distances_used = self.distances
         sum_log_mus = np.sum(np.log(distances_used[:, 2] / distances_used[:, 1]))
@@ -260,7 +274,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_rk(self, rk=None, ratio=None):
+    def fix_rk(self, rk, ratio=None):
         """Computes the k points within the given rk and n points within given rn.
 
         For each point, computes the number self.k of points within a sphere of radius rk
@@ -270,8 +284,8 @@ class IdEstimation(Base):
         to the number of points of the dataset no mask will be applied
 
         Args:
-                rk (float or int): external shell radius
-                ratio (float,optional): ratio between internal and external radii of the shells
+            rk (float): external shell radius
+            ratio (float,optional): ratio between internal and external shell radii of the shells
 
         Returns:
 
@@ -280,19 +294,12 @@ class IdEstimation(Base):
         if self.distances is None:
             self.compute_distances()
 
+        self.set_rk(rk)
+
         if ratio is not None:
             self.set_r(ratio)
         else:
-            assert (
-                self.r is not None
-            ), "set self.r or insert a value for the ratio parameter"
-
-        if rk is not None:
-            self.set_rk(rk)
-        else:
-            assert (
-                self.rk is not None
-            ), "set self.R or insert a value for the rk parameter"
+            assert (self.r is not None), "set self.r or insert a value for the ratio parameter"
 
         # routine
         self.rn = self.rk * self.r
@@ -303,7 +310,7 @@ class IdEstimation(Base):
         if self.maxk == self.N-1:
             self.mask = np.ones(self.N, dtype=bool)
         else:
-            # if not all possible NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
+            # if not all available NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
             # or distances[:,-1]<lk, it is likely that there are other points within lk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
             # in the calculation of likelihood
@@ -322,20 +329,20 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_binomial_rk(
-        self, rk=None, ratio=None, subset=None, method="bayes", plot=False
+        self, rk, ratio=None, subset=None, method="bayes", plot=False
     ):
-        """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
+        """Calculate the id using the binomial estimator by fixing the same eternal radius for all the points
 
-        In the estimation of d one has to remove the central point from the counting of n and k
-        as it generates the process but it is not effectively part of it
+        In the estimation of the id one has to remove the central point from the counting of n and k
+        as it is not effectively part of the poisson process generating its neighbourhood
 
         Args:
-                rk (float): radius of the external shell
-                ratio (float): ratio between internal and external shell
-                subset (int): choose a random subset of the dataset to make the Id estimate
-                method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                                            gives the mean value and std of d, while mle only the max of the likelihood
-                plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
+            rk (float): radius of the external shell
+            ratio (float): ratio between internal and external shell
+            subset (int, np.ndarray(int)): choose a random subset of the dataset to make the id estimate
+            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
+                                           gives the mean value and std of d, while mle only the max of the likelihood
+            plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
 
         """
         # checks-in and initialisations
@@ -344,44 +351,47 @@ class IdEstimation(Base):
         else:
             assert (
                 self.r is not None
-            ), "set self.r or insert a valure for the ratio parameter"
+            ), "set self.r or insert a value for the ratio parameter"
 
-        if rk is not None:
-            self.set_rk(rk)
-        else:
-            assert (
-                self.rk is not None
-            ), "set self.R or insert a valure for the rk parameter"
-
+        self.set_rk(rk)
         self.rn = self.rk * self.r
 
         # routine
-        self.fix_rk()
+        self.fix_rk(rk)
 
         n_eff = self.n[self.mask]
         k_eff = self.k[self.mask]
 
+        # eventually perform the estimate using only a subset of the points (k and n are still computed on the whole
+        # dataset!!!)
         if subset is not None:
-            assert isinstance(
-                subset, (np.integer, int)
-            ), "subset needs to be an integer"
-            if subset < len(n_eff):
-                subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
-                n_eff = n_eff[subset]
-                k_eff = k_eff[subset]
+            # if subset is integer draw that amount of random numbers
+            if isinstance(subset, (np.integer, int)):
+                if subset < self.mask.sum():
+                    subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
+            # if subset is an array, use it as a mask
+            elif isinstance(subset, np.ndarray):
+                assert subset.shape[0] < self.mask.sum()
+                assert isinstance(subset[0], (int, np.integer))
+            else:
+                print("choose a proper shape for the subset")
+                return 0
 
-        E_n = n_eff.mean()
-        if E_n == 1.0:
-            print(
-                "no points in the inner shell, returning 0. Consider increasing rk and/or the ratio"
-            )
+            n_eff = n_eff[subset]
+            k_eff = k_eff[subset]
+
+        e_n = n_eff.mean()
+        e_k = k_eff.mean()
+        if e_n == 1.0:
+            print("no points in the inner shell, returning 0. Consider increasing rk and/or the ratio")
             self.id_estimated_binom = 0
             return 0
 
         if method == "mle":
-            self.id_estimated_binom = np.log((E_n - 1) / (k_eff.mean() - 1)) / np.log(
-                self.r
-            )
+            self.id_estimated_binom = np.log((e_n - 1.) / (e_k - 1.)) / np.log(self.r)
+            self.id_estimated_binom_std = ut._compute_binomial_cramerrao(self.id_estimated_binom,e_k-1.,self.r,
+                                                                         n_eff.shape[0])**0.5
+
         elif method == "bayes":
             (
                 self.id_estimated_binom,
@@ -396,14 +406,14 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def fix_k(self, k_eff=None, ratio=None):
-        """Computes rk, rn, n for each point given a selected value of k
+        """Computes rk, rn, n for each point of the dataset given a value of k
 
         This routine computes the external radius rk, internal radius rn and internal points n
-        given a value k (the number of NN to consider).
+        given a value k, the number of NN to consider.
 
         Args:
-                k_eff (int, default=self.maxk): selected number of NN
-                ratio (float, ): ratio among rn and rk
+            k_eff (int, default=self.maxk): the number of NN to take into account
+            ratio (float): ratio among rn and rk
 
         Returns:
 
@@ -420,18 +430,16 @@ class IdEstimation(Base):
             ), "set self.r or insert a value for the parameter ratio"
 
         if k_eff is not None:
-            assert (
-                k_eff < self.maxk
-            ), "You first need to recompute the distances with the proper amount on NN"
+            assert (k_eff < self.maxk), "You first need to recompute the distances with the proper amount on NN"
         else:
             k_eff = self.maxk - 1
 
         # routine
         self.k = k_eff
-        self.rk = self.distances[:, self.k]  # k NN -> k-1 position in the array
+        self.rk = self.distances[:, self.k] 
         self.rn = self.rk * self.r
         self.n = (self.distances <= self.rn.reshape(self.N, 1)).sum(axis=1)
-
+        # mask computed for consistency as in the fix_rk method, but no points should be ever excluded
         self.mask = np.ones(self.N, dtype=bool)
 
     # --------------------------------------------------------------------------------------
@@ -439,15 +447,15 @@ class IdEstimation(Base):
     def compute_id_binomial_k(
         self, k=None, ratio=None, subset=None, method="bayes", plot=False
     ):
-        """Calculate Id using the binomial estimator by fixing the number of neighbours
+        """Calculate id using the binomial estimator by fixing the number of neighbours
 
         As in the case in which one fixes rk, also in this version of the estimation
-        one removes the central point from n and k. Furthermore one has to remove also
+        one removes the central point from n and k. Furthermore, one has to remove also
         the k-th NN, as it plays the role of the distance at which rk is taken.
         So if k=5 it means the 5th NN from the central point will be considered,
         taking into account 6 points though (the central one too). This means that
         in principle k_eff = 6, to which I'm supposed to subtract 2. For this reason
-        in the computation of the MLE we have directly k-1, which explicitely would be k_eff-2
+        in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
 
         Args:
                 k (int): order of neighbour that set the external shell
@@ -476,24 +484,33 @@ class IdEstimation(Base):
         self.fix_k(k)
         n_eff = self.n
 
+        # eventually perform the estimate using only a subset of the points (k and n are still computed on the whole
+        # dataset!!!)
         if subset is not None:
-            assert isinstance(
-                subset, (np.integer, int)
-            ), "subset needs to be an integer"
-            if subset < len(self.n):
-                subset = rng.choice(len(self.n), subset, replace=False, shuffle=False)
-                n_eff = self.n[subset]
+            # if subset is integer draw that amount of random numbers
+            if isinstance(subset, (np.integer, int)):
+                if subset < self.N:
+                    subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
+            # if subset is an array, use it as a mask
+            elif isinstance(subset, np.ndarray):
+                assert subset.shape[0] < self.N
+                assert isinstance(subset[0], (int, np.integer))
+            else:
+                print("choose a proper shape for the subset")
+                return 0
 
-        E_n = n_eff.mean()
-        if E_n == 1.0:
-            print(
-                "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
-            )
+            n_eff = n_eff[subset]
+
+        e_n = n_eff.mean()
+        if e_n == 1.0:
+            print("no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio")
             self.id_estimated_binom = 0
             return 0
 
         if method == "mle":
-            self.id_estimated_binom = np.log((E_n - 1) / (k - 1)) / np.log(self.r)
+            self.id_estimated_binom = np.log((e_n - 1) / (k - 1)) / np.log(self.r)
+            self.id_estimated_binom_std = ut._compute_binomial_cramerrao(self.id_estimated_binom, k-1, self.r,
+                                                                         n_eff.shape[0]) ** 0.5
         elif method == "bayes":
             (
                 self.id_estimated_binom,
@@ -504,33 +521,6 @@ class IdEstimation(Base):
         else:
             print("select a proper method for id computation")
             return 0
-
-    # ----------------------------------------------------------------------------------------------
-
-    def binomial_CramerRao(self, d=None, k=None, r=None, N=None):
-        """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
-
-        Args:
-            d (float): intrinsic dimension
-            k (float): average number of neighbours in the external shell
-            r (float): ratio among internal and external radii
-            N (int): number of points of the dataset
-
-        """
-
-        if d is None:
-            assert (
-                self.id_estimated_binom is not None
-            ), "You have to compute the id using the binomial estimator first!"
-            d = self.intrinsic_dim_binom
-        if k is None:
-            k = self.k
-        if r is None:
-            r = self.r
-        if N is None:
-            N = self.N
-
-        self.VarCramerRao = (r ** (-d) - 1) / (k * N * np.log(r) ** 2)
 
     # ----------------------------------------------------------------------------------------------
     def set_id(self, d):
