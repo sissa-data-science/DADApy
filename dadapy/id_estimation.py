@@ -54,11 +54,6 @@ class IdEstimation(Base):
 
             intrinsic_dim (float): the estimation of the intrinsic dimension
 
-        References:
-
-            E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the in-trinsic dimension of datasets by a minimal
-            neighborhood information, Scientific reports 7 (1) (2017) 1–8
-
         """
 
         N = mus.shape[0]
@@ -99,6 +94,10 @@ class IdEstimation(Base):
             id (float): the estimated intrinsic dimension
             id_err (float): the standard error on the id estimation
             rs (float): the average nearest neighbor distance (rs)
+
+        References:
+            E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the in-trinsic dimension of datasets by a minimal
+            neighborhood information, Scientific reports 7 (1) (2017) 1–8
 
         """
 
@@ -253,6 +252,86 @@ class IdEstimation(Base):
             )
 
         return ids_scaling, ids_scaling_err, rs_scaling
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _mus_scaling_reduce_func(self, dist, start, range_scaling=None):
+        """Compute
+
+        adapted from kneighbors function of sklearn
+        https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
+
+        Description.
+
+        Args:
+            range_scaling
+
+        Returns:
+
+
+        """
+
+        max_step = int(math.log(range_scaling, 2))
+        steps = np.array([2 ** i for i in range(max_step)])
+
+        sample_range = np.arange(dist.shape[0])[:, None]
+        neigh_ind = np.argpartition(dist, range_scaling - 1, axis=1)
+        neigh_ind = neigh_ind[:, :range_scaling]
+
+        # argpartition doesn't guarantee sorted order, so we sort again
+        neigh_ind = neigh_ind[sample_range, np.argsort(dist[sample_range, neigh_ind])]
+
+        dist = np.sqrt(dist[sample_range, neigh_ind])
+
+        dist = self._remove_zero_dists(dist)
+        mus = dist[:, steps[1:]] / dist[:, steps[:-1]]
+        rs = dist[:, np.array([steps[:-1], steps[1:]])]
+
+        return (
+            dist[:, : self.maxk + 1],
+            neigh_ind[:, : self.maxk + 1],
+            mus,
+            rs,
+        )
+
+    def _return_mus_scaling(self, range_scaling):
+        """Compute
+
+        Description.
+
+        Args:
+            range_scaling
+
+        Returns:
+
+
+        """
+
+        reduce_func = partial(
+            self._mus_scaling_reduce_func, range_scaling=range_scaling
+        )
+
+        kwds = {"squared": True}
+        chunked_results = list(
+            pairwise_distances_chunked(
+                self.X,
+                self.X,
+                reduce_func=reduce_func,
+                metric=self.metric,
+                n_jobs=self.njobs,
+                working_memory=1024,
+                **kwds,
+            )
+        )
+
+        neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
+
+        return (
+            np.vstack(neigh_dist),
+            np.vstack(neigh_ind),
+            np.vstack(mus),
+            np.vstack(rs),
+        )
 
     # ----------------------------------------------------------------------------------------------
 
