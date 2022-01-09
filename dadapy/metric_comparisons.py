@@ -43,10 +43,14 @@ class MetricComparisons(Base):
             (float, float): the information imbalance from distance i to distance j and vice versa
         """
         X_ = self.X[:, coords1]
-        _, dist_indices_i = compute_nn_distances(X_, self.maxk, self.metric, self.period)
+        _, dist_indices_i = compute_nn_distances(
+            X_, self.maxk, self.metric, self.period
+        )
 
         X_ = self.X[:, coords2]
-        _, dist_indices_j = compute_nn_distances(X_, self.maxk, self.metric, self.period)
+        _, dist_indices_j = compute_nn_distances(
+            X_, self.maxk, self.metric, self.period
+        )
 
         imb_ij = ut._return_imbalance(dist_indices_i, dist_indices_j, k=k, dtype=dtype)
         imb_ji = ut._return_imbalance(dist_indices_j, dist_indices_i, k=k, dtype=dtype)
@@ -462,7 +466,9 @@ class MetricComparisons(Base):
         """
         X_ = X[:, coords]
 
-        _, dist_indices_coords = compute_nn_distances(X_, self.maxk, self.metric, self.period)
+        _, dist_indices_coords = compute_nn_distances(
+            X_, self.maxk, self.metric, self.period
+        )
 
         imb_coords_full = ut._return_imbalance(
             dist_indices_coords, dist_indices, k=k, dtype=dtype

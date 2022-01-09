@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.special import gammaln
+
 from dadapy.cython_ import cython_maximum_likelihood_opt as cml
 
 

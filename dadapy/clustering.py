@@ -1,5 +1,6 @@
 import multiprocessing
 import time
+
 import numpy as np
 import scipy as sp
 
@@ -54,7 +55,7 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering(self, Z=1.65, halo=False, density_algorithm = 'PAK', k = None):
+    def compute_clustering(self, Z=1.65, halo=False, density_algorithm="PAK", k=None):
         """Compute clustering according to the algorithm DPA
 
         The only free parameter is the merging factor Z, which controls how the different density peaks are merged
@@ -75,12 +76,12 @@ class Clustering(DensityEstimation):
         """
         if self.log_den is None:
 
-            if density_algorithm == 'PAK':
+            if density_algorithm == "PAK":
                 self.compute_density_PAk()
 
-            elif density_algorithm == 'kNN':
+            elif density_algorithm == "kNN":
                 assert k is not None, "provide k to estimate the density with kNN"
-                self.compute_density_kNN(k = k)
+                self.compute_density_kNN(k=k)
 
             else:
                 raise NameError('density estimators name must be "PAK" or "kNN" ')
@@ -209,24 +210,25 @@ class Clustering(DensityEstimation):
             halo[tt[(self.log_den < halo_cutoff[self.cluster_assignment])]] = -1
             self.cluster_assignment = halo
 
-    def compute_clustering_pure_python(self, Z=1.65, halo=False, density_algorithm = 'PAK', k = None):
-        """Same as compute_clustering, but without the cython optimization
-        """
+    def compute_clustering_pure_python(
+        self, Z=1.65, halo=False, density_algorithm="PAK", k=None
+    ):
+        """Same as compute_clustering, but without the cython optimization"""
 
-        #assert self.log_den is not None, "Compute density before clustering"
+        # assert self.log_den is not None, "Compute density before clustering"
 
         if self.log_den is None:
 
-            if density_algorithm == 'PAK':
-                #if self.verb: print('PAK density estimation started')
+            if density_algorithm == "PAK":
+                # if self.verb: print('PAK density estimation started')
                 self.compute_density_PAk()
-                #if self.verb: print('PAK density estimation finished')
+                # if self.verb: print('PAK density estimation finished')
 
-            elif density_algorithm == 'kNN':
+            elif density_algorithm == "kNN":
                 assert k is not None, "provide k to estimate the density with kNN"
-                #if self.verb: print('kNN density estimation finished')
-                self.compute_density_kNN(k = k)
-                #if self.verb: print('kNN density estimation finished')
+                # if self.verb: print('kNN density estimation finished')
+                self.compute_density_kNN(k=k)
+                # if self.verb: print('kNN density estimation finished')
 
             else:
                 raise NameError('density estimators name must be "PAK" or "kNN" ')
@@ -252,21 +254,20 @@ class Clustering(DensityEstimation):
             if t == 0:
                 centers.append(i)
 
-        #print(len(centers))
-        #for i in range(len(centers)):
-            #print(centers[i])
+        # print(len(centers))
+        # for i in range(len(centers)):
+        # print(centers[i])
 
         count = 0
         for i in centers:
             l, m = np.where(self.dist_indices == i)
             for j in range(l.shape[0]):
                 if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
-                    #print(i)
+                    # print(i)
                     centers.remove(i)
-                    count+=1
+                    count += 1
                     break
-        #print('centers to remove =', count)
-
+        # print('centers to remove =', count)
 
         cluster_init = []
         for j in range(N):
@@ -421,7 +422,7 @@ class Clustering(DensityEstimation):
                         kk = nnum[k]
                         log_den_bord_m[jj][kk] = log_den_bord[j][k]
                         log_den_bord_err[jj][kk] = log_den_bord_err[j][k]
-                        Point_bord_m[jj][kk]=Point_bord[j][k]
+                        Point_bord_m[jj][kk] = Point_bord[j][k]
         Last_cls = np.empty(N, dtype=int)
         for j in range(N_clusters):
             for k in cluster_indices[j]:
@@ -444,8 +445,10 @@ class Clustering(DensityEstimation):
         self.cluster_assignment = cluster_assignment
         self.cluster_centers = cluster_centers
         self.log_den_bord = (
-            #out_bord + log_den_min - 1 - np.log(N)
-            out_bord + log_den_min - 1
+            # out_bord + log_den_min - 1 - np.log(N)
+            out_bord
+            + log_den_min
+            - 1
         )  # remove wrong normalisation introduced earlier
         self.log_den_bord_err = log_den_bord_err
         self.bord_indices = Point_bord_m

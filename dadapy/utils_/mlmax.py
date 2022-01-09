@@ -1,6 +1,7 @@
-import dadapy.utils_.utils as ut
 import numpy as np
 from scipy.optimize import minimize
+
+import dadapy.utils_.utils as ut
 
 
 def ML_fun_gPAk(params, args):
