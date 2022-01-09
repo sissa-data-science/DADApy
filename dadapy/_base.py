@@ -239,6 +239,23 @@ class Base:
         )
 
 
+    # better to use this formulation which can be applied to _mus_scaling_reduce_func
+    def _remove_zero_dists(self, distances):
+
+        # TO IMPROVE/CHANGE
+        # to_remove = distances[:, 2] < np.finfo(self.dtype).eps
+        # distances = distances[~to_remove]
+        # indices = indices[~to_remove]
+
+        # TO TEST
+
+        # find all points with any zero distance
+        indx_ = np.nonzero(distances[:, 1] < np.finfo(self.dtype).eps)[0]
+        # set nearest distance to eps:
+        distances[indx_, 1] = np.finfo(self.dtype).eps
+
+        return distances
+
     def remove_identical_points(self):
 
         if self.N > 100000:
