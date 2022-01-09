@@ -232,6 +232,19 @@ class IdEstimation(Base):
         algorithm="base",
         fraction=0.9,
     ):
+        """Compute the id at different scales using the 2NN algorithm.
+
+        Args:
+            N_min (int): minimum number of points considered when decimating the dataset
+            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
+            fraction (float): fraction of mus that will be considered for the estimate (discard highest mus)
+
+        Returns:
+            ids_scaling (np.ndarray(float)): array of intrinsic dimensions
+            ids_scaling_err (np.ndarray(float)): array of error estimates
+            rs_scaling (np.ndarray(float)): array of average distances of the neighbors involved in the estimates
+
+        """
 
         max_ndec = int(math.log(self.N, 2)) - 1
         Nsubsets = np.round(self.N / np.array([2 ** i for i in range(max_ndec)]))
@@ -387,8 +400,6 @@ class IdEstimation(Base):
             rk (float): external shell radius
             ratio (float,optional): ratio between internal and external shell radii of the shells
 
-        Returns:
-
         """
         # checks-in and initialisations
         if self.distances is None:
@@ -524,8 +535,6 @@ class IdEstimation(Base):
         Args:
             k_eff (int, default=self.maxk): the number of NN to take into account
             ratio (float): ratio among rn and rk
-
-        Returns:
 
         """
         # checks-in and initialisations
