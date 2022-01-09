@@ -272,9 +272,7 @@ class Base:
         """
 
         if self.N > 100000:
-            print(
-                "WARNING: this method might be very slow for large datasets. "
-            )
+            print("WARNING: this method might be very slow for large datasets. ")
 
         # removal of overlapping data points
         X_unique = np.unique(self.X, axis=0)
