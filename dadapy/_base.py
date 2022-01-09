@@ -1,11 +1,8 @@
 import math
 import multiprocessing
 import time
-from functools import partial
 
 import numpy as np
-from sklearn.metrics import pairwise_distances_chunked
-from sklearn.neighbors import NearestNeighbors
 
 from dadapy.utils_.utils import compute_nn_distances, from_all_distances_to_nndistances
 
@@ -108,7 +105,6 @@ class Base:
         Args:
             maxk: maximum number of neighbours for which distance is computed and stored
             metric: type of metric
-            p: type of metric
             period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
 
         """
@@ -159,6 +155,17 @@ class Base:
 
     # better to use this formulation which can be applied to _mus_scaling_reduce_func
     def _remove_zero_dists(self, distances):
+        """Find zero nearest neighhbour distances and substitute the numerical zeros with a very small number.
+
+        This method is mostly useful to regularize the computation of certain id estimators.
+
+        Args:
+            distances: distances to modify
+
+        Returns:
+            distances with regularised zeros
+
+        """
 
         # TO IMPROVE/CHANGE
         # to_remove = distances[:, 2] < np.finfo(self.dtype).eps
@@ -175,11 +182,16 @@ class Base:
         return distances
 
     def remove_identical_points(self):
+        """Find points that are numerically identical and remove them.
+
+        For very large datasets this method might be slow and you might want to use a command like: awk '!seen[$0]++' .
+        See https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data
+        for more information
+        """
 
         if self.N > 100000:
             print(
                 "WARNING: this method might be very slow for large datasets. "
-                "You might want to use a command like: awk '!seen[$0]++' . See https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data"
             )
 
         # removal of overlapping data points
