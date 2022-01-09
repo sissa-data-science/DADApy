@@ -1,12 +1,11 @@
 import cython
 import numpy as np
+
 cimport numpy as np
 
 from scipy.special import gammaln
-from libc.math cimport exp
-from libc.math cimport log
-from libc.math cimport pi
-from libc.math cimport pow
+
+from libc.math cimport exp, log, pi, pow
 
 DTYPE = np.int
 floatTYPE = np.float
