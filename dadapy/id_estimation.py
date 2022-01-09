@@ -1,10 +1,8 @@
 import math
 import multiprocessing
-from functools import partial
 
 import numpy as np
 from scipy.optimize import curve_fit
-from sklearn.metrics import pairwise_distances_chunked
 from sklearn.neighbors import NearestNeighbors
 
 from dadapy._base import Base
