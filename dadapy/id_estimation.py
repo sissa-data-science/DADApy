@@ -86,7 +86,7 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_2NN(
-        self, algorithm="base", fraction=0.9, decimation=1, set_attr=True
+        self, algorithm="base", fraction=0.9, decimation=1, maxk = 30, set_attr=True
     ):
         """Compute intrinsic dimension using the 2NN algorithm
 
@@ -113,15 +113,21 @@ class IdEstimation(Base):
                 distances, dist_indices = self.distances, self.dist_indices
 
             else:
-                N_subset = int(np.rint(self.N * decimation))
-                idx = np.random.choice(self.N, size=N_subset, replace=False)
-                X_decimated = self.X[idx]
+                if decimation==1:
+                    X_decimated = self.X #without decimation the dataset must not be shuffled. The distance matrix must be the same on different runs
+                else:
+                    N_subset = int(np.rint(self.N * decimation))
+                    idx = np.random.choice(self.N, size=N_subset, replace=False)
+                    X_decimated = self.X[idx]
                 distances, dist_indices = compute_nn_distances(
                     X_decimated,
-                    3,  # only compute first 2 nn distances
-                    self.metric,
-                    self.p,
-                    self.period,
+                    #the distance matrix can be used in the density routines e.g to compute k star.
+                    #I'd keep maxk as an argument of compute id 2nn so that we can set it at will.
+                    #I set it to 30 for the moment. The speed gain from 3 to  30 should not be so big..
+                    maxk = maxk,  # only compute first 2 nn
+                    metric = self.metric,
+                    p = self.p,
+                    period = self.period,
                 )
 
             mus = np.log(distances[:, 2] / distances[:, 1])
