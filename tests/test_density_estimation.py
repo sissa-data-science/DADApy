@@ -16,7 +16,7 @@ def test_density_estimation_basics():
 
     de.compute_distances(maxk=25)
 
-    de.return_id_2NN()
+    de.compute_id_2NN()
     assert pytest.approx(1.85, de.intrinsic_dim)
 
     de.compute_density_kNN(10)

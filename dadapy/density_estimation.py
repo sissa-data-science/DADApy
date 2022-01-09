@@ -1,17 +1,17 @@
-import time
 import multiprocessing
+import time
 
 import numpy as np
-from scipy.special import gammaln
-from scipy import sparse
 from scipy import linalg as slin
+from scipy import sparse
+from scipy.special import gammaln
 
-from dadapy.id_estimation import IdEstimation
-from dadapy.cython_ import cython_maximum_likelihood_opt as cml
-from dadapy.cython_ import cython_grads as cgr
 from dadapy.cython_ import cython_density as cd
-from dadapy.utils_.utils import compute_cross_nn_distances
+from dadapy.cython_ import cython_grads as cgr
+from dadapy.cython_ import cython_maximum_likelihood_opt as cml
+from dadapy.id_estimation import IdEstimation
 from dadapy.utils_.density_estimation import return_density_kstarNN, return_density_PAk
+from dadapy.utils_.utils import compute_cross_nn_distances
 
 cores = multiprocessing.cpu_count()
 
@@ -129,7 +129,7 @@ class DensityEstimation(IdEstimation):
 
         """
         if self.intrinsic_dim is None:
-            _ = self.return_id_2NN()
+            _ = self.compute_id_2NN()
 
         if self.verb:
             print(f"k-NN density estimation started (k={k})")
@@ -178,7 +178,7 @@ class DensityEstimation(IdEstimation):
         """
 
         if self.intrinsic_dim is None:
-            _ = self.return_id_2NN()
+            _ = self.compute_id_2NN()
 
         if self.verb:
             print(f"kstar estimation started, Dthr = {Dthr}")
@@ -729,7 +729,9 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print(
                 "{0:0.2f} seconds optimizing the likelihood for all the points".format(
-                    sec2 - sec))
+                    sec2 - sec
+                )
+            )
 
         # Normalise density
         log_den -= np.log(self.N)
@@ -835,7 +837,6 @@ class DensityEstimation(IdEstimation):
         # Fij_types: 'grad', 'zero', 'PAk'
         # TODO: we need to implement a gCorr term with the deltaFijs equal to zero.
         # Implementation is obsolete, we should use same ad dF_PAk_gCorr
-
         # compute optimal k
         if self.kstar is None:
             self.compute_kstar()
@@ -884,7 +885,13 @@ class DensityEstimation(IdEstimation):
 
             # optimise the likelihood using pytorch
             l_, log_den = maximise(
-                Fis, self.kstar, Vis, self.dist_indices, Fij_list, Fij_var_list, alpha
+                Fis,
+                self.kstar,
+                Vis,
+                self.dist_indices,
+                self.Fij_list,
+                self.Fij_var_list,
+                alpha,
             )
 
         # normalise density
@@ -1280,7 +1287,7 @@ class DensityEstimation(IdEstimation):
     def return_interpolated_density_kNN(self, X_new, k):
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.p, self.period
+            X_new, self.X, self.maxk, self.metric, self.period
         )
 
         kstar = np.ones(X_new.shape[0], dtype=int) * k
@@ -1294,7 +1301,7 @@ class DensityEstimation(IdEstimation):
     def return_interpolated_density_kstarNN(self, X_new, Dthr=23.92812698):
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.p, self.period
+            X_new, self.X, self.maxk, self.metric, self.period
         )
 
         kstar = cd._compute_kstar_interp(
@@ -1319,7 +1326,7 @@ class DensityEstimation(IdEstimation):
         assert self.X is not None
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.p, self.period
+            X_new, self.X, self.maxk, self.metric, self.period
         )
 
         kstar = cd._compute_kstar_interp(
@@ -1346,7 +1353,7 @@ if __name__ == "__main__":
 
     de.compute_distances(maxk=300)
 
-    _ = de.return_id_2NN()
+    _ = de.compute_id_2NN()
 
     de.compute_density_PAk_optimised()
 

@@ -1,10 +1,11 @@
 import multiprocessing
+import re
+
 import numpy as np
+import scipy.special as sp
 from scipy.spatial import cKDTree
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
-import scipy.special as sp
-import re
 
 cores = multiprocessing.cpu_count()
 
@@ -60,12 +61,12 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
 
     """
 
-    dist_indices = np.asarray(np.argsort(pdist_matrix, axis=1)[:, 0:maxk + 1])
+    dist_indices = np.asarray(np.argsort(pdist_matrix, axis=1)[:, 0 : maxk + 1])
     distances = np.asarray(np.take_along_axis(pdist_matrix, dist_indices, axis=1))
     return distances, dist_indices
 
 
-def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=None):
+def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None):
     """Compute distances, up to neighbour maxk, between points of X_new and points of X.
 
     The element distances[i,j] represents the distance between point i in dataset X and its j-th neighbour in dataset
@@ -76,7 +77,6 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=N
         X (np.array(float)): starting dataset of points, from which distances are computed
         maxk (int): number of neighbours to save
         metric (str): metric used to compute the distances
-        p (int): Minkowski p-norm used (alternative to metric, necessary only if period!=None)
         period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
 
     Returns:
@@ -97,19 +97,27 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", p=2, period=N
             distances *= X.shape[1]
 
     else:
+        if metric == "euclidean" or metric == "minkowski":
+            p = 2
+        elif metric == "manhattan":
+            p = 1
+        else:
+            raise KeyError(
+                "periodic distance computation is supported only for euclidean and manhattan metrics"
+            )
+
         distances, dist_indices = compute_NN_PBC(X, maxk, box_size=period, p=p)
 
     return distances, dist_indices
 
 
-def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
+def compute_nn_distances(X, maxk, metric="euclidean", period=None):
     """For each point, compute the distances from its first maxk nearest neighbours
 
     Args:
         X (np.ndarray): points array of dimension N x D
         maxk (int): number of neighbours to save
         metric (str): metric used to compute the distances
-        p (int): Minkowski p-norm used (alternative to metric, necessary if period!=None)
         period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
 
     Returns:
@@ -118,7 +126,9 @@ def compute_nn_distances(X, maxk, metric="euclidean", p=2, period=None):
 
     """
 
-    distances, dist_indices = compute_cross_nn_distances(X, X, maxk + 1, metric=metric, p=p, period=period)
+    distances, dist_indices = compute_cross_nn_distances(
+        X, X, maxk + 1, metric=metric, period=period
+    )
     return distances, dist_indices
 
 
@@ -127,8 +137,10 @@ def cast_to64(myarray):
         myarray = myarray.astype("float64")
     return myarray
 
+
 # --------------------------------------------------------------------------------------
 # Some useful function to properly sort lists
+
 
 def atoi(text):
     return int(text) if text.isdigit() else text
@@ -158,6 +170,7 @@ def float_keys(text):
 # --------------------------------------------------------------------------------------
 # Stirling and binomial approximations
 
+
 def stirling(n):
     return (
         np.sqrt(2 * np.pi * n) * (n / np.e) ** n * (1.0 + 1.0 / 12.0 / n)
@@ -180,6 +193,7 @@ def log_binom_stirling(k, n):
 
 # --------------------------------------------------------------------------------------
 # Helper functions
+
 
 def _loglik(d, mus, n1, n2, N):
     one_m_mus_d = 1.0 - mus ** (-d)
@@ -228,6 +242,7 @@ def _fisher_info_scaling(id_ml, mus, n1, n2):
 #     one_m_mus_d = 1. - mu ** (-d)
 #     sum = np.sum(((1 - n) / one_m_mus_d + 2. * n - 1.) * np.log(mu))
 #     return sum - N / d
+
 
 def _compute_binomial_cramerrao(d, k, r, n):
     """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
@@ -408,6 +423,8 @@ def _align_arrays(set1, err1, set2, err2=None):
     offset = np.average(diffs, weights=w)
 
     return offset, set1 - offset
+
+
 # --------------------------------------------------------------------------------------
 
 
@@ -499,7 +516,7 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
         d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
         d_right = d_range[ind[-1]] + 0.5 * dx
         d_range = np.linspace(d_left, d_right, 1000)
-        dx = d_range[1]-d_range[0]
+        dx = d_range[1] - d_range[0]
         P = np.array([p_d(di) for di in d_range]) * dx
 
         plt.plot(d_range, P)

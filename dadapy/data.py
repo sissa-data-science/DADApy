@@ -1,6 +1,8 @@
 import multiprocessing
 import os
+
 import numpy as np
+
 from dadapy.clustering import Clustering
 from dadapy.metric_comparisons import MetricComparisons
 

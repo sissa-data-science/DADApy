@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
-from scipy import cluster
 from matplotlib import cm
 from matplotlib.collections import LineCollection
+from scipy import cluster
 from sklearn import manifold
 
 

@@ -71,7 +71,8 @@ setup(
     packages=["dadapy", "dadapy.utils_"],
     # dependencies
     # install_requires=["numpy", "scipy", "scikit-learn", "Cython", "pytest"],
-    install_requires=["numpy", "scipy", "scikit-learn", "pytest"],
+    install_requires=["numpy", "scipy", "scikit-learn", "matplotlib"],
+    extras_require={"dev": ["tox", "black", "isort", "pytest"]},
     cmdclass=cmdclass,
     ext_modules=ext_modules,
 )

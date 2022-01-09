@@ -1,19 +1,16 @@
 import math
-import time
 import multiprocessing
+import time
 from functools import partial
 
 import numpy as np
-
 from sklearn.metrics import pairwise_distances_chunked
 from sklearn.neighbors import NearestNeighbors
 
-from dadapy.utils_.utils import from_all_distances_to_nndistances
-from dadapy.utils_.utils import compute_nn_distances
+from dadapy.utils_.utils import compute_nn_distances, from_all_distances_to_nndistances
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
-
 
 
 class Base:
@@ -49,7 +46,6 @@ class Base:
         self.dims = None
         self.N = None
         self.metric = "euclidean"
-        self.p = 2
         self.period = None
         self.data_structure = data_structure
 
@@ -66,7 +62,7 @@ class Base:
             self.distances = None
             # BUG to be solved: the next line
             if self.maxk is None:
-                self.maxk = self.N - 1
+                self.maxk = min(100, self.N - 1)
 
         if distances is not None:
             if isinstance(distances, tuple):
@@ -76,7 +72,7 @@ class Base:
                 is_ndarray = isinstance(distances, np.ndarray)
 
                 if self.maxk is None:
-                    self.maxk = distances[0].shape[1] - 1
+                    self.maxk = min(100, distances[0].shape[1] - 1)
 
                 self.N = distances[0].shape[0]
 
@@ -96,15 +92,17 @@ class Base:
 
                 self.N = distances.shape[0]
                 if self.maxk is None:
-                    self.maxk = distances.shape[1] - 1
+                    self.maxk = min(100, distances.shape[1] - 1)
 
-                self.distances, self.dist_indices = from_all_distances_to_nndistances(distances, self.maxk)
+                self.distances, self.dist_indices = from_all_distances_to_nndistances(
+                    distances, self.maxk
+                )
 
             self.dtype = self.distances.dtype
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_distances(self, maxk=None, metric="minkowski", p=2, period=None):
+    def compute_distances(self, maxk=None, metric="euclidean", period=None):
         """Compute distaces between points up to the maxk nearest neighbour
 
         Args:
@@ -119,7 +117,7 @@ class Base:
             sec = time.time()
 
         self.metric = metric
-        self.p = p
+
         if period is not None:
             if isinstance(period, np.ndarray) and period.shape == (self.dims,):
                 self.period = period
@@ -129,6 +127,7 @@ class Base:
                 raise ValueError(
                     f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)")
                 )
+            print(self.period)
 
         if maxk is not None:
             self.maxk = maxk
@@ -147,7 +146,7 @@ class Base:
             print(f"Computation of the distances up to {self.maxk} NNs started")
 
         self.distances, self.dist_indices = compute_nn_distances(
-            self.X, self.maxk, self.metric, self.p, self.period
+            self.X, self.maxk, self.metric, self.period
         )
 
         sec2 = time.time()
@@ -240,51 +239,50 @@ class Base:
         )
 
 
-################################################################################
-    # def _remove_zero_dists(self, distances):
-    #
-    #     # TO IMPROVE/CHANGE
-    #     # to_remove = distances[:, 2] < np.finfo(self.dtype).eps
-    #     # distances = distances[~to_remove]
-    #     # indices = indices[~to_remove]
-    #
-    #     # TO TEST
-    #
-    #     # find all points with any zero distance
-    #     indx_ = np.nonzero(distances[:, 1] < np.finfo(self.dtype).eps)[0]
-    #     # set nearest distance to eps:
-    #     distances[indx_, 1] = np.finfo(self.dtype).eps
-    #
-    #     return distances
+    def remove_identical_points(self):
 
-
-    """TODO"""
-    def remove_identical_points_TO_BE_WRITTEN(self):
-
-        N0 = self.X.shape[0]
-        # removal of overlapping data points
-
-        self.X = np.unique(self.X)  # This does not work properly because of sorting!!
-
-        self.N = self.X.shape[0]
-
-        if self.N != N0:
+        if self.N > 100000:
             print(
-                f"{N0 - self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements"
+                "WARNING: this method might be very slow for large datasets. "
+                "You might want to use a command like: awk '!seen[$0]++' . See https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data"
             )
+
+        # removal of overlapping data points
+        X_unique = np.unique(self.X, axis=0)
+
+        N_unique = X_unique.shape[0]
+
+        if N_unique < self.N:
+
+            print(
+                f"{self.N - N_unique} overlapping datapoints found: keeping {N_unique} unique elements",
+                "WARNING: the order of points has been changed!",
+            )
+
+            self.X = X_unique
+            self.N = N_unique
+            self.maxk = min(self.maxk, self.N - 1)
+
             if self.distances is not None:
-                self.distances, self.dist_indices = None, None
+                print("distances between points will be recomputed")
+                self.compute_distances()
+
+        else:
+            print("No identical identical points were found")
 
 
-            #removing overlapping data_points/zero distances
+if __name__ == "__main__":
 
-            # if self.data_structure != "discrete" and coordinates is not None:
-            #     N0 = self.X.shape[0]
-            #     self.X, self.inverse_indices = np.unique(self.X, axis = 0, return_inverse = True)
-            #
-            #     self.N = self.X.shape[0]
-            #     if self.N != N0:
-            #          print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
+    from numpy.random import default_rng
 
-                #the original matrix can be obtained with self.X[self.inverse_indices]
-                #TODO randomize the entries of the self.X array and build an array of inverse indices
+    rng = default_rng(0)
+
+    X = np.array([[0, 0, 0], [0.5, 0, 0], [0.9, 0, 0]])
+
+    d = Base(X, verbose=True)
+
+    d.compute_distances()
+    print(d.distances, d.dist_indices)
+
+    d.compute_distances(period=1.1, metric="manhattan")
+    print(d.distances, d.dist_indices)

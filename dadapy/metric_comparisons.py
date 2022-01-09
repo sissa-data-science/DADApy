@@ -44,12 +44,12 @@ class MetricComparisons(Base):
         """
         X_ = self.X[:, coords1]
         _, dist_indices_i = compute_nn_distances(
-            X_, self.maxk, self.metric, self.p, self.period
+            X_, self.maxk, self.metric, self.period
         )
 
         X_ = self.X[:, coords2]
         _, dist_indices_j = compute_nn_distances(
-            X_, self.maxk, self.metric, self.p, self.period
+            X_, self.maxk, self.metric, self.period
         )
 
         imb_ij = ut._return_imbalance(dist_indices_i, dist_indices_j, k=k, dtype=dtype)
@@ -426,9 +426,7 @@ class MetricComparisons(Base):
 
         X_ = self.X[:, coords]
 
-        _, dist_indices_ = compute_nn_distances(
-            X_, self.maxk, self.metric, self.p, self.period
-        )
+        _, dist_indices_ = compute_nn_distances(X_, self.maxk, self.metric, self.period)
 
         overlaps = []
         for i in range(self.N):
@@ -469,7 +467,7 @@ class MetricComparisons(Base):
         X_ = X[:, coords]
 
         _, dist_indices_coords = compute_nn_distances(
-            X_, self.maxk, self.metric, self.p, self.period
+            X_, self.maxk, self.metric, self.period
         )
 
         imb_coords_full = ut._return_imbalance(
