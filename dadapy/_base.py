@@ -1,8 +1,10 @@
 import math
 import multiprocessing
 import time
+from functools import partial
 
 import numpy as np
+from sklearn.metrics import pairwise_distances_chunked
 
 from dadapy.utils_.utils import compute_nn_distances, from_all_distances_to_nndistances
 
@@ -121,9 +123,8 @@ class Base:
                 self.period = np.full((self.dims), fill_value=period, dtype=float)
             else:
                 raise ValueError(
-                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)")
+                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
                 )
-            print(self.period)
 
         if maxk is not None:
             self.maxk = maxk
@@ -233,7 +234,6 @@ class Base:
             np.vstack(mus),
             np.vstack(rs),
         )
-
 
     # better to use this formulation which can be applied to _mus_scaling_reduce_func
     def _remove_zero_dists(self, distances):
