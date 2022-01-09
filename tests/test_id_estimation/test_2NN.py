@@ -16,8 +16,6 @@ def test_compute_id_2NN():
 
     de = DensityEstimation(coordinates=X)
 
-    de.compute_distances(maxk=25)
-
     de.compute_id_2NN()
     assert pytest.approx(de.intrinsic_dim, abs=0.01) == 1.85
 
