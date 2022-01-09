@@ -254,37 +254,40 @@ class Base:
             np.vstack(rs),
         )
 
-    def remove_identical_points_TO_BE_WRITTEN(self):
+    def remove_identical_points(self):
 
-        N0 = self.X.shape[0]
-        # removal of overlapping data points
-
-        self.X = np.unique(self.X)  # This does not work properly because of sorting!!
-
-        self.N = self.X.shape[0]
-
-        if self.N != N0:
+        if self.N > 100000:
             print(
-                f"{N0 - self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements"
+                "WARNING: this method might be very slow for large datasets. "
+                "You might want to use a command like: awk '!seen[$0]++' . See https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data"
             )
+
+        # removal of overlapping data points
+        X_unique = np.unique(self.X, axis=0)
+
+        N_unique = X_unique.shape[0]
+
+        if N_unique < self.N:
+
+            print(
+                f"{self.N - N_unique} overlapping datapoints found: keeping {N_unique} unique elements",
+                "WARNING: the order of points has been changed!",
+            )
+
+            self.X = X_unique
+            self.N = N_unique
+            self.maxk = min(self.maxk, self.N - 1)
+
             if self.distances is not None:
-                self.distances, self.dist_indices = None, None
+                print("distances between points will be recomputed")
+                self.compute_distances()
 
-            # removing overlapping data_points/zero distances
-
-            # if self.data_structure != "discrete" and coordinates is not None:
-            #     N0 = self.X.shape[0]
-            #     self.X, self.inverse_indices = np.unique(self.X, axis = 0, return_inverse = True)
-            #
-            #     self.N = self.X.shape[0]
-            #     if self.N != N0:
-            #          print(f'{N0-self.N}/{N0} overlapping datapoints: keeping {self.N} unique elements')
-
-            # the original matrix can be obtained with self.X[self.inverse_indices]
-            # TODO randomize the entries of the self.X array and build an array of inverse indices
+        else:
+            print("No identical identical points were found")
 
 
 if __name__ == "__main__":
+
     from numpy.random import default_rng
 
     rng = default_rng(0)
