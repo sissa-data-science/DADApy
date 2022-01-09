@@ -1,6 +1,8 @@
+import time
+
 import cython
 import numpy as np
-import time
+
 cimport numpy as np
 from libc.math cimport exp
 

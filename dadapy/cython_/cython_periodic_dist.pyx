@@ -5,8 +5,8 @@
 import cython
 import numpy as np
 
-from libc.math cimport sqrt
-from libc.math cimport nearbyint
+from libc.math cimport nearbyint, sqrt
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
