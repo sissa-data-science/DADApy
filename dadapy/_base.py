@@ -66,7 +66,7 @@ class Base:
             self.distances = None
             # BUG to be solved: the next line
             if self.maxk is None:
-                self.maxk = self.N - 1
+                self.maxk = min(100, self.N - 1)
 
         if distances is not None:
             if isinstance(distances, tuple):
@@ -76,7 +76,7 @@ class Base:
                 is_ndarray = isinstance(distances, np.ndarray)
 
                 if self.maxk is None:
-                    self.maxk = distances[0].shape[1] - 1
+                    self.maxk = min(100, distances[0].shape[1] - 1)
 
                 self.N = distances[0].shape[0]
 
@@ -96,7 +96,7 @@ class Base:
 
                 self.N = distances.shape[0]
                 if self.maxk is None:
-                    self.maxk = distances.shape[1] - 1
+                    self.maxk = min(100, distances.shape[1] - 1)
 
                 self.distances, self.dist_indices = from_all_distances_to_nndistances(distances, self.maxk)
 
