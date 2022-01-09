@@ -23,4 +23,4 @@ jobs:
         run: pip install -e .
 
       - name: Run pytest
-        run: pytest -sv -p no:nb_regression test
+        run: pytest -sv -p no:nb_regression tests
