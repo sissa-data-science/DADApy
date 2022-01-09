@@ -1,9 +1,11 @@
 import math
 import multiprocessing
+from functools import partial
 
 import numpy as np
-import scipy.special as sp
 from scipy.optimize import curve_fit
+from sklearn.metrics import pairwise_distances_chunked
+from sklearn.neighbors import NearestNeighbors
 
 from dadapy._base import Base
 from dadapy.utils_ import utils as ut
@@ -255,7 +257,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def _mus_scaling_reduce_func(self, dist, start, range_scaling=None):
+    def _mus_scaling_reduce_func(self, dist, range_scaling=None):
         """Compute
 
         adapted from kneighbors function of sklearn
