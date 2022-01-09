@@ -1,6 +1,7 @@
-import dadapy.utils_.utils as ut
 import numpy as np
 import scipy
+
+import dadapy.utils_.utils as ut
 
 # --------------------------------------------------------------------------------------
 
@@ -11,12 +12,14 @@ D_MIN = np.finfo(np.float32).eps
 # TODO: find a proper way to load the data with a relative path
 # load, just once and for all, the coefficients for the polynomials in d at fixed L
 import os
+
 volumes_path = os.path.join(os.path.split(__file__)[0], "discrete_volumes")
 coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
 
 # V_exact_int = np.loadtxt(volume_path + '/V_exact.dat',dtype=np.uint64)
 
 # --------------------------------------------------------------------------------------
+
 
 def compute_discrete_volume(L, d, O1=False):
     """Enumerate the points contained in a region of radius L according to Manhattan metric
@@ -74,6 +77,7 @@ def compute_discrete_volume(L, d, O1=False):
 
 # --------------------------------------------------------------------------------------
 
+
 def compute_derivative_discrete_vol(l, d):
     """compute derivative of discrete volumes with respect to dimension
 
@@ -87,13 +91,15 @@ def compute_derivative_discrete_vol(l, d):
     """
 
     # exact formula with polynomials, for small L
-#    assert isinstance(l, (int, np.int))
+    #    assert isinstance(l, (int, np.int))
     if l < coeff.shape[0]:
         l = int(l)
 
         D = d ** np.arange(-1, coeff.shape[1] - 1, dtype=np.double)
 
-        coeff_d = coeff[l] * np.arange(coeff.shape[1])  #usual coefficient * coeff from first deriv
+        coeff_d = coeff[l] * np.arange(
+            coeff.shape[1]
+        )  # usual coefficient * coeff from first deriv
         return np.dot(coeff_d, D)
 
         # faster version in case of array l, use 'if all(l<coeff.shape[0])'
@@ -124,11 +130,12 @@ def compute_derivative_discrete_vol(l, d):
 
 # --------------------------------------------------------------------------------------
 
-def compute_jacobian(lk,ln,d):
+
+def compute_jacobian(lk, ln, d):
     """Compute jacobian of the ratio of volumes wrt d
 
     Given that the probability of the binomial process is p = V(ln,d)/V(lk,d), in order to
-    obtain relationships for d (like deriving the LogLikelihood or computing the posterior) 
+    obtain relationships for d (like deriving the LogLikelihood or computing the posterior)
     one needs to compute the differential dp/dd
 
     Args:
@@ -140,7 +147,7 @@ def compute_jacobian(lk,ln,d):
             dp_dd (ndarray(float) or float): differential
 
     """
-    #p = Vn / Vk
+    # p = Vn / Vk
     Vk = compute_discrete_volume(lk, d)[0]
     Vn = compute_discrete_volume(ln, d)[0]
     dVk_dd = compute_derivative_discrete_vol(lk, d)
@@ -148,7 +155,9 @@ def compute_jacobian(lk,ln,d):
     dp_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
     return dp_dd
 
+
 # --------------------------------------------------------------------------------------
+
 
 def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
     """Compute the binomial log likelihood given Rk,Rn,k,n
@@ -185,20 +194,22 @@ def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
 
     # for big values of k and n (~1000) the binomial coefficients explode -> use
     # its logarithmic definition through Stirling apporximation
-    
+
     # if np.any(log_binom == np.inf):
     #     mask = np.where(log_binom == np.inf)[0]
     #     log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
 
-    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) #+ log_binom
+    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p)  # + log_binom
     # add weights cotribution
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
     return -LogL.sum()
 
+
 # --------------------------------------------------------------------------------------
 
-def Cramer_Rao(d,ln,lk,N,k):
+
+def Cramer_Rao(d, ln, lk, N, k):
     """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
 
     Args:
@@ -210,23 +221,32 @@ def Cramer_Rao(d,ln,lk,N,k):
 
     """
 
-    P = compute_discrete_volume(ln,d)[0]/compute_discrete_volume(lk,d)[0]
+    P = compute_discrete_volume(ln, d)[0] / compute_discrete_volume(lk, d)[0]
 
-    return P*(1-P)/(np.float64(N)*compute_jacobian(lk,ln,d)**2*k)
+    return P * (1 - P) / (np.float64(N) * compute_jacobian(lk, ln, d) ** 2 * k)
 
-# --------------------------------------------------------------------------------------
-
-def eq_to_find0(d,ln,lk,n,k):
-    return compute_discrete_volume(ln,d)/compute_discrete_volume(lk,d)-n/k
 
 # --------------------------------------------------------------------------------------
 
-def find_d(ln,lk,n,k):
-    if n<0.00001:    #i.e. i'm dealing with an isolated point, there's no statistics on n
+
+def eq_to_find0(d, ln, lk, n, k):
+    return compute_discrete_volume(ln, d) / compute_discrete_volume(lk, d) - n / k
+
+
+# --------------------------------------------------------------------------------------
+
+
+def find_d(ln, lk, n, k):
+    if (
+        n < 0.00001
+    ):  # i.e. i'm dealing with an isolated point, there's no statistics on n
         return 0
-#    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
-#        return 0
-    return scipy.optimize.root_scalar(eq_to_find0,args=(ln,lk,n,k),bracket=(D_MIN,D_MAX)).root
+    #    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
+    #        return 0
+    return scipy.optimize.root_scalar(
+        eq_to_find0, args=(ln, lk, n, k), bracket=(D_MIN, D_MAX)
+    ).root
+
 
 # --------------------------------------------------------------------------------------
 
@@ -259,8 +279,8 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
     posterior = beta_d(a, b)
 
     def p_d(d):
-        p = compute_discrete_volume(ln,d) / compute_discrete_volume(lk,d)
-        dp_dd = compute_jacobian(lk,ln,d)
+        p = compute_discrete_volume(ln, d) / compute_discrete_volume(lk, d)
+        dp_dd = compute_jacobian(lk, ln, d)
         return abs(posterior.pdf(p) * dp_dd)
 
     # in principle we don't know where the distribution is peaked, so
@@ -288,7 +308,7 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
     d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
     d_right = d_range[ind[-1]] + 0.5 * dx
     d_range = np.linspace(d_left, d_right, 1000)
-    dx = d_range[1]-d_range[0]
+    dx = d_range[1] - d_range[0]
     P = np.array([p_d(di) for di in d_range]) * dx
     P = P.reshape(P.shape[0])
 

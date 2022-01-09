@@ -1,7 +1,4 @@
-lint-all: black isort lint vulture darglint pylint ## run all linters
-
-lint: ## check style with flake8
-	flake8 dadapy tests scripts examples
+lint-all: black isort #lint vulture darglint pylint ## run all linters
 
 isort: ## sort import statements with isort
 	isort dadapy tests
@@ -14,15 +11,6 @@ black: ## apply black formatting
 
 black-check: ## check black formatting
 	black --check --verbose dadapy tests
-
-pylint: ## run pylint
-	pylint dadapy tests
-
-vulture: ## run vulture
-	vulture dadapy dev_scripts/whitelist.py
-
-darglint: ## run vulture
-	darglint dadapy
 
 # to include the "dadapy" folder: pytest tests --doctest-modules dadapy tests/
 test: ## run tests quickly with the default Python
@@ -40,3 +28,16 @@ coverage: ## check code coverage quickly with the default Python
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
+
+
+#lint: ## check style with flake8
+#	flake8 dadapy tests scripts examples
+#
+#pylint: ## run pylint
+#	pylint dadapy tests
+#
+#vulture: ## run vulture
+#	vulture dadapy dev_scripts/whitelist.py
+#
+#darglint: ## run vulture
+#	darglint dadapy

@@ -7,7 +7,6 @@ from scipy.optimize import curve_fit
 
 from dadapy._base import Base
 from dadapy.utils_ import utils as ut
-
 from dadapy.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()

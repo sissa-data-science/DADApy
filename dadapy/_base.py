@@ -1,15 +1,13 @@
 import math
-import time
 import multiprocessing
+import time
 from functools import partial
 
 import numpy as np
-
 from sklearn.metrics import pairwise_distances_chunked
 from sklearn.neighbors import NearestNeighbors
 
-from dadapy.utils_.utils import from_all_distances_to_nndistances
-from dadapy.utils_.utils import compute_nn_distances
+from dadapy.utils_.utils import compute_nn_distances, from_all_distances_to_nndistances
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -48,7 +46,6 @@ class Base:
         self.dims = None
         self.N = None
         self.metric = "euclidean"
-        self.p = 2
         self.period = None
         self.data_structure = data_structure
 

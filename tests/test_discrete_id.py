@@ -1,8 +1,10 @@
+import numpy as np
 import pytest
 
-import numpy as np
 from dadapy.id_discrete import IdDiscrete
+
 rng = np.random.default_rng()
+
 
 def test_id_discrete():
     """Test the discrete id estimator"""
@@ -16,7 +18,7 @@ def test_id_discrete():
     X = rng.integers(0, box, size=(N, d))
 
     IDD = IdDiscrete(X, maxk=X.shape[0])
-    IDD.compute_distances(metric='manhattan', period=box)
+    IDD.compute_distances(metric="manhattan", period=box)
 
     IDD.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
 
