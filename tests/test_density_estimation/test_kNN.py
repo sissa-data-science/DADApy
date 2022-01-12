@@ -1,23 +1,17 @@
 import os
 
 import numpy as np
-import pytest
 
 from dadapy import DensityEstimation
 
 
-def test_density_estimation_basics():
-    """Test the density estimation operations work correctly"""
-    filename = os.path.join(os.path.split(__file__)[0], "2gaussians_in_2d.npy")
+def test_density_estimation_kNN():
+    """Test the kNN density estimation operations work correctly"""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 
     X = np.load(filename)
 
     de = DensityEstimation(coordinates=X)
-
-    de.compute_distances(maxk=25)
-
-    de.compute_id_2NN()
-    assert pytest.approx(1.85, de.intrinsic_dim)
 
     de.compute_density_kNN(10)
 
@@ -126,7 +120,4 @@ def test_density_estimation_basics():
         ]
     )
 
-    # Check we get the expected answer
-    # assert np.array_equal(de.log_den, expected_den)
-    # print(np.isclose(de.log_den, expected_den))
     assert np.allclose(de.log_den, expected_den)

@@ -344,7 +344,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kstarNN(self):
+    def compute_density_kstarNN(self, Dthr=23.92812698):
         """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
         Args:
             Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
@@ -353,7 +353,7 @@ class DensityEstimation(IdEstimation):
         """
 
         if self.kstar is None:
-            self.compute_kstar()
+            self.compute_kstar(Dthr)
 
         if self.verb:
             print("kstar-NN density estimation started")
@@ -395,9 +395,18 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kpeaks(self):
+    def compute_density_kpeaks(self, Dthr=23.92812698):
+        """Computes the density of each point as proportional to the optimal k value found for that point.
+
+        This method is mostly useful for the kpeaks clustering algorithm.
+
+        Args:
+            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+            to a p-value of 1e-6.
+
+        """
         if self.kstar is None:
-            self.compute_kstar()
+            self.compute_kstar(Dthr)
 
         if self.verb:
             print("Density estimation for k-peaks clustering started")
