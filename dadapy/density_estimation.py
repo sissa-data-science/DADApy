@@ -1294,6 +1294,16 @@ class DensityEstimation(IdEstimation):
         return H
 
     def return_interpolated_density_kNN(self, X_new, k):
+        """Return the kNN density of the primary dataset, evaluated on a new set of points "X_new".
+
+        Args:
+            X_new (np.ndarray(float)): The points onto which the density should be computed
+            k (int): the number of neighbours considered for the kNN estimator
+
+        Returns:
+            log_den (np.ndarray(float)): log density of dataset evaluated on X_new
+            log_den_err (np.ndarray(float)): error on log density estimates
+        """
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
@@ -1302,12 +1312,22 @@ class DensityEstimation(IdEstimation):
         kstar = np.ones(X_new.shape[0], dtype=int) * k
 
         log_den, log_den_err, dc = return_density_kstarNN(
-            cross_distances, self.intrinsic_dim, kstar
+            cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
 
         return log_den, log_den_err
 
     def return_interpolated_density_kstarNN(self, X_new, Dthr=23.92812698):
+        """
+
+        Args:
+            X_new (np.ndarray(float)): The points onto which the density should be computed
+            Dthr: Likelihood ratio parameter used to compute optimal k
+
+        Returns:
+            log_den (np.ndarray(float)): log density of dataset evaluated on X_new
+            log_den_err (np.ndarray(float)): error on log density estimates
+        """
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
@@ -1330,6 +1350,16 @@ class DensityEstimation(IdEstimation):
         return log_den, log_den_err
 
     def return_interpolated_density_PAk(self, X_new, Dthr=23.92812698):
+        """
+
+        Args:
+            X_new (np.ndarray(float)): The points onto which the density should be computed
+            Dthr: Likelihood ratio parameter used to compute optimal k
+
+        Returns:
+            log_den (np.ndarray(float)): log density of dataset evaluated on X_new
+            log_den_err (np.ndarray(float)): error on log density estimates
+        """
 
         assert self.intrinsic_dim is not None
         assert self.X is not None
