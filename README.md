@@ -1,5 +1,4 @@
-<img src="https://raw.githubusercontent.com/sissa-data-science/DADApy/master/logo/dummy_logo.png" width="200">
-
+<img src="https://raw.githubusercontent.com/sissa-data-science/DADApy/master/logo/logo_1_horizontal_v2.jpg" width="200">
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![codecov](https://codecov.io/gh/sissa-data-science/DADApy/branch/develop/graph/badge.svg?token=X4M0KWAPO5)](https://codecov.io/gh/sissa-data-science/DADApy)
