@@ -45,25 +45,33 @@ data.compute_clustering()
 # Currently implemented algorithms
 
 - Intrinsic dimension estimators
-	 - 
-- Two-NN estimator
+     - 
+- Two-NN estimator 
+  > Facco et al., *Scientific Reports* (2017)
 - Gride estimator
-	
+  > Denti et al., *arXiv* (2021)
 - Density estimators
-	- 
--  kNN estimator
+    - 
+- kNN estimator
 - k*NN estimator (kNN with adaptive choice of k)
 - PAk estimator
+  > Rodriguez et al., *JCTC* (2018)
 
 - Density peaks estimators
-	- 
--  Density peaks clustering
+    - 
+- Density peaks clustering 
+  > Rodriguez and Laio, *Science* (2014)
 - Advanced density peaks clustering
+  > d’Errico et al., *Information Sciences* (2021)
+- k-peak clustering
+  > Sormani, Rodriguez and Laio, *JCTC* (2020)
 
 - Manifold comparison tools
-	- 
+    - 
 - Neighbourhood overlap
-- Information imbalance 
+  > Doimo et al., *NeurIPS* (2020)
+- Information imbalance
+  > Glielmo et al., *ArXiv* (2021)
 
 
 # Installation
