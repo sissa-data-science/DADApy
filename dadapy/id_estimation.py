@@ -93,7 +93,6 @@ class IdEstimation(Base):
         return intrinsic_dim
 
     # ----------------------------------------------------------------------------------------------
-
     def compute_id_2NN(
         self, algorithm="base", fraction=0.9, decimation=1, set_attr=True
     ):
@@ -172,7 +171,6 @@ class IdEstimation(Base):
             d1 (float): maximum intrinsic dimension considered in the search
 
         Returns:
-
             ids_scaling (np.ndarray(float)): array of intrinsic dimensions
             ids_scaling_err (np.ndarray(float)): array of error estimates
             rs_scaling (np.ndarray(float)): array of average distances of the neighbors involved in the estimates
@@ -190,11 +188,6 @@ class IdEstimation(Base):
             )
         max_step = int(math.log(max_rank, 2))
         nn_ranks = np.array([2 ** i for i in range(max_step)])
-
-        # def get_steps(upper_bound, range_max=range_max):
-        #     range_r2 = min(range_max, upper_bound)
-        #     max_step = int(math.log(range_r2, 2))
-        #     return np.array([2 ** i for i in range(max_step)]), range_r2
 
         # if self.distances is not None and range_max < self.maxk+1:
         if self.distances is not None:
@@ -282,57 +275,24 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-
-    def _mus_scaling_reduce_func(self, dist, range_scaling=None):
-        """Compute
-
-        adapted from kneighbors function of sklearn
-        https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py
-
-        Description.
-
-        Args:
-            range_scaling
-
-        Returns:
-
-
-        """
-
-        max_step = int(math.log(range_scaling, 2))
-        steps = np.array([2 ** i for i in range(max_step)])
-
-        sample_range = np.arange(dist.shape[0])[:, None]
-        neigh_ind = np.argpartition(dist, range_scaling - 1, axis=1)
-        neigh_ind = neigh_ind[:, :range_scaling]
-
-        # argpartition doesn't guarantee sorted order, so we sort again
-        neigh_ind = neigh_ind[sample_range, np.argsort(dist[sample_range, neigh_ind])]
-
-        dist = np.sqrt(dist[sample_range, neigh_ind])
-
-        dist = self._remove_zero_dists(dist)
-        mus = dist[:, steps[1:]] / dist[:, steps[:-1]]
-        rs = dist[:, np.array([steps[:-1], steps[1:]])]
-
-        return (
-            dist[:, : self.maxk + 1],
-            neigh_ind[:, : self.maxk + 1],
-            mus,
-            rs,
-        )
-
     def _return_mus_scaling(self, range_scaling):
-        """Compute
-
-        Description.
+        """
+        Description:
+            adapted from kneighbors function of sklearn
+            https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py#L596
+            It allows to keep a nearest neighbor matrix up to rank 'maxk' (few tens of points)
+            instead of 'range_scaling' (few thousands), while computing the ratios between neighbors' distances
+            up to neighbors' rank 'range scaling'.
+            For big datasets it avoids out of memory errors
 
         Args:
-            range_scaling
+            range_scaling (int): maximum neighbor rank considered in the computation of the mu ratios
 
         Returns:
-
-
+            dist (np.ndarray(float)): the FULL distance matrix sorted in increasing order of neighbor distances up to maxk
+            neighb_ind np.ndarray(int)): the FULL matrix of the indices of the nearest neighbors up to maxk
+            mus np.ndarray(float)): the FULL matrix of the ratios of the neighbor distances of order 2**(i+1) and 2**i
+            rs np.ndarray(float)): the FULL matrix of the distances of the neighbors involved in the mu estimates
         """
 
         reduce_func = partial(
@@ -361,6 +321,57 @@ class IdEstimation(Base):
             np.vstack(rs),
         )
 
+
+    def _mus_scaling_reduce_func(self, dist, range_scaling=None):
+        """
+        Description.
+            Applied at the end of pairwise_distance_chunked see:
+            https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/metrics/pairwise.py#L1474
+
+            Once a chunk of the distance matrix is computed _mus_scaling_reduce_func
+            1) estracts the distances of the  neighbors of order 2**i up to the maximum
+            neighbor range given by range_scaling
+            2) computes the mus[i] (ratios of the neighbor distance of order 2**(i+1)
+            and 2**i (see return id scaling gride)
+            3) returns the chunked distances up to maxk, the mus, and rs, the distances
+            of the neighbors involved in the estimate
+
+        Args:
+            dist: chunk of distance matrix passed internally by pairwise_distance_chunked
+            range_scaling (int): maximum neighbor rank
+
+        Returns:
+            dist: CHUNK of distance matrix sorted in increasing order of neighbor distances up to maxk
+            neighb_ind: indices of the nearest neighbors up to maxk
+            mus: ratios of the neighbor distances of order 2**(i+1) and 2**i
+            rs: distances of the neighbors involved in the mu estimates
+        """
+
+        max_step = int(math.log(range_scaling, 2))
+        steps = np.array([2 ** i for i in range(max_step)])
+
+        sample_range = np.arange(dist.shape[0])[:, None]
+        neigh_ind = np.argpartition(dist, range_scaling - 1, axis=1)
+        neigh_ind = neigh_ind[:, :range_scaling]
+
+        # argpartition doesn't guarantee sorted order, so we sort again
+        neigh_ind = neigh_ind[sample_range, np.argsort(dist[sample_range, neigh_ind])]
+
+        dist = np.sqrt(dist[sample_range, neigh_ind])
+
+        dist = self._remove_zero_dists(dist)
+        mus = dist[:, steps[1:]] / dist[:, steps[:-1]]
+        rs = dist[:, np.array([steps[:-1], steps[1:]])]
+
+        return (
+            dist[:, : self.maxk + 1],
+            neigh_ind[:, : self.maxk + 1],
+            mus,
+            rs,
+        )
+
+
+
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_gammaprior(self, alpha=2, beta=5):
@@ -369,7 +380,6 @@ class IdEstimation(Base):
         Args:
             alpha (float): parameter of the prior
             beta (float): other prior parameter
-
         """
         if self.distances is None:
             self.compute_distances()
