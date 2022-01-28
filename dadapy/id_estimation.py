@@ -96,7 +96,7 @@ class IdEstimation(Base):
             rs (float): the average nearest neighbor distance (rs)
 
         References:
-            E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the in-trinsic dimension of datasets by a minimal
+            E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the intrinsic dimension of datasets by a minimal
             neighborhood information, Scientific reports 7 (1) (2017) 1–8
 
         """
