@@ -1,5 +1,4 @@
-<img src="https://raw.githubusercontent.com/sissa-data-science/DADApy/master/logo/dummy_logo.png" width="200">
-
+<img src="https://raw.githubusercontent.com/sissa-data-science/DADApy/master/logo/logo_1_horizontal_transparent_v2.png" width="500">
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![codecov](https://codecov.io/gh/sissa-data-science/DADApy/branch/develop/graph/badge.svg?token=X4M0KWAPO5)](https://codecov.io/gh/sissa-data-science/DADApy)
@@ -46,25 +45,33 @@ data.compute_clustering()
 # Currently implemented algorithms
 
 - Intrinsic dimension estimators
-	 - 
-- Two-NN estimator
+     - 
+- Two-NN estimator 
+  > Facco et al., *Scientific Reports* (2017)
 - Gride estimator
-	
+  > Denti et al., *arXiv* (2021)
 - Density estimators
-	- 
--  kNN estimator
+    - 
+- kNN estimator
 - k*NN estimator (kNN with adaptive choice of k)
 - PAk estimator
+  > Rodriguez et al., *JCTC* (2018)
 
 - Density peaks estimators
-	- 
--  Density peaks clustering
+    - 
+- Density peaks clustering 
+  > Rodriguez and Laio, *Science* (2014)
 - Advanced density peaks clustering
+  > d’Errico et al., *Information Sciences* (2021)
+- k-peak clustering
+  > Sormani, Rodriguez and Laio, *JCTC* (2020)
 
 - Manifold comparison tools
-	- 
+    - 
 - Neighbourhood overlap
-- Information imbalance 
+  > Doimo et al., *NeurIPS* (2020)
+- Information imbalance
+  > Glielmo et al., *ArXiv* (2021)
 
 
 # Installation
