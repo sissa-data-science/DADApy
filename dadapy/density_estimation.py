@@ -1257,6 +1257,10 @@ class DensityEstimation(IdEstimation):
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
         """
+        assert self.X is not None
+
+        if self.intrinsic_dim is None:
+            _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
@@ -1284,6 +1288,10 @@ class DensityEstimation(IdEstimation):
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
         """
+        assert self.X is not None
+
+        if self.intrinsic_dim is None:
+            _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
@@ -1320,8 +1328,10 @@ class DensityEstimation(IdEstimation):
             log_den_err (np.ndarray(float)): error on log density estimates
         """
 
-        assert self.intrinsic_dim is not None
         assert self.X is not None
+
+        if self.intrinsic_dim is None:
+            _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
