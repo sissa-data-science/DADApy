@@ -361,32 +361,11 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("kstar-NN density estimation started")
 
-        dc = np.zeros(self.N, dtype=float)
-        log_den = np.zeros(self.N, dtype=float)
-        log_den_err = np.zeros(self.N, dtype=float)
-        prefactor = np.exp(
-            self.intrinsic_dim / 2.0 * np.log(np.pi)
-            - gammaln((self.intrinsic_dim + 2) / 2)
+        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
+            self.distances, self.intrinsic_dim, self.kstar, interpolation=False
         )
 
-        log_den_min = 9.9e300
-
-        for i in range(self.N):
-            k = self.kstar[i]
-            dc[i] = self.distances[i, k]
-            log_den[i] = np.log(k) - np.log(prefactor)
-
-            rk = self.distances[i, k]
-
-            log_den[i] -= self.intrinsic_dim * np.log(rk)
-
-            log_den_err[i] = 1.0 / np.sqrt(k)
-
-            if log_den[i] < log_den_min:
-                log_den_min = log_den[i]
-
-            # Normalise density
-
+        # Normalise density
         log_den -= np.log(self.N)
 
         self.log_den = log_den

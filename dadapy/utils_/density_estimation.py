@@ -46,12 +46,6 @@ def return_not_normalised_density_kstarNN(
         if log_den[i] < log_den_min:
             log_den_min = log_den[i]
 
-    # Normalise density
-    log_den -= np.log(N)
-
-    log_den = log_den
-    log_den_err = log_den_err
-
     return log_den, log_den_err, dc
 
 

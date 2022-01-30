@@ -321,7 +321,6 @@ class IdEstimation(Base):
             np.vstack(rs),
         )
 
-
     def _mus_scaling_reduce_func(self, dist, range_scaling=None):
         """
         Description.
@@ -369,8 +368,6 @@ class IdEstimation(Base):
             mus,
             rs,
         )
-
-
 
     # ----------------------------------------------------------------------------------------------
 
