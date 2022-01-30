@@ -712,44 +712,15 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("PAk density estimation started")
 
-        dc = np.zeros(self.N, dtype=float)
-        log_den = np.zeros(self.N, dtype=float)
-        log_den_err = np.zeros(self.N, dtype=float)
-        prefactor = np.exp(
-            self.intrinsic_dim / 2.0 * np.log(np.pi)
-            - gammaln((self.intrinsic_dim + 2.0) / 2.0)
-        )
-        log_den_min = 9.9e300
-
         sec = time.time()
-        for i in range(self.N):
-            vi = np.zeros(self.kstar[i], dtype=float)
-            dc[i] = self.distances[i, self.kstar[i]]
-            rr = np.log(self.kstar[i]) - (
-                np.log(prefactor)
-                + self.intrinsic_dim * np.log(self.distances[i, self.kstar[i]])
-            )
-            knn = 0
-            for j in range(self.kstar[i]):
-                # to avoid easy overflow
-                vi[j] = prefactor * (
-                    pow(self.distances[i, j + 1], self.intrinsic_dim)
-                    - pow(self.distances[i, j], self.intrinsic_dim)
-                )
-                if vi[j] < 1.0e-300:
-                    knn = 1
-                    break
 
-            if knn == 0:
-                log_den[i] = cml._nrmaxl(rr, self.kstar[i], vi)
-            else:
-                log_den[i] = rr
-            if log_den[i] < log_den_min:
-                log_den_min = log_den[i]
-
-            log_den_err[i] = np.sqrt(
-                (4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1))
-            )
+        log_den, log_den_err, dc = return_not_normalised_density_PAk(
+            self.distances,
+            self.intrinsic_dim,
+            self.kstar,
+            self.maxk,
+            interpolation=False,
+        )
 
         sec2 = time.time()
 

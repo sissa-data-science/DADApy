@@ -96,7 +96,7 @@ def return_not_normalised_density_PAk(
                 knn = 1
                 break
         if knn == 0:
-            log_den[i] = cml._nrmaxl(rr, kstar[i], vi, maxk)
+            log_den[i] = cml._nrmaxl(rr, kstar[i], vi)
         else:
             log_den[i] = rr
         if log_den[i] < log_den_min:
