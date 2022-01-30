@@ -19,7 +19,9 @@ from scipy.special import gammaln
 from dadapy.cython_ import cython_maximum_likelihood_opt as cml
 
 
-def return_density_kstarNN(distances, intrinsic_dim, kstar, interpolation=False):
+def return_not_normalised_density_kstarNN(
+    distances, intrinsic_dim, kstar, interpolation=False
+):
     N = distances.shape[0]
     dc = np.zeros(N, dtype=float)
     prefactor = np.exp(
@@ -30,6 +32,7 @@ def return_density_kstarNN(distances, intrinsic_dim, kstar, interpolation=False)
     if not interpolation:
         log_den = np.log(kstar, dtype=float)
         log_den_err = 1.0 / np.sqrt(kstar, dtype=float)
+
     else:
         log_den = np.log(kstar - 1, dtype=float)
         log_den_err = 1.0 / np.sqrt(kstar - 1, dtype=float)
@@ -52,7 +55,9 @@ def return_density_kstarNN(distances, intrinsic_dim, kstar, interpolation=False)
     return log_den, log_den_err, dc
 
 
-def return_density_PAk(distances, intrinsic_dim, kstar, maxk, interpolation=False):
+def return_not_normalised_density_PAk(
+    distances, intrinsic_dim, kstar, maxk, interpolation=False
+):
     N = distances.shape[0]
 
     dc = np.zeros(N, dtype=float)
@@ -96,10 +101,5 @@ def return_density_PAk(distances, intrinsic_dim, kstar, maxk, interpolation=Fals
             log_den[i] = rr
         if log_den[i] < log_den_min:
             log_den_min = log_den[i]
-
-    # Normalise density
-    log_den -= np.log(N)
-    log_den = log_den
-    log_den_err = log_den_err
 
     return log_den, log_den_err, dc

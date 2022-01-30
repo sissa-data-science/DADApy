@@ -25,7 +25,10 @@ from dadapy.cython_ import cython_density as cd
 from dadapy.cython_ import cython_grads as cgr
 from dadapy.cython_ import cython_maximum_likelihood_opt as cml
 from dadapy.id_estimation import IdEstimation
-from dadapy.utils_.density_estimation import return_density_kstarNN, return_density_PAk
+from dadapy.utils_.density_estimation import (
+    return_not_normalised_density_kstarNN,
+    return_not_normalised_density_PAk,
+)
 from dadapy.utils_.utils import compute_cross_nn_distances
 
 cores = multiprocessing.cpu_count()
@@ -1326,9 +1329,12 @@ class DensityEstimation(IdEstimation):
 
         kstar = np.ones(X_new.shape[0], dtype=int) * k
 
-        log_den, log_den_err, dc = return_density_kstarNN(
+        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
+
+        # Normalise density
+        log_den -= np.log(self.N)
 
         return log_den, log_den_err
 
@@ -1358,9 +1364,12 @@ class DensityEstimation(IdEstimation):
             self.distances,
         )
 
-        log_den, log_den_err, dc = return_density_kstarNN(
+        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
+
+        # Normalise density
+        log_den -= np.log(self.N)
 
         return log_den, log_den_err
 
@@ -1393,9 +1402,12 @@ class DensityEstimation(IdEstimation):
             self.distances,
         )
 
-        log_den, log_den_err, dc = return_density_PAk(
+        log_den, log_den_err, dc = return_not_normalised_density_PAk(
             cross_distances, self.intrinsic_dim, kstar, self.maxk, interpolation=True
         )
+
+        # Normalise density
+        log_den -= np.log(self.N)
 
         return log_den, log_den_err
 
