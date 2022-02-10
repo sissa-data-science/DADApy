@@ -224,11 +224,11 @@ class IdEstimation(Base):
         for i in range(mus.shape[1]):
             n1 = 2**i
             id = ut._argmax_loglik(
-                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=1.0e-7
+                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=self.eps
             )
             ids_scaling[i] = id
             ids_scaling_err[i] = (
-                1 / ut._fisher_info_scaling(id, mus[:, i], n1, 2 * n1)
+                1 / ut._fisher_info_scaling(id, mus[:, i], n1, 2 * n1, eps=self.eps)
             ) ** 0.5
 
         return ids_scaling, ids_scaling_err, rs_scaling
@@ -277,53 +277,7 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def _return_mus_scaling(self, range_scaling):
-        """
-        Description:
-            adapted from kneighbors function of sklearn
-            https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py#L596
-            It allows to keep a nearest neighbor matrix up to rank 'maxk' (few tens of points)
-            instead of 'range_scaling' (few thousands), while computing the ratios between neighbors' distances
-            up to neighbors' rank 'range scaling'.
-            For big datasets it avoids out of memory errors
-
-        Args:
-            range_scaling (int): maximum neighbor rank considered in the computation of the mu ratios
-
-        Returns:
-            dist (np.ndarray(float)): the FULL distance matrix sorted in increasing order of neighbor distances up to maxk
-            neighb_ind np.ndarray(int)): the FULL matrix of the indices of the nearest neighbors up to maxk
-            mus np.ndarray(float)): the FULL matrix of the ratios of the neighbor distances of order 2**(i+1) and 2**i
-            rs np.ndarray(float)): the FULL matrix of the distances of the neighbors involved in the mu estimates
-        """
-
-        reduce_func = partial(
-            self._mus_scaling_reduce_func, range_scaling=range_scaling
-        )
-
-        kwds = {"squared": True}
-        chunked_results = list(
-            pairwise_distances_chunked(
-                self.X,
-                self.X,
-                reduce_func=reduce_func,
-                metric=self.metric,
-                n_jobs=self.njobs,
-                working_memory=1024,
-                **kwds,
-            )
-        )
-
-        neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
-
-        return (
-            np.vstack(neigh_dist),
-            np.vstack(neigh_ind),
-            np.vstack(mus),
-            np.vstack(rs),
-        )
-
-    def _mus_scaling_reduce_func(self, dist, range_scaling=None):
+    def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """
         Description.
             Applied at the end of pairwise_distance_chunked see:
@@ -369,6 +323,52 @@ class IdEstimation(Base):
             neigh_ind[:, : self.maxk + 1],
             mus,
             rs,
+        )
+
+    def _return_mus_scaling(self, range_scaling):
+        """
+        Description:
+            adapted from kneighbors function of sklearn
+            https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py#L596
+            It allows to keep a nearest neighbor matrix up to rank 'maxk' (few tens of points)
+            instead of 'range_scaling' (few thousands), while computing the ratios between neighbors' distances
+            up to neighbors' rank 'range scaling'.
+            For big datasets it avoids out of memory errors
+
+        Args:
+            range_scaling (int): maximum neighbor rank considered in the computation of the mu ratios
+
+        Returns:
+            dist (np.ndarray(float)): the FULL distance matrix sorted in increasing order of neighbor distances up to maxk
+            neighb_ind np.ndarray(int)): the FULL matrix of the indices of the nearest neighbors up to maxk
+            mus np.ndarray(float)): the FULL matrix of the ratios of the neighbor distances of order 2**(i+1) and 2**i
+            rs np.ndarray(float)): the FULL matrix of the distances of the neighbors involved in the mu estimates
+        """
+
+        reduce_func = partial(
+            self._mus_scaling_reduce_func, range_scaling=range_scaling
+        )
+
+        kwds = {"squared": True}
+        chunked_results = list(
+            pairwise_distances_chunked(
+                self.X,
+                self.X,
+                reduce_func=reduce_func,
+                metric=self.metric,
+                n_jobs=self.njobs,
+                working_memory=1024,
+                **kwds,
+            )
+        )
+
+        neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
+
+        return (
+            np.vstack(neigh_dist),
+            np.vstack(neigh_ind),
+            np.vstack(mus),
+            np.vstack(rs),
         )
 
     # ----------------------------------------------------------------------------------------------

@@ -210,8 +210,10 @@ def log_binom_stirling(k, n):
 # Helper functions
 
 
-def _loglik(d, mus, n1, n2, N):
+def _loglik(d, mus, n1, n2, N, eps):
     one_m_mus_d = 1.0 - mus ** (-d)
+    "regularize small numbers"
+    one_m_mus_d[one_m_mus_d<2*eps] = 2*eps
     sum = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.0) * np.log(mus))
     return sum - N / d
 
@@ -221,10 +223,10 @@ def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
     indx = np.nonzero(mus == 1)
     mus[indx] += 1e-10  # np.finfo(dtype).eps
 
-    l1 = _loglik(d1, mus, n1, n2, N)
-    while abs(d0 - d1) > eps:
+    l1 = _loglik(d1, mus, n1, n2, N, eps)
+    while abs(d0 - d1) > 5*eps:
         d2 = (d0 + d1) / 2.0
-        l2 = _loglik(d2, mus, n1, n2, N)
+        l2 = _loglik(d2, mus, n1, n2, N, eps)
         if l2 * l1 > 0:
             d1 = d2
         else:
@@ -234,9 +236,11 @@ def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
     return d
 
 
-def _fisher_info_scaling(id_ml, mus, n1, n2):
+def _fisher_info_scaling(id_ml, mus, n1, n2, eps):
     N = len(mus)
     one_m_mus_d = 1.0 - mus ** (-id_ml)
+    "regularize small numbers"
+    one_m_mus_d[one_m_mus_d<2*eps] = 2*eps
     log_mu = np.log(mus)
 
     j0 = N / id_ml**2
