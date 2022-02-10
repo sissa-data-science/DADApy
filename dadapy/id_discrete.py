@@ -19,11 +19,12 @@ import numpy as np
 
 # import scipy.special as sp
 from scipy.optimize import minimize_scalar as SMin
+from scipy.stats import ks_2samp as KS
 
 import dadapy.utils_.discrete_functions as df
 from dadapy._base import Base
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 # from dadapy.utils_ import utils as ut
@@ -82,6 +83,8 @@ class IdDiscrete(Base):
         self.n = None
         self.mask = None
 
+        self._k = None
+
         self.id_estimated_binom = None
         self.id_estimated_binom_std = None
         self.posterior_domain = None
@@ -102,8 +105,8 @@ class IdDiscrete(Base):
         Eventually add the weights of the points if they have an explicit multiplicity
 
         Args:
-                        lk (int): external shell radius
-                        ln (int): internal shell radius
+            lk (int): external shell radius
+            ln (int): internal shell radius
 
         Returns:
 
@@ -118,7 +121,7 @@ class IdDiscrete(Base):
         else:
             assert (
                 self.lk is not None and self.ln is not None
-            ), "set self.lk and self.ln or insert proper values for the lk and ln parameters"
+            ), "set lk and ln or insert proper values for the lk and ln parameters"
 
         # compute k and n
         if self.is_w is False:
@@ -187,42 +190,41 @@ class IdDiscrete(Base):
             self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
+
         if lk is not None and ln is not None:
-            self.set_lk_ln(lk, ln)
+            if lk != self.lk or ln != self.ln:
+                self.set_lk_ln(lk, ln)
+                self.fix_lk()
         else:
             assert (
                 self.lk is not None and self.ln is not None
-            ), "set self.lk and self.ln or insert proper values for the lk and ln parameters"
+            ), "set lk and ln through set_lk_ln or insert proper values for the lk and ln parameters"
 
         # routine
-        self.fix_lk()
-
-        # remove points with bad statistics (see fix_lk to see which are the conditions)
-        n_eff = self.n[self.mask]
-        k_eff = self.k[self.mask]
-        if self.is_w:
-            w_eff = self.weights[self.mask]
-
         if self.verb:
             print("n and k computed")
 
         # eventually perform the estimate using only a subset of the points (k and n are still computed on the whole dataset!!!)
         if subset is not None:
             # if subset is integer draw that amount of random numbers
-            if isinstance(subset, (np.integer, int)):
-                if subset < self.mask.sum():
-                    subset = rng.choice(
-                        len(n_eff), subset, replace=False, shuffle=False
-                    )
+            if isinstance(subset, (np.integer, int)) and subset < self.mask.sum():
+                subset = rng.choice(self.mask.sum(), subset, replace=False, shuffle=False)
             # if subset is an array, use it as a mask
             elif isinstance(subset, np.ndarray):
-                assert subset.shape[0] < self.mask.sum()
+                #assert subset.shape[0] < self.mask.sum()
                 assert isinstance(subset[0], (int, np.integer))
 
             n_eff = n_eff[subset]
             k_eff = k_eff[subset]
             if self.is_w:
                 w_eff = w_eff[subset]
+
+
+        # remove points with bad statistics (see fix_lk to see which are the conditions)
+        n_eff = self.n[self.mask]
+        k_eff = self.k[self.mask]
+        if self.is_w:
+            w_eff = self.weights[self.mask]
 
         # check statistics before performing id estimation
         if ~self.is_w:
@@ -248,14 +250,14 @@ class IdDiscrete(Base):
                 n_eff = n_eff.mean() - 1
 
             # explicit computation of likelihood, not necessary when ln and lk are fixed
-            # self.id_estimated_binom = SMin(
-            # 	df.compute_binomial_logL,
-            # 	args=(self.lk, k_eff - 1, self.ln, n_eff - 1, True, w_eff),
-            # 	bounds=(df.D_MIN+np.finfo(np.float16).eps, df.D_MAX),
-            # 	method="bounded",
-            # ).x
+            self.id_estimated_binom = SMin(
+              df.compute_binomial_logL,
+              args=(self.lk, k_eff, self.ln, n_eff, True, w_eff),
+              bounds=(df.D_MIN+np.finfo(np.float16).eps, df.D_MAX),
+              method="bounded",
+            ).x
 
-            self.id_estimated_binom = df.find_d(self.ln, self.lk, n_eff, k_eff)
+            #self.id_estimated_binom = df.find_d(self.ln, self.lk, n_eff, k_eff)
 
             self.id_estimated_binom_std = (
                 df.Cramer_Rao(
@@ -263,19 +265,6 @@ class IdDiscrete(Base):
                 )
                 ** 0.5
             )
-
-            """
-			from scipy.optimize import root_scalar as rs
-			n_eff = w_eff*(n_eff-1)
-			k_eff = w_eff*(k_eff-1)
-
-			self.id_estimated_binom = rs(df.find_d,args=(self.ln,self.lk,n_eff.mean(),k_eff.mean()),bracket=(df.D_MIN,df.D_MAX),method='brentq').root
-			if is None:
-				N = self.mask.sum()
-			else
-				N = subset
-			self.id_estimated_binom_std = self.CramerRao(N=N,k=k_eff.mean())
-			"""
 
         elif method == "bayes":
             if self.is_w:
@@ -306,7 +295,7 @@ class IdDiscrete(Base):
         """Computes Rk, Rn, n for each point given a selected value of k
 
         This routine computes external radii lk, internal radii ln and internal points n.
-        It also ensure that lk is scaled onto the most external shell
+        It also ensures that lk is scaled onto the most external shell
         for which we are sure to have all points.
         NB As a consequence the k will be point dependent
 
@@ -395,6 +384,8 @@ class IdDiscrete(Base):
                 + "and thus will be kept out of the statistics. Consider increasing k."
             )
 
+        self._k = k_eff
+
     # --------------------------------------------------------------------------------------
 
     def fix_k_shell(self, k_shell, ratio):
@@ -473,6 +464,7 @@ class IdDiscrete(Base):
                 + " points would have Rk set to 0 "
                 + "and thus will be kept out of the statistics. Consider increasing k."
             )
+        self._k = k_shell
 
     # --------------------------------------------------------------------------------------
 
@@ -486,10 +478,10 @@ class IdDiscrete(Base):
         chosen is
 
         Args:
-                        k (int): order of neighbour that set the external shell
-                        shell (bool): k stands for number of neighbours or number of occupied shells
-                        ratio (float): ratio between internal and external shell
-                        subset (int): choose a random subset of the dataset to make the Id estimate
+            k (int): order of neighbour that set the external shell
+            shell (bool): k stands for number of neighbours or number of occupied shells
+            ratio (float): ratio between internal and external shell
+            subset (int): choose a random subset of the dataset to make the Id estimate
 
         """
         # checks-in and initialisations
@@ -499,10 +491,10 @@ class IdDiscrete(Base):
 
         assert 0 < ratio < 1, "set a proper value for the ratio"
 
-        if shell:
+        if shell and k != self._k:
             self.fix_k_shell(k, ratio)
 
-        else:
+        elif k != self._k:
             self.fix_k(k, ratio)
 
         n_eff = self.n[self.mask]
@@ -511,15 +503,18 @@ class IdDiscrete(Base):
         lk_eff = self.lk[self.mask]
 
         if subset is not None:
-            assert isinstance(
-                subset, (np.integer, int)
-            ), "subset needs to be an integer"
-            if subset < len(n_eff):
+            # if subset is integer draw that amount of random numbers
+            if isinstance(subset, (np.integer, int)) and subset < self.mask.sum():
                 subset = rng.choice(len(n_eff), subset, replace=False, shuffle=False)
-                n_eff = n_eff[subset]
-                k_eff = k_eff[subset]
-                ln_eff = ln_eff[subset]
-                lk_eff = lk_eff[subset]
+            # if subset is an array, use it as a mask
+            elif isinstance(subset, np.ndarray):
+                #assert subset.shape[0] < self.mask.sum()
+                assert isinstance(subset[0], (int, np.integer))
+
+            n_eff = n_eff[subset]
+            k_eff = k_eff[subset]
+            ln_eff = ln_eff[subset]
+            lk_eff = lk_eff[subset]
 
         e_n = n_eff.mean()
         if e_n == 1.0:
@@ -549,7 +544,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def model_validation(self, alpha=0.05, plot_pdf=False, plot_cdf=True):
+    def model_validation_full(self, alpha=0.05, plot_pdf=False, plot_cdf=True, path=None, subset=None):
         """Use Kolmogorov-Smirnoff test to asses the goodness of the estimate
 
         In order to validate estimate of the intrinsic dimension and the model
@@ -563,29 +558,37 @@ class IdDiscrete(Base):
         CDF
 
         Args:
-                        plot_pdf (bool, default=False): plot histogram of n_emp and n_i
-                        plot_cdf (bool, default=False): plot cdf of n_emp and n_i
+            plot_pdf (bool, default=False): plot histogram of n_emp and n_i
+            plot_cdf (bool, default=False): plot cdf of n_emp and n_i
+            path (str): if plotting, decide directory where to save
         """
 
         if self.id_estimated_binom is None:
             print("compute the id before validating the model!")
             return 0
 
+
+
         if isinstance(self.ln, np.ndarray):
+
+            title = 'K='+str(self.k[self.mask].mean()-1)+r'$\quad\langle R \rangle=$'+str(self.lk[self.mask].mean())
+
             p = df.compute_discrete_volume(
-                self.ln[self.mask], self.id_estimated_binom
-            ) / df.compute_discrete_volume(self.lk[self.mask], self.id_estimated_binom)
-            n_model = rng.binomial(self.k[self.mask] - 1, p)
+                self.ln[self.mask].mean(), self.id_estimated_binom
+            ) / df.compute_discrete_volume(self.lk[self.mask].mean(), self.id_estimated_binom)
+
+            n_model = rng.binomial(self.k[self.mask].mean() - 1, p, size=self.mask.sum())
+
         else:
+
+            title = 'R='+str(self.lk)+r'$\quad\langle K \rangle=$'+str(self.k[self.mask].mean())
+
             p = df.compute_discrete_volume(
                 self.ln, self.id_estimated_binom
             ) / df.compute_discrete_volume(self.lk, self.id_estimated_binom)
-            n_model = rng.binomial(self.k[self.mask] - 1, p)
+            n_model = rng.binomial(self.k[self.mask].mean() - 1, p, size=self.mask.sum())
 
         n_emp = self.n[self.mask] - 1
-
-        from scipy.stats import chisquare as X2
-        from scipy.stats import ks_2samp as KS
 
         s, pv = KS(n_emp, n_model)
 
@@ -612,46 +615,297 @@ class IdDiscrete(Base):
         # print("X2p-value:\t" + str(pvX))
         #
         # if pvX > alpha:
-        # 	print("We cannot reject the null hypotesis: the empirical and theoretical distributions has to be considered equivalent")
+        #   print("We cannot reject the null hypotesis: the empirical and theoretical distributions has to be considered equivalent")
         # else:
-        # 	print("We have to reject the null hypotesis: the two distributions ae not equivalent and thus the model as it is cannot be used to infer the id")
+        #   print("We have to reject the null hypotesis: the two distributions ae not equivalent and thus the model as it is cannot be used to infer the id")
 
         if plot_pdf:
 
             a = np.histogram(
-                n_emp, range=(-0.5, self.k.max() + 0.5), bins=self.k.max() + 1
+                n_emp, range=(-0.5, self.n.max() + 0.5), bins=self.n.max() + 1, density=True
             )
             b = np.histogram(
-                n_model, range=(-0.5, self.k.max() + 0.5), bins=self.k.max() + 1
+                n_model, range=(-0.5, self.n.max() + 0.5), bins=self.n.max() + 1, density=True
             )
 
             x = a[1][:-1] + 0.5
             plt.figure()
-            plt.plot(x, a[0], label="n_empirical")
-            plt.plot(x, b[0], label="n_model")
+            plt.title(title)
+            plt.plot(x, a[0], label="n empirical")
+            plt.plot(x, b[0], label="n model")
+            plt.xlabel('n', fontsize=12)
+            plt.ylabel('P(n)', fontsize=12)
             plt.legend()
-            plt.show()
+            if path is not None:
+                plt.savefig(path.rstrip('/')+'/mv_pdf.pdf')
+            else:
+                plt.show()
 
         if plot_cdf:
+            from matplotlib import cm
+            import seaborn as sns
+            sns.set_style("ticks")
+            sns.set_context("notebook")
+
+            cmap = cm.get_cmap('tab20b', 20)
 
             a = np.histogram(
-                n_emp, range=(-0.5, self.k.max() + 0.5), bins=self.k.max() + 1
+                n_emp, range=(-0.5, self.n.max() + 0.5), bins=self.n.max() + 1
             )
             b = np.histogram(
-                n_model, range=(-0.5, self.k.max() + 0.5), bins=self.k.max() + 1
+                n_model, range=(-0.5, self.n.max() + 0.5), bins=self.n.max() + 1
             )
             cdf_emp = np.cumsum(a[0]) / self.mask.sum()
             cdf_mod = np.cumsum(b[0]) / self.mask.sum()
 
             x = a[1][:-1] + 0.5
             plt.figure()
-            plt.plot(x, cdf_emp, label="cdf_empirical")
-            plt.plot(x, cdf_mod, label="cdf_model")
-            plt.legend()
-            plt.show()
+            plt.title(title)
+            plt.plot(x, cdf_emp, '-', label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
+            plt.plot(x, cdf_mod, '--', label="n model", linewidth=4, alpha=0.9, c=cmap(0))
+            plt.xlabel('n', fontsize=15)
+            plt.ylabel('F(n)', fontsize=15)
+            plt.legend(fontsize=14, frameon=False)  # ,bbox_to_anchor=(1, 0.8))
+            plt.xticks(size=14)
+            plt.yticks(size=14)
+            plt.tight_layout()
+            if path is not None:
+                plt.savefig(path.rstrip('/')+'/mv_cdf.pdf')
+            else:
+                plt.show()
 
             diff = max(abs(cdf_emp - cdf_mod))
             print(diff, diff * np.sqrt(self.mask.sum() * 0.5))
+
+            #return x, cdf_emp, cdf_mod
+
+    # ----------------------------------------------------------------------------------------------
+
+    def R_mod_val(self, k_win, path=None):
+        """Use Kolmogorov-Smirnoff test to asses the goodness of the estimate at fixed R within certain windows in k
+
+        For a fixed value of R and for given values of windows of k, compute
+        artificial estimates for the n and compare them to the empirical ones 
+        using the KS test
+
+        Args:
+            k_win (np.ndarray(int)): boundaries of the windows in k
+            path (string): if provided, save the plots and observables to the provided folder
+        """
+        obs = []
+        for i in range(len(k_win)-1):
+
+            # find points within window
+            k_ave = (k_win[i+1]+k_win[i])/2.
+            mask = np.logical_and(k_win[i] < self.k,self.k <= k_win[i+1])
+            ki = self.k[mask]-1
+            ni = self.n[mask]-1
+
+            #skip window with too few points
+            if len(ni)<20:
+                continue
+                
+            # find id and error within window
+            if ni.mean() < k_ave:
+                ki_ = k_ave
+            else:
+                ki_ = ki.mean()
+            id_i = df.find_d(self.ln,self.lk,ni.mean(),ki_)
+            cr = df.Cramer_Rao(id_i,self.ln,self.lk,len(ni),ki.mean())**0.5
+            
+            ## model validation
+            # compute the p of the binomial distribution
+            p = df.compute_discrete_volume(self.ln,id_i)/df.compute_discrete_volume(self.lk,id_i)
+            # extract the artificial n
+            n_mod = rng.binomial(k_ave,p,size=mask.sum())
+            # produce histograms
+            sup = max(ni.max(),n_mod.max())
+            a = np.histogram(ni,range=(-0.5,sup+0.5),bins=sup+1,density=True)
+            b = np.histogram(n_mod,range=(-0.5,sup+0.5),bins=sup+1,density=True)
+            # and cdfs
+            cdf_nn = np.cumsum(a[0])
+            cdf_nn = cdf_nn/cdf_nn[-1]
+            cdf_nmod = np.cumsum(b[0])
+            cdf_nmod = cdf_nmod/cdf_nmod[-1]
+            # perform KS test
+            kstat, pvi = KS(n_mod,ni)
+            print(id_i, pvi)
+            # save observables
+            obs.append((k_ave, id_i, cr, ni.mean(), ni.std(), n_mod.mean(), n_mod.std(), len(ni), pvi))
+        # PRINT    
+            # print('k mean:\t',k_m)
+            # print('n mean:\t',nn.mean())
+            # print('id:\t',id_i)
+            # print('n model mean:\t', n_mod.mean())
+            # print('pvalue, hopefully > 0.05:\t',pvi)
+        # PLOT
+            # DATA------------------------------------------------------
+            # plt.figure()
+            # plt.title('values')
+            # plt.plot(kk,alpha=0.5,label='k emp')
+            # plt.plot(nn,alpha=0.5,label='n emp')
+            # plt.plot(n_mod,alpha=0.5,label='n mod')
+            # plt.plot(n_mod1,alpha=0.5,label='n mod1')
+            # plt.xlabel('window index')
+            # plt.legend()
+            # plt.show()
+            # PDF--------------------------------------------------------
+            plt.figure()
+            plt.title(r'R='+str(self.lk)+'\t$\overline{k}=$'+str(k_ave))
+            plt.plot(a[0], alpha=0.5, label='n empirical')
+            plt.plot(b[0], alpha=0.5, label='n model')
+            plt.xlabel('n', size=12)
+            plt.ylabel('P(n)', size=12)
+            if sup < 10:
+                plt.xticks(np.arange(0, sup+1))
+            plt.legend()
+            if path:
+                plt.savefig(path+'k'+str(k_ave)+'.pdf')
+            else:
+                plt.show()
+            # CDF-------------------------------------------------------
+
+            from matplotlib import cm
+            import seaborn as sns
+            sns.set_style("ticks")
+            sns.set_context("notebook")
+            cmap = cm.get_cmap('tab20b', 20)
+
+            plt.figure()
+            plt.title(r'R='+str(self.lk)+'\t$\overline{k}=$'+str(k_ave))
+            plt.plot(cdf_nn, '-', label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
+            plt.plot(cdf_nmod, '--', label="n model", linewidth=4, alpha=0.9, c=cmap(0))
+            plt.xlabel('n', fontsize=15)
+            plt.ylabel('F(n)', fontsize=15)
+            plt.legend(fontsize=14, frameon=False)
+            plt.xticks(size=14)
+            plt.yticks(size=14)
+            plt.tight_layout()
+            if sup < 10:
+                plt.xticks(np.arange(0, sup+1))
+            plt.legend()
+            if path:
+                plt.savefig(path+'k'+str(k_ave)+'CDF.pdf')
+            else:
+                plt.show()
+        if path:    
+            np.savetxt(path+'observables.txt', obs, header='<k_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value', fmt='%.3f', delimiter='\t')
+        else:
+            print(obs)
+
+    # ----------------------------------------------------------------------------------------------
+    def K_mod_val(self, R_win, ratio, path=None):
+        """Use Kolmogorov-Smirnoff test to asses the goodness of the estimate at fixed R within certain windows in k
+
+        For a fixed value of K and for given values of windows of R, compute
+        artificial estimates for the n and compare them to the empirical ones 
+        using the KS test
+
+        Args:
+            R_win (np.ndarray(int)): boundaries of the windows in R
+            ratio (float): ratio between shells radii
+            path (string): if provided, save the plots and observables to the provided folder
+        """
+        obs = []
+        for i in range(len(R_win)-1):
+
+            # find points within window
+            R_ave = (R_win[i+1]+R_win[i])/2.
+            mask = np.logical_and(R_win[i] < self.lk,self.lk <= R_win[i+1])
+            mask = mask*(self.k>=0.8*self.k.max())      #selects only those points for which k_eff >~ 0.8 K
+            ki = self.k[mask]-1
+            ni = self.n[mask]-1
+            lki = self.lk[mask]
+            lni = self.ln[mask]
+
+            k_ave = ki.mean()
+
+            #skip window with too few points
+            if len(ni)<20:
+                continue
+                
+            # find id and error within window
+            id_i = df.find_d(np.rint(R_ave*ratio),np.rint(R_ave),ni.mean(),k_ave)
+            cr = df.Cramer_Rao(id_i,np.rint(R_ave*ratio),np.rint(R_ave),len(ni),k_ave)**0.5
+            
+            ## model validation
+            # compute the p of the binomial distribuzion
+            p = df.compute_discrete_volume(np.rint(R_ave*ratio),id_i)/df.compute_discrete_volume(np.rint(R_ave),id_i)
+            # extract the artificial n
+            n_mod = rng.binomial(k_ave,p,size=mask.sum())
+            # produce histograms
+            sup = max(ni.max(), n_mod.max())
+            a = np.histogram(ni, range=(-0.5, sup+0.5), bins=sup+1, density=True)
+            b = np.histogram(n_mod, range=(-0.5, sup+0.5), bins=sup+1, density=True)
+            # and cdfs
+            cdf_nn = np.cumsum(a[0])
+            cdf_nn = cdf_nn/cdf_nn[-1]
+            cdf_nmod = np.cumsum(b[0])
+            cdf_nmod = cdf_nmod/cdf_nmod[-1]
+            # perform KS test
+            kstat, pvi = KS(n_mod, ni)
+            print(id_i, pvi)
+            # save observables
+            obs.append((R_ave, id_i, cr, ni.mean(), ni.std(), n_mod.mean(), n_mod.std(), len(ni), pvi))
+        # PRINT    
+            # print('k mean:\t',k_m)
+            # print('n mean:\t',nn.mean())
+            # print('id:\t',id_i)
+            # print('n model mean:\t', n_mod.mean())
+            # print('pvalue, hopefully > 0.05:\t',pvi)
+        # PLOT
+            # DATA------------------------------------------------------
+            # plt.figure()
+            # plt.title('values')
+            # plt.plot(kk,alpha=0.5,label='k emp')
+            # plt.plot(nn,alpha=0.5,label='n emp')
+            # plt.plot(n_mod,alpha=0.5,label='n mod')
+            # plt.plot(n_mod1,alpha=0.5,label='n mod1')
+            # plt.xlabel('window index')
+            # plt.legend()
+            # plt.show()
+            # PDF--------------------------------------------------------
+            plt.figure()
+            plt.title(r'K='+str(int(k_ave))+'\t$\overline{R}=$'+str(R_ave))
+            plt.plot(a[0], alpha=0.5, label='n empirical')
+            plt.plot(b[0], alpha=0.5, label='n model')
+            plt.xlabel('n', size=12)
+            plt.ylabel('P(n)', size=12)
+            if sup < 10:
+                plt.xticks(np.arange(0, sup+1))
+            plt.legend()
+            if path:
+                plt.savefig(path+'R'+str(R_ave)+'.pdf')
+            else:
+                plt.show()
+            # CDF-------------------------------------------------------
+            from matplotlib import cm
+            import seaborn as sns
+            sns.set_style("ticks")
+            sns.set_context("notebook")
+            cmap = cm.get_cmap('tab20b', 20)
+            
+            plt.figure()
+            plt.title(r'K='+str(int(k_ave))+'\t$\overline{R}=$'+str(R_ave))
+            plt.plot(cdf_nn, '-', label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
+            plt.plot(cdf_nmod, '--', label="n model", linewidth=4, alpha=0.9, c=cmap(0))
+            plt.xlabel('n', fontsize=15)
+            plt.ylabel('F(n)', fontsize=15)
+            plt.legend(fontsize=14, frameon=False)
+            plt.xticks(size=14)
+            plt.yticks(size=14)
+            plt.tight_layout()
+            if sup<10:
+                plt.xticks(np.arange(0, sup+1))
+            plt.legend()
+            if path:
+                plt.savefig(path+'R'+str(R_ave)+'CDF.pdf')
+            else:
+                plt.show()
+        if path:    
+            np.savetxt(path+'observables.txt', obs, header='<R_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value', fmt='%.3f', delimiter='\t')
+        else:
+            print(obs)
 
     # ----------------------------------------------------------------------------------------------
 
