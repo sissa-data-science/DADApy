@@ -15,6 +15,7 @@
 
 import math
 import multiprocessing
+from functools import partial
 
 import numpy as np
 from scipy.optimize import curve_fit
