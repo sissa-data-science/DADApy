@@ -17,11 +17,10 @@
 import math
 import multiprocessing
 import time
+from functools import partial
 
 import numpy as np
-from functools import partial
 from sklearn.metrics import pairwise_distances_chunked
-
 
 from dadapy.utils_.utils import compute_nn_distances, from_all_distances_to_nndistances
 
