@@ -95,7 +95,7 @@ def plot_ID_vs_nneigh(Data, nneighs=np.arange(2, 90)):
 
 
 def plot_SLAn(Data, linkage="single"):
-    assert Data.labels is not None
+    assert Data.cluster_assignment is not None
 
     nd = int((Data.N_clusters * Data.N_clusters - Data.N_clusters) / 2)
     Dis = np.empty(nd, dtype=float)
@@ -359,6 +359,18 @@ def get_dendrogram(Data, cmap="viridis"):
 
 
 def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
+    """Plot the information imbalance plane corresponding to the computed ibalances.
+
+    Args:
+        imbalances (np.ndarray): Information imbalances from the full space to specific sets of coordinates and vice-versa
+        coord_list (list of lists of integers, optional): The list of coordinates considered for the information
+        imbalance computations
+        labels (list of strings, optional): Labels for the list of coordinates
+
+    Returns:
+
+    """
+
     plt.figure(figsize=(4, 4))
     for i, (imb0, imb1) in enumerate(imbalances.T):
         if coord_list is not None:
