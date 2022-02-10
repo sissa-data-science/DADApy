@@ -239,11 +239,11 @@ def _fisher_info_scaling(id_ml, mus, n1, n2):
     one_m_mus_d = 1.0 - mus ** (-id_ml)
     log_mu = np.log(mus)
 
-    j0 = N / id_ml ** 2
+    j0 = N / id_ml**2
 
     factor1 = np.divide(log_mu, one_m_mus_d)
     factor2 = mus ** (-id_ml)
-    tmp = np.multiply(factor1 ** 2, factor2)
+    tmp = np.multiply(factor1**2, factor2)
     j1 = (n2 - n1 - 1) * np.sum(tmp)
 
     return j0 + j1
@@ -379,7 +379,7 @@ def _return_imb_between_two(X, Xp, maxk, k, ltype="mean"):
 def _return_imb_linear_comb_two_dists(
     dist_indices_Y, d1, d2, a1, maxk, k=1, ltype="mean"
 ):
-    dX = np.sqrt((a1 ** 2 * d1 ** 2 + d2 ** 2))
+    dX = np.sqrt((a1**2 * d1**2 + d2**2))
 
     dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0 : maxk + 1])
 
@@ -392,7 +392,7 @@ def _return_imb_linear_comb_two_dists(
 def _return_imb_linear_comb_three_dists(
     dist_indices_Y, d1, d2, d3, a1, a2, maxk, k=1, ltype="mean"
 ):
-    dX = np.sqrt((a1 ** 2 * d1 ** 2 + a2 ** 2 * d2 ** 2 + d3 ** 2))
+    dX = np.sqrt((a1**2 * d1**2 + a2**2 * d2**2 + d3**2))
 
     dist_indices_X = np.asarray(np.argsort(dX, axis=1)[:, 0 : maxk + 1])
 
@@ -506,7 +506,7 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
         import matplotlib.pyplot as plt
 
         def p_d(d):
-            return abs(posterior.pdf(r ** d) * (r ** d) * np.log(r))
+            return abs(posterior.pdf(r**d) * (r**d) * np.log(r))
 
         dx = 0.1
         d_left = D_MIN

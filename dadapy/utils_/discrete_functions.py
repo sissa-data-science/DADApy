@@ -59,13 +59,13 @@ def compute_discrete_volume(L, d, O1=False):
         # Large L approximation obtained using Stirling formula
         def V_Stirling(ll):
             if O1:
-                correction = 2 ** d
+                correction = 2**d
             else:
                 correction = (
-                    np.exp(0.5 * (d + d ** 2) / ll) * (1 + np.exp(-d / ll)) ** d
+                    np.exp(0.5 * (d + d**2) / ll) * (1 + np.exp(-d / ll)) ** d
                 )
 
-            return ll ** d / scipy.special.factorial(d) * correction
+            return ll**d / scipy.special.factorial(d) * correction
 
         ind_small_l = l < coeff.shape[0]
         V = np.zeros(l.shape[0])
@@ -114,7 +114,7 @@ def compute_derivative_discrete_vol(l, d):
         return (
             np.e ** (((0.5 + 0.5 * d) * d) / l)
             * (1 + np.e ** (-d / l)) ** d
-            * l ** d
+            * l**d
             * (
                 scipy.special.factorial(d)
                 * (
