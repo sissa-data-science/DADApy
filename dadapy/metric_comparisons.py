@@ -118,7 +118,6 @@ class MetricComparisons(Base):
             indices = [(i, j) for i in range(ncoords) for j in range(i)]
 
             for idx, n in zip(indices, nmats):
-                print(indices, nmats)
                 n_mat[idx[0], idx[1]] = n[0]
                 n_mat[idx[1], idx[0]] = n[1]
 
@@ -315,9 +314,9 @@ class MetricComparisons(Base):
         all_imbalances = [imbalances]
 
         np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-        np.save("all_losses.npy", all_imbalances)
+        np.save("all_imbalances.npy", all_imbalances)
 
-        for i in range(n_coords):
+        for i in range(n_coords - 1):
             coord_list = [selected_coords + [oc] for oc in other_coords]
 
             imbalances_ = self.return_inf_imb_target_selected_coords(
@@ -345,7 +344,7 @@ class MetricComparisons(Base):
             all_imbalances.append(imbalances)
 
             np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-            np.save("all_losses.npy", all_imbalances)
+            np.save("all_imbalances.npy", all_imbalances)
 
         return selected_coords, all_imbalances
 
@@ -480,6 +479,7 @@ class MetricComparisons(Base):
             overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
 
         overlap = np.mean(overlaps)
+
         return overlap
 
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
