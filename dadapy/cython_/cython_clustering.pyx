@@ -60,10 +60,10 @@ def _compute_clustering(floatTYPE_t Z,
     cdef np.ndarray[DTYPE_t, ndim = 1]  to_remove = np.repeat(-1, len_centers)
     cdef DTYPE_t len_to_remove = 0
 
-    if verb: print("part one finished")
-
-    for i in range(len_centers):
-        print(_centers_[i])
+    if verb:
+        print("part one finished")
+        # for i in range(len_centers):
+        #     print(_centers_[i])
 
 # This  part  checks that there are no centers within the neighborhood of points with higher density.
     for k in range(len_centers):
@@ -90,9 +90,10 @@ def _compute_clustering(floatTYPE_t Z,
     #                     len_to_remove += 1
     #                     break
 
-    if verb: print("part two finished")
+    if verb:
+        print("part two finished")
+        # print(len_centers, len(to_remove))
 
-    print(len_centers, len(to_remove))
     cdef np.ndarray[DTYPE_t, ndim = 1]  centers = np.empty(len_centers - len_to_remove, dtype=int)
     cdef DTYPE_t cindx = 0
 
@@ -106,8 +107,9 @@ def _compute_clustering(floatTYPE_t Z,
             centers[cindx] = _centers_[i]
             cindx += 1
 
-    if verb: print("part tree finished")
-    print(len(centers))
+    if verb:
+        print("part tree finished")
+        # print(len(centers))
     #the selected centers can't belong to the neighborhood of points with higher density
     cdef np.ndarray[DTYPE_t, ndim = 1]  cluster_init_ = np.repeat(-1, Nele)
     Nclus = len_centers - len_to_remove
@@ -115,7 +117,8 @@ def _compute_clustering(floatTYPE_t Z,
     for i in range(len_centers - len_to_remove):
         cluster_init_[centers[i]] = i
 
-    if verb: print("Number of clusters before multimodality test=", Nclus)
+    if verb:
+        print("Number of clusters before multimodality test=", Nclus)
 
     sortg = np.argsort(-g)  # Rank of the elements in the g vector sorted in descendent order
 
@@ -207,7 +210,8 @@ def _compute_clustering(floatTYPE_t Z,
         Rho_bord_err[i, i] = 0.
 
     sec2 = time.time()
-    if verb: print("{0:0.2f} seconds identifying the borders".format(sec2 - sec))
+    if verb:
+        print("{0:0.2f} seconds identifying the borders".format(sec2 - sec))
 
     check = 1
     sec = time.time()
@@ -288,7 +292,8 @@ def _compute_clustering(floatTYPE_t Z,
                     Rho_bord_err[jmod, i] = 0
                     Rho_bord_err[i, jmod] = Rho_bord_err[jmod, i]
     sec2 = time.time()
-    if verb: print("{0:0.2f} seconds with multimodality test".format(sec2 - sec))
+    if verb:
+        print("{0:0.2f} seconds with multimodality test".format(sec2 - sec))
     sec = time.time()
 
     Nclus_m = 0
@@ -336,6 +341,6 @@ def _compute_clustering(floatTYPE_t Z,
 
     out_bord = np.copy(Rho_bord_m)
     sec2 = time.time()
-    if verb: print(
-        "{0:0.2f} seconds for final operations".format(sec2 - sec))
+    if verb:
+        print("{0:0.2f} seconds for final operations".format(sec2 - sec))
     return clstruct_m, Nclus_m, labels, centers_m, out_bord, Rho_min, Rho_bord_err_m, Point_bord_m
