@@ -449,7 +449,7 @@ class IdEstimation(Base):
             # or distances[:,-1]<lk, it is likely that there are other points within lk that are not being
             # considered and thus potentially altering the statistics -> neglect them through self.mask
             # in the calculation of likelihood
-            self.mask = self.distances[:, -1] > self.lk  # or self.k == self.maxk
+            self.mask = self.distances[:, -1] > self.rk  # or self.k == self.maxk
 
             if np.any(~self.mask):
                 print(

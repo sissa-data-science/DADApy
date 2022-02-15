@@ -204,27 +204,27 @@ class IdDiscrete(Base):
         if self.verb:
             print("n and k computed")
 
-        # eventually perform the estimate using only a subset of the points (k and n are still computed on the whole dataset!!!)
-        if subset is not None:
-            # if subset is integer draw that amount of random numbers
-            if isinstance(subset, (np.integer, int)) and subset < self.mask.sum():
-                subset = rng.choice(self.mask.sum(), subset, replace=False, shuffle=False)
-            # if subset is an array, use it as a mask
-            elif isinstance(subset, np.ndarray):
-                #assert subset.shape[0] < self.mask.sum()
-                assert isinstance(subset[0], (int, np.integer))
-
-            n_eff = n_eff[subset]
-            k_eff = k_eff[subset]
-            if self.is_w:
-                w_eff = w_eff[subset]
-
-
         # remove points with bad statistics (see fix_lk to see which are the conditions)
         n_eff = self.n[self.mask]
         k_eff = self.k[self.mask]
         if self.is_w:
             w_eff = self.weights[self.mask]
+
+        # eventually perform the estimate using only a subset of the points (k and n are still computed on the whole dataset!!!)
+        if subset is not None:
+            # if subset is an array, use it as a mask
+            if isinstance(subset, (np.ndarray,list)):
+                assert isinstance(subset[0], (int, np.integer))
+                assert max(subset)<self.N
+
+            # if subset is integer draw that amount of random numbers
+            elif isinstance(subset, (np.integer, int)) and subset < self.mask.sum():
+                subset = rng.choice(self.mask.sum(), subset, replace=False, shuffle=False)
+
+            n_eff = n_eff[subset]
+            k_eff = k_eff[subset]
+            if self.is_w:
+                w_eff = w_eff[subset]
 
         # check statistics before performing id estimation
         if ~self.is_w:
@@ -935,6 +935,44 @@ class IdDiscrete(Base):
             [wi > 0 and isinstance(wi, (np.int, int))] for wi in w
         ), "load proper integer weights"
         self.weights = np.array(w, dtype=np.int)
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _my_mask(self, subset):
+
+        assert self.mask is not None
+
+        if isinstance(subset, (np.ndarray,list)):
+
+            assert (isinstance(subset[0],(int,np.integer))), "elements of list/array must be integers, in order to be used as indexes"
+            assert (max(subset) < self.N), "the array must contain elements with indexes lower than the total number of elements"
+
+            my_mask = np.zeros(self.mask.shape[0], dtype=bool)
+            my_mask[subset] = True
+            my_mask *= self.mask
+
+            assert my_mask.sum() == len(subset)
+
+
+        elif isinstance(subset, (int,np.integer)):
+
+            if subset > self.mask.sum():
+                my_mask = np.copy(self.mask)
+
+            else:
+                my_mask = np.zeros(self.mask.shape[0], dtype=bool)
+                idx = np.sort( rng.choice( np.where( self.mask == True)[0], subset, replace=False, shuffle=False ) )
+                print(idx)
+                my_mask[idx] = True
+
+                assert my_mask.sum() == subset
+
+        else:
+            print("use a proper format for the subset, returning no subset")
+            return np.copy(self.mask)
+
+        return my_mask
+
 
 
 # ----------------------------------------------------------------------------------------------
