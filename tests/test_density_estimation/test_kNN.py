@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pytest
 
 from dadapy import DensityEstimation
 
@@ -120,4 +121,4 @@ def test_density_estimation_kNN():
         ]
     )
 
-    assert np.allclose(de.log_den, expected_den)
+    assert de.log_den == pytest.approx(expected_den, abs=1e-6)

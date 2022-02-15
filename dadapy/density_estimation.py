@@ -25,7 +25,10 @@ from dadapy.cython_ import cython_density as cd
 from dadapy.cython_ import cython_grads as cgr
 from dadapy.cython_ import cython_maximum_likelihood_opt as cml
 from dadapy.id_estimation import IdEstimation
-from dadapy.utils_.density_estimation import return_density_kstarNN, return_density_PAk
+from dadapy.utils_.density_estimation import (
+    return_not_normalised_density_kstarNN,
+    return_not_normalised_density_PAk,
+)
 from dadapy.utils_.utils import compute_cross_nn_distances
 
 cores = multiprocessing.cpu_count()
@@ -151,25 +154,10 @@ class DensityEstimation(IdEstimation):
 
         # kstar = np.full(self.N, k, dtype=int)
         self.set_kstar(k)
-        dc = np.zeros(self.N, dtype=float)
-        log_den = np.zeros(self.N, dtype=float)
-        log_den_err = np.zeros(self.N, dtype=float)
-        prefactor = np.exp(
-            self.intrinsic_dim / 2.0 * np.log(np.pi)
-            - gammaln((self.intrinsic_dim + 2) / 2)
+
+        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
+            self.distances, self.intrinsic_dim, self.kstar, interpolation=False
         )
-        log_den_min = 9.9e300
-
-        for i in range(self.N):
-            dc[i] = self.distances[i, self.kstar[i]]
-            log_den[i] = np.log(self.kstar[i]) - (
-                np.log(prefactor)
-                + self.intrinsic_dim * np.log(self.distances[i, self.kstar[i]])
-            )
-
-            log_den_err[i] = 1.0 / np.sqrt(self.kstar[i])
-            if log_den[i] < log_den_min:
-                log_den_min = log_den[i]
 
         # Normalise density
         log_den -= np.log(self.N)
@@ -373,32 +361,11 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("kstar-NN density estimation started")
 
-        dc = np.zeros(self.N, dtype=float)
-        log_den = np.zeros(self.N, dtype=float)
-        log_den_err = np.zeros(self.N, dtype=float)
-        prefactor = np.exp(
-            self.intrinsic_dim / 2.0 * np.log(np.pi)
-            - gammaln((self.intrinsic_dim + 2) / 2)
+        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
+            self.distances, self.intrinsic_dim, self.kstar, interpolation=False
         )
 
-        log_den_min = 9.9e300
-
-        for i in range(self.N):
-            k = self.kstar[i]
-            dc[i] = self.distances[i, k]
-            log_den[i] = np.log(k) - np.log(prefactor)
-
-            rk = self.distances[i, k]
-
-            log_den[i] -= self.intrinsic_dim * np.log(rk)
-
-            log_den_err[i] = 1.0 / np.sqrt(k)
-
-            if log_den[i] < log_den_min:
-                log_den_min = log_den[i]
-
-            # Normalise density
-
+        # Normalise density
         log_den -= np.log(self.N)
 
         self.log_den = log_den
@@ -709,44 +676,15 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("PAk density estimation started")
 
-        dc = np.zeros(self.N, dtype=float)
-        log_den = np.zeros(self.N, dtype=float)
-        log_den_err = np.zeros(self.N, dtype=float)
-        prefactor = np.exp(
-            self.intrinsic_dim / 2.0 * np.log(np.pi)
-            - gammaln((self.intrinsic_dim + 2.0) / 2.0)
-        )
-        log_den_min = 9.9e300
-
         sec = time.time()
-        for i in range(self.N):
-            vi = np.zeros(self.kstar[i], dtype=float)
-            dc[i] = self.distances[i, self.kstar[i]]
-            rr = np.log(self.kstar[i]) - (
-                np.log(prefactor)
-                + self.intrinsic_dim * np.log(self.distances[i, self.kstar[i]])
-            )
-            knn = 0
-            for j in range(self.kstar[i]):
-                # to avoid easy overflow
-                vi[j] = prefactor * (
-                    pow(self.distances[i, j + 1], self.intrinsic_dim)
-                    - pow(self.distances[i, j], self.intrinsic_dim)
-                )
-                if vi[j] < 1.0e-300:
-                    knn = 1
-                    break
 
-            if knn == 0:
-                log_den[i] = cml._nrmaxl(rr, self.kstar[i], vi)
-            else:
-                log_den[i] = rr
-            if log_den[i] < log_den_min:
-                log_den_min = log_den[i]
-
-            log_den_err[i] = np.sqrt(
-                (4 * self.kstar[i] + 2) / (self.kstar[i] * (self.kstar[i] - 1))
-            )
+        log_den, log_den_err, dc = return_not_normalised_density_PAk(
+            self.distances,
+            self.intrinsic_dim,
+            self.kstar,
+            self.maxk,
+            interpolation=False,
+        )
 
         sec2 = time.time()
 
@@ -900,7 +838,7 @@ class DensityEstimation(IdEstimation):
 
             dc = np.array([self.distances[i, self.kstar[i]] for i in range(self.N)])
 
-            Vis = prefactor * (dc ** self.intrinsic_dim)
+            Vis = prefactor * (dc**self.intrinsic_dim)
 
             # get good initial conditions for the optimisation
             Fis = np.array(
@@ -1087,7 +1025,7 @@ class DensityEstimation(IdEstimation):
 
             diag = (
                 np.array(-A.sum(axis=1)).reshape((self.N,))
-                + (1.0 - alpha) / self.log_den_err ** 2
+                + (1.0 - alpha) / self.log_den_err**2
             )
 
             A.setdiag(diag)
@@ -1098,7 +1036,7 @@ class DensityEstimation(IdEstimation):
                     np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
                     - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
                 )
-                + (1.0 - alpha) * self.log_den / self.log_den_err ** 2
+                + (1.0 - alpha) * self.log_den / self.log_den_err**2
             )
 
             sec2 = time.time()
@@ -1319,6 +1257,10 @@ class DensityEstimation(IdEstimation):
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
         """
+        assert self.X is not None
+
+        if self.intrinsic_dim is None:
+            _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
@@ -1326,9 +1268,12 @@ class DensityEstimation(IdEstimation):
 
         kstar = np.ones(X_new.shape[0], dtype=int) * k
 
-        log_den, log_den_err, dc = return_density_kstarNN(
+        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
+
+        # Normalise density
+        log_den -= np.log(self.N)
 
         return log_den, log_den_err
 
@@ -1343,6 +1288,10 @@ class DensityEstimation(IdEstimation):
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
         """
+        assert self.X is not None
+
+        if self.intrinsic_dim is None:
+            _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
@@ -1358,9 +1307,12 @@ class DensityEstimation(IdEstimation):
             self.distances,
         )
 
-        log_den, log_den_err, dc = return_density_kstarNN(
+        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
+
+        # Normalise density
+        log_den -= np.log(self.N)
 
         return log_den, log_den_err
 
@@ -1376,8 +1328,10 @@ class DensityEstimation(IdEstimation):
             log_den_err (np.ndarray(float)): error on log density estimates
         """
 
-        assert self.intrinsic_dim is not None
         assert self.X is not None
+
+        if self.intrinsic_dim is None:
+            _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
@@ -1393,9 +1347,12 @@ class DensityEstimation(IdEstimation):
             self.distances,
         )
 
-        log_den, log_den_err, dc = return_density_PAk(
+        log_den, log_den_err, dc = return_not_normalised_density_PAk(
             cross_distances, self.intrinsic_dim, kstar, self.maxk, interpolation=True
         )
+
+        # Normalise density
+        log_den -= np.log(self.N)
 
         return log_den, log_den_err
 

@@ -114,6 +114,10 @@ class Base:
                 )
 
             self.dtype = self.distances.dtype
+        try:
+            self.eps = np.finfo(self.dtype).eps
+        except:
+            self.eps = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -166,7 +170,7 @@ class Base:
         if self.verb:
             print("{0:0.2f} seconds for computing distances".format(sec2 - sec))
 
-#-------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------
 
     # better to use this formulation which can be applied to _mus_scaling_reduce_func
     def _remove_zero_dists(self, distances):

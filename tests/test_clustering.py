@@ -17,7 +17,8 @@ def test_clustering_basics():
     cl.compute_distances(maxk=25)
 
     cl.compute_id_2NN()
-    assert pytest.approx(1.85, cl.intrinsic_dim)
+
+    assert cl.intrinsic_dim == pytest.approx(1.8549132955234566)
 
     cl.compute_density_kNN(10)
 

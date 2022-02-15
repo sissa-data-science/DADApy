@@ -118,7 +118,6 @@ class MetricComparisons(Base):
             indices = [(i, j) for i in range(ncoords) for j in range(i)]
 
             for idx, n in zip(indices, nmats):
-                print(indices, nmats)
                 n_mat[idx[0], idx[1]] = n[0]
                 n_mat[idx[1], idx[0]] = n[1]
 
@@ -163,6 +162,8 @@ class MetricComparisons(Base):
 
         """
         assert self.X is not None
+        if self.distances is None:
+            self.compute_distances()
 
         print("total number of computations is: ", len(coord_list))
 
@@ -260,8 +261,11 @@ class MetricComparisons(Base):
             selected_coords:
             all_imbalances:
         """
-        print("taking full space as the complete representation")
+        print("taking full space as the target representation")
         assert self.X is not None
+        if self.distances is None:
+            self.compute_distances()
+
         selected_coords, all_imbalances = self.greedy_feature_selection_target(
             self.dist_indices, n_coords, k, dtype=dtype, symm=symm
         )
@@ -274,17 +278,16 @@ class MetricComparisons(Base):
         """Greedy selection of the set of coordinates which is most informative about a target distance.
 
         Args:
-            target_ranks (np.array(int)): an array containing the ranks in the target space
+            target_ranks (np.ndarray(int)): an array containing the ranks in the target space
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
             dtype (str): specific way to characterise the deviation from a delta distribution
             symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
-            selected_coords:
-            all_imbalances:
+            selected_coords (list(int)): coordinates selected at each iteration
+            all_imbalances (list(np.ndarray)): imbalances computed at each iteration
         """
-        print("taking labels as the reference representation")
         assert self.X is not None
 
         dims = self.dims
@@ -299,7 +302,8 @@ class MetricComparisons(Base):
         else:
             selected_coord = np.argmin(imbalances[1])
 
-        print("1 coordinate selected: ", selected_coord)
+        if self.verb:
+            print("1 coordinate selected: ", selected_coord)
 
         other_coords = list(np.arange(dims).astype(int))
 
@@ -310,9 +314,9 @@ class MetricComparisons(Base):
         all_imbalances = [imbalances]
 
         np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-        np.save("all_losses.npy", all_imbalances)
+        np.save("all_imbalances.npy", all_imbalances)
 
-        for i in range(n_coords):
+        for i in range(n_coords - 1):
             coord_list = [selected_coords + [oc] for oc in other_coords]
 
             imbalances_ = self.return_inf_imb_target_selected_coords(
@@ -330,7 +334,8 @@ class MetricComparisons(Base):
 
             selected_coord = other_coords[to_select]
 
-            print("{} coordinate selected: ".format(i + 2), selected_coord)
+            if self.verb:
+                print("{} coordinate selected: ".format(i + 2), selected_coord)
 
             other_coords.remove(selected_coord)
 
@@ -339,9 +344,32 @@ class MetricComparisons(Base):
             all_imbalances.append(imbalances)
 
             np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-            np.save("all_losses.npy", all_imbalances)
+            np.save("all_imbalances.npy", all_imbalances)
 
         return selected_coords, all_imbalances
+
+    def return_inf_imb_full_all_dplets(self, d, k=1, dtype="mean"):
+        """Compute the information imbalances between the full X space and all possible combinations of d coordinates
+        contained of X.
+
+        Args:
+            d (int): target order considered (e.g., d = 2 will compute all couples of coordinates)
+            k (int): number of neighbours considered in the computation of the imbalances
+            dtype (str): specific way to characterise the deviation from a delta distribution
+
+        Returns:
+            coord_list: list of the set of coordinates for which imbalances are computed
+            imbalances: the correspinding couples of information imbalances
+        """
+        assert self.X is not None
+        if self.distances is None:
+            self.compute_distances()
+
+        coord_list, imbalances = self.return_inf_imb_target_all_dplets(
+            self.dist_indices, d, k, dtype
+        )
+
+        return coord_list, imbalances
 
     def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1, dtype="mean"):
         """Compute the information imbalances between a target distance and all possible combinations of d coordinates
@@ -349,12 +377,13 @@ class MetricComparisons(Base):
 
         Args:
             target_ranks (np.array(int)): an array containing the ranks in the target space
-            d:
+            d (int): target order considered (e.g., d = 2 will compute all couples of coordinates)
             k (int): number of neighbours considered in the computation of the imbalances
             dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
-
+            coord_list: list of the set of coordinates for which imbalances are computed
+            imbalances: the correspinding couples of information imbalances
         """
         assert self.X is not None
         import itertools
@@ -426,7 +455,8 @@ class MetricComparisons(Base):
         return np.array(coords_removed)[::-1], np.array(projection_removed)[::-1]
 
     def return_label_overlap(self, labels, k=30):
-        assert self.distances is not None
+        if self.distances is None:
+            self.compute_distances()
 
         overlaps = []
         for i in range(self.N):
@@ -449,19 +479,19 @@ class MetricComparisons(Base):
             overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
 
         overlap = np.mean(overlaps)
+
         return overlap
 
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
         assert self.X is not None
 
-        if True:  # self.njobs == 1:
-            overlaps = []
-            for coords in coord_list:
-                if self.verb:
-                    print("computing overlap for coord selection")
+        overlaps = []
+        for coords in coord_list:
+            if self.verb:
+                print("computing overlap for coord selection")
 
-                overlap = self.return_label_overlap_coords(labels, coords, k)
-                overlaps.append(overlap)
+            overlap = self.return_label_overlap_coords(labels, coords, k)
+            overlaps.append(overlap)
 
         return overlaps
 
@@ -491,5 +521,5 @@ class MetricComparisons(Base):
         imb_full_coords = ut._return_imbalance(
             dist_indices, dist_indices_coords, k=k, dtype=dtype
         )
-        print("computing imbalances with coords ", coords)
+
         return imb_full_coords, imb_coords_full

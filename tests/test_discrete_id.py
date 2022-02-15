@@ -3,7 +3,7 @@ import pytest
 
 from dadapy.id_discrete import IdDiscrete
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(12345)
 
 
 def test_id_discrete():
@@ -22,15 +22,15 @@ def test_id_discrete():
 
     IDD.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
 
-    assert pytest.approx(d, IDD.id_estimated_binom)
+    assert IDD.id_estimated_binom == pytest.approx(2.047335150414252)
 
     IDD.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
 
-    assert pytest.approx(d, IDD.id_estimated_binom)
+    assert IDD.id_estimated_binom == pytest.approx(2.014968714680048)
 
     IDD.compute_id_binomial_lk(lk=4, ln=2, method="mle")
 
-    assert pytest.approx(d, IDD.id_estimated_binom)
+    assert IDD.id_estimated_binom == pytest.approx(2.012434143811029)
 
 
 """

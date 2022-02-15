@@ -39,7 +39,7 @@ class Data(Clustering, MetricComparisons):
         coordinates=None,
         distances=None,
         maxk=None,
-        verbose=True,
+        verbose=False,
         njobs=cores,
         working_memory=1024,
     ):
