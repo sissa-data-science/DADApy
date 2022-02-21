@@ -81,6 +81,7 @@ class IdDiscrete(Base):
         self.k = None
         self.n = None
         self.mask = None
+        self.ratio = None
 
         self._k = None
 
@@ -121,7 +122,7 @@ class IdDiscrete(Base):
             assert (
                     self.lk is not None and self.ln is not None
             ), "set lk and ln or insert proper values for the lk and ln parameters"
-
+        self.set_ratio(float(self.ln)/float(self.lk))
         # compute k and n
         if self.is_w is False:
             self.k = (self.distances <= self.lk).sum(axis=1)
@@ -292,7 +293,7 @@ class IdDiscrete(Base):
                 self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
-        assert 0 < ratio < 1, "set a proper value for the ratio"
+        self.set_ratio(ratio)
 
         if k_eff is None:
             k_eff = self.maxk - 1
@@ -341,7 +342,7 @@ class IdDiscrete(Base):
                 k_temp = index[-1]  # EX: 9
 
             # fix internal radius
-            ln_temp = np.rint(lk_temp * ratio)
+            ln_temp = np.rint(lk_temp * self.ratio)
             # if the inner shell is accidentally the same of the outer, go to the innerer one
             if ln_temp == lk_temp:
                 ln_temp -= 1
@@ -378,8 +379,8 @@ class IdDiscrete(Base):
         NB in this case we will have an effective, point dependent k
 
         Args:
-                        k_shell (int): selected (max) number of considered shells
-                        ratio (float): ratio among Rn and Rk
+            k_shell (int): selected (max) number of considered shells
+            ratio (float): ratio among Rn and Rk
 
         """
 
@@ -390,7 +391,7 @@ class IdDiscrete(Base):
                 self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
-        assert 0 < ratio < 1, "set a proper value for the ratio"
+        self.set_ratio(ratio)
 
         assert k_shell < self.maxk, "asking for a much too large number of shells"
 
@@ -414,7 +415,7 @@ class IdDiscrete(Base):
             # set lk to the distance of the selected shell
             lk_temp = unique[k_shell]
             # and ln according to the ratio
-            ln_temp = np.rint(lk_temp * ratio)
+            ln_temp = np.rint(lk_temp * self.ratio)
             # if the inner shell is accidentally the same of the outer, go to the innerer one
             if ln_temp == lk_temp:
                 ln_temp -= 1
@@ -473,11 +474,11 @@ class IdDiscrete(Base):
 
         assert 0 < ratio < 1, "set a proper value for the ratio"
 
-        if shell and k != self._k:
-            self.fix_k_shell(k, ratio)
-
-        elif k != self._k:
-            self.fix_k(k, ratio)
+        if k != self._k or ratio != self.ratio:
+            if shell:
+                self.fix_k_shell(k, ratio)
+            else:
+                self.fix_k(k, ratio)
 
         mask = self._my_mask(subset)
 
@@ -653,7 +654,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def R_mod_val(self, k_win, subset=None, path=None):
+    def R_mod_val(self, k_win, subset=None, path=None, pdf=False, cdf=True):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
 
         For a fixed value of R and for given values of windows of k, compute
@@ -664,6 +665,8 @@ class IdDiscrete(Base):
             k_win (np.ndarray(int)): boundaries of the windows in k
             subset (int or np.ndarray(int)): subset of points used to perform the model validation
             path (string): if provided, save the plots and observables to the provided folder
+            pdf (bool): plot empirical vs model pdfs
+            cdf (bool): plot empirical vs model cdfs
         """
         obs = []
         mask = self._my_mask(subset)
@@ -695,7 +698,6 @@ class IdDiscrete(Base):
             p = df.compute_discrete_volume(self.ln, id_i) / df.compute_discrete_volume(self.lk, id_i)
             # extract the artificial n
             n_mod = rng.binomial(k_ave, p, size=mask_i.sum())
-            print(n_mod.shape)
             # produce histograms
             sup = max(ni.max(), n_mod.max())
             a = np.histogram(ni, range=(-0.5, sup + 0.5), bins=sup + 1, density=True)
@@ -707,7 +709,7 @@ class IdDiscrete(Base):
             cdf_nmod = cdf_nmod / cdf_nmod[-1]
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
-            print("window id:\t",id_i,"\nwindow p-value:\t", pvi)
+            print("window elements:\t",len(ni),"\nwindow id:\t",id_i,"\nwindow p-value:\t", pvi)
             # save observables
             obs.append((k_ave, id_i, cr, ni.mean(), ni.std(), n_mod.mean(), n_mod.std(), len(ni), pvi))
             # PRINT
@@ -728,44 +730,45 @@ class IdDiscrete(Base):
             # plt.legend()
             # plt.show()
             # PDF--------------------------------------------------------
-            plt.figure()
-            plt.title(r'R=' + str(self.lk) + '\t$\overline{k}=$' + str(k_ave))
-            plt.plot(a[0], alpha=0.5, label='n empirical')
-            plt.plot(b[0], alpha=0.5, label='n model')
-            plt.xlabel('n', size=12)
-            plt.ylabel('P(n)', size=12)
-            if sup < 10:
-                plt.xticks(np.arange(0, sup + 1))
-            plt.legend()
-            if path:
-                plt.savefig(path + 'k' + str(k_ave) + '.pdf')
-            else:
-                plt.show()
+            if pdf:
+                plt.figure()
+                plt.title(r'R=' + str(self.lk) + '\t$\overline{k}=$' + str(k_ave))
+                plt.plot(a[0], alpha=0.5, label='n empirical')
+                plt.plot(b[0], alpha=0.5, label='n model')
+                plt.xlabel('n', size=12)
+                plt.ylabel('P(n)', size=12)
+                if sup < 10:
+                    plt.xticks(np.arange(0, sup + 1))
+                plt.legend()
+                if path:
+                    plt.savefig(path + 'k' + str(k_ave) + '.pdf')
+                else:
+                    plt.show()
             # CDF-------------------------------------------------------
+            if cdf:
+                from matplotlib import cm
+                import seaborn as sns
+                sns.set_style("ticks")
+                sns.set_context("notebook")
+                cmap = cm.get_cmap('tab20b', 20)
 
-            from matplotlib import cm
-            import seaborn as sns
-            sns.set_style("ticks")
-            sns.set_context("notebook")
-            cmap = cm.get_cmap('tab20b', 20)
-
-            plt.figure()
-            plt.title(r'R=' + str(self.lk) + '\t$\overline{k}=$' + str(k_ave))
-            plt.plot(cdf_nn, '-', label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
-            plt.plot(cdf_nmod, '--', label="n model", linewidth=4, alpha=0.9, c=cmap(0))
-            plt.xlabel('n', fontsize=15)
-            plt.ylabel('F(n)', fontsize=15)
-            plt.legend(fontsize=14, frameon=False)
-            plt.xticks(size=14)
-            plt.yticks(size=14)
-            plt.tight_layout()
-            if sup < 10:
-                plt.xticks(np.arange(0, sup + 1))
-            plt.legend()
-            if path:
-                plt.savefig(path + 'k' + str(k_ave) + 'CDF.pdf')
-            else:
-                plt.show()
+                plt.figure()
+                plt.title(r'R=' + str(self.lk) + '\t$\overline{k}=$' + str(k_ave))
+                plt.plot(cdf_nn, '-', label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
+                plt.plot(cdf_nmod, '--', label="n model", linewidth=4, alpha=0.9, c=cmap(0))
+                plt.xlabel('n', fontsize=15)
+                plt.ylabel('F(n)', fontsize=15)
+                plt.legend(fontsize=14, frameon=False)
+                plt.xticks(size=14)
+                plt.yticks(size=14)
+                plt.tight_layout()
+                if sup < 10:
+                    plt.xticks(np.arange(0, sup + 1))
+                plt.legend()
+                if path:
+                    plt.savefig(path + 'k' + str(k_ave) + 'CDF.pdf')
+                else:
+                    plt.show()
         if path:
             np.savetxt(path + 'observables.txt', obs,
                        header='<k_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value',
@@ -774,7 +777,7 @@ class IdDiscrete(Base):
             print(obs)
 
     # ----------------------------------------------------------------------------------------------
-    def K_mod_val(self, R_win, ratio, subset=None, path=None):
+    def K_mod_val(self, R_win, subset=None, path=None, pdf=False, cdf=True):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
 
         For a fixed value of K and for given values of windows of R, compute
@@ -783,9 +786,10 @@ class IdDiscrete(Base):
 
         Args:
             R_win (np.ndarray(int)): boundaries of the windows in R
-            ratio (float): ratio between shells radii
             subset (int or np.ndarray(int)): subset of points used to perform the model validation
             path (string): if provided, save the plots and observables to the provided folder
+            pdf (bool): plot empirical vs model pdfs
+            cdf (bool): plot empirical vs model cdfs
         """
         obs = []
 
@@ -813,12 +817,12 @@ class IdDiscrete(Base):
                 continue
 
             # find id and error within window
-            id_i = df.find_d(np.rint(R_ave * ratio), np.rint(R_ave), ni.mean(), k_ave)
-            cr = df.Cramer_Rao(id_i, np.rint(R_ave * ratio), np.rint(R_ave), len(ni), k_ave) ** 0.5
+            id_i = df.find_d(np.rint(R_ave * self.ratio), np.rint(R_ave), ni.mean(), k_ave)
+            cr = df.Cramer_Rao(id_i, np.rint(R_ave * self.ratio), np.rint(R_ave), len(ni), k_ave) ** 0.5
 
             ## model validation
             # compute the p of the binomial distribution
-            p = df.compute_discrete_volume(np.rint(R_ave * ratio), id_i) /\
+            p = df.compute_discrete_volume(np.rint(R_ave * self.ratio), id_i) /\
                 df.compute_discrete_volume(np.rint(R_ave), id_i)
             # extract the artificial n
             n_mod = rng.binomial(k_ave, p, size=mask_i.sum())
@@ -833,7 +837,7 @@ class IdDiscrete(Base):
             cdf_nmod = cdf_nmod / cdf_nmod[-1]
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
-            print("window id:\t",id_i,"\nwindow p-value:\t", pvi)
+            print("window elements:\t",len(ni),"\nwindow id:\t",id_i,"\nwindow p-value:\t", pvi)
             # save observables
             obs.append((R_ave, id_i, cr, ni.mean(), ni.std(), n_mod.mean(), n_mod.std(), len(ni), pvi))
             # PRINT
@@ -854,43 +858,45 @@ class IdDiscrete(Base):
             # plt.legend()
             # plt.show()
             # PDF--------------------------------------------------------
-            plt.figure()
-            plt.title(r'K=' + str(int(k_ave)) + '\t$\overline{R}=$' + str(R_ave))
-            plt.plot(a[0], alpha=0.5, label='n empirical')
-            plt.plot(b[0], alpha=0.5, label='n model')
-            plt.xlabel('n', size=12)
-            plt.ylabel('P(n)', size=12)
-            if sup < 10:
-                plt.xticks(np.arange(0, sup + 1))
-            plt.legend()
-            if path:
-                plt.savefig(path + 'R' + str(R_ave) + '.pdf')
-            else:
-                plt.show()
+            if pdf:
+                plt.figure()
+                plt.title(r'K=' + str(int(k_ave)) + '\t$\overline{R}=$' + str(R_ave))
+                plt.plot(a[0], alpha=0.5, label='n empirical')
+                plt.plot(b[0], alpha=0.5, label='n model')
+                plt.xlabel('n', size=12)
+                plt.ylabel('P(n)', size=12)
+                if sup < 10:
+                    plt.xticks(np.arange(0, sup + 1))
+                plt.legend()
+                if path:
+                    plt.savefig(path + 'R' + str(R_ave) + '.pdf')
+                else:
+                    plt.show()
             # CDF-------------------------------------------------------
-            from matplotlib import cm
-            import seaborn as sns
-            sns.set_style("ticks")
-            sns.set_context("notebook")
-            cmap = cm.get_cmap('tab20b', 20)
+            if cdf:
+                from matplotlib import cm
+                import seaborn as sns
+                sns.set_style("ticks")
+                sns.set_context("notebook")
+                cmap = cm.get_cmap('tab20b', 20)
 
-            plt.figure()
-            plt.title(r'K=' + str(int(k_ave)) + '\t$\overline{R}=$' + str(R_ave))
-            plt.plot(cdf_nn, '-', label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
-            plt.plot(cdf_nmod, '--', label="n model", linewidth=4, alpha=0.9, c=cmap(0))
-            plt.xlabel('n', fontsize=15)
-            plt.ylabel('F(n)', fontsize=15)
-            plt.legend(fontsize=14, frameon=False)
-            plt.xticks(size=14)
-            plt.yticks(size=14)
-            plt.tight_layout()
-            if sup < 10:
-                plt.xticks(np.arange(0, sup + 1))
-            plt.legend()
-            if path:
-                plt.savefig(path + 'R' + str(R_ave) + 'CDF.pdf')
-            else:
-                plt.show()
+                plt.figure()
+                plt.title(r'K=' + str(int(k_ave)) + '\t$\overline{R}=$' + str(R_ave))
+                plt.plot(cdf_nn, '-', label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
+                plt.plot(cdf_nmod, '--', label="n model", linewidth=4, alpha=0.9, c=cmap(0))
+                plt.xlabel('n', fontsize=15)
+                plt.ylabel('F(n)', fontsize=15)
+                plt.legend(fontsize=14, frameon=False)
+                plt.xticks(size=14)
+                plt.yticks(size=14)
+                plt.tight_layout()
+                if sup < 10:
+                    plt.xticks(np.arange(0, sup + 1))
+                plt.legend()
+                if path:
+                    plt.savefig(path + 'R' + str(R_ave) + 'CDF.pdf')
+                else:
+                    plt.show()
         if path:
             np.savetxt(path + 'observables.txt', obs,
                        header='<R_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value',
@@ -902,7 +908,7 @@ class IdDiscrete(Base):
 
     def set_id(self, d):
         assert d > 0, "cannot support negative dimensions (yet)"
-        self.id_selected = d
+        self.id_estimated_binom = d
 
     # ----------------------------------------------------------------------------------------------
 
@@ -918,6 +924,12 @@ class IdDiscrete(Base):
         assert lk > ln, "select lk and ln, s.t. lk > ln"
         self.ln = ln
         self.lk = lk
+
+    # ----------------------------------------------------------------------------------------------
+
+    def set_ratio(self, r):
+        assert (isinstance(r, float) and 0 < r < 1), "select a proper ratio 0<r<1"
+        self.ratio = r
 
     # ----------------------------------------------------------------------------------------------
 
