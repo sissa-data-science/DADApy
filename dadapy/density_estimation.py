@@ -838,7 +838,7 @@ class DensityEstimation(IdEstimation):
 
             dc = np.array([self.distances[i, self.kstar[i]] for i in range(self.N)])
 
-            Vis = prefactor * (dc**self.intrinsic_dim)
+            Vis = prefactor * (dc ** self.intrinsic_dim)
 
             # get good initial conditions for the optimisation
             Fis = np.array(
@@ -1025,7 +1025,7 @@ class DensityEstimation(IdEstimation):
 
             diag = (
                 np.array(-A.sum(axis=1)).reshape((self.N,))
-                + (1.0 - alpha) / self.log_den_err**2
+                + (1.0 - alpha) / self.log_den_err ** 2
             )
 
             A.setdiag(diag)
@@ -1036,7 +1036,7 @@ class DensityEstimation(IdEstimation):
                     np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
                     - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
                 )
-                + (1.0 - alpha) * self.log_den / self.log_den_err**2
+                + (1.0 - alpha) * self.log_den / self.log_den_err ** 2
             )
 
             sec2 = time.time()

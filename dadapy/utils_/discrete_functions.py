@@ -1,17 +1,24 @@
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+import seaborn as sns
+from matplotlib import cm
+from scipy.optimize import minimize_scalar as SMin
 
-import dadapy.utils_.utils as ut
+sns.set_style("ticks")
+sns.set_context("notebook")
+
+cmap = cm.get_cmap("tab20b", 20)
 
 # --------------------------------------------------------------------------------------
-
 # bounds for numerical estimation, change if needed
 D_MAX = 50.0
 D_MIN = np.finfo(np.float32).eps
 
-# TODO: find a proper way to load the data with a relative path
 # load, just once and for all, the coefficients for the polynomials in d at fixed L
-import os
+
 
 volumes_path = os.path.join(os.path.split(__file__)[0], "discrete_volumes")
 coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
@@ -19,18 +26,20 @@ coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
 # V_exact_int = np.loadtxt(volume_path + '/V_exact.dat',dtype=np.uint64)
 
 # --------------------------------------------------------------------------------------
+def binom(n, k, p):
+    return scipy.special.binom(k, n) * p ** n * (1.0 - p) ** (k - n)
 
 
 def compute_discrete_volume(L, d, O1=False):
     """Enumerate the points contained in a region of radius L according to Manhattan metric
 
     Args:
-            L (nd.array( integer or float )): radii of the volumes of which points will be enumerated
-            d (float): dimension of the metric space
-            O1 (bool, default=Flase): first order approximation in the large L limit. Set to False in order to have the o(1/L) approx
+        L (nd.array( integer or float )): radii of the volumes of which points will be enumerated
+        d (float): dimension of the metric space
+        O1 (bool, default=False): first order approximation in the large L limit. Set to False in order to have the o(1/L) approx
 
     Returns:
-            V (nd.array( integer or float )): points within the given volumes
+        V (nd.array( integer or float )): points within the given volumes
 
     """
     # if L is one dimensional make it an array
@@ -59,13 +68,13 @@ def compute_discrete_volume(L, d, O1=False):
         # Large L approximation obtained using Stirling formula
         def V_Stirling(ll):
             if O1:
-                correction = 2**d
+                correction = 2 ** d
             else:
                 correction = (
-                    np.exp(0.5 * (d + d**2) / ll) * (1 + np.exp(-d / ll)) ** d
+                    np.exp(0.5 * (d + d ** 2) / ll) * (1 + np.exp(-d / ll)) ** d
                 )
 
-            return ll**d / scipy.special.factorial(d) * correction
+            return ll ** d / scipy.special.factorial(d) * correction
 
         ind_small_l = l < coeff.shape[0]
         V = np.zeros(l.shape[0])
@@ -78,15 +87,15 @@ def compute_discrete_volume(L, d, O1=False):
 # --------------------------------------------------------------------------------------
 
 
-def compute_derivative_discrete_vol(l, d):
+def _compute_derivative_discrete_vol(l, d):
     """compute derivative of discrete volumes with respect to dimension
 
     Args:
-            L (int): radii at which the derivative is calculated
-            d (float): embedding dimension
+        l (int): radii at which the derivative is calculated
+        d (float): embedding dimension
 
     Returns:
-            dV_dd (ndarray(float) or float): derivative at different values of radius
+        dV_dd (ndarray(float) or float): derivative at different values of radius
 
     """
 
@@ -114,7 +123,7 @@ def compute_derivative_discrete_vol(l, d):
         return (
             np.e ** (((0.5 + 0.5 * d) * d) / l)
             * (1 + np.e ** (-d / l)) ** d
-            * l**d
+            * l ** d
             * (
                 scipy.special.factorial(d)
                 * (
@@ -131,7 +140,7 @@ def compute_derivative_discrete_vol(l, d):
 # --------------------------------------------------------------------------------------
 
 
-def compute_jacobian(lk, ln, d):
+def _compute_jacobian(lk, ln, d):
     """Compute jacobian of the ratio of volumes wrt d
 
     Given that the probability of the binomial process is p = V(ln,d)/V(lk,d), in order to
@@ -139,19 +148,19 @@ def compute_jacobian(lk, ln, d):
     one needs to compute the differential dp/dd
 
     Args:
-            lk (int): radius of external volume
-            ln (int): radius of internal volume
-            d (float): embedding dimension
+        lk (int): radius of external volume
+        ln (int): radius of internal volume
+        d (float): embedding dimension
 
     Returns:
-            dp_dd (ndarray(float) or float): differential
+        dp_dd (ndarray(float) or float): differential
 
     """
     # p = Vn / Vk
     Vk = compute_discrete_volume(lk, d)[0]
     Vn = compute_discrete_volume(ln, d)[0]
-    dVk_dd = compute_derivative_discrete_vol(lk, d)
-    dVn_dd = compute_derivative_discrete_vol(ln, d)
+    dVk_dd = _compute_derivative_discrete_vol(lk, d)
+    dVn_dd = _compute_derivative_discrete_vol(ln, d)
     dp_dd = dVn_dd / Vk - dVk_dd * Vn / Vk / Vk
     return dp_dd
 
@@ -159,25 +168,24 @@ def compute_jacobian(lk, ln, d):
 # --------------------------------------------------------------------------------------
 
 
-def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
+def compute_binomial_logl(d, Rk, k, Rn, n, discrete=True, w=1):
     """Compute the binomial log likelihood given Rk,Rn,k,n
 
     Args:
-            d (float): embedding dimension
-            Rk (ndarray(float) or float): external radii
-            k (ndarray(int) or int): number of points within the external radii
-            Rn (ndarray(float) or float): external radii
-            n (ndarray(int)): number of points within the internal radii
-            discrete (bool, default=False): choose discrete or continuous volumes formulation
-            w (ndarray(int or float), default=1): weights or multeplicity for each point
+        d (float): embedding dimension
+        Rk (ndarray(float) or float): external radii
+        k (ndarray(int) or int): number of points within the external radii
+        Rn (ndarray(float) or float): external radii
+        n (ndarray(int)): number of points within the internal radii
+        discrete (bool, default=False): choose discrete or continuous volumes formulation
+        w (ndarray(int or float), default=1): weights or multiplicity for each point
 
     Returns:
-            -LogL (float): minus total likelihood
+        -LogL (float): minus total likelihood
 
     """
 
     if discrete:
-
         p = compute_discrete_volume(Rn, d) / compute_discrete_volume(Rk, d)
 
     else:
@@ -193,14 +201,14 @@ def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
     # log_binom = np.log(scipy.special.binom(k, n))
 
     # for big values of k and n (~1000) the binomial coefficients explode -> use
-    # its logarithmic definition through Stirling apporximation
+    # its logarithmic definition through Stirling approximation
 
     # if np.any(log_binom == np.inf):
     #     mask = np.where(log_binom == np.inf)[0]
     #     log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
 
     LogL = n * np.log(p) + (k - n) * np.log(1.0 - p)  # + log_binom
-    # add weights cotribution
+    # add weights contribution
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
     return -LogL.sum()
@@ -209,7 +217,7 @@ def compute_binomial_logL(d, Rk, k, Rn, n, discrete=True, w=1):
 # --------------------------------------------------------------------------------------
 
 
-def Cramer_Rao(d, ln, lk, N, k):
+def binomial_cramer_rao(d, ln, lk, N, k):
     """Calculate the Cramer Rao lower bound for the variance associated with the binomial estimator
 
     Args:
@@ -219,39 +227,61 @@ def Cramer_Rao(d, ln, lk, N, k):
         N (int): number of points of the dataset
         k (float): average number of neighbours in the external shell
 
+    Returns:
+        cr (float): the Cramer-Rao estimation
     """
 
-    P = compute_discrete_volume(ln, d)[0] / compute_discrete_volume(lk, d)[0]
+    p = compute_discrete_volume(ln, d)[0] / compute_discrete_volume(lk, d)[0]
 
-    return P * (1 - P) / (np.float64(N) * compute_jacobian(lk, ln, d) ** 2 * k)
+    return p * (1 - p) / (np.float64(N) * _compute_jacobian(lk, ln, d) ** 2 * k)
 
 
 # --------------------------------------------------------------------------------------
 
 
-def eq_to_find0(d, ln, lk, n, k):
+def _eq_to_find_0(d, ln, lk, n, k):
     return compute_discrete_volume(ln, d) / compute_discrete_volume(lk, d) - n / k
 
 
 # --------------------------------------------------------------------------------------
 
 
-def find_d(ln, lk, n, k):
+def find_d_root(ln, lk, n, k):
     if (
         n < 0.00001
-    ):  # i.e. i'm dealing with an isolated point, there's no statistics on n
+    ):  # i.e. i'm dealing with a isolated points, there's no statistics on n
         return 0
     #    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
     #        return 0
     return scipy.optimize.root_scalar(
-        eq_to_find0, args=(ln, lk, n, k), bracket=(D_MIN, D_MAX)
+        _eq_to_find_0, args=(ln, lk, n, k), bracket=(D_MIN, D_MAX)
     ).root
 
 
 # --------------------------------------------------------------------------------------
 
 
-def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
+def find_d_likelihood(ln, lk, n, k, ww):
+    if isinstance(n, np.ndarray):
+        n_check = n.mean()
+    else:
+        n_check = n
+    if (
+        n_check < 0.00001
+    ):  # i.e. i'm dealing with isolated points, there's no statistics on n
+        return 0
+    #    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
+    #        return 0
+    return SMin(
+        compute_binomial_logl,
+        args=(lk, k, ln, n, True, ww),
+        bounds=(D_MIN + np.finfo(np.float16).eps, D_MAX),
+        method="bounded",
+    ).x
+
+
+# --------------------------------------------------------------------------------------
+def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
     """Compute the posterior distribution of d given the input aggregates
     Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
     However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
@@ -271,7 +301,7 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
             d_range (ndarray(float)): domain of the posterior
             P (ndarray(float)): probability of the posterior
     """
-    from scipy.special import beta as beta_f
+    # from scipy.special import beta as beta_f
     from scipy.stats import beta as beta_d
 
     a = a0 + n.sum()
@@ -280,7 +310,7 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
 
     def p_d(d):
         p = compute_discrete_volume(ln, d) / compute_discrete_volume(lk, d)
-        dp_dd = compute_jacobian(lk, ln, d)
+        dp_dd = _compute_jacobian(lk, ln, d)
         return abs(posterior.pdf(p) * dp_dd)
 
     # in principle we don't know where the distribution is peaked, so
@@ -316,8 +346,6 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
     #        print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
 
     if plot:
-        import matplotlib.pyplot as plt
-
         plt.figure()
         plt.plot(d_range, P)
         plt.xlabel("d")
@@ -337,3 +365,77 @@ def _beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
 
 
 # --------------------------------------------------------------------------------------
+# ------------------------------PLOT ROUTINES-------------------------------------------
+
+
+def plot_pdf(n_emp, n_mod, title, fileout=None):
+    plt.figure()
+    plt.title(title)
+    plt.plot(n_emp, "-", label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
+    plt.plot(n_mod, "--", label="n model", linewidth=4, alpha=0.9, c=cmap(0))
+    plt.xlabel("n", fontsize=15)
+    plt.ylabel("P(n)", fontsize=15)
+    plt.legend(fontsize=14, frameon=False)
+    plt.xticks(size=14)
+    plt.yticks(size=14)
+    plt.tight_layout()
+    if fileout is not None:
+        plt.savefig(fileout)
+    else:
+        plt.show()
+
+
+# --------------------------------------------------------------------------------------
+
+
+def plot_cdf(n_emp, n_mod, title, fileout=None):
+    plt.figure()
+    plt.title(title)
+    plt.plot(n_emp, "-", label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
+    plt.plot(n_mod, "--", label="n model", linewidth=4, alpha=0.9, c=cmap(0))
+    plt.xlabel("n", fontsize=15)
+    plt.ylabel("F(n)", fontsize=15)
+    plt.legend(fontsize=14, frameon=False)
+    plt.xticks(size=14)
+    plt.yticks(size=14)
+    plt.tight_layout()
+    if fileout is not None:
+        plt.savefig(fileout)
+    else:
+        plt.show()
+
+
+# --------------------------------------------------------------------------------------
+
+
+def plot_id_pv(x, idd, pv, title, xlabel, fileout):
+    fig, ax1 = plt.subplots()
+
+    c_left = "firebrick"
+    c_right = "navy"
+
+    plt.yticks(fontsize=13)
+    plt.xticks(fontsize=13)
+
+    ax1.set_title(title)
+    ax1.set_xlabel(xlabel, size=15)
+    ax1.set_ylabel("estimated id", size=15, c=c_left)
+    ax1.tick_params(axis="y", colors=c_left)
+
+    ax1.scatter(x, idd, alpha=0.85, c=c_left, s=75)
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("p-value", size=15, c=c_right)
+    ax2.tick_params(axis="y", colors=c_right)
+    ax2.set_yscale("log")
+
+    ax2.scatter(x, pv, marker="^", color=c_right, s=75)
+    # ax2.plot(data[:,0],np.ones_like(data[:,-1])*0.05,'k--',alpha=0.5,label=r'$\alpha=0.05$')
+
+    # plt.legend()
+    plt.tight_layout()
+
+    if fileout is not None:
+        plt.savefig(fileout)
+    else:
+        plt.show()

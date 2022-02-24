@@ -248,7 +248,7 @@ def maximise_wPAk_flatF(
         la = t.sum(mask * Fis_corr) - t.sum(mask * (vijs_t * t.exp(Fis_corr)))
 
         #    lb = alpha * t.sum(mask * ((deltas - Fijs_t) ** 2 / Fijs_var_t))
-        lb = alpha * t.sum(mask * ((Fijs_t**2) / Fijs_var_t))
+        lb = alpha * t.sum(mask * ((Fijs_t ** 2) / Fijs_var_t))
 
         l = la - lb
         return -l
