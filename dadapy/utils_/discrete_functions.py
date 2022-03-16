@@ -254,7 +254,7 @@ def find_d_root(ln, lk, n, k):
     #    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
     #        return 0
     return scipy.optimize.root_scalar(
-        _eq_to_find_0, args=(ln, lk, n, k), bracket=(D_MIN, D_MAX)
+        _eq_to_find_0, args=(ln, lk, n, k), bracket=(D_MIN + np.finfo(np.float16).eps, D_MAX)
     ).root
 
 
@@ -291,7 +291,7 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
             k (nd.array(int)): number of points within the external shells
             n (nd.array(int)): number of points within the internal shells
             lk (int): outer shell radius
-            lk (int): inner shell radius
+            ln (int): inner shell radius
             a0 (float): beta distribution parameter, default =1 for flat prior
             b0 (float): prior initializer, default =1 for flat prior
             plot (bool, default=False): plot the posterior

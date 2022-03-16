@@ -720,10 +720,12 @@ class IdDiscrete(Base):
                     fileout = None
                 df.plot_cdf(cdf_nn, cdf_nmod, title, fileout)
 
-            plt.figure()
-            plt.scatter(self.X[:, 0], self.X[:, 1], alpha=0.2)
-            plt.scatter(self.X[mask_i, 0], self.X[mask_i, 1], alpha=0.2, color="red")
-            plt.show()
+            # plt.figure()
+            # plt.scatter(self.X[:, 0], self.X[:, 1], alpha=0.2)
+            # plt.scatter(self.X[mask_i, 0], self.X[mask_i, 1], alpha=0.2, color="red")
+            # name = path + "k" + str(k_ave) + "_proj.png"
+            # plt.savefig(name, dpi=300)
+            # #plt.show()
 
         obs = np.array(obs)
         if recap:
@@ -789,9 +791,9 @@ class IdDiscrete(Base):
             # find points within window
             R_ave = (R_win[i + 1] + R_win[i]) / 2.0
             mask_i = np.logical_and(R_win[i] < lk_eff, lk_eff <= R_win[i + 1])
-            mask_i = mask_i * (
-                k_eff >= 0.8 * k_eff.max()
-            )  # selects only those points for which k_eff >~ 0.8 K
+            # mask_i = mask_i * (
+            #     k_eff >= 0.8 * k_eff.max()
+            # )  # selects only those points for which k_eff >~ 0.8 K
             ki = k_eff[mask_i]
             ni = n_eff[mask_i]
             lki = lk_eff[mask_i]
@@ -890,8 +892,11 @@ class IdDiscrete(Base):
             # plt.figure()
             # plt.scatter(self.X[:, 0], self.X[:, 1], alpha=0.2)
             # plt.scatter(self.X[mask_i, 0], self.X[mask_i, 1], alpha=0.2, color='red')
+            # # plt.show()
             # name = path + "R" + str(R_ave) + "_proj.png"
             # plt.savefig(name, dpi=300)
+
+
         obs = np.array(obs)
         if recap:
             if path is not None:
