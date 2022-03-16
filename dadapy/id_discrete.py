@@ -896,7 +896,6 @@ class IdDiscrete(Base):
             # name = path + "R" + str(R_ave) + "_proj.png"
             # plt.savefig(name, dpi=300)
 
-
         obs = np.array(obs)
         if recap:
             if path is not None:

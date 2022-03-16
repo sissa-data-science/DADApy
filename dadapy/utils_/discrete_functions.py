@@ -254,7 +254,9 @@ def find_d_root(ln, lk, n, k):
     #    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
     #        return 0
     return scipy.optimize.root_scalar(
-        _eq_to_find_0, args=(ln, lk, n, k), bracket=(D_MIN + np.finfo(np.float16).eps, D_MAX)
+        _eq_to_find_0,
+        args=(ln, lk, n, k),
+        bracket=(D_MIN + np.finfo(np.float16).eps, D_MAX),
     ).root
 
 
