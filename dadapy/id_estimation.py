@@ -189,7 +189,7 @@ class IdEstimation(Base):
                 f"distance already computed up to {max_rank}. max rank set to {max_rank}"
             )
         max_step = int(math.log(max_rank, 2))
-        nn_ranks = np.array([2 ** i for i in range(max_step)])
+        nn_ranks = np.array([2**i for i in range(max_step)])
 
         # if self.distances is not None and range_max < self.maxk+1:
         if self.distances is not None:
@@ -222,7 +222,7 @@ class IdEstimation(Base):
 
         # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
         for i in range(mus.shape[1]):
-            n1 = 2 ** i
+            n1 = 2**i
             id = ut._argmax_loglik(
                 self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=self.eps
             )
@@ -235,7 +235,10 @@ class IdEstimation(Base):
 
     # -------------------------------------------------------------------------------
     def return_id_scaling_2NN(
-        self, N_min=10, algorithm="base", fraction=0.9,
+        self,
+        N_min=10,
+        algorithm="base",
+        fraction=0.9,
     ):
         """Compute the id at different scales using the 2NN algorithm.
 
@@ -252,7 +255,7 @@ class IdEstimation(Base):
         """
 
         max_ndec = int(math.log(self.N, 2)) - 1
-        Nsubsets = np.round(self.N / np.array([2 ** i for i in range(max_ndec)]))
+        Nsubsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
         Nsubsets = Nsubsets.astype(int)
 
         if N_min is not None:
@@ -300,7 +303,7 @@ class IdEstimation(Base):
         """
 
         max_step = int(math.log(range_scaling, 2))
-        steps = np.array([2 ** i for i in range(max_step)])
+        steps = np.array([2**i for i in range(max_step)])
 
         sample_range = np.arange(dist.shape[0])[:, None]
         neigh_ind = np.argpartition(dist, range_scaling - 1, axis=1)
@@ -394,7 +397,7 @@ class IdEstimation(Base):
         beta_post = beta + sum_log_mus
 
         mean_post = alpha_post / beta_post
-        std_post = np.sqrt(alpha_post / beta_post ** 2)
+        std_post = np.sqrt(alpha_post / beta_post**2)
         mode_post = (alpha_post - 1) / beta_post
 
         self.id_alpha_post = alpha_post

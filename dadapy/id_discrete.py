@@ -602,7 +602,7 @@ class IdDiscrete(Base):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
 
         For a fixed value of R and for given values of windows of k, compute
-        artificial estimates for the n and compare them to the empirical ones 
+        artificial estimates for the n and compare them to the empirical ones
         using the KS test
 
         Args:
@@ -764,7 +764,7 @@ class IdDiscrete(Base):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
 
         For a fixed value of K and for given values of windows of R, compute
-        artificial estimates for the n and compare them to the empirical ones 
+        artificial estimates for the n and compare them to the empirical ones
         using the KS test
 
         Args:
