@@ -3,12 +3,12 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-import seaborn as sns
+#import seaborn as sns
 from matplotlib import cm
 from scipy.optimize import minimize_scalar as SMin
 
-sns.set_style("ticks")
-sns.set_context("notebook")
+#sns.set_style("ticks")
+#sns.set_context("notebook")
 
 cmap = cm.get_cmap("tab20b", 20)
 
