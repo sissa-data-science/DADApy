@@ -217,6 +217,8 @@ class MetricComparisons(Base):
         """
         assert self.X is not None
         assert target_ranks.shape[0] == self.X.shape[0]
+       # if self.distances is None:
+       #     self.compute_distances()
 
         print("total number of computations is: ", len(coord_list))
 
@@ -303,22 +305,19 @@ class MetricComparisons(Base):
             selected_coords = np.argsort(proj)[0:n_best]
         else:
             selected_coords = np.argsort(imbalances[1])[0:n_best]
-
+        
         selected_coords = [selected_coords[i: i + 1] for i in range(0, len(selected_coords))]
         best_one = selected_coords[0]
         best_tuples = [[int(best_one)]]  # start with the best 1-tuple
         best_imbalances = [[round(float(imbalances[0][best_one]), 3), round(float(imbalances[1][best_one]), 3)]]
 
         if self.verb:
-            print("best single variables selected: ", best_one)
+            print("best single variable selected: ", best_one)
 
         all_single_coords = list(np.arange(dims).astype(int))
         other_coords = [coord for coord in all_single_coords if coord not in selected_coords]
 
-        #np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-        #np.save("all_imbalances.npy", all_imbalances)
-
-        while len(best_tuples) < n_best:
+        while len(best_tuples) < n_coords:
             c_list = []
             for i in selected_coords:
                 for j in all_single_coords:
@@ -331,10 +330,7 @@ class MetricComparisons(Base):
             imbalances_ = self.return_inf_imb_target_selected_coords(
                 target_ranks, coord_list, k=k, dtype=dtype
             )
-            imbalances = np.empty((2, dims))
-            imbalances[:, :] = None
-            imbalances[:, other_coords] = imbalances_
-
+            
             if symm:
                 proj = np.dot(imbalances_.T, np.array([np.sqrt(0.5), np.sqrt(0.5)]))
                 to_select = np.argsort(proj)[0:n_best]
@@ -345,9 +341,6 @@ class MetricComparisons(Base):
             best_tuples.append(coord_list[best_ind])  # append the best n-plet to list
             best_imbalances.append([round(imbalances_[0][best_ind], 3), round(imbalances_[1][best_ind], 3)])
             selected_coords = np.array(coord_list)[to_select]
-
-            np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-            np.save("all_imbalances.npy", all_imbalances)
 
         return best_tuples, np.array(best_imbalances)
 
@@ -513,9 +506,14 @@ class MetricComparisons(Base):
             (float, float): the information imbalance from 'full' to 'alternative' and vice versa
         """
         X_ = X[:, coords]
+        
+        if self.period is not None:
+            period_ = self.period[coords]
+        else:
+            period_ = self.period
 
         _, dist_indices_coords = compute_nn_distances(
-            X_, self.maxk, self.metric, self.period
+            X_, self.maxk, self.metric, period_
         )
 
         imb_coords_full = ut._return_imbalance(
