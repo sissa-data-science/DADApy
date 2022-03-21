@@ -35,12 +35,13 @@ class MetricComparisons(Base):
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+        self, coordinates=None, distances=None, maxk=None, period=None, verbose=False, njobs=cores
     ):
         super().__init__(
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
+            period=period,
             verbose=verbose,
             njobs=njobs,
         )
@@ -506,8 +507,16 @@ class MetricComparisons(Base):
             (float, float): the information imbalance from 'full' to 'alternative' and vice versa
         """
         X_ = X[:, coords]
-        
+
         if self.period is not None:
+            if isinstance(self.period, np.ndarray) and self.period.shape == (self.dims,):
+                self.period = self.period
+            elif isinstance(self.period, (int, float)):
+                self.period = np.full((self.dims), fill_value=self.period, dtype=float)
+            else:
+                raise ValueError(
+                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
+                ) 
             period_ = self.period[coords]
         else:
             period_ = self.period
