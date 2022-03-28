@@ -58,11 +58,11 @@ class DataSets:
 
         self.verbose = verbose
         self.njobs = njobs
-        self.ids = None  # ids
-        self.ov_gt = None  # overlap ground truth (classes)
-        self.ov_out = None  # overlap output neighborhoods
-        self.ov_ll = None  # overlap ll neighbourhoods
-        self.gamma = None  # gamma_matrix all to all
+        self.ids = None         # ids
+        self.ov_gt = None       # overlap ground truth (classes)
+        self.ov_out = None      # overlap output neighborhoods
+        self.ov_ll = None       # overlap ll neighbourhoods
+        self.gamma = None       # gamma_matrix all to all
 
     def add_one_dataset(self, coordinates=None, distances=None, labels=None, maxk=None):
 
@@ -85,43 +85,22 @@ class DataSets:
         for d in self.data_sets:
             d.gt_labels = labels
 
-    def compute_id_2NN(self, decimation=1, fraction=0.9, n_reps=1):
-
-        print(
-            "computing id: fraction = {}, decimation = {}, repetitions = {}, range = {}".format(
-                fraction, decimation, n_reps, 2
-            )
-        )
-        for i, d in enumerate(self.data_sets):
-            print("computing id of dataset ", i)
-            d.compute_id_2NN(decimation=decimation, fraction=fraction)
-            print("id computation finished")
-
-        self.ids = [d.intrinsic_dim for d in self.data_sets]
-
-    def compute_id_scaling(
-        self, range_max=1024, d0=0.001, d1=1000, return_ids=False, save_mus=False
-    ):
-
-        for i, d in enumerate(self.data_sets):
-            print("computing id of layer ", i)
-            d.return_id_scaling_r2n(
-                range_max=range_max,
-                d0=d0,
-                d1=d1,
-                return_ids=return_ids,
-                save_mus=save_mus,
-            )
-
-        self.ids = [d.ids_scaling[0] for d in self.data_sets]
-
     def serialize_computation(self, computation_string, **kwargs):
         """This method applies the computation defined in 'computation_string' to all Data instances
         contained in the class.
         """
+        # attr_dict = {'compute_id_2NN': 'ids',
+        #             'compute_density_kNN': 'rhos',
+        #             'compute_density_PAk': 'rhos'
+        #             'compute_clustering': ''}
+
+
         for i, d in enumerate(self.data_sets):
             comput = getattr(d, computation_string)
             comput(**kwargs)
+
+        # try:
+        #     attr = getattr(self, attr_dict[computation_string])
 
 
 if __name__ == "__main__":

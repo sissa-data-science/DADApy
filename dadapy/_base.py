@@ -65,8 +65,8 @@ class Base:
         self.data_structure = data_structure
 
         if coordinates is not None:
-            assert isinstance(self.X, np.ndarray)
-            "Coordinates must be in numpy ndarray format"
+            assert isinstance(self.X, np.ndarray), "Coordinates must be in numpy ndarray format"
+
 
             self.dtype = self.X.dtype
 
@@ -81,29 +81,29 @@ class Base:
 
         if distances is not None:
             if isinstance(distances, tuple):
-                assert distances[0].shape[0] == distances[1].shape[0]
-                assert isinstance(distances[0], np.ndarray)
-                assert isinstance(distances[1], np.ndarray)
-                is_ndarray = isinstance(distances, np.ndarray)
+                assert isinstance(distances[0], np.ndarray), "distances must be in numpy ndarray format"
+                assert isinstance(distances[1], np.ndarray), "distance indices must be in numpy ndarray format"
+
+                assert distances[0].shape[0] == distances[1].shape[0], "distances and indices must have the same shape"
+
+                #is_ndarray = isinstance(distances, np.ndarray)
 
                 if self.maxk is None:
                     self.maxk = min(100, distances[0].shape[1] - 1)
 
                 self.N = distances[0].shape[0]
-
                 self.distances = distances[0][:, : self.maxk + 1]
+                self.dist_indices = distances[1][:, : self.maxk + 1]
 
-                self.dist_indices = (
-                    distances[1][:, : self.maxk + 1]
-                    if is_ndarray
-                    else distances[1].numpy().shape[0]
-                )
+                # self.dist_indices = (
+                #     distances[1][:, : self.maxk + 1]
+                #     if is_ndarray
+                #     else distances[1].numpy().shape[0]
+                # )
 
             else:
-                assert (
-                    distances.shape[0] == distances.shape[1]
-                )  # assuming square matrix
-                assert isinstance(distances, np.ndarray)
+                assert isinstance(distances, np.ndarray), "distances must be in numpy ndarray format"
+                assert distances.shape[0] == distances.shape[1], "distance matrix shape must be N x N"
 
                 self.N = distances.shape[0]
                 if self.maxk is None:
