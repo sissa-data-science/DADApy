@@ -194,7 +194,7 @@ class DensityEstimation(IdEstimation):
             self.maxk,
             Dthr,
             self.dist_indices,
-            self.distances,
+            self.distances.astype('float64'),
         )
         self.set_kstar(kstar)
 
