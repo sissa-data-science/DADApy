@@ -193,7 +193,7 @@ class DensityEstimation(IdEstimation):
             self.N,
             self.maxk,
             Dthr,
-            self.dist_indices,
+            self.dist_indices.astype('int64'),
             self.distances.astype('float64'),
         )
         self.set_kstar(kstar)
@@ -667,11 +667,11 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_PAk(self):
+    def compute_density_PAk(self, Dthr=23.92812698):
 
         # compute optimal k
         if self.kstar is None:
-            self.compute_kstar()
+            self.compute_kstar(Dthr=Dthr)
 
         if self.verb:
             print("PAk density estimation started")

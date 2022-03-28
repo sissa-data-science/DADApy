@@ -70,7 +70,7 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering(self, Z=1.65, halo=False, density_algorithm="PAK", k=None):
+    def compute_clustering(self, Z=1.65, halo=False, density_algorithm="PAK", k=None, Dthr=23.92812698):
         """Compute clustering according to the algorithm DPA
 
         The only free parameter is the merging factor Z, which controls how the different density peaks are merged
@@ -82,7 +82,9 @@ class Clustering(DensityEstimation):
             halo (bool): compute (or not) the halo points
             density_algorithm (str): method to compute the local density.
                 Use 'PAK' for adaptive neighbourhood, 'kNN' for fixed neighbourhood
-            k (int): eventual number of neighbour if using kNN algorithm
+            k (int): number of neighbours when using kNN algorithm
+            Dthr (float): Likelihood ratio parameter used to compute optimal k when using PAK algorithm.
+                The value of Dthr=23.92 corresponds to a p-value of 1e-6.
 
         References:
             M. d’Errico, E. Facco, A. Laio, A. Rodriguez, Automatic topography  of  high-dimensional  data  sets  by
@@ -92,7 +94,7 @@ class Clustering(DensityEstimation):
         if self.log_den is None:
 
             if density_algorithm == "PAK":
-                self.compute_density_PAk()
+                self.compute_density_PAk(Dthr=Dthr)
 
             elif density_algorithm == "kNN":
                 assert k is not None, "provide k to estimate the density with kNN"
