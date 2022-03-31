@@ -205,7 +205,7 @@ def plot_DecGraph(Data):
     plt.show()
 
 
-def get_dendrogram(Data, cmap="viridis"):
+def get_dendrogram(Data, cmap="viridis",savefig=''):
     # Generation of SL dendrogram
     # Prepare some auxiliary lists
     e1 = []
@@ -355,6 +355,8 @@ def get_dendrogram(Data, cmap="viridis"):
             c=cc,
             weight="bold",
         )
+    if (savefig!=''):
+        plt.savefig(savefig)
     plt.show()
 
 
