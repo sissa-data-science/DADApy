@@ -293,7 +293,7 @@ def get_dendrogram(Data, cmap="viridis"):
     pop = np.zeros((Data.N_clusters), dtype=int)
     for i in range(Data.N_clusters):
         pop[i] = len(Data.cluster_indices[i])
-    # print (pop)
+    #print (pop)
     add = 0.0
     x = []
     y = []
@@ -302,8 +302,8 @@ def get_dendrogram(Data, cmap="viridis"):
         label.append(sorted_elements[i])
         j = Data.cluster_centers[label[i]]
         y.append(Data.log_den[j])
-        x.append(add + 0.5 * np.log(pop[i]))
-        add = add + np.log(pop[i])
+        x.append(add + 0.5 * np.log(pop[sorted_elements[i]]))
+        add = add + np.log(pop[sorted_elements[i]])
 
     xs = x.copy()
     ys = y.copy()
