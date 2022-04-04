@@ -70,7 +70,9 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering(self, Z=1.65, halo=False, density_algorithm="PAK", k=None, Dthr=23.92812698):
+    def compute_clustering(
+        self, Z=1.65, halo=False, density_algorithm="PAK", k=None, Dthr=23.92812698
+    ):
         """Compute clustering according to the algorithm DPA
 
         The only free parameter is the merging factor Z, which controls how the different density peaks are merged

@@ -58,11 +58,11 @@ class DataSets:
 
         self.verbose = verbose
         self.njobs = njobs
-        self.ids = None         # ids
-        self.ov_gt = None       # overlap ground truth (classes)
-        self.ov_out = None      # overlap output neighborhoods
-        self.ov_ll = None       # overlap ll neighbourhoods
-        self.gamma = None       # gamma_matrix all to all
+        self.ids = None  # ids
+        self.ov_gt = None  # overlap ground truth (classes)
+        self.ov_out = None  # overlap output neighborhoods
+        self.ov_ll = None  # overlap ll neighbourhoods
+        self.gamma = None  # gamma_matrix all to all
 
     def add_one_dataset(self, coordinates=None, distances=None, labels=None, maxk=None):
 
@@ -93,7 +93,6 @@ class DataSets:
         #             'compute_density_kNN': 'rhos',
         #             'compute_density_PAk': 'rhos'
         #             'compute_clustering': ''}
-
 
         for i, d in enumerate(self.data_sets):
             comput = getattr(d, computation_string)

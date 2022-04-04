@@ -205,7 +205,7 @@ def plot_DecGraph(Data):
     plt.show()
 
 
-def get_dendrogram(Data, cmap="viridis",savefig=''):
+def get_dendrogram(Data, cmap="viridis", savefig=""):
     # Generation of SL dendrogram
     # Prepare some auxiliary lists
     e1 = []
@@ -293,7 +293,7 @@ def get_dendrogram(Data, cmap="viridis",savefig=''):
     pop = np.zeros((Data.N_clusters), dtype=int)
     for i in range(Data.N_clusters):
         pop[i] = len(Data.cluster_indices[i])
-    #print (pop)
+    # print (pop)
     add = 0.0
     x = []
     y = []
@@ -355,7 +355,7 @@ def get_dendrogram(Data, cmap="viridis",savefig=''):
             c=cc,
             weight="bold",
         )
-    if (savefig!=''):
+    if savefig != "":
         plt.savefig(savefig)
     plt.show()
 

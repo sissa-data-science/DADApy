@@ -193,8 +193,8 @@ class DensityEstimation(IdEstimation):
             self.N,
             self.maxk,
             Dthr,
-            self.dist_indices.astype('int64'),
-            self.distances.astype('float64'),
+            self.dist_indices.astype("int64"),
+            self.distances.astype("float64"),
         )
         self.set_kstar(kstar)
 

@@ -164,13 +164,14 @@ class IdEstimation(Base):
         return intrinsic_dim, intrinsic_dim_err, intrinsic_dim_scale
 
     # ----------------------------------------------------------------------------------------------
-    def return_id_scaling_gride(self, range_max=1024, d0=0.001, d1=1000):
+    def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7):
         """Compute the id at different scales using the Gride algorithm.
 
         Args:
             range_max (int): maximum nearest neighbor rank considered for the id computations
             d0 (float): minimum intrinsic dimension considered in the search
             d1 (float): maximum intrinsic dimension considered in the search
+            eps (float): precision of the approximate id calculation
 
         Returns:
             ids_scaling (np.ndarray(float)): array of intrinsic dimensions
@@ -183,21 +184,25 @@ class IdEstimation(Base):
         """
 
         max_rank = min(self.N, range_max)
-        if self.distances is not None:
-            max_rank = min(max_rank, self.maxk + 1)
-            print(
-                f"distance already computed up to {max_rank}. max rank set to {max_rank}"
-            )
         max_step = int(math.log(max_rank, 2))
         nn_ranks = np.array([2**i for i in range(max_step)])
 
-        # if self.distances is not None and range_max < self.maxk+1:
-        if self.distances is not None:
-            # steps, _ = get_steps(upper_bound=range_max)
+        if self.distances is not None and range_max < self.maxk + 1:
+            max_rank = min(max_rank, self.maxk + 1)
+            if self.verb:
+                print(
+                    f"distance already computed up to {max_rank}. max rank set to {max_rank}"
+                )
+
             mus = self.distances[:, nn_ranks[1:]] / self.distances[:, nn_ranks[:-1]]
             rs = self.distances[:, np.array([nn_ranks[:-1], nn_ranks[1:]])]
 
         elif self.X is not None:
+
+            if self.verb:
+                print(
+                    f"distance not computed up to {max_rank}. distance computation started"
+                )
 
             distances, dist_indices, mus, rs = self._return_mus_scaling(
                 range_scaling=max_rank
@@ -206,6 +211,8 @@ class IdEstimation(Base):
             # distances, dist_indices of shape (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
             # mus of shape (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
             # rs of shape (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data for kth in nn_ranks
+            if self.verb:
+                print(f"distance computation finished")
 
             # if distances have not been computed save them
             if self.distances is None:
@@ -221,15 +228,23 @@ class IdEstimation(Base):
         rs_scaling = np.mean(rs, axis=(0, 1))
 
         # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
+        if self.verb:
+            print(f"id inference started")
         for i in range(mus.shape[1]):
             n1 = 2**i
             id = ut._argmax_loglik(
-                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=self.eps
-            )
+                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, self.N, eps=eps
+            )  # eps=precision id calculation
             ids_scaling[i] = id
+
             ids_scaling_err[i] = (
-                1 / ut._fisher_info_scaling(id, mus[:, i], n1, 2 * n1, eps=self.eps)
+                1
+                / ut._fisher_info_scaling(
+                    id, mus[:, i], n1, 2 * n1, eps=5 * self.eps
+                )  # eps=regularization small numbers
             ) ** 0.5
+        if self.verb:
+            print(f"id inference finished")
 
         return ids_scaling, ids_scaling_err, rs_scaling
 
