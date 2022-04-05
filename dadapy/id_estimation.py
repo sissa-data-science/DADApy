@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
+import copy
 import math
 import multiprocessing
 from functools import partial
@@ -25,7 +26,6 @@ from sklearn.neighbors import NearestNeighbors
 from dadapy._base import Base
 from dadapy.utils_ import utils as ut
 from dadapy.utils_.utils import compute_nn_distances
-import copy
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -318,7 +318,7 @@ class IdEstimation(Base):
             rs: distances of the neighbors involved in the mu estimates
         """
 
-        #argsort may be faster than argpartition when gride is applied on the full dataset (for the moment not used)
+        # argsort may be faster than argpartition when gride is applied on the full dataset (for the moment not used)
 
         max_step = int(math.log(range_scaling, 2))
         steps = np.array([2**i for i in range(max_step)])
@@ -335,11 +335,10 @@ class IdEstimation(Base):
         mus = dist[:, steps[1:]] / dist[:, steps[:-1]]
         rs = dist[:, np.array([steps[:-1], steps[1:]])]
 
-        dist = copy.deepcopy(dist[:, :self.maxk+1])
-        neigh_ind = copy.deepcopy(neigh_ind[:, :self.maxk+1])
+        dist = copy.deepcopy(dist[:, : self.maxk + 1])
+        neigh_ind = copy.deepcopy(neigh_ind[:, : self.maxk + 1])
 
         return dist, neigh_ind, mus, rs
-
 
     def _return_mus_scaling(self, range_scaling):
         """
@@ -372,7 +371,7 @@ class IdEstimation(Base):
                 self.X,
                 reduce_func=reduce_func,
                 metric=self.metric,
-                #n_jobs = 1,
+                # n_jobs = 1,
                 n_jobs=self.njobs,
                 working_memory=1024,
                 **kwds,

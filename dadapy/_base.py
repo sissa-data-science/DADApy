@@ -72,11 +72,8 @@ class Base:
             self.dtype = self.X.dtype
 
             self.N = self.X.shape[0]
-
-            # self.N = coordinates.shape[0]
             self.dims = coordinates.shape[1]
             self.distances = None
-            # BUG to be solved: the next line
             if self.maxk is None:
                 self.maxk = min(100, self.N - 1)
 
@@ -93,20 +90,12 @@ class Base:
                     distances[0].shape[0] == distances[1].shape[0]
                 ), "distances and indices must have the same shape"
 
-                # is_ndarray = isinstance(distances, np.ndarray)
-
                 if self.maxk is None:
                     self.maxk = min(100, distances[0].shape[1] - 1)
 
                 self.N = distances[0].shape[0]
                 self.distances = distances[0][:, : self.maxk + 1]
                 self.dist_indices = distances[1][:, : self.maxk + 1]
-
-                # self.dist_indices = (
-                #     distances[1][:, : self.maxk + 1]
-                #     if is_ndarray
-                #     else distances[1].numpy().shape[0]
-                # )
 
             else:
                 assert isinstance(
@@ -196,7 +185,7 @@ class Base:
             distances with regularised zeros
 
         """
-        
+
         # find all points with any zero distance
         indx_ = np.nonzero(distances[:, 1] < np.finfo(self.dtype).eps)[0]
         # set nearest distance to eps:
