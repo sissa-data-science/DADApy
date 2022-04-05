@@ -25,6 +25,7 @@ from sklearn.neighbors import NearestNeighbors
 from dadapy._base import Base
 from dadapy.utils_ import utils as ut
 from dadapy.utils_.utils import compute_nn_distances
+import copy
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -317,6 +318,8 @@ class IdEstimation(Base):
             rs: distances of the neighbors involved in the mu estimates
         """
 
+        #argsort may be faster than argpartition when gride is applied on the full dataset (for the moment not used)
+
         max_step = int(math.log(range_scaling, 2))
         steps = np.array([2**i for i in range(max_step)])
 
@@ -333,12 +336,11 @@ class IdEstimation(Base):
         mus = dist[:, steps[1:]] / dist[:, steps[:-1]]
         rs = dist[:, np.array([steps[:-1], steps[1:]])]
 
-        return (
-            dist[:, : self.maxk + 1],
-            neigh_ind[:, : self.maxk + 1],
-            mus,
-            rs,
-        )
+        dist = copy.deepcopy(dist[:, :self.maxk+1])
+        neigh_ind = copy.deepcopy(neigh_ind[:, :self.maxk+1])
+
+        return dist, neigh_ind, mus, rs
+
 
     def _return_mus_scaling(self, range_scaling):
         """
