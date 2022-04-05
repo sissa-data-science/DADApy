@@ -35,7 +35,13 @@ class MetricComparisons(Base):
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, period=None, verbose=False, njobs=cores
+        self,
+        coordinates=None,
+        distances=None,
+        maxk=None,
+        period=None,
+        verbose=False,
+        njobs=cores,
     ):
         super().__init__(
             coordinates=coordinates,
@@ -218,8 +224,8 @@ class MetricComparisons(Base):
         """
         assert self.X is not None
         assert target_ranks.shape[0] == self.X.shape[0]
-       # if self.distances is None:
-       #     self.compute_distances()
+        # if self.distances is None:
+        #     self.compute_distances()
 
         print("total number of computations is: ", len(coord_list))
 
@@ -251,7 +257,9 @@ class MetricComparisons(Base):
 
         return np.array(n1s_n2s).T
 
-    def greedy_feature_selection_full(self, n_coords, k=1, n_best=10, dtype="mean", symm=True):
+    def greedy_feature_selection_full(
+        self, n_coords, k=1, n_best=10, dtype="mean", symm=True
+    ):
         """Greedy selection of the set of coordinates which is most informative about full distance measure.
 
         Args:
@@ -296,7 +304,7 @@ class MetricComparisons(Base):
         """
         assert self.X is not None
 
-        dims = self.dims # number of features / variables
+        dims = self.dims  # number of features / variables
 
         imbalances = self.return_inf_imb_target_all_coords(
             target_ranks, k=k, dtype=dtype
@@ -307,18 +315,32 @@ class MetricComparisons(Base):
             selected_coords = np.argsort(proj)[0:n_best]
         else:
             selected_coords = np.argsort(imbalances[1])[0:n_best]
-        
-        selected_coords = [selected_coords[i: i + 1] for i in range(0, len(selected_coords))]
+
+        selected_coords = [
+            selected_coords[i : i + 1] for i in range(0, len(selected_coords))
+        ]
         best_one = selected_coords[0]
         best_tuples = [[int(best_one)]]  # start with the best 1-tuple
-        best_imbalances = [[round(float(imbalances[0][best_one]), 3), round(float(imbalances[1][best_one]), 3)]]
-        all_imbalances = [[[round(float(num1), 3) for num1 in imbalances[0]], [round(float(num0), 3) for num0 in imbalances[1]]]]
+        best_imbalances = [
+            [
+                round(float(imbalances[0][best_one]), 3),
+                round(float(imbalances[1][best_one]), 3),
+            ]
+        ]
+        all_imbalances = [
+            [
+                [round(float(num1), 3) for num1 in imbalances[0]],
+                [round(float(num0), 3) for num0 in imbalances[1]],
+            ]
+        ]
 
         if self.verb:
             print("best single variable selected: ", best_one)
 
         all_single_coords = list(np.arange(dims).astype(int))
-        other_coords = [coord for coord in all_single_coords if coord not in selected_coords]
+        other_coords = [
+            coord for coord in all_single_coords if coord not in selected_coords
+        ]
 
         while len(best_tuples) < n_coords:
             c_list = []
@@ -328,12 +350,14 @@ class MetricComparisons(Base):
                         ii = list(i)
                         ii.append(j)
                         c_list.append(ii)
-            coord_list = [list(e) for e in set(frozenset(d) for d in c_list)]  # make sure no tuples are doubled
+            coord_list = [
+                list(e) for e in set(frozenset(d) for d in c_list)
+            ]  # make sure no tuples are doubled
 
             imbalances_ = self.return_inf_imb_target_selected_coords(
                 target_ranks, coord_list, k=k, dtype=dtype
             )
-            
+
             if symm:
                 proj = np.dot(imbalances_.T, np.array([np.sqrt(0.5), np.sqrt(0.5)]))
                 to_select = np.argsort(proj)[0:n_best]
@@ -342,8 +366,15 @@ class MetricComparisons(Base):
 
             best_ind = to_select[0]
             best_tuples.append(coord_list[best_ind])  # append the best n-plet to list
-            best_imbalances.append([round(imbalances_[0][best_ind], 3), round(imbalances_[1][best_ind], 3)])
-            all_imbalances.append([[round(num0, 3) for num0 in imbalances_[0]], [round(num1, 3) for num1 in imbalances_[1]]])
+            best_imbalances.append(
+                [round(imbalances_[0][best_ind], 3), round(imbalances_[1][best_ind], 3)]
+            )
+            all_imbalances.append(
+                [
+                    [round(num0, 3) for num0 in imbalances_[0]],
+                    [round(num1, 3) for num1 in imbalances_[1]],
+                ]
+            )
             selected_coords = np.array(coord_list)[to_select]
 
         return best_tuples, np.array(best_imbalances), all_imbalances
@@ -512,14 +543,16 @@ class MetricComparisons(Base):
         X_ = X[:, coords]
 
         if self.period is not None:
-            if isinstance(self.period, np.ndarray) and self.period.shape == (self.dims,):
+            if isinstance(self.period, np.ndarray) and self.period.shape == (
+                self.dims,
+            ):
                 self.period = self.period
             elif isinstance(self.period, (int, float)):
                 self.period = np.full((self.dims), fill_value=self.period, dtype=float)
             else:
                 raise ValueError(
                     f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
-                ) 
+                )
             period_ = self.period[coords]
         else:
             period_ = self.period
