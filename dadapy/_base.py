@@ -49,6 +49,7 @@ class Base:
         coordinates=None,
         distances=None,
         maxk=None,
+        period=None,
         data_structure="continuous",
         verbose=False,
         njobs=cores,
@@ -61,7 +62,7 @@ class Base:
         self.dims = None
         self.N = None
         self.metric = "euclidean"
-        self.period = None
+        self.period = period
         self.data_structure = data_structure
 
         if coordinates is not None:

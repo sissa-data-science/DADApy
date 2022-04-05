@@ -35,12 +35,13 @@ class MetricComparisons(Base):
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+        self, coordinates=None, distances=None, maxk=None, period=None, verbose=False, njobs=cores
     ):
         super().__init__(
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
+            period=period,
             verbose=verbose,
             njobs=njobs,
         )
@@ -217,6 +218,8 @@ class MetricComparisons(Base):
         """
         assert self.X is not None
         assert target_ranks.shape[0] == self.X.shape[0]
+       # if self.distances is None:
+       #     self.compute_distances()
 
         print("total number of computations is: ", len(coord_list))
 
@@ -248,32 +251,33 @@ class MetricComparisons(Base):
 
         return np.array(n1s_n2s).T
 
-    def greedy_feature_selection_full(self, n_coords, k=1, dtype="mean", symm=True):
+    def greedy_feature_selection_full(self, n_coords, k=1, n_best=10, dtype="mean", symm=True):
         """Greedy selection of the set of coordinates which is most informative about full distance measure.
 
         Args:
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
+            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and calculate the imbalance until n_coords is reached
             dtype (str): specific way to characterise the deviation from a delta distribution
             symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
-            selected_coords:
-            all_imbalances:
+            best_tuples (list(list(int))): best coordinates selected at each iteration
+            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each iteration, belonging to the best tuple
         """
         print("taking full space as the target representation")
         assert self.X is not None
         if self.distances is None:
             self.compute_distances()
 
-        selected_coords, all_imbalances = self.greedy_feature_selection_target(
-            self.dist_indices, n_coords, k, dtype=dtype, symm=symm
+        best_tuples, best_imbalances = self.greedy_feature_selection_target(
+            self.dist_indices, n_coords, k, n_best, dtype, symm
         )
 
-        return selected_coords, all_imbalances
+        return best_tuples, best_imbalances
 
     def greedy_feature_selection_target(
-        self, target_ranks, n_coords, k, dtype="mean", symm=True
+        self, target_ranks, n_coords, k, n_best, dtype="mean", symm=True
     ):
         """Greedy selection of the set of coordinates which is most informative about a target distance.
 
@@ -281,16 +285,18 @@ class MetricComparisons(Base):
             target_ranks (np.ndarray(int)): an array containing the ranks in the target space
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
+            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and calculate the imbalance until n_coords is reached
             dtype (str): specific way to characterise the deviation from a delta distribution
             symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
-            selected_coords (list(int)): coordinates selected at each iteration
-            all_imbalances (list(np.ndarray)): imbalances computed at each iteration
+            best_tuples (list(list(int))): best coordinates selected at each iteration
+            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each iteration, belonging to the best tuple
+            all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed at each iteration, belonging all greedy tuples
         """
         assert self.X is not None
 
-        dims = self.dims
+        dims = self.dims # number of features / variables
 
         imbalances = self.return_inf_imb_target_all_coords(
             target_ranks, k=k, dtype=dtype
@@ -298,55 +304,49 @@ class MetricComparisons(Base):
 
         if symm:
             proj = np.dot(imbalances.T, np.array([np.sqrt(0.5), np.sqrt(0.5)]))
-            selected_coord = np.argmin(proj)
+            selected_coords = np.argsort(proj)[0:n_best]
         else:
-            selected_coord = np.argmin(imbalances[1])
+            selected_coords = np.argsort(imbalances[1])[0:n_best]
+        
+        selected_coords = [selected_coords[i: i + 1] for i in range(0, len(selected_coords))]
+        best_one = selected_coords[0]
+        best_tuples = [[int(best_one)]]  # start with the best 1-tuple
+        best_imbalances = [[round(float(imbalances[0][best_one]), 3), round(float(imbalances[1][best_one]), 3)]]
+        all_imbalances = [[[round(float(num1), 3) for num1 in imbalances[0]], [round(float(num0), 3) for num0 in imbalances[1]]]]
 
         if self.verb:
-            print("1 coordinate selected: ", selected_coord)
+            print("best single variable selected: ", best_one)
 
-        other_coords = list(np.arange(dims).astype(int))
+        all_single_coords = list(np.arange(dims).astype(int))
+        other_coords = [coord for coord in all_single_coords if coord not in selected_coords]
 
-        other_coords.remove(selected_coord)
-
-        selected_coords = [selected_coord]
-
-        all_imbalances = [imbalances]
-
-        np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-        np.save("all_imbalances.npy", all_imbalances)
-
-        for i in range(n_coords - 1):
-            coord_list = [selected_coords + [oc] for oc in other_coords]
+        while len(best_tuples) < n_coords:
+            c_list = []
+            for i in selected_coords:
+                for j in all_single_coords:
+                    if j not in i:
+                        ii = list(i)
+                        ii.append(j)
+                        c_list.append(ii)
+            coord_list = [list(e) for e in set(frozenset(d) for d in c_list)]  # make sure no tuples are doubled
 
             imbalances_ = self.return_inf_imb_target_selected_coords(
                 target_ranks, coord_list, k=k, dtype=dtype
             )
-            imbalances = np.empty((2, dims))
-            imbalances[:, :] = None
-            imbalances[:, other_coords] = imbalances_
-
+            
             if symm:
                 proj = np.dot(imbalances_.T, np.array([np.sqrt(0.5), np.sqrt(0.5)]))
-                to_select = np.argmin(proj)
+                to_select = np.argsort(proj)[0:n_best]
             else:
-                to_select = np.argmin(imbalances_[1])
+                to_select = np.argsort(imbalances_[1])[0:n_best]
 
-            selected_coord = other_coords[to_select]
+            best_ind = to_select[0]
+            best_tuples.append(coord_list[best_ind])  # append the best n-plet to list
+            best_imbalances.append([round(imbalances_[0][best_ind], 3), round(imbalances_[1][best_ind], 3)])
+            all_imbalances.append([[round(num0, 3) for num0 in imbalances_[0]], [round(num1, 3) for num1 in imbalances_[1]]])
+            selected_coords = np.array(coord_list)[to_select]
 
-            if self.verb:
-                print("{} coordinate selected: ".format(i + 2), selected_coord)
-
-            other_coords.remove(selected_coord)
-
-            selected_coords.append(selected_coord)
-
-            all_imbalances.append(imbalances)
-
-            np.savetxt("selected_coords.txt", selected_coords, fmt="%i")
-            np.save("all_imbalances.npy", all_imbalances)
-
-        return selected_coords, all_imbalances
+        return best_tuples, np.array(best_imbalances), all_imbalances
 
     def return_inf_imb_full_all_dplets(self, d, k=1, dtype="mean"):
         """Compute the information imbalances between the full X space and all possible combinations of d coordinates
@@ -511,8 +511,21 @@ class MetricComparisons(Base):
         """
         X_ = X[:, coords]
 
+        if self.period is not None:
+            if isinstance(self.period, np.ndarray) and self.period.shape == (self.dims,):
+                self.period = self.period
+            elif isinstance(self.period, (int, float)):
+                self.period = np.full((self.dims), fill_value=self.period, dtype=float)
+            else:
+                raise ValueError(
+                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
+                ) 
+            period_ = self.period[coords]
+        else:
+            period_ = self.period
+
         _, dist_indices_coords = compute_nn_distances(
-            X_, self.maxk, self.metric, self.period
+            X_, self.maxk, self.metric, period_
         )
 
         imb_coords_full = ut._return_imbalance(

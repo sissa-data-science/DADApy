@@ -391,7 +391,7 @@ def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
         plt.legend()
 
     plt.xlabel(r"$\Delta(X_{full} \rightarrow X_{coords}) $")
-    plt.ylabel(r"$\Delta(X_{full} \rightarrow X_{coords}) $")
+    plt.ylabel(r"$\Delta(X_{coords} \rightarrow X_{full}) $")
 
 
 if __name__ == "__main__":
