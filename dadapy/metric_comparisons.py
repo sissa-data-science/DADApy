@@ -292,6 +292,7 @@ class MetricComparisons(Base):
         Returns:
             best_tuples (list(list(int))): best coordinates selected at each iteration
             best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each iteration, belonging to the best tuple
+            all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed at each iteration, belonging all greedy tuples
         """
         assert self.X is not None
 
@@ -311,6 +312,7 @@ class MetricComparisons(Base):
         best_one = selected_coords[0]
         best_tuples = [[int(best_one)]]  # start with the best 1-tuple
         best_imbalances = [[round(float(imbalances[0][best_one]), 3), round(float(imbalances[1][best_one]), 3)]]
+        all_imbalances = [[[round(float(num1), 3) for num1 in imbalances[0]], [round(float(num0), 3) for num0 in imbalances[1]]]]
 
         if self.verb:
             print("best single variable selected: ", best_one)
@@ -341,9 +343,10 @@ class MetricComparisons(Base):
             best_ind = to_select[0]
             best_tuples.append(coord_list[best_ind])  # append the best n-plet to list
             best_imbalances.append([round(imbalances_[0][best_ind], 3), round(imbalances_[1][best_ind], 3)])
+            all_imbalances.append([[round(num0, 3) for num0 in imbalances_[0]], [round(num1, 3) for num1 in imbalances_[1]]])
             selected_coords = np.array(coord_list)[to_select]
 
-        return best_tuples, np.array(best_imbalances)
+        return best_tuples, np.array(best_imbalances), all_imbalances
 
     def return_inf_imb_full_all_dplets(self, d, k=1, dtype="mean"):
         """Compute the information imbalances between the full X space and all possible combinations of d coordinates
