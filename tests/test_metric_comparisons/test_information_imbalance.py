@@ -48,21 +48,20 @@ def test_information_imbalance_basics():
 def test_greedy_feature_selection_full():
     """Test thst the information imbalance greedy optimisation works correctly"""
 
-    expeted_coords = np.array([1, 0])
-    expected_imbalances = np.array([[0.14, 0.15, 0.97], [0.6, 0.51, 0.97]])
+    expeted_coords = np.array([0, 1])
+    expected_imbalances = np.array([[0.15, 0.51], [0.02, 0.02]])
 
     X = np.load(filename)
 
     mc = MetricComparisons(coordinates=X, maxk=X.shape[0] - 1)
 
-    selected_coords, all_imbalances = mc.greedy_feature_selection_full(n_coords=2)
+    selected_coords, best_imbalances, all_imbalances = mc.greedy_feature_selection_full(
+        n_coords=2
+    )
 
-    assert (selected_coords == expeted_coords).all()
+    assert (selected_coords[-1] == expeted_coords).all()
 
-    assert all_imbalances[0] == pytest.approx(expected_imbalances, abs=0.01)
-
-    os.remove("all_imbalances.npy")
-    os.remove("selected_coords.txt")
+    assert best_imbalances == pytest.approx(expected_imbalances, abs=0.01)
 
 
 def test_return_inf_imb_matrix_of_coords():
