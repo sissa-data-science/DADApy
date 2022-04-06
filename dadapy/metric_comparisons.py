@@ -278,7 +278,11 @@ class MetricComparisons(Base):
         if self.distances is None:
             self.compute_distances()
 
-        best_tuples, best_imbalances, all_imbalances = self.greedy_feature_selection_target(
+        (
+            best_tuples,
+            best_imbalances,
+            all_imbalances,
+        ) = self.greedy_feature_selection_target(
             self.dist_indices, n_coords, k, n_best, dtype, symm
         )
 
