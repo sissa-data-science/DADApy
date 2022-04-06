@@ -205,7 +205,7 @@ def plot_DecGraph(Data):
     plt.show()
 
 
-def get_dendrogram(Data, cmap="viridis", savefig=""):
+def get_dendrogram(Data, cmap="viridis", savefig="",logscale=True):
     # Generation of SL dendrogram
     # Prepare some auxiliary lists
     e1 = []
@@ -217,6 +217,13 @@ def get_dendrogram(Data, cmap="viridis", savefig=""):
     Ldis = []
     Fmax = max(Data.log_den)
     Rho_bord_m = np.copy(Data.log_den_bord)
+    # Obtain populations of the clusters for fine tunning the x-axis 
+    pop = np.zeros((Data.N_clusters), dtype=int)
+    for i in range(Data.N_clusters):
+        pop[i] = len(Data.cluster_indices[i])
+        if (logscale):
+            pop[i]=np.log(pop[i])
+    xr=np.sum(pop)
     # Obtain distances in list format from topography
     for i in range(Data.N_clusters - 1):
         for j in range(i + 1, Data.N_clusters):
@@ -289,11 +296,7 @@ def get_dendrogram(Data, cmap="viridis", savefig=""):
             if sorted_elements[i] == L[j]:
                 sorted_elements[i] = Li2[j]
                 sorted_elements.insert(i, Li1[j])
-    # Get coordinates for the plot
-    pop = np.zeros((Data.N_clusters), dtype=int)
-    for i in range(Data.N_clusters):
-        pop[i] = len(Data.cluster_indices[i])
-    # print (pop)
+
     add = 0.0
     x = []
     y = []
@@ -302,8 +305,8 @@ def get_dendrogram(Data, cmap="viridis", savefig=""):
         label.append(sorted_elements[i])
         j = Data.cluster_centers[label[i]]
         y.append(Data.log_den[j])
-        x.append(add + 0.5 * np.log(pop[sorted_elements[i]]))
-        add = add + np.log(pop[sorted_elements[i]])
+        x.append(add + 0.5 * pop[sorted_elements[i]])
+        add = add + pop[sorted_elements[i]]
 
     xs = x.copy()
     ys = y.copy()
@@ -355,6 +358,7 @@ def get_dendrogram(Data, cmap="viridis", savefig=""):
             c=cc,
             weight="bold",
         )
+    plt.xlim([0,xr])
     if savefig != "":
         plt.savefig(savefig)
     plt.show()
