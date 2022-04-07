@@ -206,6 +206,32 @@ def plot_DecGraph(Data):
 
 
 def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
+    #
+    # get_dendrogram (Data,cmap="viridis",savefig"",logscale=True)
+    #
+    # This function generates a visualization of the topography computed with 
+    # ADP. Fundamentaly it corresponds to a hierarchy of the clusters build 
+    # with Single Linkage taking as similarity measure the density at the 
+    # border between clusters. At difference from classical dendrograms, 
+    # where all the branches have the same height, in this case 
+    # the height of the branches is proportional to the density of the cluster 
+    # centre. To convey more information, the distance in the x-axis between 
+    # clusters is proportional to the population (or its logarithm). 
+    # It takes as mandatory argument: 
+    #
+    # Data: A dadapy data object for which ADP has been already run. 
+    #
+    # While the optional arguments are:
+    #
+    # cmap: The color map for representing the different clusters, 
+    # the default is "viridis".
+    # savefig: A string with the name of the file in which the dendrogram 
+    # will be saved. The default is empty, so no file is generated.
+    # logscale: Makes the distances in the x-axis between clusters proportional 
+    # to the logarithm of the population of the clusters instead of 
+    # proportional to the population itself. In very unbalanced clusterings, 
+    # it makes the dendrogram more human readable. The default is True.
+    # 
     # Generation of SL dendrogram
     # Prepare some auxiliary lists
     e1 = []
