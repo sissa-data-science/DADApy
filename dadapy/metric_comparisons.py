@@ -18,8 +18,8 @@ import multiprocessing
 import numpy as np
 from joblib import Parallel, delayed
 
-import dadapy.utils_.utils as ut
 from dadapy._base import Base
+from dadapy.utils_.metric_comparisons import _return_imbalance
 from dadapy.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
@@ -73,8 +73,8 @@ class MetricComparisons(Base):
             X_, self.maxk, self.metric, self.period
         )
 
-        imb_ij = ut._return_imbalance(dist_indices_i, dist_indices_j, k=k)
-        imb_ji = ut._return_imbalance(dist_indices_j, dist_indices_i, k=k)
+        imb_ij = _return_imbalance(dist_indices_i, dist_indices_j, k=k)
+        imb_ji = _return_imbalance(dist_indices_j, dist_indices_i, k=k)
 
         return imb_ij, imb_ji
 
@@ -216,6 +216,45 @@ class MetricComparisons(Base):
         )
 
         return np.array(n1s_n2s).T
+
+    def _return_imb_with_coords(self, X, coords, dist_indices, k):
+        """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
+         built using a subset of coordinates.
+
+        Args:
+            X: coordinate matrix
+            coords: subset of coordinates to be used when building the alternative distance
+            dist_indices (int[:,:]): nearest neighbours according to full distance
+            k (int): order of nearest neighbour considered, default is 1
+
+        Returns:
+            (float, float): the information imbalance from 'full' to 'alternative' and vice versa
+        """
+        X_ = X[:, coords]
+
+        if self.period is not None:
+            if isinstance(self.period, np.ndarray) and self.period.shape == (
+                self.dims,
+            ):
+                self.period = self.period
+            elif isinstance(self.period, (int, float)):
+                self.period = np.full((self.dims), fill_value=self.period, dtype=float)
+            else:
+                raise ValueError(
+                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
+                )
+            period_ = self.period[coords]
+        else:
+            period_ = self.period
+
+        _, dist_indices_coords = compute_nn_distances(
+            X_, self.maxk, self.metric, period_
+        )
+
+        imb_coords_full = _return_imbalance(dist_indices_coords, dist_indices, k=k)
+        imb_full_coords = _return_imbalance(dist_indices, dist_indices_coords, k=k)
+
+        return imb_full_coords, imb_coords_full
 
     def greedy_feature_selection_full(self, n_coords, k=1, n_best=10, symm=True):
         """Greedy selection of the set of coordinates which is most informative about full distance measure.
@@ -469,42 +508,3 @@ class MetricComparisons(Base):
             overlaps.append(overlap)
 
         return overlaps
-
-    def _return_imb_with_coords(self, X, coords, dist_indices, k):
-        """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
-         built using a subset of coordinates.
-
-        Args:
-            X: coordinate matrix
-            coords: subset of coordinates to be used when building the alternative distance
-            dist_indices (int[:,:]): nearest neighbours according to full distance
-            k (int): order of nearest neighbour considered, default is 1
-
-        Returns:
-            (float, float): the information imbalance from 'full' to 'alternative' and vice versa
-        """
-        X_ = X[:, coords]
-
-        if self.period is not None:
-            if isinstance(self.period, np.ndarray) and self.period.shape == (
-                self.dims,
-            ):
-                self.period = self.period
-            elif isinstance(self.period, (int, float)):
-                self.period = np.full((self.dims), fill_value=self.period, dtype=float)
-            else:
-                raise ValueError(
-                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
-                )
-            period_ = self.period[coords]
-        else:
-            period_ = self.period
-
-        _, dist_indices_coords = compute_nn_distances(
-            X_, self.maxk, self.metric, period_
-        )
-
-        imb_coords_full = ut._return_imbalance(dist_indices_coords, dist_indices, k=k)
-        imb_full_coords = ut._return_imbalance(dist_indices, dist_indices_coords, k=k)
-
-        return imb_full_coords, imb_coords_full
