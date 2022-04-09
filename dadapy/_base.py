@@ -14,13 +14,10 @@
 # ==============================================================================
 
 
-import math
 import multiprocessing
 import time
-from functools import partial
 
 import numpy as np
-from sklearn.metrics import pairwise_distances_chunked
 
 from dadapy.utils_.utils import compute_nn_distances, from_all_distances_to_nndistances
 
@@ -29,20 +26,7 @@ rng = np.random.default_rng()
 
 
 class Base:
-    """Base class. A simple container of coordinates and/or distances and of basic methods.
-
-    Attributes:
-        N (int): number of data points
-        X (np.ndarray(float)): the data points loaded into the object, of shape (N , dimension of embedding space)
-        dims (int, optional): embedding dimension of the datapoints
-        maxk (int): maximum number of neighbours to be considered for the calculation of distances
-        distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
-        dist_indices (np.ndarray(int)): A matrix of dimension N x mask containing the indices of the nearest neighbours
-        verb (bool): whether you want the code to speak or shut up
-        njobs (int): number of cores to be used
-        metric (str): metric used to compute distances
-        period (np.array(float), optional): array of shape (dims,) containing periodicity for each coordinate. Default is None
-    """
+    """Base class."""
 
     def __init__(
         self,
@@ -54,7 +38,17 @@ class Base:
         verbose=False,
         njobs=cores,
     ):
+        """Containing coordinates and/or distances and some basic methods.
 
+        Args:
+            coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+            maxk (int): maximum number of neighbours to be considered for the calculation of distances
+            period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
+            data_structure (str): the type of data structure, options are "continuous" or "discrete"
+            verbose (bool): whether you want the code to speak or shut up
+            njobs (int): number of cores to be used
+        """
         self.X = coordinates
         self.maxk = maxk
         self.verb = verbose
@@ -117,13 +111,13 @@ class Base:
             self.dtype = self.distances.dtype
         try:
             self.eps = np.finfo(self.dtype).eps
-        except:
+        except BaseException:
             self.eps = None
 
     # ----------------------------------------------------------------------------------------------
 
     def compute_distances(self, maxk=None, metric="euclidean", period=None):
-        """Compute distaces between points up to the maxk nearest neighbour
+        """Compute distaces between points up to the maxk nearest neighbour.
 
         Args:
             maxk: maximum number of neighbours for which distance is computed and stored
@@ -186,7 +180,6 @@ class Base:
             distances with regularised zeros
 
         """
-
         # find all points with any zero distance
         indx_ = np.nonzero(distances[:, 1] < np.finfo(self.dtype).eps)[0]
         # set nearest distance to eps:
@@ -198,10 +191,10 @@ class Base:
         """Find points that are numerically identical and remove them.
 
         For very large datasets this method might be slow and you might want to use a command like: awk '!seen[$0]++' .
-        See https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data
+        See
+        https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data
         for more information
         """
-
         if self.N > 100000:
             print("WARNING: this method might be very slow for large datasets. ")
 
