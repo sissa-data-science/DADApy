@@ -449,12 +449,19 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_gammaprior(self, alpha=2, beta=5):
+    def compute_id_2NN_wprior(self, alpha=2, beta=5, posterior_mean=True):
         """Compute the intrinsic dimension using a bayesian formulation of 2nn.
 
         Args:
-            alpha (float): parameter of the prior
-            beta (float): other prior parameter
+            alpha (float): parameter of the Gamma prior
+            beta (float): parameter of the Gamma prior
+            posterior_mean (bool): whether to use the posterior mean as estimator,
+                if False the posterior mode will be used
+
+        Returns:
+            id (float): the estimated intrinsic dimension
+            id_err (float): the standard error on the id estimation
+            rs (float): the average nearest neighbor distance (rs)
         """
         if self.distances is None:
             self.compute_distances()
@@ -476,12 +483,15 @@ class IdEstimation(Base):
         std_post = np.sqrt(alpha_post / beta_post**2)
         mode_post = (alpha_post - 1) / beta_post
 
-        self.id_alpha_post = alpha_post
-        self.id_beta_post = beta_post
-        self.id_estimated_mp = mean_post
-        self.id_estimated_mp_std = std_post
-        self.id_estimated_map = mode_post
-        self.intrinsic_dim = int(np.around(self.id_estimated_mp, decimals=0))
+        if posterior_mean:
+            self.intrinsic_dim = mean_post
+        else:
+            self.intrinsic_dim = mode_post
+
+        self.intrinsic_dim_err = std_post
+        self.intrinsic_dim_scale = np.mean(distances_used[:, np.array([1, 2])])
+
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
 
     # ----------------------------------------------------------------------------------------------
 
@@ -775,17 +785,3 @@ class IdEstimation(Base):
         """Set the rk parameter."""
         assert 0 < R, "select a proper rk>0"
         self.rk = R
-
-
-if __name__ == "__main__":
-    from numpy.random import default_rng
-
-    rng = default_rng()
-
-    X = rng.standard_normal(size=(100, 5))
-
-    d = IdEstimation(X)
-
-    print(d.compute_id_2NN())
-
-    print(d.return_id_scaling_2NN())
