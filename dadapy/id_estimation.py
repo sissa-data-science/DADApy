@@ -448,7 +448,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_gammaprior(self, alpha=2, beta=5):
+    def compute_id_2NN_wprior(self, alpha=2, beta=5, posterior_mean=True):
         """Compute the intrinsic dimension using a bayesian formulation of 2nn.
 
         Args:
@@ -728,17 +728,3 @@ class IdEstimation(Base):
         """Set the rk parameter."""
         assert 0 < R, "select a proper rk>0"
         self.rk = R
-
-
-if __name__ == "__main__":
-    from numpy.random import default_rng
-
-    rng = default_rng()
-
-    X = rng.standard_normal(size=(100, 5))
-
-    d = IdEstimation(X)
-
-    print(d.compute_id_2NN())
-
-    print(d.return_id_scaling_2NN())
