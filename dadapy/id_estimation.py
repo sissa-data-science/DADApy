@@ -89,8 +89,9 @@ class IdEstimation(Base):
         N_eff = int(N * fraction)
         mus_reduced = np.sort(mus)[:N_eff]
 
+        # TO FIX: maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
         if algorithm == "ml":
-            intrinsic_dim = (N - 1) / np.sum(mus)
+            intrinsic_dim = N / np.sum(mus)
 
         elif algorithm == "base":
             y = -np.log(1 - np.arange(1, N_eff + 1) / N)
@@ -354,14 +355,14 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def _mus_scaling_reduce_func(self, dist, start, range_scaling):
+    def _mus_scaling_reduce_func(self, dist, range_scaling):
         """Help to compute the "mus" needed to compute the id.
 
         Applied at the end of pairwise_distance_chunked see:
         https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/metrics/pairwise.py#L1474
 
         Once a chunk of the distance matrix is computed _mus_scaling_reduce_func
-        1) extracts the distances of the  neighbors of order 2**i up to the maximum
+        1) estracts the distances of the  neighbors of order 2**i up to the maximum
         neighbor range given by range_scaling
         2) computes the mus[i] (ratios of the neighbor distance of order 2**(i+1)
         and 2**i (see return id scaling gride)
@@ -447,7 +448,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_2NN_wprior(self, alpha=2, beta=5, posterior_mean=True):
+    def compute_id_gammaprior(self, alpha=2, beta=5):
         """Compute the intrinsic dimension using a bayesian formulation of 2nn.
 
         Args:
@@ -493,8 +494,8 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def _fix_rk(self, rk, r):
-        """Compute the k_binomial points within the given rk and n_binomial points within given rn=rk*r.
+    def fix_rk(self, rk, ratio=None):
+        """Compute the k points within the given rk and n points within given rn.
 
         For each point, computes the number k_binomial of points within a sphere of radius rk
         and the number n_binomial within an inner sphere of radius rn=rk*r. It also provides
@@ -548,7 +549,9 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_rk(self, rk, r, bayes=True):
+    def compute_id_binomial_rk(
+        self, rk, ratio=None, subset=None, method="bayes", plot=False
+    ):
         """Calculate the id using the binomial estimator by fixing the same eternal radius for all the points.
 
         In the estimation of the id one has to remove the central point from the counting of n and k
@@ -556,15 +559,15 @@ class IdEstimation(Base):
 
         Args:
             rk (float): radius of the external shell
-            r (float): ratio between internal and external shell
-            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
-                gives the mean value and std of d, while mle returns the max of the likelihood and the std
-                according to Cramer-Rao lower bound
+            ratio (float): ratio between internal and external shell
+            subset (int, np.ndarray(int)): choose a random subset of the dataset to make the id estimate
+            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
+                gives the mean value and std of d, while mle only the max of the likelihood
+            plot (bool, default=False): if True plots the posterior
+                and initialise self.posterior_domain and self.posterior
 
         Returns:
-            id (float): the estimated intrinsic dimension
-            id_err (float): the standard error on the id estimation
-            rs (float): the average nearest neighbor distance (rs)
+            None
 
         """
         # checks-in and initialisations
@@ -612,8 +615,8 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def _fix_k(self, k, r):
-        """Compute rk, rn and n_binomial for each point of the dataset given a value of k.
+    def fix_k(self, k_eff=None, ratio=None):
+        """Compute rk, rn, n for each point of the dataset given a value of k.
 
         This routine computes the external radius rk, internal radius rn and internal points n
         given a value k, the number of NN to consider.
@@ -646,7 +649,9 @@ class IdEstimation(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(self, k, r, bayes=True):
+    def compute_id_binomial_k(
+        self, k=None, ratio=None, subset=None, method="bayes", plot=False
+    ):
         """Calculate id using the binomial estimator by fixing the number of neighbours.
 
         As in the case in which one fixes rk, also in this version of the estimation
@@ -658,16 +663,16 @@ class IdEstimation(Base):
         in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
 
         Args:
-            k (int): number of neighbours to take into account
-            r (float): ratio between internal and external shells
-            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
-                gives the mean value and std of d, while mle returns the max of the likelihood and the std
-                according to Cramer-Rao lower bound
+            k (int): order of neighbour that set the external shell
+            ratio (float): ratio between internal and external shell
+            subset (int): choose a random subset of the dataset to make the Id estimate
+            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
+                gives the mean value and std of d, while mle only the max of the likelihood
+            plot (bool, default=False): if True plots the posterior
+                and initialise self.posterior_domain and self.posterior
 
         Returns:
-            id (float): the estimated intrinsic dimension
-            id_err (float): the standard error on the id estimation
-            rs (float): the average nearest neighbor distance (rs)
+            None
 
         """
         # checks-in and initialisations
@@ -709,5 +714,31 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
     def set_id(self, d):
         """Set the intrinsic dimension."""
-        assert d > 0, "intrinsic dimension can't be negative (yet)"
+        assert d > 0, "cannot support negative dimensions (yet)"
         self.intrinsic_dim = d
+
+    # ----------------------------------------------------------------------------------------------
+    def set_r(self, r):
+        """Set the r parameter."""
+        assert 0 < r < 1, "select a proper ratio, 0<r<1"
+        self.r = r
+
+    # ----------------------------------------------------------------------------------------------
+    def set_rk(self, R):
+        """Set the rk parameter."""
+        assert 0 < R, "select a proper rk>0"
+        self.rk = R
+
+
+if __name__ == "__main__":
+    from numpy.random import default_rng
+
+    rng = default_rng()
+
+    X = rng.standard_normal(size=(100, 5))
+
+    d = IdEstimation(X)
+
+    print(d.compute_id_2NN())
+
+    print(d.return_id_scaling_2NN())
