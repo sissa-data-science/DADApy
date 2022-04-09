@@ -30,7 +30,6 @@ cores = multiprocessing.cpu_count()
 class MetricComparisons(Base):
     """Class for the metric comparisons."""
 
-    @classmethod
     def __init__(
         self,
         coordinates=None,
