@@ -93,36 +93,24 @@ class MetricComparisons(Base):
 
         n_mat = np.zeros((ncoords, ncoords))
 
-        if self.njobs == 1:
-
-            for i in range(ncoords):
-                for j in range(i):
-                    if self.verb:
-                        print("computing loss between coords ", i, j)
-
-                    nij, nji = self.return_inf_imb_two_selected_coords([i], [j], k)
-                    n_mat[i, j] = nij
-                    n_mat[j, i] = nji
-
-        elif self.njobs > 1:
-            if self.verb:
-                print(
-                    "computing imbalances with coord number on {} processors".format(
-                        self.njobs
-                    )
+        if self.verb:
+            print(
+                "computing imbalances with coord number on {} processors".format(
+                    self.njobs
                 )
-
-            nmats = Parallel(n_jobs=self.njobs)(
-                delayed(self.return_inf_imb_two_selected_coords)([i], [j], k)
-                for i in range(ncoords)
-                for j in range(i)
             )
 
-            indices = [(i, j) for i in range(ncoords) for j in range(i)]
+        nmats = Parallel(n_jobs=self.njobs)(
+            delayed(self.return_inf_imb_two_selected_coords)([i], [j], k)
+            for i in range(ncoords)
+            for j in range(i)
+        )
 
-            for idx, n in zip(indices, nmats):
-                n_mat[idx[0], idx[1]] = n[0]
-                n_mat[idx[1], idx[0]] = n[1]
+        indices = [(i, j) for i in range(ncoords) for j in range(i)]
+
+        for idx, n in zip(indices, nmats):
+            n_mat[idx[0], idx[1]] = n[0]
+            n_mat[idx[1], idx[0]] = n[1]
 
         return n_mat
 
@@ -217,27 +205,15 @@ class MetricComparisons(Base):
 
         print("total number of computations is: ", len(coord_list))
 
-        if self.njobs == 1:
-            n1s_n2s = []
-            for coords in coord_list:
-                if self.verb:
-                    print("computing loss with coord selection")
-                n0i, ni0 = self._return_imb_with_coords(self.X, coords, target_ranks, k)
-                n1s_n2s.append((n0i, ni0))
-
-        elif self.njobs > 1:
-            if self.verb:
-                print(
-                    "computing loss with coord number on {} processors".format(
-                        self.njobs
-                    )
-                )
-            n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(self._return_imb_with_coords)(self.X, coords, target_ranks, k)
-                for coords in coord_list
+        if self.verb:
+            print(
+                "computing loss with coord number on {} processors".format(self.njobs)
             )
-        else:
-            raise ValueError("njobs cannot be negative")
+
+        n1s_n2s = Parallel(n_jobs=self.njobs)(
+            delayed(self._return_imb_with_coords)(self.X, coords, target_ranks, k)
+            for coords in coord_list
+        )
 
         return np.array(n1s_n2s).T
 
@@ -320,6 +296,8 @@ class MetricComparisons(Base):
             print("best single variable selected: ", best_one)
 
         all_single_coords = list(np.arange(dims).astype(int))
+
+        # TODO: Do we need to remove this as it's not used?
         other_coords = [
             coord for coord in all_single_coords if coord not in selected_coords
         ]
