@@ -23,7 +23,6 @@ from scipy.special import gammaln
 
 from dadapy.cython_ import cython_density as cd
 from dadapy.cython_ import cython_grads as cgr
-from dadapy.cython_ import cython_maximum_likelihood_opt as cml
 from dadapy.id_estimation import IdEstimation
 from dadapy.utils_.density_estimation import (
     return_not_normalised_density_kstarNN,
@@ -1159,7 +1158,7 @@ class DensityEstimation(IdEstimation):
         return log_den, log_den_err
 
     def return_interpolated_density_kstarNN(self, X_new, Dthr=23.92812698):
-        """
+        """Return the kstarNN density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
@@ -1198,7 +1197,7 @@ class DensityEstimation(IdEstimation):
         return log_den, log_den_err
 
     def return_interpolated_density_PAk(self, X_new, Dthr=23.92812698):
-        """
+        """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
@@ -1236,19 +1235,3 @@ class DensityEstimation(IdEstimation):
         log_den -= np.log(self.N)
 
         return log_den, log_den_err
-
-
-if __name__ == "__main__":
-    X = np.random.uniform(size=(1000, 2))
-
-    de = DensityEstimation(coordinates=X)
-
-    de.compute_distances(maxk=300)
-
-    _ = de.compute_id_2NN()
-
-    de.compute_density_PAk_optimised()
-
-    # de.compute_grads()
-
-    print(de.log_den)
