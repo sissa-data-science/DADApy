@@ -396,53 +396,6 @@ class MetricComparisons(Base):
 
         return np.array(coord_list), np.array(imbalances)
 
-    def return_coordinates_infomation_ranking(self):
-        print("taking dataset as the complete representation")
-        assert self.X is not None
-
-        d = self.X.shape[1]
-
-        coords_kept = [i for i in range(d)]
-
-        coords_removed = []
-
-        projection_removed = []
-
-        for i in range(d):
-            print("niter is ", i)
-
-            print(self.X.shape)
-            nls = self.return_inf_imb_full_all_coords(k=1)
-
-            projection = nls.T.dot([np.sqrt(0.5), np.sqrt(0.5)])
-
-            idx_to_remove = np.argmax(projection)
-
-            c_to_remove = coords_kept[idx_to_remove]
-
-            self.X = np.delete(self.X, idx_to_remove, 1)
-
-            if i < (d - 1):
-                self.compute_distances(maxk=self.N)
-
-            coords_kept.pop(idx_to_remove)
-
-            coords_removed.append(c_to_remove)
-
-            projection_removed.append(projection[idx_to_remove])
-
-            print("removing index number ", idx_to_remove)
-            print("corresponding to coordinate number ", c_to_remove)
-
-        # idx_to_remove = 0
-        # c_to_remove = coords_kept[idx_to_remove]
-        # coords_kept.pop(idx_to_remove)
-        # projection_removed.append(projection[idx_to_remove])
-
-        print("keeping datasets number ", coords_kept)
-
-        return np.array(coords_removed)[::-1], np.array(projection_removed)[::-1]
-
     def return_label_overlap(self, labels, k=30):
         if self.distances is None:
             self.compute_distances()
