@@ -1,4 +1,4 @@
-# Copyright 2021 The DADApy Authors. All Rights Reserved.
+# Copyright 2021-2022 The DADApy Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 
+"""This module implements contains the implementation of the IdEstimation class."""
+
 import copy
 import math
 import multiprocessing
@@ -21,7 +23,6 @@ from functools import partial
 import numpy as np
 from scipy.optimize import curve_fit
 from sklearn.metrics import pairwise_distances_chunked
-from sklearn.neighbors import NearestNeighbors
 
 from dadapy._base import Base
 from dadapy.utils_ import utils as ut
@@ -32,24 +33,34 @@ rng = np.random.default_rng()
 
 
 class IdEstimation(Base):
-    """Estimates the intrinsic dimension of a dataset choosing among various routines.
-
-    Inherits from class Base.
-
-    Attributes:
-
-        intrinsic_dim (float): computed intrinsic dimension of the data manifold.
-        intrinsic_dim_err (float): error on the id estimation
-        intrinsic_dim_scale (float): distance scale of id estimation
-    """
+    """IdEstimation class."""
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+        self,
+        coordinates=None,
+        distances=None,
+        maxk=None,
+        period=None,
+        verbose=False,
+        njobs=cores,
     ):
+        """Estimate the intrinsic dimension of a dataset choosing among various routines.
+
+        Inherits from class Base.
+
+        Args:
+            coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+            maxk (int): maximum number of neighbours to be considered for the calculation of distances
+            period (np.array(float), optional): array containing periodicity for each coordinate. Default is None
+            verbose (bool): whether you want the code to speak or shut up
+            njobs (int): number of cores to be used
+        """
         super().__init__(
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
+            period=period,
             verbose=verbose,
             njobs=njobs,
         )
@@ -59,10 +70,47 @@ class IdEstimation(Base):
         self.intrinsic_dim_scale = None
 
     # ----------------------------------------------------------------------------------------------
+
+    def _compute_id_2NN(self, mus, fraction, algorithm="base"):
+        """Compute the id using the 2NN algorithm.
+
+        Helper of return return_id_2NN.
+
+        Args:
+            mus (np.ndarray(float)): ratio of the distances of first- and second-nearest neighbours
+            fraction (float): fraction of mus to take into account, discard the highest values
+            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
+
+        Returns:
+            intrinsic_dim (float): the estimation of the intrinsic dimension
+
+        """
+        N = mus.shape[0]
+        N_eff = int(N * fraction)
+        mus_reduced = np.sort(mus)[:N_eff]
+
+        # TO FIX: maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
+        if algorithm == "ml":
+            intrinsic_dim = N / np.sum(mus)
+
+        elif algorithm == "base":
+            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
+
+            def func(x, m):
+                return m * x
+
+            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
+
+        else:
+            raise ValueError("Please select a valid algorithm type")
+
+        return intrinsic_dim
+
+    # ----------------------------------------------------------------------------------------------
     def compute_id_2NN(
         self, algorithm="base", fraction=0.9, decimation=1, set_attr=True
     ):
-        """Compute intrinsic dimension using the 2NN algorithm
+        """Compute intrinsic dimension using the 2NN algorithm.
 
         Args:
             algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
@@ -80,7 +128,6 @@ class IdEstimation(Base):
             neighborhood information, Scientific reports 7 (1) (2017) 1–8
 
         """
-
         nrep = int(np.rint(1.0 / decimation))
         ids = np.zeros(nrep)
         rs = np.zeros(nrep)
@@ -91,7 +138,7 @@ class IdEstimation(Base):
                 # with decimation == 1 use saved distances if present
                 distances, dist_indices = self.distances, self.dist_indices
 
-            elif decimation == 1 and self.distances is None and set_attr == True:
+            elif decimation == 1 and self.distances is None and set_attr is True:
                 # with decimation ==1 and set_attr==True compute distances and save them
                 self.compute_distances()
                 distances, dist_indices = self.distances, self.dist_indices
@@ -128,42 +175,7 @@ class IdEstimation(Base):
         return intrinsic_dim, intrinsic_dim_err, intrinsic_dim_scale
 
     # ----------------------------------------------------------------------------------------------
-    def _compute_id_2NN(self, mus, fraction, algorithm="base"):
-        """Helper of return return_id_2NN. Computes the id using the 2NN algorithm
 
-        Args:
-            mus (np.ndarray(float)): ratio of the distances of first- and second-nearest neighbours
-            fraction (float): fraction of mus to take into account, discard the highest values
-            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
-
-        Returns:
-
-            intrinsic_dim (float): the estimation of the intrinsic dimension
-
-        """
-
-        N = mus.shape[0]
-        N_eff = int(N * fraction)
-        mus_reduced = np.sort(mus)[:N_eff]
-
-        # TO FIX: maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
-        if algorithm == "ml":
-            intrinsic_dim = N / np.sum(mus)
-
-        elif algorithm == "base":
-            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
-
-            def func(x, m):
-                return m * x
-
-            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
-
-        else:
-            raise ValueError("Please select a valid algorithm type")
-
-        return intrinsic_dim
-
-    # -------------------------------------------------------------------------------
     def return_id_scaling_2NN(
         self,
         N_min=10,
@@ -278,7 +290,6 @@ class IdEstimation(Base):
             F. Denti, D. Doimo, A. Laio, A. Mira, Distributional results for model-based intrinsic dimension
             estimators, arXiv preprint arXiv:2104.13832 (2021).
         """
-
         max_rank = min(self.N, range_max)
         max_step = int(math.log(max_rank, 2))
         nn_ranks = np.array([2**i for i in range(max_step)])
@@ -308,7 +319,7 @@ class IdEstimation(Base):
             # mus of shape (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
             # rs of shape (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data for kth in nn_ranks
             if self.verb:
-                print(f"distance computation finished")
+                print("distance computation finished")
 
             # if distances have not been computed save them
             if self.distances is None:
@@ -325,7 +336,7 @@ class IdEstimation(Base):
 
         # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
         if self.verb:
-            print(f"id inference started")
+            print("id inference started")
         for i in range(mus.shape[1]):
             n1 = 2**i
             id = ut._argmax_loglik(
@@ -340,24 +351,24 @@ class IdEstimation(Base):
                 )  # eps=regularization small numbers
             ) ** 0.5
         if self.verb:
-            print(f"id inference finished")
+            print("id inference finished")
 
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def _mus_scaling_reduce_func(self, dist, start, range_scaling):
-        """
-        Description.
-            Applied at the end of pairwise_distance_chunked see:
-            https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/metrics/pairwise.py#L1474
+    def _mus_scaling_reduce_func(self, dist, range_scaling):
+        """Help to compute the "mus" needed to compute the id.
 
-            Once a chunk of the distance matrix is computed _mus_scaling_reduce_func
-            1) estracts the distances of the  neighbors of order 2**i up to the maximum
-            neighbor range given by range_scaling
-            2) computes the mus[i] (ratios of the neighbor distance of order 2**(i+1)
-            and 2**i (see return id scaling gride)
-            3) returns the chunked distances up to maxk, the mus, and rs, the distances
-            of the neighbors involved in the estimate
+        Applied at the end of pairwise_distance_chunked see:
+        https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/metrics/pairwise.py#L1474
+
+        Once a chunk of the distance matrix is computed _mus_scaling_reduce_func
+        1) estracts the distances of the  neighbors of order 2**i up to the maximum
+        neighbor range given by range_scaling
+        2) computes the mus[i] (ratios of the neighbor distance of order 2**(i+1)
+        and 2**i (see return id scaling gride)
+        3) returns the chunked distances up to maxk, the mus, and rs, the distances
+        of the neighbors involved in the estimate
 
         Args:
             dist: chunk of distance matrix passed internally by pairwise_distance_chunked
@@ -369,7 +380,6 @@ class IdEstimation(Base):
             mus: ratios of the neighbor distances of order 2**(i+1) and 2**i
             rs: distances of the neighbors involved in the mu estimates
         """
-
         # argsort may be faster than argpartition when gride is applied on the full dataset (for the moment not used)
 
         max_step = int(math.log(range_scaling, 2))
@@ -393,25 +403,24 @@ class IdEstimation(Base):
         return dist, neigh_ind, mus, rs
 
     def _return_mus_scaling(self, range_scaling):
-        """
-        Description:
-            adapted from kneighbors function of sklearn
-            https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py#L596
-            It allows to keep a nearest neighbor matrix up to rank 'maxk' (few tens of points)
-            instead of 'range_scaling' (few thousands), while computing the ratios between neighbors' distances
-            up to neighbors' rank 'range scaling'.
-            For big datasets it avoids out of memory errors
+        """Return the "mus" needed to compute the id.
+
+        Adapted from kneighbors function of sklearn
+        https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/neighbors/_base.py#L596
+        It allows to keep a nearest neighbor matrix up to rank 'maxk' (few tens of points)
+        instead of 'range_scaling' (few thousands), while computing the ratios between neighbors' distances
+        up to neighbors' rank 'range scaling'.
+        For big datasets it avoids out of memory errors
 
         Args:
             range_scaling (int): maximum neighbor rank considered in the computation of the mu ratios
 
         Returns:
-            dist (np.ndarray(float)): the FULL distance matrix sorted in increasing order of neighbor distances up to maxk
+            dist (np.ndarray(float)): the FULL distance matrix sorted in increasing order of distances up to maxk
             neighb_ind np.ndarray(int)): the FULL matrix of the indices of the nearest neighbors up to maxk
             mus np.ndarray(float)): the FULL matrix of the ratios of the neighbor distances of order 2**(i+1) and 2**i
             rs np.ndarray(float)): the FULL matrix of the distances of the neighbors involved in the mu estimates
         """
-
         reduce_func = partial(
             self._mus_scaling_reduce_func, range_scaling=range_scaling
         )
@@ -423,7 +432,6 @@ class IdEstimation(Base):
                 self.X,
                 reduce_func=reduce_func,
                 metric=self.metric,
-                # n_jobs = 1,
                 n_jobs=self.njobs,
                 working_memory=1024,
                 **kwds,
@@ -442,7 +450,7 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_gammaprior(self, alpha=2, beta=5):
-        """Compute the intrinsic dimension using a bayesian formulation of 2nn
+        """Compute the intrinsic dimension using a bayesian formulation of 2nn.
 
         Args:
             alpha (float): parameter of the prior
@@ -478,7 +486,7 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def fix_rk(self, rk, ratio=None):
-        """Computes the k points within the given rk and n points within given rn.
+        """Compute the k points within the given rk and n points within given rn.
 
         For each point, computes the number self.k of points within a sphere of radius rk
         and the number self.n within an inner sphere of radius rn=rk*ratio. It also provides
@@ -534,18 +542,22 @@ class IdEstimation(Base):
     def compute_id_binomial_rk(
         self, rk, ratio=None, subset=None, method="bayes", plot=False
     ):
-        """Calculate the id using the binomial estimator by fixing the same eternal radius for all the points
+        """Calculate the id using the binomial estimator by fixing the same eternal radius for all the points.
 
         In the estimation of the id one has to remove the central point from the counting of n and k
-        as it is not effectively part of the poisson process generating its neighbourhood
+        as it is not effectively part of the poisson process generating its neighbourhood.
 
         Args:
             rk (float): radius of the external shell
             ratio (float): ratio between internal and external shell
             subset (int, np.ndarray(int)): choose a random subset of the dataset to make the id estimate
             method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                                           gives the mean value and std of d, while mle only the max of the likelihood
-            plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
+                gives the mean value and std of d, while mle only the max of the likelihood
+            plot (bool, default=False): if True plots the posterior
+                and initialise self.posterior_domain and self.posterior
+
+        Returns:
+            None
 
         """
         # checks-in and initialisations
@@ -617,7 +629,7 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def fix_k(self, k_eff=None, ratio=None):
-        """Computes rk, rn, n for each point of the dataset given a value of k
+        """Compute rk, rn, n for each point of the dataset given a value of k.
 
         This routine computes the external radius rk, internal radius rn and internal points n
         given a value k, the number of NN to consider.
@@ -658,7 +670,7 @@ class IdEstimation(Base):
     def compute_id_binomial_k(
         self, k=None, ratio=None, subset=None, method="bayes", plot=False
     ):
-        """Calculate id using the binomial estimator by fixing the number of neighbours
+        """Calculate id using the binomial estimator by fixing the number of neighbours.
 
         As in the case in which one fixes rk, also in this version of the estimation
         one removes the central point from n and k. Furthermore, one has to remove also
@@ -669,12 +681,17 @@ class IdEstimation(Base):
         in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
 
         Args:
-                k (int): order of neighbour that set the external shell
-                ratio (float): ratio between internal and external shell
-                subset (int): choose a random subset of the dataset to make the Id estimate
-                method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                                            gives the mean value and std of d, while mle only the max of the likelihood
-                plot (bool, default=False): if True plots the posterior and initialise self.posterior_domain and self.posterior
+            k (int): order of neighbour that set the external shell
+            ratio (float): ratio between internal and external shell
+            subset (int): choose a random subset of the dataset to make the Id estimate
+            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
+                gives the mean value and std of d, while mle only the max of the likelihood
+            plot (bool, default=False): if True plots the posterior
+                and initialise self.posterior_domain and self.posterior
+
+        Returns:
+            None
+
         """
         # checks-in and initialisations
         if ratio is not None:
@@ -743,16 +760,19 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
     def set_id(self, d):
+        """Set the intrinsic dimension."""
         assert d > 0, "cannot support negative dimensions (yet)"
         self.intrinsic_dim = d
 
     # ----------------------------------------------------------------------------------------------
     def set_r(self, r):
+        """Set the r parameter."""
         assert 0 < r < 1, "select a proper ratio, 0<r<1"
         self.r = r
 
     # ----------------------------------------------------------------------------------------------
     def set_rk(self, R):
+        """Set the rk parameter."""
         assert 0 < R, "select a proper rk>0"
         self.rk = R
 
