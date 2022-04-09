@@ -318,14 +318,13 @@ def _return_ranks(dist_indices_1, dist_indices_2, k=1):
     return conditional_ranks
 
 
-def _return_imbalance(dist_indices_1, dist_indices_2, k=1, dtype="mean"):
+def _return_imbalance(dist_indices_1, dist_indices_2, k=1):
     """Compute the information imbalance between two precomputed distance measures.
 
     Args:
         dist_indices_1 (np.ndarray(int): nearest neighbours according to distance1
         dist_indices_2 (np.ndarray(int): nearest neighbours according to distance2
         k (int): order of nearest neighbour considered for the calculation of the imbalance, default = 1
-        dtype (str): type of information imbalance computation, default is 'mean'
 
     Returns:
         (float): information imbalance from distance 1 to distance 2
@@ -337,27 +336,8 @@ def _return_imbalance(dist_indices_1, dist_indices_2, k=1, dtype="mean"):
 
     ranks = _return_ranks(dist_indices_1, dist_indices_2, k=k)
 
-    if dtype == "mean":
-        imb = np.mean(ranks) / (N / 2.0)
-    elif dtype == "log_mean":
-        imb = np.log(np.mean(ranks) / (N / 2.0))
-    elif dtype == "binned":
-        nbins = int(round(N / k))
+    imb = np.mean(ranks) / (N / 2.0)
 
-        Hmax = np.log(nbins)
-
-        cs = ranks / N
-        freqs, bins = np.histogram(cs, nbins, range=(0, 1.0))
-        ps = freqs / N
-
-        nonzero = np.nonzero(ps)
-        ps = ps[nonzero]
-        H = -np.dot(ps, np.log(ps))
-
-        imb = H / Hmax
-
-    else:
-        raise ValueError("Choose a valid imbalance type (dtype)")
     return imb
 
 
