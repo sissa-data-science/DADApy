@@ -13,6 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 
+"""This module contains the implementation of the MetricComparisons class."""
+
 import multiprocessing
 
 import numpy as np
@@ -26,14 +28,9 @@ cores = multiprocessing.cpu_count()
 
 
 class MetricComparisons(Base):
-    """This class contains several methods to compare metric spaces obtained using subsets of the data features.
-    Using these methods one can assess whether two spaces are equivalent, completely independent, or whether one
-    space is more informative than the other.
+    """Class for the metric comparisons."""
 
-    Attributes:
-
-    """
-
+    @classmethod
     def __init__(
         self,
         coordinates=None,
@@ -43,6 +40,19 @@ class MetricComparisons(Base):
         verbose=False,
         njobs=cores,
     ):
+        """Class containing several methods to compare metric spaces obtained using subsets of the data features.
+
+        Using these methods one can assess whether two spaces are equivalent, completely independent, or whether one
+        space is more informative than the other.
+
+        Args:
+            coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+            maxk (int): maximum number of neighbours to be considered for the calculation of distances
+            period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
+            verbose (bool): whether you want the code to speak or shut up
+            njobs (int): number of cores to be used
+        """
         super().__init__(
             coordinates=coordinates,
             distances=distances,
@@ -53,7 +63,7 @@ class MetricComparisons(Base):
         )
 
     def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1):
-        """Returns the imbalances between distances taken as the i and the j component of the coordinate matrix X.
+        """Return the imbalances between distances taken as the i and the j component of the coordinate matrix X.
 
         Args:
             coords1 (list(int)): components for the first distance
@@ -115,7 +125,7 @@ class MetricComparisons(Base):
         return n_mat
 
     def return_inf_imb_full_all_coords(self, k=1):
-        """Compute the information imbalances between the 'full' space and each one of its D features
+        """Compute the information imbalances between the 'full' space and each one of its D features.
 
         Args:
             k (int): number of neighbours considered in the computation of the imbalances
@@ -139,8 +149,8 @@ class MetricComparisons(Base):
 
         Args:
             coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
-            sub-list defines a set of coordinates for which the information imbalance should be
-            computed.
+                sub-list defines a set of coordinates for which the information imbalance should be
+                computed.
             k (int): number of neighbours considered in the computation of the imbalances
 
         Returns:
@@ -189,8 +199,8 @@ class MetricComparisons(Base):
         Args:
             target_ranks (np.array(int)): an array containing the ranks in the target space
             coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
-            sub-list defines a set of coordinates for which the information imbalance should be
-            computed.
+                sub-list defines a set of coordinates for which the information imbalance should be
+                computed.
             k (int): number of neighbours considered in the computation of the imbalances
 
         Returns:
@@ -200,8 +210,6 @@ class MetricComparisons(Base):
         """
         assert self.X is not None
         assert target_ranks.shape[0] == self.X.shape[0]
-        # if self.distances is None:
-        #     self.compute_distances()
 
         print("total number of computations is: ", len(coord_list))
 
@@ -218,8 +226,7 @@ class MetricComparisons(Base):
         return np.array(n1s_n2s).T
 
     def _return_imb_with_coords(self, X, coords, dist_indices, k):
-        """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
-         built using a subset of coordinates.
+        """Return the imbalances between a 'full' distance and a distance built using a subset of coordinates.
 
         Args:
             X: coordinate matrix
@@ -262,12 +269,14 @@ class MetricComparisons(Base):
         Args:
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
-            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and calculate the imbalance until n_coords is reached
+            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and
+                calculate the imbalance until n_coords is reached
             symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
             best_tuples (list(list(int))): best coordinates selected at each iteration
-            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each iteration, belonging to the best tuple
+            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each
+                iteration, belonging to the best tuple
         """
         print("taking full space as the target representation")
         assert self.X is not None
@@ -293,13 +302,16 @@ class MetricComparisons(Base):
             target_ranks (np.ndarray(int)): an array containing the ranks in the target space
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
-            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and calculate the imbalance until n_coords is reached
+            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable
+                and calculate the imbalance until n_coords is reached
             symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
             best_tuples (list(list(int))): best coordinates selected at each iteration
-            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each iteration, belonging to the best tuple
-            all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed at each iteration, belonging all greedy tuples
+            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed
+              at each iteration, belonging to the best tuple
+            all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed
+              at each iteration, belonging all greedy tuples
         """
         assert self.X is not None
 
@@ -335,11 +347,6 @@ class MetricComparisons(Base):
             print("best single variable selected: ", best_one)
 
         all_single_coords = list(np.arange(dims).astype(int))
-
-        # TODO: Do we need to remove this as it's not used?
-        other_coords = [
-            coord for coord in all_single_coords if coord not in selected_coords
-        ]
 
         while len(best_tuples) < n_coords:
             c_list = []
@@ -379,8 +386,7 @@ class MetricComparisons(Base):
         return best_tuples, np.array(best_imbalances), all_imbalances
 
     def return_inf_imb_full_all_dplets(self, d, k=1):
-        """Compute the information imbalances between the full X space and all possible combinations of d coordinates
-        contained of X.
+        """Compute the information imbalances between the full space and all possible combinations of d coordinates.
 
         Args:
             d (int): target order considered (e.g., d = 2 will compute all couples of coordinates)
@@ -401,8 +407,7 @@ class MetricComparisons(Base):
         return coord_list, imbalances
 
     def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1):
-        """Compute the information imbalances between a target distance and all possible combinations of d coordinates
-        contained of X.
+        """Compute the information imbalances between a target distance and all combinations of d coordinates of X.
 
         Args:
             target_ranks (np.array(int)): an array containing the ranks in the target space
@@ -437,6 +442,7 @@ class MetricComparisons(Base):
 
     def return_label_overlap(self, labels, k=30):
         """Return the neighbour overlap between the full space and a set of labels.
+
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
 
         Args:
@@ -460,6 +466,7 @@ class MetricComparisons(Base):
 
     def return_label_overlap_coords(self, labels, coords, k=30):
         """Return the neighbour overlap between a selection of coordinates and a set of labels.
+
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
 
         Args:
@@ -487,6 +494,7 @@ class MetricComparisons(Base):
 
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
         """Return a list of neighbour overlaps computed on a list of selected coordinates.
+
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
 
         Args:
