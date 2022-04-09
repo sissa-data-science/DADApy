@@ -397,7 +397,18 @@ class MetricComparisons(Base):
         return np.array(coord_list), np.array(imbalances)
 
     def return_label_overlap(self, labels, k=30):
+        """Return the neighbour overlap between the full space and a set of labels.
+        An overlap of 1 means that all neighbours of a point have the same label as the central point.
+
+        Args:
+            labels (np.ndarray): the labels with respect to which the overlap is computed
+            k (int): the number of neighbours considered for the overlap
+
+        Returns:
+            (float): the neighbour overlap of the points
+        """
         if self.distances is None:
+            assert self.X is not None
             self.compute_distances()
 
         overlaps = []
@@ -409,6 +420,17 @@ class MetricComparisons(Base):
         return overlap
 
     def return_label_overlap_coords(self, labels, coords, k=30):
+        """Return the neighbour overlap between a selection of coordinates and a set of labels.
+        An overlap of 1 means that all neighbours of a point have the same label as the central point.
+
+        Args:
+            labels (np.ndarray): the labels with respect to which the overlap is computed
+            coords (list(int)): a list of coordinates to consider for the distance computation
+            k (int): the number of neighbours considered for the overlap
+
+        Returns:
+            (float): the neighbour overlap of the points
+        """
         assert self.X is not None
 
         X_ = self.X[:, coords]
@@ -425,6 +447,17 @@ class MetricComparisons(Base):
         return overlap
 
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
+        """Return a list of neighbour overlaps computed on a list of selected coordinates.
+        An overlap of 1 means that all neighbours of a point have the same label as the central point.
+
+        Args:
+            labels (np.ndarray): the labels with respect to which the overlap is computed
+            coord_list (list(list(int))): a list of lists, with each sublist representing a set of coordinates
+            k: the number of neighbours considered for the overlap
+
+        Returns:
+            (list(float)): a list of neighbour overlaps of the points
+        """
         assert self.X is not None
 
         overlaps = []
