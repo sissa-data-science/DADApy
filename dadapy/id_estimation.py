@@ -183,23 +183,29 @@ class IdEstimation(Base):
             F. Denti, D. Doimo, A. Laio, A. Mira, Distributional results for model-based intrinsic dimension
             estimators, arXiv preprint arXiv:2104.13832 (2021).
 
-            ::
+        Quick Start
+        ===========
+
+        .. code-block:: python
+
                 from dadapy import IdEstimation
+                from sklearn.datasets import make_swiss_roll
 
+                #two dimensional manifold embedded in 3d with noise
 
-                cov = np.identity(3) #covariance matrix
-                cov[-1, -1] = 0.01**2 # variance along z is much smaller --> noise
-                X = np.random.multivariate_normal(mean = np.zeros(3), cov = cov, size = 1000)
+                n_samples = 5000
+                noise = 0.3
+                X, _ = make_swiss_roll(n_samples, noise=noise)
 
                 ie = IdEstimation(coordinates=X)
                 ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_gride(range_max = 512)
 
                 ids_scaling
-                array([2.33 2.15 2.14 2.04 2.06 2.09 2.06 2.  ])
+                array([2.81 2.71 2.48 2.27 2.11 1.98 1.95 2.05])
                 ids_scaling_err
-                array([0.07 0.05 0.03 0.02 0.02 0.01 0.01 0.01])
+                array([0.04 0.03 0.02 0.01 0.01 0.01 0.   0.  ])
                 rs_scaling
-                array([0.1  0.15 0.2  0.28 0.4  0.54 0.75 1.04])
+                array([0.52 0.69 0.93 1.26 1.75 2.48 3.54 4.99])
         """
 
         max_rank = min(self.N, range_max)
