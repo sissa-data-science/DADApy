@@ -182,6 +182,24 @@ class IdEstimation(Base):
         References:
             F. Denti, D. Doimo, A. Laio, A. Mira, Distributional results for model-based intrinsic dimension
             estimators, arXiv preprint arXiv:2104.13832 (2021).
+
+            ::
+                from dadapy import IdEstimation
+
+
+                cov = np.identity(3) #covariance matrix
+                cov[-1, -1] = 0.01**2 # variance along z is much smaller --> noise
+                X = np.random.multivariate_normal(mean = np.zeros(3), cov = cov, size = 1000)
+
+                ie = IdEstimation(coordinates=X)
+                ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_gride(range_max = 512)
+
+                ids_scaling
+                array([2.33 2.15 2.14 2.04 2.06 2.09 2.06 2.  ])
+                ids_scaling_err
+                array([0.07 0.05 0.03 0.02 0.02 0.01 0.01 0.01])
+                rs_scaling
+                array([0.1  0.15 0.2  0.28 0.4  0.54 0.75 1.04])
         """
 
         max_rank = min(self.N, range_max)
