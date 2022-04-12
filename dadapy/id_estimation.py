@@ -58,7 +58,6 @@ class IdEstimation(Base):
         self.intrinsic_dim_err = None
         self.intrinsic_dim_scale = None
 
-
     # ----------------------------------------------------------------------------------------------
     def compute_id_2NN(
         self, algorithm="base", fraction=0.9, decimation=1, set_attr=True
@@ -232,7 +231,6 @@ class IdEstimation(Base):
 
         return ids_scaling, ids_scaling_err, rs_scaling
 
-
     # ----------------------------------------------------------------------------------------------
     def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7):
         """Compute the id at different scales using the Gride algorithm.
@@ -280,7 +278,6 @@ class IdEstimation(Base):
             F. Denti, D. Doimo, A. Laio, A. Mira, Distributional results for model-based intrinsic dimension
             estimators, arXiv preprint arXiv:2104.13832 (2021).
         """
-
 
         max_rank = min(self.N, range_max)
         max_step = int(math.log(max_rank, 2))
