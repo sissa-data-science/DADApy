@@ -89,9 +89,8 @@ class IdEstimation(Base):
         N_eff = int(N * fraction)
         mus_reduced = np.sort(mus)[:N_eff]
 
-        # TO FIX: maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
         if algorithm == "ml":
-            intrinsic_dim = N / np.sum(mus)
+            intrinsic_dim = (N - 1) / np.sum(mus)
 
         elif algorithm == "base":
             y = -np.log(1 - np.arange(1, N_eff + 1) / N)
