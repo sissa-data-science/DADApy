@@ -362,7 +362,7 @@ class IdEstimation(Base):
         https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/metrics/pairwise.py#L1474
 
         Once a chunk of the distance matrix is computed _mus_scaling_reduce_func
-        1) estracts the distances of the  neighbors of order 2**i up to the maximum
+        1) extracts the distances of the  neighbors of order 2**i up to the maximum
         neighbor range given by range_scaling
         2) computes the mus[i] (ratios of the neighbor distance of order 2**(i+1)
         and 2**i (see return id scaling gride)
@@ -494,19 +494,18 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_rk(self, rk, ratio=None):
-        """Compute the k points within the given rk and n points within given rn.
+    def _fix_rk(self, rk, r):
+        """Compute the k_binomial points within the given rk and n_binomial points within given rn=rk*r
 
         For each point, computes the number k_binomial of points within a sphere of radius rk
         and the number n_binomial within an inner sphere of radius rn=rk*r. It also provides
         a mask to take into account those points for which the statistics might be wrong, i.e.
-        if k_binomial == self.maxk, there might be other points within rk that have not been taken into account
-        because maxk was too low. If self.maxk is equal to the number of points of the dataset no mask will be applied
+        if k_binomial == self.maxk, there might be other points within rk that have not been taken into account because maxk was too low. If self.maxk is equal
+        to the number of points of the dataset no mask will be applied
 
         Args:
             rk (float): external shell radius
             r (float): ratio between internal and external shell radii of the shells
-
         Returns:
             k (np.ndarray(int)): number of points within the external shell of radius rk
             n (np.ndarray(int)): number of points within the internal shell of radius rk*r
@@ -539,8 +538,7 @@ class IdEstimation(Base):
                     "NB: for "
                     + str(sum(~(mask)))
                     + " points, the counting of k_binomial could be wrong, "
-                    + "as more points might be present within the selected radius with respect "
-                    "to the calculated neighbours. In order not to affect "
+                    + "as more points might be present within the selected radius with respect to the calculated neighbours. In order not to affect "
                     + "the statistics a mask is provided to remove them from the calculation of the "
                     + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
                 )
@@ -549,9 +547,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_rk(
-        self, rk, ratio=None, subset=None, method="bayes", plot=False
-    ):
+    def compute_id_binomial_rk(self, rk, r, bayes=True):
         """Calculate the id using the binomial estimator by fixing the same eternal radius for all the points.
 
         In the estimation of the id one has to remove the central point from the counting of n and k
@@ -559,15 +555,13 @@ class IdEstimation(Base):
 
         Args:
             rk (float): radius of the external shell
-            ratio (float): ratio between internal and external shell
-            subset (int, np.ndarray(int)): choose a random subset of the dataset to make the id estimate
-            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                gives the mean value and std of d, while mle only the max of the likelihood
-            plot (bool, default=False): if True plots the posterior
-                and initialise self.posterior_domain and self.posterior
-
+            r (float): ratio between internal and external shell
+            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
+                gives the mean value and std of d, while mle returns the max of the likelihood and the std according to Cramer-Rao lower bound
         Returns:
-            None
+            id (float): the estimated intrinsic dimension
+            id_err (float): the standard error on the id estimation
+            rs (float): the average nearest neighbor distance (rs)
 
         """
         # checks-in and initialisations
@@ -615,8 +609,8 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_k(self, k_eff=None, ratio=None):
-        """Compute rk, rn, n for each point of the dataset given a value of k.
+    def _fix_k(self, k, r):
+        """Compute rk, rn and n_binomial for each point of the dataset given a value of k.
 
         This routine computes the external radius rk, internal radius rn and internal points n
         given a value k, the number of NN to consider.
@@ -624,7 +618,6 @@ class IdEstimation(Base):
         Args:
             k (int): the number of NN to take into account
             r (float): ratio among rn and rk
-
         Returns:
             n (np.ndarray(int)): number of points within the internal shell of radius rk*r
         """
@@ -649,9 +642,7 @@ class IdEstimation(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(
-        self, k=None, ratio=None, subset=None, method="bayes", plot=False
-    ):
+    def compute_id_binomial_k(self, k, r, bayes=True):
         """Calculate id using the binomial estimator by fixing the number of neighbours.
 
         As in the case in which one fixes rk, also in this version of the estimation
@@ -663,16 +654,15 @@ class IdEstimation(Base):
         in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
 
         Args:
-            k (int): order of neighbour that set the external shell
-            ratio (float): ratio between internal and external shell
-            subset (int): choose a random subset of the dataset to make the Id estimate
-            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                gives the mean value and std of d, while mle only the max of the likelihood
-            plot (bool, default=False): if True plots the posterior
-                and initialise self.posterior_domain and self.posterior
+            k (int): number of neighbours to take into account
+            r (float): ratio between internal and external shells
+            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
+                gives the mean value and std of d, while mle returns the max of the likelihood and the std according to Cramer-Rao lower bound
 
         Returns:
-            None
+            id (float): the estimated intrinsic dimension
+            id_err (float): the standard error on the id estimation
+            rs (float): the average nearest neighbor distance (rs)
 
         """
         # checks-in and initialisations
@@ -716,15 +706,3 @@ class IdEstimation(Base):
         """Set the intrinsic dimension."""
         assert d > 0, "cannot support negative dimensions (yet)"
         self.intrinsic_dim = d
-
-    # ----------------------------------------------------------------------------------------------
-    def set_r(self, r):
-        """Set the r parameter."""
-        assert 0 < r < 1, "select a proper ratio, 0<r<1"
-        self.r = r
-
-    # ----------------------------------------------------------------------------------------------
-    def set_rk(self, R):
-        """Set the rk parameter."""
-        assert 0 < R, "select a proper rk>0"
-        self.rk = R
