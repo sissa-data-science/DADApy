@@ -494,17 +494,18 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def _fix_rk(self, rk, r):
-        """Compute the k_binomial points within the given rk and n_binomial points within given rn=rk*r
+        """Compute the k_binomial points within the given rk and n_binomial points within given rn=rk*r.
 
         For each point, computes the number k_binomial of points within a sphere of radius rk
         and the number n_binomial within an inner sphere of radius rn=rk*r. It also provides
         a mask to take into account those points for which the statistics might be wrong, i.e.
-        if k_binomial == self.maxk, there might be other points within rk that have not been taken into account because maxk was too low. If self.maxk is equal
-        to the number of points of the dataset no mask will be applied
+        if k_binomial == self.maxk, there might be other points within rk that have not been taken into account
+        because maxk was too low. If self.maxk is equal to the number of points of the dataset no mask will be applied
 
         Args:
             rk (float): external shell radius
             r (float): ratio between internal and external shell radii of the shells
+
         Returns:
             k (np.ndarray(int)): number of points within the external shell of radius rk
             n (np.ndarray(int)): number of points within the internal shell of radius rk*r
@@ -537,7 +538,8 @@ class IdEstimation(Base):
                     "NB: for "
                     + str(sum(~(mask)))
                     + " points, the counting of k_binomial could be wrong, "
-                    + "as more points might be present within the selected radius with respect to the calculated neighbours. In order not to affect "
+                    + "as more points might be present within the selected radius with respect "
+                    "to the calculated neighbours. In order not to affect "
                     + "the statistics a mask is provided to remove them from the calculation of the "
                     + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
                 )
@@ -556,7 +558,9 @@ class IdEstimation(Base):
             rk (float): radius of the external shell
             r (float): ratio between internal and external shell
             bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
-                gives the mean value and std of d, while mle returns the max of the likelihood and the std according to Cramer-Rao lower bound
+                gives the mean value and std of d, while mle returns the max of the likelihood and the std
+                according to Cramer-Rao lower bound
+
         Returns:
             id (float): the estimated intrinsic dimension
             id_err (float): the standard error on the id estimation
@@ -617,6 +621,7 @@ class IdEstimation(Base):
         Args:
             k (int): the number of NN to take into account
             r (float): ratio among rn and rk
+
         Returns:
             n (np.ndarray(int)): number of points within the internal shell of radius rk*r
         """
@@ -656,7 +661,8 @@ class IdEstimation(Base):
             k (int): number of neighbours to take into account
             r (float): ratio between internal and external shells
             bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
-                gives the mean value and std of d, while mle returns the max of the likelihood and the std according to Cramer-Rao lower bound
+                gives the mean value and std of d, while mle returns the max of the likelihood and the std
+                according to Cramer-Rao lower bound
 
         Returns:
             id (float): the estimated intrinsic dimension
