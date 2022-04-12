@@ -213,7 +213,7 @@ def _loglik(d, mus, n1, n2, N, eps):
     "regularize small numbers"
     one_m_mus_d[one_m_mus_d < 2 * eps] = 2 * eps
     sum = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.0) * np.log(mus))
-    return sum - N / d
+    return sum - (N - 1) / d
 
 
 def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
