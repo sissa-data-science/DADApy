@@ -363,7 +363,7 @@ class IdEstimation(Base):
         https://github.com/scikit-learn/scikit-learn/blob/95119c13af77c76e150b753485c662b7c52a41a2/sklearn/metrics/pairwise.py#L1474
 
         Once a chunk of the distance matrix is computed _mus_scaling_reduce_func
-        1) estracts the distances of the  neighbors of order 2**i up to the maximum
+        1) extracts the distances of the  neighbors of order 2**i up to the maximum
         neighbor range given by range_scaling
         2) computes the mus[i] (ratios of the neighbor distance of order 2**(i+1)
         and 2**i (see return id scaling gride)
@@ -495,63 +495,60 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_rk(self, rk, ratio=None):
-        """Compute the k points within the given rk and n points within given rn.
+    def _fix_rk(self, rk, r):
+        """Compute the k_binomial points within the given rk and n_binomial points within given rn=rk*r
 
-        For each point, computes the number self.k of points within a sphere of radius rk
-        and the number self.n within an inner sphere of radius rn=rk*ratio. It also provides
+        For each point, computes the number k_binomial of points within a sphere of radius rk
+        and the number n_binomial within an inner sphere of radius rn=rk*r. It also provides
         a mask to take into account those points for which the statistics might be wrong, i.e.
-        k == self.maxk, meaning that all available points were selected. If self.maxk is equal
+        if k_binomial == self.maxk, there might be other points within rk that have not been taken into account because maxk was too low. If self.maxk is equal
         to the number of points of the dataset no mask will be applied
 
         Args:
             rk (float): external shell radius
-            ratio (float,optional): ratio between internal and external shell radii of the shells
-
+            r (float): ratio between internal and external shell radii of the shells
+        Returns:
+            k (np.ndarray(int)): number of points within the external shell of radius rk
+            n (np.ndarray(int)): number of points within the internal shell of radius rk*r
+            mask (np.ndarray(bool)): array that states whether to use the point for the id estimate
         """
         # checks-in and initialisations
         if self.distances is None:
             self.compute_distances()
 
-        self.set_rk(rk)
-
-        if ratio is not None:
-            self.set_r(ratio)
-        else:
-            assert (
-                self.r is not None
-            ), "set self.r or insert a value for the ratio parameter"
+        assert rk > 0, "use a positive radius"
+        assert 0 < r < 1, "select a proper ratio, 0<r<1"
 
         # routine
-        self.rn = self.rk * self.r
-        self.k = (self.distances <= self.rk).sum(axis=1)
-        self.n = (self.distances <= self.rn).sum(axis=1)
+        rn = rk * r
+        k = (self.distances <= rk).sum(axis=1)
+        n = (self.distances <= rn).sum(axis=1)
 
         # checks-out
         if self.maxk == self.N - 1:
-            self.mask = np.ones(self.N, dtype=bool)
+            mask = np.ones(self.N, dtype=bool)
         else:
             # if not all available NN were taken into account (i.e. maxk < N) and k is equal to self.maxk
             # or distances[:,-1]<lk, it is likely that there are other points within lk that are not being
-            # considered and thus potentially altering the statistics -> neglect them through self.mask
+            # considered and thus potentially altering the statistics -> neglect them through mask
             # in the calculation of likelihood
-            self.mask = self.distances[:, -1] > self.rk  # or self.k == self.maxk
+            mask = self.distances[:, -1] > rk  # or k == self.maxk
 
-            if np.any(~self.mask):
+            if np.any(~mask):
                 print(
                     "NB: for "
-                    + str(sum(~(self.mask)))
-                    + " points, the counting of k could be wrong, "
-                    + "as more points might be present within the selected Rk. In order not to affect "
+                    + str(sum(~(mask)))
+                    + " points, the counting of k_binomial could be wrong, "
+                    + "as more points might be present within the selected radius with respect to the calculated neighbours. In order not to affect "
                     + "the statistics a mask is provided to remove them from the calculation of the "
                     + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
                 )
 
+        return k, n, mask
+
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_rk(
-        self, rk, ratio=None, subset=None, method="bayes", plot=False
-    ):
+    def compute_id_binomial_rk(self, rk, r, bayes=True):
         """Calculate the id using the binomial estimator by fixing the same eternal radius for all the points.
 
         In the estimation of the id one has to remove the central point from the counting of n and k
@@ -559,127 +556,94 @@ class IdEstimation(Base):
 
         Args:
             rk (float): radius of the external shell
-            ratio (float): ratio between internal and external shell
-            subset (int, np.ndarray(int)): choose a random subset of the dataset to make the id estimate
-            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                gives the mean value and std of d, while mle only the max of the likelihood
-            plot (bool, default=False): if True plots the posterior
-                and initialise self.posterior_domain and self.posterior
-
+            r (float): ratio between internal and external shell
+            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
+                gives the mean value and std of d, while mle returns the max of the likelihood and the std according to Cramer-Rao lower bound
         Returns:
-            None
+            id (float): the estimated intrinsic dimension
+            id_err (float): the standard error on the id estimation
+            rs (float): the average nearest neighbor distance (rs)
 
         """
         # checks-in and initialisations
-        if ratio is not None:
-            self.set_r(ratio)
-        else:
-            assert (
-                self.r is not None
-            ), "set self.r or insert a value for the ratio parameter"
-
-        self.set_rk(rk)
-        self.rn = self.rk * self.r
+        assert rk > 0, "Use a positive radius"
+        assert 0 < r < 1, "Select a proper ratio, 0<r<1"
 
         # routine
-        self.fix_rk(rk)
+        k, n, mask = self._fix_rk(rk, r)
 
-        n_eff = self.n[self.mask]
-        k_eff = self.k[self.mask]
+        self.intrinsic_dim_scale = 0.5 * (rk + rk * r)
 
-        # eventually perform the estimate using only a subset of the points (k and n are still computed on the whole
-        # dataset!!!)
-        if subset is not None:
-            # if subset is integer draw that amount of random numbers
-            if isinstance(subset, (np.integer, int)):
-                if subset < self.mask.sum():
-                    subset = rng.choice(
-                        len(n_eff), subset, replace=False, shuffle=False
-                    )
-            # if subset is an array, use it as a mask
-            elif isinstance(subset, np.ndarray):
-                assert subset.shape[0] < self.mask.sum()
-                assert isinstance(subset[0], (int, np.integer))
-            else:
-                print("choose a proper shape for the subset")
-                return 0
-
-            n_eff = n_eff[subset]
-            k_eff = k_eff[subset]
+        n_eff = n[mask]
+        k_eff = k[mask]
 
         e_n = n_eff.mean()
         e_k = k_eff.mean()
         if e_n == 1.0:
             print(
-                "no points in the inner shell, returning 0. Consider increasing rk and/or the ratio"
+                "No points in the inner shell, returning 0. Consider increasing rk and/or the ratio"
             )
-            self.id_estimated_binom = 0
+            self.intrinsic_dim = 0
+            self.intrinsic_dim_err = 0
             return 0
 
-        if method == "mle":
-            self.id_estimated_binom = np.log((e_n - 1.0) / (e_k - 1.0)) / np.log(self.r)
-            self.id_estimated_binom_std = (
+        if bayes is False:
+            self.intrinsic_dim = np.log((e_n - 1.0) / (e_k - 1.0)) / np.log(r)
+            self.intrinsic_dim_err = np.sqrt(
                 ut._compute_binomial_cramerrao(
-                    self.id_estimated_binom, e_k - 1.0, self.r, n_eff.shape[0]
+                    self.intrinsic_dim, e_k - 1.0, r, n_eff.shape[0]
                 )
-                ** 0.5
             )
 
-        elif method == "bayes":
+        elif bayes is True:
             (
-                self.id_estimated_binom,
-                self.id_estimated_binom_std,
-                self.posterior_domain,
-                self.posterior,
-            ) = ut._beta_prior(k_eff - 1, n_eff - 1, self.r, plot=plot)
+                self.intrinsic_dim,
+                self.intrinsic_dim_err,
+                posterior_domain,
+                posterior_values,
+            ) = ut._beta_prior(k_eff - 1, n_eff - 1, r, posterior_profile=False)
         else:
-            print("select a proper method for id computation")
+            print("Select a proper method for id computation")
             return 0
+
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_k(self, k_eff=None, ratio=None):
-        """Compute rk, rn, n for each point of the dataset given a value of k.
+    def _fix_k(self, k, r):
+        """Compute rk, rn and n_binomial for each point of the dataset given a value of k.
 
         This routine computes the external radius rk, internal radius rn and internal points n
         given a value k, the number of NN to consider.
 
         Args:
-            k_eff (int, default=self.maxk): the number of NN to take into account
-            ratio (float): ratio among rn and rk
-
+            k (int): the number of NN to take into account
+            r (float): ratio among rn and rk
+        Returns:
+            n (np.ndarray(int)): number of points within the internal shell of radius rk*r
         """
+        # checks-in and initialisations
         # checks-in and initialisations
         if self.distances is None:
             self.compute_distances()
 
-        if ratio is not None:
-            self.set_r(ratio)
-        else:
-            assert (
-                self.r is not None
-            ), "set self.r or insert a value for the parameter ratio"
-
-        if k_eff is not None:
-            assert (
-                k_eff < self.maxk
-            ), "You first need to recompute the distances with the proper amount on NN"
-        else:
-            k_eff = self.maxk - 1
+        assert (
+            0 < k < self.maxk
+        ), "Select a proper number of neighbours. Increase maxk and recompute distances if necessary"
+        assert 0 < r < 1, "Select a proper ratio, 0<r<1"
 
         # routine
-        self.k = k_eff
-        self.rk = self.distances[:, self.k]
-        self.rn = self.rk * self.r
-        self.n = (self.distances <= self.rn.reshape(self.N, 1)).sum(axis=1)
-        # mask computed for consistency as in the fix_rk method, but no points should be ever excluded
-        self.mask = np.ones(self.N, dtype=bool)
+        rk = self.distances[:, k]
+        rn = rk * r
+        n = (self.distances <= rn.reshape(self.N, 1)).sum(axis=1)
+
+        self.intrinsic_dim_scale = 0.5 * (rk.mean() + rn.mean())
+
+        return n
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(
-        self, k=None, ratio=None, subset=None, method="bayes", plot=False
-    ):
+    def compute_id_binomial_k(self, k, r, bayes=True):
         """Calculate id using the binomial estimator by fixing the number of neighbours.
 
         As in the case in which one fixes rk, also in this version of the estimation
@@ -691,97 +655,55 @@ class IdEstimation(Base):
         in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
 
         Args:
-            k (int): order of neighbour that set the external shell
-            ratio (float): ratio between internal and external shell
-            subset (int): choose a random subset of the dataset to make the Id estimate
-            method (str, default='bayes'): choose method between 'bayes' and 'mle'. The bayesian estimate
-                gives the mean value and std of d, while mle only the max of the likelihood
-            plot (bool, default=False): if True plots the posterior
-                and initialise self.posterior_domain and self.posterior
+            k (int): number of neighbours to take into account
+            r (float): ratio between internal and external shells
+            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
+                gives the mean value and std of d, while mle returns the max of the likelihood and the std according to Cramer-Rao lower bound
 
         Returns:
-            None
+            id (float): the estimated intrinsic dimension
+            id_err (float): the standard error on the id estimation
+            rs (float): the average nearest neighbor distance (rs)
 
         """
         # checks-in and initialisations
-        if ratio is not None:
-            self.set_r(ratio)
-        else:
-            assert (
-                self.r is not None
-            ), "set self.r or insert a value for the ratio parameter"
-
-        if k is not None:
-            assert (
-                k < self.maxk
-            ), "You first need to recompute the distances with the proper number of NN"
-        else:
-            k = self.maxk - 1
+        assert (
+            0 < k < self.maxk
+        ), "Select a proper number of neighbours. Increase maxk if necessary"
+        assert 0 < r < 1, "Select a proper ratio, 0<r<1"
 
         # routine
-        self.fix_k(k)
-        n_eff = self.n
-
-        # eventually perform the estimate using only a subset of the points (k and n are still computed on the whole
-        # dataset!!!)
-        if subset is not None:
-            # if subset is integer draw that amount of random numbers
-            if isinstance(subset, (np.integer, int)):
-                if subset < self.N:
-                    subset = rng.choice(
-                        len(n_eff), subset, replace=False, shuffle=False
-                    )
-            # if subset is an array, use it as a mask
-            elif isinstance(subset, np.ndarray):
-                assert subset.shape[0] < self.N
-                assert isinstance(subset[0], (int, np.integer))
-            else:
-                print("choose a proper shape for the subset")
-                return 0
-
-            n_eff = n_eff[subset]
-
-        e_n = n_eff.mean()
+        n = self._fix_k(k, r)
+        e_n = n.mean()
         if e_n == 1.0:
             print(
                 "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
             )
-            self.id_estimated_binom = 0
+            self.intrinsic_dim = 0
+            self.intrinsic_dim_err = 0
             return 0
 
-        if method == "mle":
-            self.id_estimated_binom = np.log((e_n - 1) / (k - 1)) / np.log(self.r)
-            self.id_estimated_binom_std = (
-                ut._compute_binomial_cramerrao(
-                    self.id_estimated_binom, k - 1, self.r, n_eff.shape[0]
-                )
-                ** 0.5
+        if bayes is False:
+            self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
+            self.intrinsic_dim_err = np.sqrt(
+                ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
             )
-        elif method == "bayes":
+
+        elif bayes is True:
             (
-                self.id_estimated_binom,
-                self.id_estimated_binom_std,
-                self.posterior_domain,
-                self.posterior,
-            ) = ut._beta_prior(k - 1, n_eff - 1, self.r, plot=plot)
+                self.intrinsic_dim,
+                self.intrinsic_dim_err,
+                posterior_domain,
+                posterior_values,
+            ) = ut._beta_prior(k - 1, n - 1, r, posterior_profile=False)
         else:
             print("select a proper method for id computation")
             return 0
+
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
 
     # ----------------------------------------------------------------------------------------------
     def set_id(self, d):
         """Set the intrinsic dimension."""
         assert d > 0, "cannot support negative dimensions (yet)"
         self.intrinsic_dim = d
-
-    # ----------------------------------------------------------------------------------------------
-    def set_r(self, r):
-        """Set the r parameter."""
-        assert 0 < r < 1, "select a proper ratio, 0<r<1"
-        self.r = r
-
-    # ----------------------------------------------------------------------------------------------
-    def set_rk(self, R):
-        """Set the rk parameter."""
-        assert 0 < R, "select a proper rk>0"
-        self.rk = R

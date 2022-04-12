@@ -157,22 +157,22 @@ def cast_to64(myarray):
 # Some useful function to properly sort lists
 
 
-def atoi(text):
+def _atoi(text):
     return int(text) if text.isdigit() else text
 
 
-def natural_keys(text):
+def _natural_keys(text):
     """sort list in human order, for both numbers and letters
     http://nedbatchelder.com/blog/200712/human_sorting.html
     """
-    return [atoi(c) for c in re.split("(\d+)", text)]
+    return [_atoi(c) for c in re.split("(\d+)", text)]
 
 
-def float_keys(text):
+def _float_keys(text):
     """sort list in human order, for both numbers and letters
     http://nedbatchelder.com/blog/200712/human_sorting.html
     """
-    return [atoi(c) for c in re.split(r"((?:[0-9]+\.?[0-9]*|\.[0-9]+))", text)]
+    return [_atoi(c) for c in re.split(r"((?:[0-9]+\.?[0-9]*|\.[0-9]+))", text)]
 
 
 # usage example:
@@ -184,25 +184,23 @@ def float_keys(text):
 
 # --------------------------------------------------------------------------------------
 # Stirling and binomial approximations
-
-
-def stirling(n):
+def _stirling(n):
     return (
         np.sqrt(2 * np.pi * n) * (n / np.e) ** n * (1.0 + 1.0 / 12.0 / n)
     )  # + 1/288/n/n - 139/51840/n/n/n/)
 
 
-def log_stirling(n):
+def _log_stirling(n):
     return (
         (n + 0.5) * np.log(n) - n + 0.5 * np.log(2 * np.pi) + 1.0 / 12.0 / n
     )  # -1/360/n/n/n
 
 
-def binom_stirling(k, n):
+def _binom_stirling(k, n):
     return stirling(k) / stirling(n) / stirling(k - n)
 
 
-def log_binom_stirling(k, n):
+def _log_binom_stirling(k, n):
     return log_stirling(k) - log_stirling(n) - log_stirling(k - n)
 
 
@@ -349,7 +347,7 @@ def _compute_pull_variables(set1, err1, set2, err2=None):
         return (set1 - set2) / den
 
 
-def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
+def _beta_prior(k, n, r, a0=1, b0=1, posterior_profile=False):
     """Compute the posterior distribution of d given the input aggregates
     Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
     However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
@@ -381,7 +379,7 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
         b = b0 + k.sum() - n.sum()
     posterior = beta_d(a, b)
 
-    if plot:
+    if posterior_profile:
         import matplotlib.pyplot as plt
 
         def p_d(d):
@@ -423,7 +421,7 @@ def _beta_prior(k, n, r, a0=1, b0=1, plot=False):
     E_d = (sp.digamma(a) - sp.digamma(a + b)) / np.log(r)
     S_d = np.sqrt((sp.polygamma(1, a) - sp.polygamma(1, a + b)) / np.log(r) ** 2)
 
-    if plot:
+    if posterior_profile:
         return E_d, S_d, d_range, P
     else:
         return E_d, S_d, None, None
