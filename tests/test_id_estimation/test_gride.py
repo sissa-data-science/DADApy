@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pytest
 
-from dadapy import DensityEstimation
+from dadapy import IdEstimation
 
 
 def test_compute_id_gride():
@@ -14,17 +14,20 @@ def test_compute_id_gride():
 
     X = np.load(filename)
 
-    de = DensityEstimation(coordinates=X)
+    de = IdEstimation(coordinates=X)
 
     ### testing gride scaling
     # TODO: @diegodoimo there seem to be a bug in the following call
     # and you are the best person to fix it :D
     #
-    # ids, ids_err, rs = de.return_id_scaling_gride()
+    ids, ids_err, rs = de.return_id_scaling_gride()
 
-    # expected_ids = None
-    # expected_ids_err = None
-    # expected_rs = None
-    # assert ids == pytest.approx(expected_ids, abs=0.01)
-    # assert ids_err == pytest.approx(expected_ids_err, abs=0.01)
-    # assert rs == pytest.approx(expected_rs, abs=0.01)
+    assert ids == pytest.approx(
+        [2.00075528, 2.0321371, 1.91183327, 2.00055726, 1.6747242], abs=0.01
+    )
+    assert ids_err == pytest.approx(
+        [0.20007553, 0.14664295, 0.09766772, 0.07223903, 0.04275823], abs=0.01
+    )
+    assert rs == pytest.approx(
+        [0.39476585, 0.56740507, 0.80139545, 1.13457408, 1.64776878], abs=0.01
+    )
