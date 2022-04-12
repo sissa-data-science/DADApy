@@ -58,42 +58,6 @@ class IdEstimation(Base):
         self.intrinsic_dim_err = None
         self.intrinsic_dim_scale = None
 
-    # ----------------------------------------------------------------------------------------------
-
-    def _compute_id_2NN(self, mus, fraction, algorithm="base"):
-        """Helper of return return_id_2NN. Computes the id using the 2NN algorithm
-
-        Args:
-            mus (np.ndarray(float)): ratio of the distances of first- and second-nearest neighbours
-            fraction (float): fraction of mus to take into account, discard the highest values
-            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
-
-        Returns:
-
-            intrinsic_dim (float): the estimation of the intrinsic dimension
-
-        """
-
-        N = mus.shape[0]
-        N_eff = int(N * fraction)
-        mus_reduced = np.sort(mus)[:N_eff]
-
-        # TO FIX: maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
-        if algorithm == "ml":
-            intrinsic_dim = N / np.sum(mus)
-
-        elif algorithm == "base":
-            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
-
-            def func(x, m):
-                return m * x
-
-            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
-
-        else:
-            raise ValueError("Please select a valid algorithm type")
-
-        return intrinsic_dim
 
     # ----------------------------------------------------------------------------------------------
     def compute_id_2NN(
@@ -165,25 +129,62 @@ class IdEstimation(Base):
         return intrinsic_dim, intrinsic_dim_err, intrinsic_dim_scale
 
     # ----------------------------------------------------------------------------------------------
-    def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7):
-        """Compute the id at different scales using the Gride algorithm.
+    def _compute_id_2NN(self, mus, fraction, algorithm="base"):
+        """Helper of return return_id_2NN. Computes the id using the 2NN algorithm
 
         Args:
-            range_max (int): maximum nearest neighbor rank considered for the id computations
-            d0 (float): minimum intrinsic dimension considered in the search
-            d1 (float): maximum intrinsic dimension considered in the search
-            eps (float): precision of the approximate id calculation
+            mus (np.ndarray(float)): ratio of the distances of first- and second-nearest neighbours
+            fraction (float): fraction of mus to take into account, discard the highest values
+            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
 
         Returns:
-            ids_scaling (np.ndarray(float)): array of intrinsic dimensions
-            ids_scaling_err (np.ndarray(float)): array of error estimates
-            rs_scaling (np.ndarray(float)): array of average distances of the neighbors involved in the estimates
 
-        References:
-            F. Denti, D. Doimo, A. Laio, A. Mira, Distributional results for model-based intrinsic dimension
-            estimators, arXiv preprint arXiv:2104.13832 (2021).
+            intrinsic_dim (float): the estimation of the intrinsic dimension
 
-        Quick Start
+        """
+
+        N = mus.shape[0]
+        N_eff = int(N * fraction)
+        mus_reduced = np.sort(mus)[:N_eff]
+
+        # TO FIX: maximum likelihood should be computed with the unbiased estimator N-1/log(mus)?
+        if algorithm == "ml":
+            intrinsic_dim = N / np.sum(mus)
+
+        elif algorithm == "base":
+            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
+
+            def func(x, m):
+                return m * x
+
+            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
+
+        else:
+            raise ValueError("Please select a valid algorithm type")
+
+        return intrinsic_dim
+
+    # -------------------------------------------------------------------------------
+    def return_id_scaling_2NN(
+        self,
+        N_min=10,
+        algorithm="base",
+        fraction=0.9,
+    ):
+        """Compute the id at different scales using the 2NN algorithm.
+
+        Args:
+            N_min (int): minimum number of points considered when decimating the dataset,
+                        N_min effectively sets the largest 'scale';
+            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood;
+            fraction (float): fraction of mus that will be considered for the estimate (discard highest mus).
+
+        Returns:
+            ids_scaling (np.ndarray(float)): array of intrinsic dimensions;
+            ids_scaling_err (np.ndarray(float)): array of error estimates;
+            rs_scaling (np.ndarray(float)): array of average distances of the neighbors involved in the estimates.
+
+        Quick Start:
         ===========
 
         .. code-block:: python
@@ -191,22 +192,95 @@ class IdEstimation(Base):
                 from dadapy import IdEstimation
                 from sklearn.datasets import make_swiss_roll
 
-                #two dimensional manifold embedded in 3d with noise
+                #two dimensional curved manifold embedded in 3d with noise
 
                 n_samples = 5000
-                noise = 0.3
-                X, _ = make_swiss_roll(n_samples, noise=noise)
+                X, _ = make_swiss_roll(n_samples, noise=0.3)
+
+                ie = IdEstimation(coordinates=X)
+                ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(N_min = 20)
+
+                ids_scaling:
+                array([2.88 2.77 2.65 2.42 2.22 2.2  2.1  2.23])
+
+                ids_scaling_err:
+                array([0.   0.02 0.05 0.04 0.04 0.03 0.04 0.04])
+
+                rs_scaling:
+                array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
+        """
+
+        max_ndec = int(math.log(self.N, 2)) - 1
+        Nsubsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
+        Nsubsets = Nsubsets.astype(int)
+
+        if N_min is not None:
+            Nsubsets = Nsubsets[Nsubsets > N_min]
+
+        ids_scaling = np.zeros(Nsubsets.shape[0])
+        ids_scaling_err = np.zeros(Nsubsets.shape[0])
+        rs_scaling = np.zeros((Nsubsets.shape[0]))
+
+        for i, N_subset in enumerate(Nsubsets):
+
+            ids_scaling[i], ids_scaling_err[i], rs_scaling[i] = self.compute_id_2NN(
+                algorithm=algorithm,
+                fraction=fraction,
+                decimation=N_subset / self.N,
+                set_attr=False,
+            )
+
+        return ids_scaling, ids_scaling_err, rs_scaling
+
+
+    # ----------------------------------------------------------------------------------------------
+    def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7):
+        """Compute the id at different scales using the Gride algorithm.
+
+        Args:
+            range_max (int): maximum nearest neighbor rank considered for the id computations;
+                            the number of id estimates are log2(range_max) as the nearest neighbor
+                            order ('scale') is doubled at each estimate;
+            d0 (float): minimum intrinsic dimension considered in the search;
+            d1 (float): maximum intrinsic dimension considered in the search;
+            eps (float): precision of the approximate id calculation.
+
+        Returns:
+            ids_scaling (np.ndarray(float)): array of intrinsic dimensions of length log2(range_max);
+            ids_scaling_err (np.ndarray(float)): array of error estimates;
+            rs_scaling (np.ndarray(float)): array of average distances of the neighbors involved in the estimates.
+
+        Quick Start:
+        ===========
+
+        .. code-block:: python
+
+                from dadapy import IdEstimation
+                from sklearn.datasets import make_swiss_roll
+
+                #two dimensional curved manifold embedded in 3d with noise
+
+                n_samples = 5000
+                X, _ = make_swiss_roll(n_samples, noise=0.3)
 
                 ie = IdEstimation(coordinates=X)
                 ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_gride(range_max = 512)
 
-                ids_scaling
+                ids_scaling:
                 array([2.81 2.71 2.48 2.27 2.11 1.98 1.95 2.05])
-                ids_scaling_err
+
+                ids_scaling_err:
                 array([0.04 0.03 0.02 0.01 0.01 0.01 0.   0.  ])
-                rs_scaling
+
+                rs_scaling:
                 array([0.52 0.69 0.93 1.26 1.75 2.48 3.54 4.99])
+
+
+        References:
+            F. Denti, D. Doimo, A. Laio, A. Mira, Distributional results for model-based intrinsic dimension
+            estimators, arXiv preprint arXiv:2104.13832 (2021).
         """
+
 
         max_rank = min(self.N, range_max)
         max_step = int(math.log(max_rank, 2))
@@ -270,49 +344,6 @@ class IdEstimation(Base):
             ) ** 0.5
         if self.verb:
             print(f"id inference finished")
-
-        return ids_scaling, ids_scaling_err, rs_scaling
-
-    # -------------------------------------------------------------------------------
-    def return_id_scaling_2NN(
-        self,
-        N_min=10,
-        algorithm="base",
-        fraction=0.9,
-    ):
-        """Compute the id at different scales using the 2NN algorithm.
-
-        Args:
-            N_min (int): minimum number of points considered when decimating the dataset
-            algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
-            fraction (float): fraction of mus that will be considered for the estimate (discard highest mus)
-
-        Returns:
-            ids_scaling (np.ndarray(float)): array of intrinsic dimensions
-            ids_scaling_err (np.ndarray(float)): array of error estimates
-            rs_scaling (np.ndarray(float)): array of average distances of the neighbors involved in the estimates
-
-        """
-
-        max_ndec = int(math.log(self.N, 2)) - 1
-        Nsubsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
-        Nsubsets = Nsubsets.astype(int)
-
-        if N_min is not None:
-            Nsubsets = Nsubsets[Nsubsets > N_min]
-
-        ids_scaling = np.zeros(Nsubsets.shape[0])
-        ids_scaling_err = np.zeros(Nsubsets.shape[0])
-        rs_scaling = np.zeros((Nsubsets.shape[0]))
-
-        for i, N_subset in enumerate(Nsubsets):
-
-            ids_scaling[i], ids_scaling_err[i], rs_scaling[i] = self.compute_id_2NN(
-                algorithm=algorithm,
-                fraction=fraction,
-                decimation=N_subset / self.N,
-                set_attr=False,
-            )
 
         return ids_scaling, ids_scaling_err, rs_scaling
 
