@@ -354,7 +354,7 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def _mus_scaling_reduce_func(self, dist, range_scaling):
+    def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
 
         Applied at the end of pairwise_distance_chunked see:
@@ -709,5 +709,5 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
     def set_id(self, d):
         """Set the intrinsic dimension."""
-        assert d > 0, "cannot support negative dimensions (yet)"
+        assert d > 0, "intrinsic dimension can't be negative (yet)"
         self.intrinsic_dim = d
