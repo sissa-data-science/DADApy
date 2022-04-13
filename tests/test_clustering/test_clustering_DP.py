@@ -8,29 +8,26 @@ filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 
 X = np.load(filename)
 
-# TODO: @alexdepremia you are surely the best person to fill this in
-#  note that the dataset X is a very simple dataset with 2 well separated Gaussians
+expected_cluster_assignment = np.array(
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 def test_compute_DecGraph():
     """Test the compute_DecGraph function works correctly"""
 
-    # cl = Clustering(coordinates=X)
+    cl = Clustering(coordinates=X)
 
-    # cl.compute_DecGraph()
+    cl.compute_density_PAk()
 
-    # ... some assertation
+    cl.compute_DecGraph()
 
-    assert True
+    assert np.count_nonzero(cl.delta>1)==7
 
 
-# TODO: @alexdepremia you are surely the best person to fill this in
-#  note that the dataset X is a very simple dataset with 2 well separated Gaussians
 def test_compute_cluster_DP():
     """Test the DP clustering works correctly"""
 
-    # cl = Clustering(coordinates=X)
-
-    # cl.compute_cluster_DP()
-
-    # ... some assertation
-
-    assert True
+    cl = Clustering(coordinates=X)
+    cl.compute_density_PAk()
+    cl.compute_DecGraph()
+    cl.compute_cluster_DP(dens_cut=-3.0,delta_cut=3.0)
+    assert cl.N_clusters == 2
+    assert (cl.cluster_assignment == expected_cluster_assignment).all()
