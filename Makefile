@@ -1,4 +1,4 @@
-lint-all: black isort #lint vulture darglint pylint ## run all linters
+lint-all: black isort lint #vulture darglint pylint ## run all linters
 
 isort: ## sort import statements with isort
 	isort dadapy tests
@@ -29,10 +29,9 @@ coverage: ## check code coverage quickly with the default Python
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
+lint: ## check style with flake8
+	flake8 dadapy/_base.py dadapy/metric_comparisons.py #tests dev_scripts examples
 
-#lint: ## check style with flake8
-#	flake8 dadapy tests scripts examples
-#
 #pylint: ## run pylint
 #	pylint dadapy tests
 #

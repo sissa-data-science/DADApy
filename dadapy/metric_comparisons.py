@@ -1,4 +1,4 @@
-# Copyright 2021 The DADApy Authors. All Rights Reserved.
+# Copyright 2021-2022 The DADApy Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,26 +13,22 @@
 # limitations under the License.
 # ==============================================================================
 
+"""This module contains the implementation of the MetricComparisons class."""
+
 import multiprocessing
 
 import numpy as np
 from joblib import Parallel, delayed
 
-import dadapy.utils_.utils as ut
 from dadapy._base import Base
+from dadapy.utils_.metric_comparisons import _return_imbalance
 from dadapy.utils_.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 
 
 class MetricComparisons(Base):
-    """This class contains several methods to compare metric spaces obtained using subsets of the data features.
-    Using these methods one can assess whether two spaces are equivalent, completely independent, or whether one
-    space is more informative than the other.
-
-    Attributes:
-
-    """
+    """Class for the metric comparisons."""
 
     def __init__(
         self,
@@ -43,6 +39,19 @@ class MetricComparisons(Base):
         verbose=False,
         njobs=cores,
     ):
+        """Class containing several methods to compare metric spaces obtained using subsets of the data features.
+
+        Using these methods one can assess whether two spaces are equivalent, completely independent, or whether one
+        space is more informative than the other.
+
+        Args:
+            coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+            maxk (int): maximum number of neighbours to be considered for the calculation of distances
+            period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
+            verbose (bool): whether you want the code to speak or shut up
+            njobs (int): number of cores to be used
+        """
         super().__init__(
             coordinates=coordinates,
             distances=distances,
@@ -52,14 +61,13 @@ class MetricComparisons(Base):
             njobs=njobs,
         )
 
-    def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1, dtype="mean"):
-        """Returns the imbalances between distances taken as the i and the j component of the coordinate matrix X.
+    def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1):
+        """Return the imbalances between distances taken as the i and the j component of the coordinate matrix X.
 
         Args:
             coords1 (list(int)): components for the first distance
             coords2 (list(int)): components for the second distance
             k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
-            dtype (str): type of information imbalance computation, default is 'mean'
 
         Returns:
             (float, float): the information imbalance from distance i to distance j and vice versa
@@ -74,17 +82,16 @@ class MetricComparisons(Base):
             X_, self.maxk, self.metric, self.period
         )
 
-        imb_ij = ut._return_imbalance(dist_indices_i, dist_indices_j, k=k, dtype=dtype)
-        imb_ji = ut._return_imbalance(dist_indices_j, dist_indices_i, k=k, dtype=dtype)
+        imb_ij = _return_imbalance(dist_indices_i, dist_indices_j, k=k)
+        imb_ji = _return_imbalance(dist_indices_j, dist_indices_i, k=k)
 
         return imb_ij, imb_ji
 
-    def return_inf_imb_matrix_of_coords(self, k=1, dtype="mean"):
+    def return_inf_imb_matrix_of_coords(self, k=1):
         """Compute the information imbalances between all pairs of D features of the data.
 
         Args:
             k (int): number of neighbours considered in the computation of the imbalances
-            dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
             n_mat (np.array(float)): a DxD matrix containing all the information imbalances
@@ -95,47 +102,32 @@ class MetricComparisons(Base):
 
         n_mat = np.zeros((ncoords, ncoords))
 
-        if self.njobs == 1:
-
-            for i in range(ncoords):
-                for j in range(i):
-                    if self.verb:
-                        print("computing loss between coords ", i, j)
-
-                    nij, nji = self.return_inf_imb_two_selected_coords(
-                        [i], [j], k, dtype
-                    )
-                    n_mat[i, j] = nij
-                    n_mat[j, i] = nji
-
-        elif self.njobs > 1:
-            if self.verb:
-                print(
-                    "computing imbalances with coord number on {} processors".format(
-                        self.njobs
-                    )
+        if self.verb:
+            print(
+                "computing imbalances with coord number on {} processors".format(
+                    self.njobs
                 )
-
-            nmats = Parallel(n_jobs=self.njobs)(
-                delayed(self.return_inf_imb_two_selected_coords)([i], [j], k, dtype)
-                for i in range(ncoords)
-                for j in range(i)
             )
 
-            indices = [(i, j) for i in range(ncoords) for j in range(i)]
+        nmats = Parallel(n_jobs=self.njobs)(
+            delayed(self.return_inf_imb_two_selected_coords)([i], [j], k)
+            for i in range(ncoords)
+            for j in range(i)
+        )
 
-            for idx, n in zip(indices, nmats):
-                n_mat[idx[0], idx[1]] = n[0]
-                n_mat[idx[1], idx[0]] = n[1]
+        indices = [(i, j) for i in range(ncoords) for j in range(i)]
+
+        for idx, n in zip(indices, nmats):
+            n_mat[idx[0], idx[1]] = n[0]
+            n_mat[idx[1], idx[0]] = n[1]
 
         return n_mat
 
-    def return_inf_imb_full_all_coords(self, k=1, dtype="mean"):
-        """Compute the information imbalances between the 'full' space and each one of its D features
+    def return_inf_imb_full_all_coords(self, k=1):
+        """Compute the information imbalances between the 'full' space and each one of its D features.
 
         Args:
             k (int): number of neighbours considered in the computation of the imbalances
-            dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
             (np.array(float)): a 2xD matrix containing the information imbalances between
@@ -147,21 +139,18 @@ class MetricComparisons(Base):
         ncoords = self.X.shape[1]
 
         coord_list = [[i] for i in range(ncoords)]
-        imbalances = self.return_inf_imb_full_selected_coords(
-            coord_list, k=k, dtype=dtype
-        )
+        imbalances = self.return_inf_imb_full_selected_coords(coord_list, k=k)
 
         return imbalances
 
-    def return_inf_imb_full_selected_coords(self, coord_list, k=1, dtype="mean"):
+    def return_inf_imb_full_selected_coords(self, coord_list, k=1):
         """Compute the information imbalances between the 'full' space and a selection of features.
 
         Args:
             coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
-            sub-list defines a set of coordinates for which the information imbalance should be
-            computed.
+                sub-list defines a set of coordinates for which the information imbalance should be
+                computed.
             k (int): number of neighbours considered in the computation of the imbalances
-            dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
             (np.array(float)): a 2xL matrix containing the information imbalances between
@@ -175,18 +164,17 @@ class MetricComparisons(Base):
         print("total number of computations is: ", len(coord_list))
 
         imbalances = self.return_inf_imb_target_selected_coords(
-            self.dist_indices, coord_list, k=k, dtype=dtype
+            self.dist_indices, coord_list, k=k
         )
 
         return imbalances
 
-    def return_inf_imb_target_all_coords(self, target_ranks, k=1, dtype="mean"):
+    def return_inf_imb_target_all_coords(self, target_ranks, k=1):
         """Compute the information imbalances between the 'target' space and a all single feature spaces in X.
 
         Args:
             target_ranks (np.array(int)): an array containing the ranks in the target space
             k (int): number of neighbours considered in the computation of the imbalances
-            dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
             (np.array(float)): a 2xL matrix containing the information imbalances between
@@ -199,23 +187,20 @@ class MetricComparisons(Base):
 
         coord_list = [[i] for i in range(ncoords)]
         imbalances = self.return_inf_imb_target_selected_coords(
-            target_ranks, coord_list, k=k, dtype=dtype
+            target_ranks, coord_list, k=k
         )
 
         return imbalances
 
-    def return_inf_imb_target_selected_coords(
-        self, target_ranks, coord_list, k=1, dtype="mean"
-    ):
+    def return_inf_imb_target_selected_coords(self, target_ranks, coord_list, k=1):
         """Compute the information imbalances between the 'target' space and a selection of features.
 
         Args:
             target_ranks (np.array(int)): an array containing the ranks in the target space
             coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
-            sub-list defines a set of coordinates for which the information imbalance should be
-            computed.
+                sub-list defines a set of coordinates for which the information imbalance should be
+                computed.
             k (int): number of neighbours considered in the computation of the imbalances
-            dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
             (np.array(float)): a 2xL matrix containing the information imbalances between
@@ -224,54 +209,73 @@ class MetricComparisons(Base):
         """
         assert self.X is not None
         assert target_ranks.shape[0] == self.X.shape[0]
-        # if self.distances is None:
-        #     self.compute_distances()
 
         print("total number of computations is: ", len(coord_list))
 
-        if self.njobs == 1:
-            n1s_n2s = []
-            for coords in coord_list:
-                if self.verb:
-                    print("computing loss with coord selection")
-                n0i, ni0 = self._return_imb_with_coords(
-                    self.X, coords, target_ranks, k, dtype
-                )
-                n1s_n2s.append((n0i, ni0))
-
-        elif self.njobs > 1:
-            if self.verb:
-                print(
-                    "computing loss with coord number on {} processors".format(
-                        self.njobs
-                    )
-                )
-            n1s_n2s = Parallel(n_jobs=self.njobs)(
-                delayed(self._return_imb_with_coords)(
-                    self.X, coords, target_ranks, k, dtype
-                )
-                for coords in coord_list
+        if self.verb:
+            print(
+                "computing loss with coord number on {} processors".format(self.njobs)
             )
-        else:
-            raise ValueError("njobs cannot be negative")
+
+        n1s_n2s = Parallel(n_jobs=self.njobs)(
+            delayed(self._return_imb_with_coords)(self.X, coords, target_ranks, k)
+            for coords in coord_list
+        )
 
         return np.array(n1s_n2s).T
 
-    def greedy_feature_selection_full(
-        self, n_coords, k=1, n_best=10, dtype="mean", symm=True
-    ):
+    def _return_imb_with_coords(self, X, coords, dist_indices, k):
+        """Return the imbalances between a 'full' distance and a distance built using a subset of coordinates.
+
+        Args:
+            X: coordinate matrix
+            coords: subset of coordinates to be used when building the alternative distance
+            dist_indices (int[:,:]): nearest neighbours according to full distance
+            k (int): order of nearest neighbour considered, default is 1
+
+        Returns:
+            (float, float): the information imbalance from 'full' to 'alternative' and vice versa
+        """
+        X_ = X[:, coords]
+
+        if self.period is not None:
+            if isinstance(self.period, np.ndarray) and self.period.shape == (
+                self.dims,
+            ):
+                self.period = self.period
+            elif isinstance(self.period, (int, float)):
+                self.period = np.full((self.dims), fill_value=self.period, dtype=float)
+            else:
+                raise ValueError(
+                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
+                )
+            period_ = self.period[coords]
+        else:
+            period_ = self.period
+
+        _, dist_indices_coords = compute_nn_distances(
+            X_, self.maxk, self.metric, period_
+        )
+
+        imb_coords_full = _return_imbalance(dist_indices_coords, dist_indices, k=k)
+        imb_full_coords = _return_imbalance(dist_indices, dist_indices_coords, k=k)
+
+        return imb_full_coords, imb_coords_full
+
+    def greedy_feature_selection_full(self, n_coords, k=1, n_best=10, symm=True):
         """Greedy selection of the set of coordinates which is most informative about full distance measure.
 
         Args:
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
-            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and calculate the imbalance until n_coords is reached
-            dtype (str): specific way to characterise the deviation from a delta distribution
+            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and
+                calculate the imbalance until n_coords is reached
             symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
             best_tuples (list(list(int))): best coordinates selected at each iteration
-            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each iteration, belonging to the best tuple
+            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each
+                iteration, belonging to the best tuple
         """
         print("taking full space as the target representation")
         assert self.X is not None
@@ -283,13 +287,13 @@ class MetricComparisons(Base):
             best_imbalances,
             all_imbalances,
         ) = self.greedy_feature_selection_target(
-            self.dist_indices, n_coords, k, n_best, dtype, symm
+            self.dist_indices, n_coords, k, n_best, symm
         )
 
         return best_tuples, best_imbalances, all_imbalances
 
     def greedy_feature_selection_target(
-        self, target_ranks, n_coords, k, n_best, dtype="mean", symm=True
+        self, target_ranks, n_coords, k, n_best, symm=True
     ):
         """Greedy selection of the set of coordinates which is most informative about a target distance.
 
@@ -297,22 +301,22 @@ class MetricComparisons(Base):
             target_ranks (np.ndarray(int)): an array containing the ranks in the target space
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
-            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable and calculate the imbalance until n_coords is reached
-            dtype (str): specific way to characterise the deviation from a delta distribution
+            n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable
+                and calculate the imbalance until n_coords is reached
             symm (bool): whether to use the symmetrised information imbalance
 
         Returns:
             best_tuples (list(list(int))): best coordinates selected at each iteration
-            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each iteration, belonging to the best tuple
-            all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed at each iteration, belonging all greedy tuples
+            best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed
+              at each iteration, belonging to the best tuple
+            all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed
+              at each iteration, belonging all greedy tuples
         """
         assert self.X is not None
 
         dims = self.dims  # number of features / variables
 
-        imbalances = self.return_inf_imb_target_all_coords(
-            target_ranks, k=k, dtype=dtype
-        )
+        imbalances = self.return_inf_imb_target_all_coords(target_ranks, k=k)
 
         if symm:
             proj = np.dot(imbalances.T, np.array([np.sqrt(0.5), np.sqrt(0.5)]))
@@ -342,9 +346,6 @@ class MetricComparisons(Base):
             print("best single variable selected: ", best_one)
 
         all_single_coords = list(np.arange(dims).astype(int))
-        other_coords = [
-            coord for coord in all_single_coords if coord not in selected_coords
-        ]
 
         while len(best_tuples) < n_coords:
             c_list = []
@@ -359,7 +360,7 @@ class MetricComparisons(Base):
             ]  # make sure no tuples are doubled
 
             imbalances_ = self.return_inf_imb_target_selected_coords(
-                target_ranks, coord_list, k=k, dtype=dtype
+                target_ranks, coord_list, k=k
             )
 
             if symm:
@@ -383,14 +384,12 @@ class MetricComparisons(Base):
 
         return best_tuples, np.array(best_imbalances), all_imbalances
 
-    def return_inf_imb_full_all_dplets(self, d, k=1, dtype="mean"):
-        """Compute the information imbalances between the full X space and all possible combinations of d coordinates
-        contained of X.
+    def return_inf_imb_full_all_dplets(self, d, k=1):
+        """Compute the information imbalances between the full space and all possible combinations of d coordinates.
 
         Args:
             d (int): target order considered (e.g., d = 2 will compute all couples of coordinates)
             k (int): number of neighbours considered in the computation of the imbalances
-            dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
             coord_list: list of the set of coordinates for which imbalances are computed
@@ -401,20 +400,18 @@ class MetricComparisons(Base):
             self.compute_distances()
 
         coord_list, imbalances = self.return_inf_imb_target_all_dplets(
-            self.dist_indices, d, k, dtype
+            self.dist_indices, d, k
         )
 
         return coord_list, imbalances
 
-    def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1, dtype="mean"):
-        """Compute the information imbalances between a target distance and all possible combinations of d coordinates
-        contained of X.
+    def return_inf_imb_target_all_dplets(self, target_ranks, d, k=1):
+        """Compute the information imbalances between a target distance and all combinations of d coordinates of X.
 
         Args:
             target_ranks (np.array(int)): an array containing the ranks in the target space
             d (int): target order considered (e.g., d = 2 will compute all couples of coordinates)
             k (int): number of neighbours considered in the computation of the imbalances
-            dtype (str): specific way to characterise the deviation from a delta distribution
 
         Returns:
             coord_list: list of the set of coordinates for which imbalances are computed
@@ -437,60 +434,25 @@ class MetricComparisons(Base):
         coord_list = list(itertools.combinations(all_coords, d))
 
         imbalances = self.return_inf_imb_target_selected_coords(
-            target_ranks, coord_list, k=k, dtype=dtype
+            target_ranks, coord_list, k=k
         )
 
         return np.array(coord_list), np.array(imbalances)
 
-    def return_coordinates_infomation_ranking(self):
-        print("taking dataset as the complete representation")
-        assert self.X is not None
-
-        d = self.X.shape[1]
-
-        coords_kept = [i for i in range(d)]
-
-        coords_removed = []
-
-        projection_removed = []
-
-        for i in range(d):
-            print("niter is ", i)
-
-            print(self.X.shape)
-            nls = self.return_inf_imb_full_all_coords(k=1)
-
-            projection = nls.T.dot([np.sqrt(0.5), np.sqrt(0.5)])
-
-            idx_to_remove = np.argmax(projection)
-
-            c_to_remove = coords_kept[idx_to_remove]
-
-            self.X = np.delete(self.X, idx_to_remove, 1)
-
-            if i < (d - 1):
-                self.compute_distances(maxk=self.N)
-
-            coords_kept.pop(idx_to_remove)
-
-            coords_removed.append(c_to_remove)
-
-            projection_removed.append(projection[idx_to_remove])
-
-            print("removing index number ", idx_to_remove)
-            print("corresponding to coordinate number ", c_to_remove)
-
-        # idx_to_remove = 0
-        # c_to_remove = coords_kept[idx_to_remove]
-        # coords_kept.pop(idx_to_remove)
-        # projection_removed.append(projection[idx_to_remove])
-
-        print("keeping datasets number ", coords_kept)
-
-        return np.array(coords_removed)[::-1], np.array(projection_removed)[::-1]
-
     def return_label_overlap(self, labels, k=30):
+        """Return the neighbour overlap between the full space and a set of labels.
+
+        An overlap of 1 means that all neighbours of a point have the same label as the central point.
+
+        Args:
+            labels (np.ndarray): the labels with respect to which the overlap is computed
+            k (int): the number of neighbours considered for the overlap
+
+        Returns:
+            (float): the neighbour overlap of the points
+        """
         if self.distances is None:
+            assert self.X is not None
             self.compute_distances()
 
         overlaps = []
@@ -502,6 +464,18 @@ class MetricComparisons(Base):
         return overlap
 
     def return_label_overlap_coords(self, labels, coords, k=30):
+        """Return the neighbour overlap between a selection of coordinates and a set of labels.
+
+        An overlap of 1 means that all neighbours of a point have the same label as the central point.
+
+        Args:
+            labels (np.ndarray): the labels with respect to which the overlap is computed
+            coords (list(int)): a list of coordinates to consider for the distance computation
+            k (int): the number of neighbours considered for the overlap
+
+        Returns:
+            (float): the neighbour overlap of the points
+        """
         assert self.X is not None
 
         X_ = self.X[:, coords]
@@ -518,6 +492,18 @@ class MetricComparisons(Base):
         return overlap
 
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
+        """Return a list of neighbour overlaps computed on a list of selected coordinates.
+
+        An overlap of 1 means that all neighbours of a point have the same label as the central point.
+
+        Args:
+            labels (np.ndarray): the labels with respect to which the overlap is computed
+            coord_list (list(list(int))): a list of lists, with each sublist representing a set of coordinates
+            k: the number of neighbours considered for the overlap
+
+        Returns:
+            (list(float)): a list of neighbour overlaps of the points
+        """
         assert self.X is not None
 
         overlaps = []
@@ -529,47 +515,3 @@ class MetricComparisons(Base):
             overlaps.append(overlap)
 
         return overlaps
-
-    def _return_imb_with_coords(self, X, coords, dist_indices, k, dtype="mean"):
-        """Returns the imbalances between a 'full' distance computed using all coordinates, and an alternative distance
-         built using a subset of coordinates.
-
-        Args:
-            X: coordinate matrix
-            coords: subset of coordinates to be used when building the alternative distance
-            dist_indices (int[:,:]): nearest neighbours according to full distance
-            k (int): order of nearest neighbour considered, default is 1
-            dtype (str): type of information imbalance computation, default is 'mean'
-
-        Returns:
-            (float, float): the information imbalance from 'full' to 'alternative' and vice versa
-        """
-        X_ = X[:, coords]
-
-        if self.period is not None:
-            if isinstance(self.period, np.ndarray) and self.period.shape == (
-                self.dims,
-            ):
-                self.period = self.period
-            elif isinstance(self.period, (int, float)):
-                self.period = np.full((self.dims), fill_value=self.period, dtype=float)
-            else:
-                raise ValueError(
-                    f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
-                )
-            period_ = self.period[coords]
-        else:
-            period_ = self.period
-
-        _, dist_indices_coords = compute_nn_distances(
-            X_, self.maxk, self.metric, period_
-        )
-
-        imb_coords_full = ut._return_imbalance(
-            dist_indices_coords, dist_indices, k=k, dtype=dtype
-        )
-        imb_full_coords = ut._return_imbalance(
-            dist_indices, dist_indices_coords, k=k, dtype=dtype
-        )
-
-        return imb_full_coords, imb_coords_full
