@@ -119,9 +119,7 @@ def test_clustering_ADP_cython():
 
     cl = Clustering(coordinates=X)
 
-    # TODO: @alexdepremia for some reason the code below runs *forever*
-    #  if use PAk and we set the default Z = 1.65. Do you know what can it be?
-    cl.compute_clustering(Z=1.65, density_algorithm="kNN", k=10)
+    cl.compute_clustering(Z=1.65)
 
     assert cl.N_clusters == 2
 
