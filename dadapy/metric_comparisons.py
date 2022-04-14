@@ -197,7 +197,7 @@ class MetricComparisons(Base):
 
         Args:
             target_ranks (np.ndarray(int)): an array containing the ranks in the target space, could be e.g.
-            the nearest neighbor ranks for a different set of variables on the same data points.
+                the nearest neighbor ranks for a different set of variables on the same data points.
             coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
                 sub-list defines a set of coordinates for which the information imbalance should be
                 computed.
@@ -283,7 +283,7 @@ class MetricComparisons(Base):
             best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each
                 iteration, belonging to the best tuple
             all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed
-              at each iteration, belonging all greedy tuples
+                at each iteration, belonging all greedy tuples
         """
         print("taking full space as the target representation")
         assert self.X is not None
@@ -312,7 +312,7 @@ class MetricComparisons(Base):
 
         Args:
             target_ranks (np.ndarray(int)): an array containing the ranks in the target space, could be e.g.
-            the nearest neighbor ranks for a different set of variables on the same data points.
+                the nearest neighbor ranks for a different set of variables on the same data points.
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
             n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable
@@ -322,9 +322,9 @@ class MetricComparisons(Base):
         Returns:
             best_tuples (list(list(int))): best coordinates selected at each iteration
             best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed
-              at each iteration, belonging to the best tuple
+                at each iteration, belonging to the best tuple
             all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed
-              at each iteration, belonging all greedy tuples
+                at each iteration, belonging all greedy tuples
         """
         assert self.X is not None
 
