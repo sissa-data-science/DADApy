@@ -9,7 +9,111 @@ filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 X = np.load(filename)
 
 expected_cluster_assignment = np.array(
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    ]
+)
+
+
 def test_compute_DecGraph():
     """Test the compute_DecGraph function works correctly"""
 
@@ -19,7 +123,7 @@ def test_compute_DecGraph():
 
     cl.compute_DecGraph()
 
-    assert np.count_nonzero(cl.delta>1)==7
+    assert np.count_nonzero(cl.delta > 1) == 7
 
 
 def test_compute_cluster_DP():
@@ -28,6 +132,5 @@ def test_compute_cluster_DP():
     cl = Clustering(coordinates=X)
     cl.compute_density_PAk()
     cl.compute_DecGraph()
-    cl.compute_cluster_DP(dens_cut=-3.0,delta_cut=3.0)
-    assert cl.N_clusters == 2
+    cl.compute_cluster_DP(dens_cut=-3.0, delta_cut=3.0)
     assert (cl.cluster_assignment == expected_cluster_assignment).all()
