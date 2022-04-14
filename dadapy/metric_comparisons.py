@@ -88,7 +88,7 @@ class MetricComparisons(Base):
         return imb_ij, imb_ji
 
     def return_inf_imb_matrix_of_coords(self, k=1):
-        """Compute the information imbalances between all pairs of D features of the data.
+        """Compute the information imbalances between all pairs of single features of the data.
 
         Args:
             k (int): number of neighbours considered in the computation of the imbalances
@@ -196,7 +196,8 @@ class MetricComparisons(Base):
         """Compute the information imbalances between the 'target' space and a selection of features.
 
         Args:
-            target_ranks (np.array(int)): an array containing the ranks in the target space
+            target_ranks (np.ndarray(int)): an array containing the ranks in the target space, could be e.g.
+            the nearest neighbor ranks for a different set of variables on the same data points.
             coord_list (list(list(int))): a list of the type [[1, 2], [8, 3, 5], ...] where each
                 sub-list defines a set of coordinates for which the information imbalance should be
                 computed.
@@ -263,7 +264,12 @@ class MetricComparisons(Base):
         return imb_full_coords, imb_coords_full
 
     def greedy_feature_selection_full(self, n_coords, k=1, n_best=10, symm=True):
-        """Greedy selection of the set of coordinates which is most informative about full distance measure.
+        """Greedy selection of the set of features which is most informative about full distance measure.
+
+           Using the n-best single features describing the full feature space, one more of all other features
+           is added combinatorically to make a candidate pool of duplets. Then, using the n-best duplets describing
+           the full space, one more of all other features is added to make a candidate pool of triplets, etc.
+           This procedure is done until including the desired number of features (n_coords) is reached.
 
         Args:
             n_coords: number of coodinates after which the algorithm is stopped
@@ -276,6 +282,8 @@ class MetricComparisons(Base):
             best_tuples (list(list(int))): best coordinates selected at each iteration
             best_imbalances (np.ndarray(float,float)): imbalances (full-->coords, coords-->full) computed at each
                 iteration, belonging to the best tuple
+            all_imbalances (list(list(list(int)))): all imbalances (full-->coords, coords-->full), computed
+              at each iteration, belonging all greedy tuples
         """
         print("taking full space as the target representation")
         assert self.X is not None
@@ -295,10 +303,16 @@ class MetricComparisons(Base):
     def greedy_feature_selection_target(
         self, target_ranks, n_coords, k, n_best, symm=True
     ):
-        """Greedy selection of the set of coordinates which is most informative about a target distance.
+        """Greedy selection of the set of features which is most informative about a target distance.
+
+           Using the n-best single features describing the target_ranks, one more of all other features is added
+           combinatorically to make a candidate pool of duplets. Then, using the n-best duplets describing the
+           target_ranks, one more of all other features is added to make a candidate pool of triplets, etc.
+           This procedure is done until including the desired number of variables (n_coords) is reached.
 
         Args:
-            target_ranks (np.ndarray(int)): an array containing the ranks in the target space
+            target_ranks (np.ndarray(int)): an array containing the ranks in the target space, could be e.g.
+            the nearest neighbor ranks for a different set of variables on the same data points.
             n_coords: number of coodinates after which the algorithm is stopped
             k (int): number of neighbours considered in the computation of the imbalances
             n_best (int): the n_best tuples are chosen in each iteration to combinatorically add one variable
