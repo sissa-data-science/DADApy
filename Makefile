@@ -30,7 +30,7 @@ coverage: ## check code coverage quickly with the default Python
 	$(BROWSER) htmlcov/index.html
 
 lint: ## check style with flake8
-	flake8 dadapy/_base.py dadapy/metric_comparisons.py #tests dev_scripts examples
+	flake8 dadapy/_base.py dadapy/metric_comparisons.py dadapy/clustering.py #tests dev_scripts examples
 
 #pylint: ## run pylint
 #	pylint dadapy tests
