@@ -23,7 +23,6 @@ from scipy.special import gammaln
 
 from dadapy.cython_ import cython_density as cd
 from dadapy.cython_ import cython_grads as cgr
-from dadapy.cython_ import cython_maximum_likelihood_opt as cml
 from dadapy.id_estimation import IdEstimation
 from dadapy.utils_.density_estimation import (
     return_not_normalised_density_kstarNN,
@@ -788,81 +787,6 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kstarNN_gCorr(
-        self, alpha=1.0, gauss_approx=False, Fij_type="grad"
-    ):
-        """
-        finds the minimum of the
-        """
-        from dadapy.utils_.mlmax_pytorch import maximise
-
-        # Fij_types: 'grad', 'zero', 'PAk'
-        # TODO: we need to implement a gCorr term with the deltaFijs equal to zero.
-        # Implementation is obsolete, we should use same ad dF_PAk_gCorr
-        # compute optimal k
-        if self.kstar is None:
-            self.compute_kstar()
-
-        if Fij_type == "zero":
-            # set changes in free energy to zero
-            raise NotImplementedError("still not implemented")
-
-        elif Fij_type == "grad":
-            # compute changes in free energy
-            if self.Fij_array is None:
-                self.compute_deltaFs_grads_semisum()
-
-            for i in range(self.N):
-
-                self.Fij_list.append(
-                    self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-                )
-                self.Fij_var_list.append(
-                    self.Fij_var_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-                )
-
-        else:
-            raise ValueError("please select a valid Fij type")
-
-        if gauss_approx:
-            raise NotImplementedError(
-                "Gaussian approximation not yet implemented (MATTEO DO IT)"
-            )
-
-        else:
-            # compute Vis
-            prefactor = np.exp(
-                self.intrinsic_dim / 2.0 * np.log(np.pi)
-                - gammaln((self.intrinsic_dim + 2) / 2)
-            )
-
-            dc = np.array([self.distances[i, self.kstar[i]] for i in range(self.N)])
-
-            Vis = prefactor * (dc**self.intrinsic_dim)
-
-            # get good initial conditions for the optimisation
-            Fis = np.array(
-                [np.log(self.kstar[i]) - np.log(Vis[i]) for i in range(self.N)]
-            )
-
-            # optimise the likelihood using pytorch
-            l_, log_den = maximise(
-                Fis,
-                self.kstar,
-                Vis,
-                self.dist_indices,
-                self.Fij_list,
-                self.Fij_var_list,
-                alpha,
-            )
-
-        # normalise density
-        log_den -= np.log(self.N)
-
-        self.log_den = log_den
-
-    # ----------------------------------------------------------------------------------------------
-
     def compute_density_dF_PAk_gCorr(self, use_variance=True, alpha=1.0, comp_err=True):
 
         # check for deltaFij
@@ -960,7 +884,6 @@ class DensityEstimation(IdEstimation):
 
     def compute_density_PAk_gCorr(
         self,
-        gauss_approx=True,
         alpha=1.0,
         log_den_PAk=None,
         log_den_PAk_err=None,
@@ -992,118 +915,75 @@ class DensityEstimation(IdEstimation):
         Fij_list = []
         Fij_var_list = []
 
-        if gauss_approx is True:
-            if self.verb:
-                print("Maximising likelihood in Gaussian approximation")
+        if self.verb:
+            print("Maximising likelihood in Gaussian approximation")
 
-            if log_den_PAk is not None and log_den_PAk_err is not None:
-                self.log_den = log_den_PAk
-                self.log_den_err = log_den_PAk_err
-
-            else:
-                self.compute_density_PAk()
-
-            # compute adjacency matrix and cumulative changes
-            A = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
-
-            supp_deltaF = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
-
-            # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
-            k1 = self.kstar[self.nind_list[:, 0]]
-            k2 = self.kstar[self.nind_list[:, 1]]
-            redundancy = np.sqrt(k1 * k2)
-
-            for nspar, indices in enumerate(self.nind_list):
-                i = indices[0]
-                j = indices[1]
-                # tmp = 1.0 / self.Fij_var_array[nspar]
-                tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
-                A[i, j] = -tmp
-                supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
-
-            A = alpha * sparse.lil_matrix(A + A.transpose())
-
-            diag = (
-                np.array(-A.sum(axis=1)).reshape((self.N,))
-                + (1.0 - alpha) / self.log_den_err**2
-            )
-
-            A.setdiag(diag)
-
-            deltaFcum = (
-                alpha
-                * (
-                    np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
-                    - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
-                )
-                + (1.0 - alpha) * self.log_den / self.log_den_err**2
-            )
-
-            sec2 = time.time()
-            if self.verb:
-                print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
-
-            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
-
-            if self.verb:
-                print(
-                    "{0:0.2f} seconds to solve linear system".format(time.time() - sec2)
-                )
-            sec2 = time.time()
-
-            self.log_den = log_den
-
-            if comp_err is True:
-                self.A = A.todense()
-                self.B = slin.pinvh(self.A)
-                # self.B = slin.inv(self.A)
-                self.log_den_err = np.sqrt(np.diag(self.B))
-
-            if self.verb:
-                print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
-            sec2 = time.time()
-
-            # self.log_den_err = np.sqrt(diag/(np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,)))
+        if log_den_PAk is not None and log_den_PAk_err is not None:
+            self.log_den = log_den_PAk
+            self.log_den_err = log_den_PAk_err
 
         else:
-            if self.verb:
-                print("Solving via SGD")
-            from dadapy.utils_.mlmax_pytorch import maximise_wPAk
+            self.compute_density_PAk()
 
-            for i in range(self.N):
+        # compute adjacency matrix and cumulative changes
+        A = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
 
-                Fij_list.append(
-                    self.Fij_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-                )
-                Fij_var_list.append(
-                    self.Fij_var_array[self.nind_iptr[i] : self.nind_iptr[i + 1]]
-                )
+        supp_deltaF = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
 
-                dc[i] = self.distances[i, self.kstar[i]]
-                rr = np.log(self.kstar[i]) - (
-                    np.log(prefactor)
-                    + self.intrinsic_dim * np.log(self.distances[i, self.kstar[i]])
-                )
-                log_den[i] = rr
-                vj = np.zeros(self.kstar[i])
-                for j in range(self.kstar[i]):
-                    vj[j] = prefactor * (
-                        pow(self.distances[i, j + 1], self.intrinsic_dim)
-                        - pow(self.distances[i, j], self.intrinsic_dim)
-                    )
+        # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+        k1 = self.kstar[self.nind_list[:, 0]]
+        k2 = self.kstar[self.nind_list[:, 1]]
+        redundancy = np.sqrt(k1 * k2)
 
-                vij_list.append(vj)
+        for nspar, indices in enumerate(self.nind_list):
+            i = indices[0]
+            j = indices[1]
+            # tmp = 1.0 / self.Fij_var_array[nspar]
+            tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
+            A[i, j] = -tmp
+            supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
 
-            l_, log_den = maximise_wPAk(
-                log_den,
-                self.kstar,
-                vij_list,
-                self.dist_indices,
-                Fij_list,
-                Fij_var_list,
-                alpha,
+        A = alpha * sparse.lil_matrix(A + A.transpose())
+
+        diag = (
+            np.array(-A.sum(axis=1)).reshape((self.N,))
+            + (1.0 - alpha) / self.log_den_err**2
+        )
+
+        A.setdiag(diag)
+
+        deltaFcum = (
+            alpha
+            * (
+                np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
+                - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
             )
-            log_den -= np.log(self.N)
+            + (1.0 - alpha) * self.log_den / self.log_den_err**2
+        )
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
+
+        log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+        if self.verb:
+            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        sec2 = time.time()
+
+        self.log_den = log_den
+
+        if comp_err is True:
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            # self.B = slin.inv(self.A)
+            self.log_den_err = np.sqrt(np.diag(self.B))
+
+        if self.verb:
+            print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+        sec2 = time.time()
+
+        # self.log_den_err = np.sqrt(diag/(np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,)))
 
         self.log_den = log_den
 
@@ -1278,7 +1158,7 @@ class DensityEstimation(IdEstimation):
         return log_den, log_den_err
 
     def return_interpolated_density_kstarNN(self, X_new, Dthr=23.92812698):
-        """
+        """Return the kstarNN density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
@@ -1317,7 +1197,7 @@ class DensityEstimation(IdEstimation):
         return log_den, log_den_err
 
     def return_interpolated_density_PAk(self, X_new, Dthr=23.92812698):
-        """
+        """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
@@ -1355,19 +1235,3 @@ class DensityEstimation(IdEstimation):
         log_den -= np.log(self.N)
 
         return log_den, log_den_err
-
-
-if __name__ == "__main__":
-    X = np.random.uniform(size=(1000, 2))
-
-    de = DensityEstimation(coordinates=X)
-
-    de.compute_distances(maxk=300)
-
-    _ = de.compute_id_2NN()
-
-    de.compute_density_PAk_optimised()
-
-    # de.compute_grads()
-
-    print(de.log_den)
