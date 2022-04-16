@@ -1,7 +1,7 @@
 <img src="https://raw.githubusercontent.com/sissa-data-science/DADApy/master/logo/logo_1_horizontal_transparent_v2.png" width="500">
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/sissa-data-science/DADApy/branch/develop/graph/badge.svg?token=X4M0KWAPO5)](https://codecov.io/gh/sissa-data-science/DADApy)
+[![codecov](https://codecov.io/gh/sissa-data-science/DADApy/branch/main/graph/badge.svg?token=X4M0KWAPO5)](https://codecov.io/gh/sissa-data-science/DADApy)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/sissa-data-science/dadapy/test?label=test)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/sissa-data-science/dadapy/lint?label=lint)
 
