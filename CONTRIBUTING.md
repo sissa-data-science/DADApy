@@ -47,12 +47,12 @@ from the main `DADApy` folder.
 ```
 make black
 make isort
-make lint
+make flake8
 ```
 
-These will automatically format your code using [`black`](https://black.readthedocs.io/en/stable/), it will 
+These will automatically format your code using [`black`](https://black.readthedocs.io/en/stable/), will 
 automatically sort your import statements using [`isort`](https://pycqa.github.io/isort/index.html), and
-it will suggest code style improvements using [`flake8`](https://flake8.pycqa.org/en/latest/).
+will suggest code style improvements using [`flake8`](https://flake8.pycqa.org/en/latest/).
 
 The above commands depend on the specific package versions installed on your local machine.
 To be sure that the tests will also pass on the GitHub machine, 
