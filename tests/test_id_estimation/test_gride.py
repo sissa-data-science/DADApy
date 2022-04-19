@@ -17,9 +17,6 @@ def test_compute_id_gride():
     de = IdEstimation(coordinates=X)
 
     ### testing gride scaling
-    # TODO: @diegodoimo there seem to be a bug in the following call
-    # and you are the best person to fix it :D
-    #
     ids, ids_err, rs = de.return_id_scaling_gride()
 
     assert ids == pytest.approx(
