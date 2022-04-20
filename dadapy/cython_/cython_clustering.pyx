@@ -238,24 +238,20 @@ def _compute_clustering(floatTYPE_t Z,
 
         for i in range(Nclus - 1):
             for j in range(i + 1, Nclus):
-                if (Point_bord[i, j] != -1):
+                a1 = (Rho_c[centers_[i]] - Rho_bord[i, j])
+                a2 = (Rho_c[centers_[j]] - Rho_bord[i, j])
+                e1 = Z * (Rho_err[centers_[i]] + Rho_bord_err[i, j])
+                e2 = Z * (Rho_err[centers_[j]] + Rho_bord_err[i, j])
+                if (a1 < e1 or a2 < e2):
+                    check = 1
+                    pos[index] = Rho_bord[i, j]
+                    ipos[index] = i
+                    jpos[index] = j
+                    if pos[index] > maxpos:
+                        maxpos = pos[index]
+                        maxposidx = index
 
-                    a1 = (Rho_c[centers_[i]] - Rho_bord[i, j])
-                    a2 = (Rho_c[centers_[j]] - Rho_bord[i, j])
-                    e1 = Z * (Rho_err[centers_[i]] + Rho_bord_err[i, j])
-                    e2 = Z * (Rho_err[centers_[j]] + Rho_bord_err[i, j])
-                    if (a1 < e1 or a2 < e2):
-                        check = 1
-                        pos[index] = Rho_bord[i, j]
-
-                        ipos[index] = i
-                        jpos[index] = j
-
-                        if pos[index] > maxpos:
-                            maxpos = pos[index]
-                            maxposidx = index
-
-                        index = index + 1
+                    index = index + 1
 
         if (check == 1):
             barriers = maxposidx

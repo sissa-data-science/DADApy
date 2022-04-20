@@ -110,7 +110,8 @@ class Clustering(DensityEstimation):
             print("Clustering started")
 
         # Make all values of log_den positives (this is important to help convergence)
-        log_den_min = np.min(self.log_den)
+        # even when substracting the value Z*log_den_err
+        log_den_min = np.min(self.log_den-Z*self.log_den_err)
 
         log_den_c = self.log_den - log_den_min + 1
 
@@ -250,7 +251,9 @@ class Clustering(DensityEstimation):
             print("Clustering started")
 
         # Make all values of log_den positives (this is important to help convergence)
-        log_den_min = np.min(self.log_den)
+        # even when substracting the value Z*log_den_err
+        log_den_min = np.min(self.log_den-Z*self.log_den_err)
+        #log_den_min = np.min(self.log_den)
         log_den_c = self.log_den - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
@@ -365,16 +368,15 @@ class Clustering(DensityEstimation):
             check = 0
             for i in range(Nclus - 1):
                 for j in range(i + 1, Nclus):
-                    if Point_bord[i][j] != -1:
-                        a1 = log_den_c[centers[i]] - log_den_bord[i][j]
-                        a2 = log_den_c[centers[j]] - log_den_bord[i][j]
-                        e1 = Z * (self.log_den_err[centers[i]] + log_den_bord_err[i][j])
-                        e2 = Z * (self.log_den_err[centers[j]] + log_den_bord_err[i][j])
-                        if a1 < e1 or a2 < e2:
-                            check = 1
-                            pos.append(log_den_bord[i][j])
-                            ipos.append(i)
-                            jpos.append(j)
+                    a1 = log_den_c[centers[i]] - log_den_bord[i][j]
+                    a2 = log_den_c[centers[j]] - log_den_bord[i][j]
+                    e1 = Z * (self.log_den_err[centers[i]] + log_den_bord_err[i][j])
+                    e2 = Z * (self.log_den_err[centers[j]] + log_den_bord_err[i][j])
+                    if a1 < e1 or a2 < e2:
+                        check = 1
+                        pos.append(log_den_bord[i][j])
+                        ipos.append(i)
+                        jpos.append(j)
             if check == 1:
                 barriers = pos.index(max(pos))
                 imod = ipos[barriers]
