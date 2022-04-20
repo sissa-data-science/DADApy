@@ -71,7 +71,7 @@ data.compute_clustering()
 - Neighbourhood overlap
   > Doimo et al., *NeurIPS* (2020)
 - Information imbalance
-  > Glielmo et al., *ArXiv* (2021)
+  > Glielmo et al., *PNAS Nexus* (2022)
 
 
 # Installation
