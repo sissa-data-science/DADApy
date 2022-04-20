@@ -63,7 +63,7 @@ def return_not_normalised_density_PAk(
 
     if not interpolation:
         logkstars = np.log(kstar, dtype=float)
-        log_den_err = 1.0 / np.sqrt(
+        log_den_err = np.sqrt(
             (4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float
         )
     else:
