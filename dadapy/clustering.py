@@ -111,7 +111,7 @@ class Clustering(DensityEstimation):
 
         # Make all values of log_den positives (this is important to help convergence)
         # even when substracting the value Z*log_den_err
-        log_den_min = np.min(self.log_den-Z*self.log_den_err)
+        log_den_min = np.min(self.log_den - Z * self.log_den_err)
 
         log_den_c = self.log_den - log_den_min + 1
 
@@ -252,8 +252,8 @@ class Clustering(DensityEstimation):
 
         # Make all values of log_den positives (this is important to help convergence)
         # even when substracting the value Z*log_den_err
-        log_den_min = np.min(self.log_den-Z*self.log_den_err)
-        #log_den_min = np.min(self.log_den)
+        log_den_min = np.min(self.log_den - Z * self.log_den_err)
+        # log_den_min = np.min(self.log_den)
         log_den_c = self.log_den - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
