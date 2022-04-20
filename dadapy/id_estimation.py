@@ -370,6 +370,7 @@ class IdEstimation(Base):
 
         Args:
             dist: chunk of distance matrix passed internally by pairwise_distance_chunked
+            start: dummy variable neede for compatibility with sklearn, not used
             range_scaling (int): maximum neighbor rank
 
         Returns:
