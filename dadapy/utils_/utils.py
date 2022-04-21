@@ -182,27 +182,6 @@ def _float_keys(text):
 # files = glob.glob(dirr+'*.ext')
 # files.sort(key = natural_keys)
 
-# --------------------------------------------------------------------------------------
-# Stirling and binomial approximations
-def _stirling(n):
-    return (
-        np.sqrt(2 * np.pi * n) * (n / np.e) ** n * (1.0 + 1.0 / 12.0 / n)
-    )  # + 1/288/n/n - 139/51840/n/n/n/)
-
-
-def _log_stirling(n):
-    return (
-        (n + 0.5) * np.log(n) - n + 0.5 * np.log(2 * np.pi) + 1.0 / 12.0 / n
-    )  # -1/360/n/n/n
-
-
-def _binom_stirling(k, n):
-    return stirling(k) / stirling(n) / stirling(k - n)
-
-
-def _log_binom_stirling(k, n):
-    return log_stirling(k) - log_stirling(n) - log_stirling(k - n)
-
 
 # --------------------------------------------------------------------------------------
 # Helper functions
@@ -249,16 +228,6 @@ def _fisher_info_scaling(id_ml, mus, n1, n2, eps):
     j1 = (n2 - n1 - 1) * np.sum(tmp)
 
     return j0 + j1
-
-
-# def _f(d, mu, n, N):
-#     # mu can't be == 1 add some noise
-#     indx = np.nonzero(mu == 1)
-#     mu[indx] += np.finfo(np.float32).eps
-#
-#     one_m_mus_d = 1. - mu ** (-d)
-#     sum = np.sum(((1 - n) / one_m_mus_d + 2. * n - 1.) * np.log(mu))
-#     return sum - N / d
 
 
 def _compute_binomial_cramerrao(d, k, r, n):
