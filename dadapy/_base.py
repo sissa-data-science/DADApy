@@ -34,7 +34,6 @@ class Base:
         distances=None,
         maxk=None,
         period=None,
-        data_structure="continuous",
         verbose=False,
         njobs=cores,
     ):
@@ -45,7 +44,6 @@ class Base:
             distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
-            data_structure (str): the type of data structure, options are "continuous" or "discrete"
             verbose (bool): whether you want the code to speak or shut up
             njobs (int): number of cores to be used
         """
@@ -57,7 +55,6 @@ class Base:
         self.N = None
         self.metric = "euclidean"
         self.period = period
-        self.data_structure = data_structure
 
         if coordinates is not None:
             assert isinstance(
