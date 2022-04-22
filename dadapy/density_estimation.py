@@ -22,7 +22,6 @@ from scipy import sparse
 from scipy.special import gammaln
 
 from dadapy.cython_ import cython_density as cd
-from dadapy.cython_ import cython_grads as cgr
 from dadapy.id_estimation import IdEstimation
 from dadapy.utils_.density_estimation import (
     return_not_normalised_density_kstarNN,
@@ -180,7 +179,6 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-
     def compute_density_kstarNN(self, Dthr=23.92812698):
         """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
         Args:
@@ -312,7 +310,6 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-
     def return_interpolated_density_kNN(self, X_new, k):
         """Return the kNN density of the primary dataset, evaluated on a new set of points "X_new".
 
@@ -386,7 +383,6 @@ class DensityEstimation(IdEstimation):
         return log_den, log_den_err
 
     # ----------------------------------------------------------------------------------------------
-
 
     def return_interpolated_density_PAk(self, X_new, Dthr=23.92812698):
         """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
