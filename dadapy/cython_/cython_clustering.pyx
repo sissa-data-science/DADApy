@@ -68,6 +68,7 @@ def _compute_clustering(floatTYPE_t Z,
 # This  part  checks that there are no centers within the neighborhood of points with higher density.
     for k in range(len_centers):
         #print(k)
+        t=0
         for i in range(Nele):
             for j in range(1, kstar[i]+1):
                 if (dist_indices[i, j] == _centers_[k]):
@@ -76,9 +77,10 @@ def _compute_clustering(floatTYPE_t Z,
                         to_remove[len_to_remove] = _centers_[k]
 
                         len_to_remove += 1
-                        #print(len_to_remove)
+                        t=1
                         break
-            break
+            if t==1:
+                break
 
     # for i in range(Nele):
     #     for k in range(len_centers):

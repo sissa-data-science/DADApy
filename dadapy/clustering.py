@@ -270,7 +270,8 @@ class Clustering(DensityEstimation):
                 centers.append(i)
 
         count = 0
-        for i in centers:
+        centers_iter=centers.copy() 
+        for i in centers_iter:
             l, m = np.where(self.dist_indices == i)
             for j in range(l.shape[0]):
                 if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
