@@ -24,24 +24,8 @@ ext_modules += [
 
 ext_modules += [
     Extension(
-        "dadapy.cython_.cython_grads",
-        sources=["dadapy/cython_/cython_grads.c"],
-        include_dirs=[get_numpy_include()],
-    )
-]
-
-ext_modules += [
-    Extension(
         "dadapy.cython_.cython_maximum_likelihood_opt",
         sources=["dadapy/cython_/cython_maximum_likelihood_opt.c"],
-        include_dirs=[get_numpy_include()],
-    )
-]
-
-ext_modules += [
-    Extension(
-        "dadapy.cython_.cython_periodic_dist",
-        sources=["dadapy/cython_/cython_periodic_dist.c"],
         include_dirs=[get_numpy_include()],
     )
 ]
