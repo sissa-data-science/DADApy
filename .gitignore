@@ -227,4 +227,9 @@ duly/cython_/*.so
 #dadapy/cython_/*.c
 dadapy/cython_/.*
 
+#Datasets
+examples/datasets/mnist.npy
+examples/datasets/isolet_float32.npy
+
+
 # End of https://www.toptal.com/developers/gitignore/api/python,emacs,vim
