@@ -68,6 +68,7 @@ def _compute_clustering(floatTYPE_t Z,
 # This  part  checks that there are no centers within the neighborhood of points with higher density.
     for k in range(len_centers):
         #print(k)
+        t=0
         for i in range(Nele):
             for j in range(1, kstar[i]+1):
                 if (dist_indices[i, j] == _centers_[k]):
@@ -76,9 +77,10 @@ def _compute_clustering(floatTYPE_t Z,
                         to_remove[len_to_remove] = _centers_[k]
 
                         len_to_remove += 1
-                        #print(len_to_remove)
+                        t=1
                         break
-            break
+            if t==1:
+                break
 
     # for i in range(Nele):
     #     for k in range(len_centers):
@@ -173,13 +175,16 @@ def _compute_clustering(floatTYPE_t Z,
 
     for c in range(Nclus):
         for p1 in clstruct[c]:
-            for k in range(1, kstar[p1] + 1):
-                p2 = dist_indices[p1, k]
-                pp = -1
-                if (cluster_init[p2] != c):
-                    pp = p2
-                    cp = cluster_init[pp]
-                    break
+            if p1 in centers:
+                pp=-1
+            else:
+                for k in range(1, kstar[p1] + 1):
+                    p2 = dist_indices[p1, k]
+                    pp = -1
+                    if (cluster_init[p2] != c):
+                        pp = p2
+                        cp = cluster_init[pp]
+                        break
             if (pp != -1):
                 for k in range(1, maxk):
                     po = dist_indices[pp, k]
@@ -258,8 +263,10 @@ def _compute_clustering(floatTYPE_t Z,
 
             imod = ipos[barriers]
             jmod = jpos[barriers]
+            c1=(Rho_c[centers[imod]] - Rho_bord[imod][jmod])/(Rho_err[centers[imod]] + Rho_bord_err[imod][jmod])
+            c2=(Rho_c[centers[jmod]] - Rho_bord[imod][jmod])/(Rho_err[centers[jmod]] + Rho_bord_err[imod][jmod])
+            if c1<c2:
 
-            if (Rho_c[centers_[imod]] < Rho_c[centers_[jmod]]):
                 tmp = jmod
                 jmod = imod
                 imod = tmp

@@ -270,7 +270,8 @@ class Clustering(DensityEstimation):
                 centers.append(i)
 
         count = 0
-        for i in centers:
+        centers_iter = centers.copy()
+        for i in centers_iter:
             l, m = np.where(self.dist_indices == i)
             for j in range(l.shape[0]):
                 if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
@@ -320,13 +321,16 @@ class Clustering(DensityEstimation):
                 Point_bord[i][j] = -1
         for c in range(Nclus):
             for p1 in clstruct[c]:
-                for k in range(1, self.kstar[p1] + 1):
-                    p2 = self.dist_indices[p1, k]
+                if p1 in centers:
                     pp = -1
-                    if cluster_init[p2] != c:
-                        pp = p2
-                        cp = cluster_init[pp]
-                        break
+                else:
+                    for k in range(1, self.kstar[p1] + 1):
+                        p2 = self.dist_indices[p1, k]
+                        pp = -1
+                        if cluster_init[p2] != c:
+                            pp = p2
+                            cp = cluster_init[pp]
+                            break
                 if pp != -1:
                     for k in range(1, self.maxk):
                         po = self.dist_indices[pp, k]
@@ -380,7 +384,13 @@ class Clustering(DensityEstimation):
                 barriers = pos.index(max(pos))
                 imod = ipos[barriers]
                 jmod = jpos[barriers]
-                if log_den_c[centers[imod]] < log_den_c[centers[jmod]]:
+                c1 = (log_den_c[centers[imod]] - log_den_bord[imod][jmod]) / (
+                    self.log_den_err[centers[imod]] + log_den_bord_err[imod][jmod]
+                )
+                c2 = (log_den_c[centers[jmod]] - log_den_bord[imod][jmod]) / (
+                    self.log_den_err[centers[jmod]] + log_den_bord_err[imod][jmod]
+                )
+                if c1 < c2:
                     tmp = jmod
                     jmod = imod
                     imod = tmp
