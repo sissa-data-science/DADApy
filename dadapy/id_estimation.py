@@ -385,8 +385,8 @@ class IdEstimation(Base):
         steps = np.array([2**i for i in range(max_step)])
 
         sample_range = np.arange(dist.shape[0])[:, None]
-        neigh_ind = np.argpartition(dist, range_scaling - 1, axis=1)
-        neigh_ind = neigh_ind[:, :range_scaling]
+        neigh_ind = np.argpartition(dist, steps[-1], axis=1)
+        neigh_ind = neigh_ind[:, : steps[-1] + 1]
 
         # argpartition doesn't guarantee sorted order, so we sort again
         neigh_ind = neigh_ind[sample_range, np.argsort(dist[sample_range, neigh_ind])]
