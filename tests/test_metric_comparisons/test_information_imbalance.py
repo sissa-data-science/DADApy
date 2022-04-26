@@ -62,7 +62,7 @@ def test_information_imbalance_basics():
 
 
 def test_greedy_feature_selection_full():
-    """Test that the information imbalance greedy optimisation works correctly."""
+    """Test that the information imbalance greedy optimisation works correctly"""
     expeted_coords = np.array([0, 1])
     expected_imbalances = np.array([[0.15, 0.51], [0.02, 0.02]])
 
@@ -81,6 +81,7 @@ def test_greedy_feature_selection_full():
 
 def test_return_inf_imb_matrix_of_coords():
     """Test inf imb calculation of all coordinates to all others."""
+
     X = np.load(filename)[:, [0, 1]]
 
     expected_matrix = np.array([[0.0, 1.02], [0.99, 0.0]])
@@ -90,3 +91,15 @@ def test_return_inf_imb_matrix_of_coords():
     matrix = mc.return_inf_imb_matrix_of_coords()
 
     assert matrix == pytest.approx(expected_matrix, abs=0.01)
+
+
+def test_return_inf_imb_two_selected_coords():
+    """Test information imbalance between selected coordinates."""
+
+    X = np.load(filename)
+
+    mc = MetricComparisons(coordinates=X, maxk=X.shape[0] - 1)
+
+    imbalances = mc.return_inf_imb_two_selected_coords([0], [0, 1])
+
+    assert imbalances == pytest.approx([0.598, 0.144], abs=0.001)
