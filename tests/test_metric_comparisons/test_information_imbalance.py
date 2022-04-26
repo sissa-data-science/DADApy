@@ -1,3 +1,20 @@
+# Copyright 2021 The DADApy Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
+"""Module for testing information imbalance related methods."""
+
 import os
 
 import numpy as np
@@ -9,8 +26,7 @@ filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy
 
 
 def test_information_imbalance_basics():
-    """Test the information imbalance operations work correctly"""
-
+    """Test the information imbalance operations work correctly."""
     X = np.load(filename)
 
     mc = MetricComparisons(coordinates=X)
@@ -46,8 +62,7 @@ def test_information_imbalance_basics():
 
 
 def test_greedy_feature_selection_full():
-    """Test thst the information imbalance greedy optimisation works correctly"""
-
+    """Test that the information imbalance greedy optimisation works correctly."""
     expeted_coords = np.array([0, 1])
     expected_imbalances = np.array([[0.15, 0.51], [0.02, 0.02]])
 
@@ -65,7 +80,7 @@ def test_greedy_feature_selection_full():
 
 
 def test_return_inf_imb_matrix_of_coords():
-
+    """Test inf imb calculation of all coordinates to all others."""
     X = np.load(filename)[:, [0, 1]]
 
     expected_matrix = np.array([[0.0, 1.02], [0.99, 0.0]])
