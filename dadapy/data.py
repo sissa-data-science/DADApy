@@ -27,7 +27,7 @@ os.getcwd()
 
 
 class Data(Clustering, MetricComparisons):
-    """This class is a container of all the method of DULY. It is initialised with a set of coordinates or a set of
+    """This class is a container of all the method of DADApy. It is initialised with a set of coordinates or a set of
     distances, and all methods can be called on the generated class instance.
 
     Attributes:
