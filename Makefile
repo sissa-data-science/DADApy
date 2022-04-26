@@ -24,13 +24,13 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source dadapy --omit="*/dadapy/plot*" -m pytest
+	coverage run --source dadapy -m pytest
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
 flake8: ## check style with flake8
-	flake8 dadapy/_base.py dadapy/metric_comparisons.py dadapy/clustering.py dadapy/id_estimation.py #tests dev_scripts examples
+	flake8 dadapy/_base.py dadapy/metric_comparisons.py dadapy/clustering.py dadapy/id_estimation.py tests #dev_scripts examples
 
 #pylint: ## run pylint
 #	pylint dadapy tests
