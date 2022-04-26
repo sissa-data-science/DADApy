@@ -16,7 +16,7 @@
 import numpy as np
 from scipy.special import gammaln
 
-from dadapy.cython_ import cython_maximum_likelihood_opt as cml
+from dadapy._cython import cython_maximum_likelihood_opt as cml
 
 
 def return_not_normalised_density_kstarNN(

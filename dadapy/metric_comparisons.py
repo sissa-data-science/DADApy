@@ -21,8 +21,8 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from dadapy._base import Base
-from dadapy.utils_.metric_comparisons import _return_imbalance
-from dadapy.utils_.utils import compute_nn_distances
+from dadapy._utils.metric_comparisons import _return_imbalance
+from dadapy._utils.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 
