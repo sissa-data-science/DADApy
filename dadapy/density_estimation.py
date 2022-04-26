@@ -13,13 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 
+"""This module contains the implementation of the DensityEstimation class."""
+
 import multiprocessing
 import time
 
 import numpy as np
-from scipy import linalg as slin
-from scipy import sparse
-from scipy.special import gammaln
 
 from dadapy.cython_ import cython_density as cd
 from dadapy.id_estimation import IdEstimation
@@ -35,15 +34,8 @@ cores = multiprocessing.cpu_count()
 class DensityEstimation(IdEstimation):
     """Computes the log-density and its error at each point and other properties.
 
-    Inherits from class IdEstimation. Can estimate the optimal number k* of neighbors for each points. \
-    Can compute the log-density and its error at each point choosing among various kNN-based methods. \
-    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component. \
-    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component. \
-
-    TODO:
-    - compute dc when compute_kstar or when set_kstar and nowhere else
-    - implement self.kstar and self.fixedk of a bool attribute self.iskfixed which is True when kstar is an array of identical integers
-
+    Inherits from class IdEstimation. Can estimate the optimal number k* of neighbors for each points.
+    Can compute the log-density and its error at each point choosing among various kNN-based methods.
 
     Attributes:
         kstar (np.array(float)): array containing the chosen number k* in the neighbourhood of each of the N points
@@ -51,22 +43,12 @@ class DensityEstimation(IdEstimation):
         log_den (np.array(float), optional): array containing the N log-densities
         log_den_err (np.array(float), optional): array containing the N errors on the log_den
 
-
-    Bello sto stile di documentazione:
-
-    Parameters
-    ----------
-    X : {float, np.ndarray, or theano symbolic variable}
-        X coordinate. If you supply an array, x and y need to be the same shape,
-        and the potential will be calculated at each (x,y pair)
-    y : {float, np.ndarray, or theano symbolic variable}
-        Y coordinate. If you supply an array, x and y need to be the same shape,
-        and the potential will be calculated at each (x,y pair)
     """
 
     def __init__(
         self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
     ):
+        """Initialise the DensityEstimation class."""
         super().__init__(
             coordinates=coordinates,
             distances=distances,
@@ -76,31 +58,19 @@ class DensityEstimation(IdEstimation):
         )
 
         self.kstar = None
-        self.nspar = None
-        self.nind_list = None
-        self.nind_iptr = None
-        self.common_neighs = None
-        self.neigh_vector_diffs = None
-        self.neigh_dists = None
         self.dc = None
         self.log_den = None
         self.log_den_err = None
-        self.grads = None
-        self.grads_var = None
-        self.check_grads_covmat = False
-        self.Fij_array = None
-        self.Fij_var_array = None
 
     # ----------------------------------------------------------------------------------------------
 
     def set_kstar(self, k=0):
-        """Set all elements of kstar to a fixed value k. Reset all other class attributes (all depending on kstar).
+        """Set all elements of kstar to a fixed value k.
+
+        Reset all other class attributes (all depending on kstar).
 
         Args:
-            k: number of neighbours used to compute the density
-
-        Returns:
-
+            k: number of neighbours used to compute the density it can be an iteger or an array of integers
         """
         if isinstance(k, np.ndarray):
             self.kstar = k
@@ -114,13 +84,14 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_kNN(self, k=10):
-        """Compute the density of of each point using a simple kNN estimator
+        """Compute the density of each point using a simple kNN estimator.
 
         Args:
-            k: number of neighbours used to compute the density
+            k (int): number of neighbours used to compute the density
 
         Returns:
-
+            log_den (np.ndarray(float)): estimated log density
+            log_den_err (np.ndarray(float)): estimated error on log density
         """
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
@@ -140,21 +111,22 @@ class DensityEstimation(IdEstimation):
         self.log_den = log_den
         self.log_den_err = log_den_err
         self.dc = dc
-        # self.kstar = kstar
 
         if self.verb:
             print("k-NN density estimation finished")
 
+        return self.log_den, self.log_den_err
+
     # ----------------------------------------------------------------------------------------------
 
     def compute_kstar(self, Dthr=23.92812698):
-        """Computes an optimal choice of k for each point. Cython optimized version.
-        Args:
-            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-            to a p-value of 1e-6.
-        Returns:
-        """
+        """Compute an optimal choice of k for each point.
 
+        Args:
+            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+                to a p-value of 1e-6.
+
+        """
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
 
@@ -180,13 +152,16 @@ class DensityEstimation(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_kstarNN(self, Dthr=23.92812698):
-        """Computes the density of each point using a simple kNN estimator with an optimal choice of k.
-        Args:
-            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-            to a p-value of 1e-6.
-        Returns:
-        """
+        """Compute the density of each point using a simple kNN estimator with an optimal choice of k.
 
+        Args:
+            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+                to a p-value of 1e-6.
+
+        Returns:
+            log_den (np.ndarray(float)): estimated log density
+            log_den_err (np.ndarray(float)): estimated error on log density
+        """
         if self.kstar is None:
             self.compute_kstar(Dthr)
 
@@ -207,17 +182,22 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("k-NN density estimation finished")
 
+        return self.log_den, self.log_den_err
+
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_kpeaks(self, Dthr=23.92812698):
-        """Computes the density of each point as proportional to the optimal k value found for that point.
+        """Compute the density of each point as proportional to the optimal k value found for that point.
 
         This method is mostly useful for the kpeaks clustering algorithm.
 
         Args:
             Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-            to a p-value of 1e-6.
+                to a p-value of 1e-6.
 
+        Returns:
+            log_den (np.ndarray(float)): estimated log density
+            log_den_err (np.ndarray(float)): estimated error on log density
         """
         if self.kstar is None:
             self.compute_kstar(Dthr)
@@ -252,10 +232,21 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("k-peaks density estimation finished")
 
+        return self.log_den, self.log_den_err
+
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_PAk(self, Dthr=23.92812698):
+        """Compute the density of each point using the PAk estimator.
 
+        Args:
+            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+                to a p-value of 1e-6.
+
+        Returns:
+            log_den (np.ndarray(float)): estimated log density
+            log_den_err (np.ndarray(float)): estimated error on log density
+        """
         # compute optimal k
         if self.kstar is None:
             self.compute_kstar(Dthr=Dthr)
@@ -292,11 +283,14 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("PAk density estimation finished")
 
+        return self.log_den, self.log_den_err
+
     # ----------------------------------------------------------------------------------------------
 
     def return_entropy(self):
-        """Compute a very rough estimate of the entropy of the data distribution
-        as the average negative log probability.
+        """Compute a very rough estimate of the entropy of the data distribution.
+
+        The cimputation simply returns the average negative log probability estimates.
 
         Returns:
             H (float): the estimate entropy of the distribution
@@ -395,7 +389,6 @@ class DensityEstimation(IdEstimation):
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
         """
-
         assert self.X is not None
 
         if self.intrinsic_dim is None:
