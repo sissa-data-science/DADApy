@@ -21,12 +21,12 @@ import time
 import numpy as np
 
 from dadapy._cython import cython_density as cd
-from dadapy.id_estimation import IdEstimation
 from dadapy._utils.density_estimation import (
     return_not_normalised_density_kstarNN,
     return_not_normalised_density_PAk,
 )
 from dadapy._utils.utils import compute_cross_nn_distances
+from dadapy.id_estimation import IdEstimation
 
 cores = multiprocessing.cpu_count()
 
