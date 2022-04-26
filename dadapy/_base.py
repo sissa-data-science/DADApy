@@ -19,7 +19,7 @@ import time
 
 import numpy as np
 
-from dadapy.utils_.utils import compute_nn_distances, from_all_distances_to_nndistances
+from dadapy._utils.utils import compute_nn_distances, from_all_distances_to_nndistances
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()

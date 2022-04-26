@@ -21,7 +21,7 @@ import time
 import numpy as np
 import scipy as sp
 
-from dadapy.cython_ import cython_clustering as cf
+from dadapy._cython import cython_clustering as cf
 from dadapy.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()

@@ -224,8 +224,8 @@ do
 # Cython
 duly/cython_/*.html
 duly/cython_/*.so
-#dadapy/cython_/*.c
-dadapy/cython_/.*
+#dadapy/_cython/*.c
+dadapy/_cython/.*
 
 #Datasets
 examples/datasets/mnist.npy

@@ -16,24 +16,24 @@ ext_modules = []
 
 ext_modules += [
     Extension(
-        "dadapy.cython_.cython_clustering",
-        sources=["dadapy/cython_/cython_clustering.c"],
+        "dadapy._cython.cython_clustering",
+        sources=["dadapy/_cython/cython_clustering.c"],
         include_dirs=[get_numpy_include()],
     )
 ]
 
 ext_modules += [
     Extension(
-        "dadapy.cython_.cython_maximum_likelihood_opt",
-        sources=["dadapy/cython_/cython_maximum_likelihood_opt.c"],
+        "dadapy._cython.cython_maximum_likelihood_opt",
+        sources=["dadapy/_cython/cython_maximum_likelihood_opt.c"],
         include_dirs=[get_numpy_include()],
     )
 ]
 
 ext_modules += [
     Extension(
-        "dadapy.cython_.cython_density",
-        sources=["dadapy/cython_/cython_density.c"],
+        "dadapy._cython.cython_density",
+        sources=["dadapy/_cython/cython_density.c"],
         include_dirs=[get_numpy_include()],
     )
 ]
@@ -44,7 +44,7 @@ setup(
     url="https://dadapy.readthedocs.io/",
     description="A Python package for Distance-based Analysis of DAta-manifolds.",
     long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
-    packages=["dadapy", "dadapy.utils_"],
+    packages=["dadapy", "dadapy._utils"],
     install_requires=["numpy", "scipy", "scikit-learn", "matplotlib"],
     extras_require={"dev": ["tox", "black", "isort", "pytest"]},
     cmdclass=cmdclass,
@@ -54,14 +54,14 @@ setup(
 ### COMPILE FROM CYTHON ### NOT WORKING
 #
 # from Cython.Build import cythonize
-# ext_modules = cythonize("dadapy/cython_/*.pyx")
+# ext_modules = cythonize("dadapy/_cython/*.pyx")
 #
 # setup(
 #     name="dadapy",
 #     url="https://dadapy.readthedocs.io/",
 #     description="A Python package for Distance-based Analysis of DAta-manifolds.",
 #     long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
-#     packages=["dadapy", "dadapy.utils_"],
+#     packages=["dadapy", "dadapy._utils"],
 #     install_requires=["numpy", "scipy", "scikit-learn", "matplotlib"],
 #     extras_require={"dev": ["tox", "black", "isort", "pytest"]},
 #     cmdclass=cmdclass,

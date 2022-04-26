@@ -25,8 +25,8 @@ from scipy.optimize import curve_fit
 from sklearn.metrics import pairwise_distances_chunked
 
 from dadapy._base import Base
-from dadapy.utils_ import utils as ut
-from dadapy.utils_.utils import compute_nn_distances
+from dadapy._utils import utils as ut
+from dadapy._utils.utils import compute_nn_distances
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()

@@ -18,13 +18,13 @@ sys.path.insert(0, os.path.abspath("../.."))
 sys.path.insert(0, os.path.abspath("../dadapy"))
 sys.path.insert(0, os.path.abspath("../../dadapy"))
 
-sys.path.insert(0, os.path.abspath("../cython_"))
-sys.path.insert(0, os.path.abspath("../../dadapy/cython_"))
+sys.path.insert(0, os.path.abspath("../_cython"))
+sys.path.insert(0, os.path.abspath("../../dadapy/_cython"))
 
 sys.path.insert(0, os.path.abspath("../examples"))
 sys.path.insert(0, os.path.abspath("../../examples"))
 
-sys.path.insert(0, os.path.abspath("../../dadapy/utils_"))
+sys.path.insert(0, os.path.abspath("../../dadapy/_utils"))
 
 # -- Project information -----------------------------------------------------
 
@@ -76,9 +76,7 @@ html_theme_options = {
 }
 
 autodoc_mock_imports = [
-    "dadapy.cython_.cython_clustering",
-    "dadapy.cython_.cython_maximum_likelihood_opt",
-    "dadapy.cython_.cython_grads",
-    "dadapy.cython_.cython_periodic_dist",
-    "dadapy.cython_.cython_density",
+    "dadapy._cython.cython_clustering",
+    "dadapy._cython.cython_maximum_likelihood_opt",
+    "dadapy._cython.cython_density",
 ]
