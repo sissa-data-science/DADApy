@@ -13,6 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 
+"""This module contains some essential plotting functions."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
@@ -23,6 +25,7 @@ from sklearn import manifold
 
 
 def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
+    """Plot the 2NN scatter plot and line fit."""
     mus = Data.distances[:, 2] / Data.distances[:, 1]
 
     idx = np.arange(mus.shape[0])
@@ -56,45 +59,12 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
 
     plt.xlabel("log(mu)")
     plt.ylabel("-log(1-F(mu))")
+    plt.show()
     # plt.savefig('ID_line_fit_plot.png')
 
 
-def plot_ID_vs_fraction(Data, fractions=np.linspace(0.1, 1, 25)):
-    IDs = []
-    IDs_errs = []
-    verbose = Data.verb
-    Data.verb = False
-
-    for frac in fractions:
-        Data.compute_id(decimation=frac, n_reps=5)
-        IDs.append(Data.id_estimated_ml)
-        IDs_errs.append(Data.id_estimated_ml_std)
-
-    Data.verb = verbose
-    plt.errorbar(fractions * Data.N, IDs, yerr=IDs_errs)
-    plt.xlabel("N")
-    plt.ylabel("estimated ID")
-    # plt.savefig('ID_decimation_plot.png')
-
-
-def plot_ID_vs_nneigh(Data, nneighs=np.arange(2, 90)):
-    IDs = []
-    verbose = Data.verb
-    Data.verb = False
-
-    for nneigh in nneighs:
-        Data.compute_id_diego(nneigh=nneigh)
-        IDs.append(Data.id_estimated_ml)
-
-    Data.verb = verbose
-    plt.plot(1.0 / nneighs, IDs)
-    # plt.xscale('log')
-    plt.xlabel("1/nneigh")
-    plt.ylabel("estimated ID")
-    # plt.savefig('ID_neighs_plot.png')
-
-
 def plot_SLAn(Data, linkage="single"):
+    """Plot a basic visualisation of the density peaks."""
     assert Data.cluster_assignment is not None
 
     nd = int((Data.N_clusters * Data.N_clusters - Data.N_clusters) / 2)
@@ -123,10 +93,10 @@ def plot_SLAn(Data, linkage="single"):
     dn = sp.cluster.hierarchy.dendrogram(DD)
     # fig.savefig('dendrogramm.png')  # save the figure to file
     plt.show()
-    # plt.close(fig)  # close the figure
 
 
 def plot_MDS(Data, cmap="viridis"):
+    """Plot a multi-dimensional scaling visualisation of the density peaks."""
     Fmax = max(Data.log_den)
     Rho_bord_m = np.copy(Data.log_den_bord)
     d_dis = np.zeros((Data.N_clusters, Data.N_clusters), dtype=float)
@@ -175,17 +145,16 @@ def plot_MDS(Data, cmap="viridis"):
     values = np.abs(Rho_bord_m)
     lc = LineCollection(segments, zorder=0, norm=plt.Normalize(0, values.max()))
     lc.set_array(Rho_bord_m.flatten())
-    # lc.set_linewidths(np.full(len(segments),0.5))
     lc.set_edgecolor(np.full(len(segments), "black"))
     lc.set_facecolor(np.full(len(segments), "black"))
     lc.set_linewidths(0.02 * Rho_bord_m.flatten())
     ax.add_collection(lc)
     # fig.savefig('2D.png')
     plt.show()
-    # plt.close(fig)  # close the figure
 
 
 def plot_matrix(Data):
+    """Plot a matrix of density peaks and density saddle points intensity."""
     Rho_bord_m = np.copy(Data.log_den_bord)
     topography = np.copy(Rho_bord_m)
     for j in range(Data.N_clusters):
@@ -195,10 +164,10 @@ def plot_matrix(Data):
     plt.imshow(topography, cmap="hot", interpolation=None)
     # fig.savefig('matrix.png')
     plt.show()
-    # plt.close(fig)  # close the figure
 
 
 def plot_DecGraph(Data):
+    """Plot the decision graph for the Density Peak clustering method."""
     plt.xlabel(r"$\rho$")
     plt.ylabel(r"$\delta$")
     plt.scatter(Data.log_den, Data.delta)
@@ -206,33 +175,31 @@ def plot_DecGraph(Data):
 
 
 def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
-    #
-    # get_dendrogram (Data,cmap="viridis",savefig"",logscale=True)
-    #
-    # This function generates a visualization of the topography computed with
-    # ADP. Fundamentaly it corresponds to a hierarchy of the clusters build
-    # with Single Linkage taking as similarity measure the density at the
-    # border between clusters. At difference from classical dendrograms,
-    # where all the branches have the same height, in this case
-    # the height of the branches is proportional to the density of the cluster
-    # centre. To convey more information, the distance in the x-axis between
-    # clusters is proportional to the population (or its logarithm).
-    # It takes as mandatory argument:
-    #
-    # Data: A dadapy data object for which ADP has been already run.
-    #
-    # While the optional arguments are:
-    #
-    # cmap: The color map for representing the different clusters,
-    # the default is "viridis".
-    # savefig: A string with the name of the file in which the dendrogram
-    # will be saved. The default is empty, so no file is generated.
-    # logscale: Makes the distances in the x-axis between clusters proportional
-    # to the logarithm of the population of the clusters instead of
-    # proportional to the population itself. In very unbalanced clusterings,
-    # it makes the dendrogram more human readable. The default is True.
-    #
-    # Generation of SL dendrogram
+    """Generate a visualisation of the topography computed with ADP.
+
+    This visualisation fundamentally corresponds to a hierarchy of the clusters build
+    with Single Linkage taking as similarity measure the density at the
+    border between clusters.
+    At difference from classical dendrograms, where all the branches have the same height,
+    in this case the height of the branches is proportional to the density of the cluster
+    centre.
+    To convey more information, the distance in the x-axis between
+    clusters is proportional to the population (or its logarithm). TODO: Alex, is this sentence true?
+
+    Args:
+        Data: A dadapy data object for which ADP has been already run.
+        cmap: (optional) The color map for representing the different clusters,
+            the default is "viridis".
+        savefig: (str, optional) A string with the name of the file in which the dendrogram
+            will be saved. The default is empty, so no file is generated.
+        logscale: (bool, optional) Makes the distances in the x-axis between clusters proportional
+            to the logarithm of the population of the clusters instead of
+            proportional to the population itself. In very unbalanced clusterings,
+            it makes the dendrogram more human readable. The default is True.
+
+    Returns:
+
+    """
     # Prepare some auxiliary lists
     e1 = []
     e2 = []
@@ -275,7 +242,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
         newname = L[nlinks - 1]
         # list of untouched clusters
         unt = []
-        for r in d12:
+        for _ in d12:
             if (e1[t] != fe) & (e1[t] != fs):
                 unt.append(e1[t])
             if (e2[t] != fe) & (e2[t] != fs):
@@ -290,7 +257,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
         for j in unt:
             t = 0
             dmin = 9.9e99
-            for r in d12:
+            for _ in d12:
                 if (e1[t] == j) | (e2[t] == j):
                     if (e1[t] == fe) | (e2[t] == fe) | (e1[t] == fs) | (e2[t] == fs):
                         if d12[t] < dmin:
@@ -301,7 +268,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
             d12new.append(dmin)
 
         t = 0
-        for r in d12:
+        for _ in d12:
             if (unt.count(e1[t])) & (unt.count(e2[t])):
                 e1new.append(e1[t])
                 e2new.append(e2[t])
@@ -394,7 +361,7 @@ def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
     """Plot the information imbalance plane corresponding to the computed ibalances.
 
     Args:
-        imbalances (np.ndarray): Information imbalances from the full space to specific sets of coordinates and vice-versa
+        imbalances (np.ndarray): Imbalances from the full space to specific sets of coordinates and vice-versa
         coord_list (list of lists of integers, optional): The list of coordinates considered for the information
         imbalance computations
         labels (list of strings, optional): Labels for the list of coordinates
@@ -402,8 +369,7 @@ def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
     Returns:
 
     """
-
-    plt.figure(figsize=(4, 4))
+    plt.figure(figsize=(5, 5))
     for i, (imb0, imb1) in enumerate(imbalances.T):
         if coord_list is not None:
             if labels is not None:
@@ -423,34 +389,34 @@ def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
     plt.xlabel(r"$\Delta(X_{full} \rightarrow X_{coords}) $")
     plt.ylabel(r"$\Delta(X_{coords} \rightarrow X_{full}) $")
 
+    plt.show()
+
 
 if __name__ == "__main__":
-    # generate some random points in n dimensions
+    # basic tests for plotting functions
+    from dadapy import Data
 
-    from adpy import Data
+    X = np.vstack(
+        (np.random.normal(0, 1, size=(1000, 5)), np.random.normal(5, 1, size=(1000, 5)))
+    )
 
-    # X = np.vstack(
-    #     (np.random.normal(0, 1, size=(1000, 15)),
-    #      np.random.normal(5, 1, size=(1000, 15))))
+    data = Data(X)
 
-    X = np.genfromtxt("Fig1.dat", dtype="float")
+    data.compute_distances(maxk=200)
+    data.compute_id_2NN()
+    data.compute_density_PAk()
+    data.compute_clustering(Z=1.65, halo=True)
 
-    dist = Data(X)
+    imbalances = data.return_inf_imb_full_all_coords()
 
-    dist.compute_distances(maxk=200)
+    # ID ESTIMATION
+    plot_ID_line_fit_estimation(data)
 
-    dist.compute_id()
+    # DENSITY PEAKS
+    plot_SLAn(data)
+    plot_MDS(data)
+    get_dendrogram(data)
+    plot_matrix(data)
 
-    dist.compute_density_kNN(k=3)
-
-    dist.compute_density_PAk()
-
-    dist.compute_clustering(Z=1.65, halo=True)
-
-    plot_SLAn(dist)
-
-    get_histogram(dist)
-
-    plot_MDS(dist)
-
-    plot_matrix(dist)
+    # IMBALANCES
+    plot_inf_imb_plane(imbalances)
