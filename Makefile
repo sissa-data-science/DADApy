@@ -12,6 +12,9 @@ black: ## apply black formatting
 black-check: ## check black formatting
 	black --check --verbose dadapy tests
 
+flake8: ## check style with flake8
+	flake8 dadapy/base.py dadapy/metric_comparisons.py dadapy/clustering.py dadapy/id_estimation.py dadapy/density_estimation tests #dev_scripts examples
+
 # to include the "dadapy" folder: pytest tests --doctest-modules dadapy tests/
 test: ## run tests quickly with the default Python
 	pytest tests --doctest-modules tests/ \
@@ -23,20 +26,12 @@ test: ## run tests quickly with the default Python
 test-all: ## run tests on every Python version with tox
 	tox
 
+test-nb: ## test notebooks in the examples folder
+	pytest examples/notebook_on_intrinsicdim_densityest_clustering.ipynb examples/notebook_on_information_imbalance.ipynb --nbmake --nbmake-timeout=300
+
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source dadapy -m pytest
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
-flake8: ## check style with flake8
-	flake8 dadapy/base.py dadapy/metric_comparisons.py dadapy/clustering.py dadapy/id_estimation.py dadapy/density_estimation.py tests #dev_scripts examples
-
-#pylint: ## run pylint
-#	pylint dadapy tests
-#
-#vulture: ## run vulture
-#	vulture dadapy dev_scripts/whitelist.py
-#
-#darglint: ## run vulture
-#	darglint dadapy
