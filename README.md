@@ -26,7 +26,7 @@ X = np.random.normal(0, 1, (1000, 3))
 data = Data(X)
 
 # compute distances up to the 100th nearest neighbour
-data.compute_distances(maxk = 100)
+data.compute_distances(maxk=100)
 
 # compute the intrinsic dimension using 2nn estimator
 data.compute_id_2NN()
@@ -34,8 +34,8 @@ data.compute_id_2NN()
 # compute the density using PAk, a point adaptive kNN estimator
 data.compute_density_PAk()
 
-# find the peaks of the density profile through the DPA algorithm
-data.compute_clustering()
+# find the peaks of the density profile through the ADP algorithm
+data.compute_clustering_ADP()
 ```
 
 # Currently implemented algorithms
