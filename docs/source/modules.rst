@@ -7,7 +7,8 @@ data, data_sets.
 
 .. toctree::
    :maxdepth: 2
-   
+
+   base
    id_estimation
    density_estimation
    clustering

@@ -14,7 +14,7 @@
 # ==============================================================================
 
 """
-The id_estimation module contains the IdEstimation class.
+The *id_estimation* module contains the *IdEstimation* class.
 
 The different algorithms of intrinsic dimension estimation are implemented as methods of this class.
 """
@@ -28,9 +28,9 @@ import numpy as np
 from scipy.optimize import curve_fit
 from sklearn.metrics import pairwise_distances_chunked
 
-from dadapy._base import Base
 from dadapy._utils import utils as ut
 from dadapy._utils.utils import compute_nn_distances
+from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
