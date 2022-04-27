@@ -13,7 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 
-"""This module implements contains the implementation of the IdEstimation class."""
+"""
+The id_estimation module contains the IdEstimation class.
+
+The different algorithms of intrinsic dimension estimation are implemented as methods of this class.
+"""
 
 import copy
 import math

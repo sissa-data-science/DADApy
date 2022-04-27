@@ -13,7 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 
-"""This module contains the implementation of the Clustering class."""
+"""
+The *clustering* module contains the *Clustering* class.
+
+Density-based clustering algorithms are implemented as methods of this class.
+"""
 
 import multiprocessing
 import time
