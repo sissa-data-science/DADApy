@@ -147,5 +147,5 @@ def test_compute_cluster_DP():
     cl = Clustering(coordinates=X)
     cl.compute_density_PAk()
     cl.compute_DecGraph()
-    cl.compute_clustering_DP(dens_cut=-3.0, delta_cut=3.0)
+    _ = cl.compute_clustering_DP(dens_cut=-3.0, delta_cut=3.0)
     assert (cl.cluster_assignment == expected_cluster_assignment).all()
