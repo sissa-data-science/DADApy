@@ -135,7 +135,7 @@ def test_clustering_ADP_pure_python():
     """Test the clustering operations work correctly."""
     cl = Clustering(coordinates=X)
 
-    cl.compute_clustering_ADP_pure_python()
+    _ = cl.compute_clustering_ADP_pure_python()
 
     assert cl.N_clusters == 2
 

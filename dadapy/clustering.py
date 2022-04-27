@@ -156,6 +156,8 @@ class Clustering(DensityEstimation):
             print(f"Clustering finished, {self.N_clusters} clusters found")
             print(f"total time is, {secf - seci}")
 
+        return self.cluster_assignment
+
     def compute_DecGraph(self):
         """Compute the decision graph."""
         assert self.log_den is not None, "Compute density before"
@@ -234,6 +236,8 @@ class Clustering(DensityEstimation):
                     halo_cutoff[j] = np.max(td)
             halo[tt[(self.log_den < halo_cutoff[self.cluster_assignment])]] = -1
             self.cluster_assignment = halo
+
+        return self.cluster_assignment
 
     def compute_clustering_ADP_pure_python(  # noqa: C901
         self, Z=1.65, halo=False, density_algorithm="PAk", k=None
@@ -470,3 +474,5 @@ class Clustering(DensityEstimation):
         self.bord_indices = Point_bord_m
         if self.verb:
             print("Clustering finished, {} clusters found".format(self.N_clusters))
+
+        return self.cluster_assignment
