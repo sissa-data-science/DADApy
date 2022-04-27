@@ -20,6 +20,7 @@ The code can be found on GitHub at https://github.com/sissa-data-science/DADApy.
    modules
    jupyter_example_1
    jupyter_example_2
+   jupyter_example_3
    
    
 Indices and tables
