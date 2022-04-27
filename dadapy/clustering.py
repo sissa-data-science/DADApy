@@ -75,8 +75,8 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering(
-        self, Z=1.65, halo=False, density_algorithm="PAK", k=None, Dthr=23.92812698
+    def compute_clustering_ADP(
+        self, Z=1.65, halo=False, density_algorithm="PAk", k=None, Dthr=23.92812698
     ):
         """Compute clustering according to the algorithm DPA.
 
@@ -100,7 +100,7 @@ class Clustering(DensityEstimation):
         """
         if self.log_den is None:
 
-            if density_algorithm == "PAK":
+            if density_algorithm == "PAk":
                 self.compute_density_PAk(Dthr=Dthr)
 
             elif density_algorithm == "kNN":
@@ -190,7 +190,7 @@ class Clustering(DensityEstimation):
         self.delta[imax] = 1.05 * np.max(self.delta)
         print("Number of points for which self.delta needed call to cdist=", ncalls)
 
-    def compute_cluster_DP(self, dens_cut=0.0, delta_cut=0.0, halo=False):
+    def compute_clustering_DP(self, dens_cut=0.0, delta_cut=0.0, halo=False):
         """Compute clustering using the Density Peak algorithm.
 
         Args:
@@ -235,13 +235,13 @@ class Clustering(DensityEstimation):
             halo[tt[(self.log_den < halo_cutoff[self.cluster_assignment])]] = -1
             self.cluster_assignment = halo
 
-    def compute_clustering_pure_python(  # noqa: C901
-        self, Z=1.65, halo=False, density_algorithm="PAK", k=None
+    def compute_clustering_ADP_pure_python(  # noqa: C901
+        self, Z=1.65, halo=False, density_algorithm="PAk", k=None
     ):
         """Compute ADP clustering, but without the cython optimization."""
         if self.log_den is None:
 
-            if density_algorithm == "PAK":
+            if density_algorithm == "PAk":
                 self.compute_density_PAk()
 
             elif density_algorithm == "kNN":

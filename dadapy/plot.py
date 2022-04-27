@@ -405,7 +405,7 @@ if __name__ == "__main__":
     data.compute_distances(maxk=200)
     data.compute_id_2NN()
     data.compute_density_PAk()
-    data.compute_clustering(Z=1.65, halo=True)
+    data.compute_clustering_ADP(Z=1.65, halo=True)
 
     imbalances = data.return_inf_imb_full_all_coords()
 

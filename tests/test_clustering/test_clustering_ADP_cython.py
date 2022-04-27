@@ -135,7 +135,7 @@ def test_clustering_ADP_cython():
     """Test the clustering operations work correctly."""
     cl = Clustering(coordinates=X)
 
-    cl.compute_clustering(Z=1.65)
+    cl.compute_clustering_ADP(Z=1.65)
 
     assert cl.N_clusters == 2
 
