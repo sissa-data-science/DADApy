@@ -13,5 +13,4 @@ data, data_sets.
    clustering
    metric_comparisons
    data
-   data_sets
    utils

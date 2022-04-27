@@ -30,11 +30,11 @@ sys.path.insert(0, os.path.abspath("../../dadapy/_utils"))
 
 project = "dadapy"
 copyright = "2021, Glielmo et al."
-author = "Aldo Glielmo, Matteo Carli, Diego Doimo, Iuri Macocco, Maria D'Errico, Alex Rodrriguez, Alessandro Laio"
+author = "Aldo Glielmo, Matteo Carli, Diego Doimo, Iuri Macocco, Romina Wild, Caludio Zeni, Maria D'Errico, " \
+         "Alex Rodriguez, Alessandro Laio "
 
 # The full version, including alpha/beta/rc tags
 release = "0.1"
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -53,7 +53,6 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["**.ipynb_checkpoints"]
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -66,7 +65,7 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 
 html_static_path = ["_static"]
-#html_static_path = ([])  # _static is included by default and this eliminates an annoying warning
+# html_static_path = ([])  # _static is included by default and this eliminates an annoying warning
 
 html_logo = "_static/logo_1_vertical_transparent_v2.png"
 

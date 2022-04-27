@@ -50,20 +50,3 @@ setup(
     cmdclass=cmdclass,
     ext_modules=ext_modules,
 )
-
-### COMPILE FROM CYTHON ### NOT WORKING
-#
-# from Cython.Build import cythonize
-# ext_modules = cythonize("dadapy/_cython/*.pyx")
-#
-# setup(
-#     name="dadapy",
-#     url="https://dadapy.readthedocs.io/",
-#     description="A Python package for Distance-based Analysis of DAta-manifolds.",
-#     long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
-#     packages=["dadapy", "dadapy._utils"],
-#     install_requires=["numpy", "scipy", "scikit-learn", "matplotlib"],
-#     extras_require={"dev": ["tox", "black", "isort", "pytest"]},
-#     cmdclass=cmdclass,
-#     ext_modules=ext_modules,
-# )
