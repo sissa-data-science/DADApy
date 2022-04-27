@@ -19,27 +19,22 @@ For more details and tutorials, visit the homepage at:
 import numpy as np
 from dadapy.data import Data
 
-# a simple 3D gaussian dataset
+# Generate a simple 3D gaussian dataset
 X = np.random.normal(0, 1, (1000, 3))
 
-# initialise the "Data" class with a
-# set of coordinates
+# initialise the "Data" class with the set of coordinates
 data = Data(X)
 
-# compute distances up to the 100th
-# nearest neighbour
+# compute distances up to the 100th nearest neighbour
 data.compute_distances(maxk = 100)
 
-# compute the intrinsic dimension
+# compute the intrinsic dimension using 2nn estimator
 data.compute_id_2NN()
 
-# compute the density of all points using a basic kNN estimator
-data.compute_density_kNN(k = 15)
-
-# or using a more advanced PAk estimator
+# compute the density using PAk, a point adaptive kNN estimator
 data.compute_density_PAk()
 
-# find the peaks of the density profile
+# find the peaks of the density profile through the DPA algorithm
 data.compute_clustering()
 ```
 
