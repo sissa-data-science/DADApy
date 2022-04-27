@@ -18,4 +18,4 @@
 - [Martin Uhrin](https://github.com/muhrin)
 
 
-You [are welcome](./contributing.md) to contribute too!  
+You [are welcome](./CONTRIBUTING.md) to contribute too!  
