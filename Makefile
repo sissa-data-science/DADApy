@@ -27,7 +27,7 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 test-nb: ## test notebooks in the examples folder
-	pytest examples/notebook_on_intrinsicdim_densityest_clustering.ipynb examples/notebook_on_information_imbalance.ipynb --nbmake --nbmake-timeout=300
+	pytest examples --nbmake --nbmake-timeout=300
 
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source dadapy -m pytest
