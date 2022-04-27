@@ -71,7 +71,7 @@ data.compute_clustering()
 
 
 # Installation
-The package is compatible with Python >= 3.6 (tested on 3.6, 3.7, 3.8 and 3.9). We currently only support Unix-based systems, including Linux and macOS. 
+The package is compatible with Python >= 3.7 (tested on 3.7, 3.8 and 3.9). We currently only support Unix-based systems, including Linux and macOS. 
 For Windows-machines we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
 The exact list of dependencies are given in setup.py and all of them will be automatically installed during setup.
 
