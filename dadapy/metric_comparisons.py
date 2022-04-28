@@ -527,22 +527,10 @@ class MetricComparisons(Base):
         X1_ = self.X[:, coords1]
         X2_ = self.X[:, coords2]
 
-        _, dist_indices1_ = compute_nn_distances(
-            X1_, k+2, self.metric, self.period
-        )
-        _, dist_indices2_ = compute_nn_distances(
-            X2_, k+2, self.metric, self.period
-        )
+        _, dist_indices1_ = compute_nn_distances(X1_, k + 2, self.metric, self.period)
+        _, dist_indices2_ = compute_nn_distances(X2_, k + 2, self.metric, self.period)
 
-        overlap = np.mean(dist_indices1_[:, 1: k+1]==dist_indices2_[:, 1: k+1])
-        #overlaps = []
-        # for i in range(self.N):
-        #
-        #     overlap_i = (
-        #         sum(dist_indices1_[i, 1 : k + 1] == dist_indices2_[i, 1 : k + 1]) / k
-        #     )
-        #     overlaps.append(overlap_i)
-        #overlap = np.mean(overlaps)
+        overlap = np.mean(dist_indices1_[:, 1 : k + 1] == dist_indices2_[:, 1 : k + 1])
 
         return overlap
 
