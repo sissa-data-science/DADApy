@@ -534,7 +534,7 @@ class MetricComparisons(Base):
             X2_, k+2, self.metric, self.period
         )
 
-        overlap = np.mean(dist_indices1_[:, 1: k+1]==dist_indices[:, 1: k+1])
+        overlap = np.mean(dist_indices1_[:, 1: k+1]==dist_indices2_[:, 1: k+1])
         #overlaps = []
         # for i in range(self.N):
         #
