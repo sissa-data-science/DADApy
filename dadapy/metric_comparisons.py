@@ -509,6 +509,43 @@ class MetricComparisons(Base):
 
         return overlap
 
+    def return_overlap_coords(self, coords1, coords2, k=30):
+        """Return the neighbour overlap between two subspaces defined by two sets of coordinates.
+
+        An overlap of 1 means that in the two subspaces all points have an identical neighbourhood.
+
+        Args:
+            coords1 (list(int)): the list of coordinates defining the first subspace
+            coords2 (list(int)): the list of coordinates defining the second subspace
+            k (int): the number of neighbours considered for the overlap
+
+        Returns:
+            (float): the neighbour overlap of the two subspaces
+        """
+        assert self.X is not None
+
+        X1_ = self.X[:, coords1]
+        X2_ = self.X[:, coords2]
+
+        _, dist_indices1_ = compute_nn_distances(
+            X1_, self.maxk, self.metric, self.period
+        )
+        _, dist_indices2_ = compute_nn_distances(
+            X2_, self.maxk, self.metric, self.period
+        )
+
+        overlaps = []
+        for i in range(self.N):
+
+            overlap_i = (
+                sum(dist_indices1_[i, 1 : k + 1] == dist_indices2_[i, 1 : k + 1]) / k
+            )
+            overlaps.append(overlap_i)
+
+        overlap = np.mean(overlaps)
+
+        return overlap
+
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
         """Return a list of neighbour overlaps computed on a list of selected coordinates.
 

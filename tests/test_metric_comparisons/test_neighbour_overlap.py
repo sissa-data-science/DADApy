@@ -25,6 +25,18 @@ from dadapy import MetricComparisons
 filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
 
 
+def test_return_overlap_coords():
+    """Test that the neighbourhood overlap works correctly."""
+    X = np.load(filename)
+
+    mc = MetricComparisons(coordinates=X)
+    mc.compute_distances()
+    # check equivalence of x-y subspace with the full x-y-z space on this dataset
+    overlap = mc.return_overlap_coords(coords1=[0, 1, 2], coords2=[0, 1])
+
+    assert overlap == pytest.approx(0.992, abs=0.0001)
+
+
 def test_return_label_overlap():
     """Test that the label overlap works correctly."""
     X1 = np.load(filename)
