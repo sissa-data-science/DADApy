@@ -230,6 +230,7 @@ dadapy/_cython/.*
 #Datasets
 examples/datasets/mnist.npy
 examples/datasets/isolet_float32.npy
+examples/datasets/isomap_faces.npy
 
 
 # End of https://www.toptal.com/developers/gitignore/api/python,emacs,vim
