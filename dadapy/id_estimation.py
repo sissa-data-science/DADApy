@@ -128,7 +128,6 @@ class IdEstimation(Base):
         References:
             E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the intrinsic dimension of datasets by a minimal
             neighborhood information, Scientific reports 7 (1) (2017) 1–8
-
         """
         nrep = int(np.rint(1.0 / decimation))
         ids = np.zeros(nrep)
@@ -673,7 +672,6 @@ class IdEstimation(Base):
             id (float): the estimated intrinsic dimension
             id_err (float): the standard error on the id estimation
             rs (float): the average nearest neighbor distance (rs)
-
         """
         # checks-in and initialisations
         assert (
