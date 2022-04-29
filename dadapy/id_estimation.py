@@ -221,7 +221,6 @@ class IdEstimation(Base):
                 rs_scaling:
                 array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
         """
-
         max_ndec = int(math.log(self.N, 2)) - 1
         Nsubsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
         Nsubsets = Nsubsets.astype(int)
@@ -383,7 +382,6 @@ class IdEstimation(Base):
             rs: distances of the neighbors involved in the mu estimates
         """
         # argsort may be faster than argpartition when gride is applied on the full dataset (for the moment not used)
-
         max_step = int(math.log(range_scaling, 2))
         steps = np.array([2**i for i in range(max_step)])
 
