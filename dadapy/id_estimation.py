@@ -87,7 +87,6 @@ class IdEstimation(Base):
 
         Returns:
             intrinsic_dim (float): the estimation of the intrinsic dimension
-
         """
         N = mus.shape[0]
         N_eff = int(N * fraction)
@@ -223,6 +222,7 @@ class IdEstimation(Base):
                 rs_scaling:
                 array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
         """
+
         max_ndec = int(math.log(self.N, 2)) - 1
         Nsubsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
         Nsubsets = Nsubsets.astype(int)
