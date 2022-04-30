@@ -196,12 +196,15 @@ class Base:
         See
         https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data
         for more information
+
+        Returns:
+            (list(int)) indices that were kept in the object
         """
         if self.N > 100000:
             print("WARNING: this method might be very slow for large datasets. ")
 
         # removal of overlapping data points
-        X_unique = np.unique(self.X, axis=0)
+        X_unique, indices_kept = np.unique(self.X, axis=0, return_index=True)
 
         N_unique = X_unique.shape[0]
 
@@ -220,22 +223,67 @@ class Base:
                 print("distances between points will be recomputed")
                 self.compute_distances()
 
+            return indices_kept
+
         else:
-            print("No identical identical points were found")
+            print("No identical points were found")
 
+    def remove_similar_points(self, atol=1e-3):
+        """Remove points whose computed distance is smaller than a given tolerance.
 
-if __name__ == "__main__":
+        Args:
+            atol: distance tolerance below which the points are removed
 
-    from numpy.random import default_rng
+        Returns:
+            (list(int)) indices that were kept in the object
+        """
+        idx_to_remove = dict(zip(range(self.N), [False] * self.N))
 
-    rng = default_rng(0)
+        # loop over all points i
+        for i, (dists, idcs) in enumerate(
+            zip(self.distances[:, 1:], self.dist_indices[:, 1:])
+        ):
 
-    X = np.array([[0, 0, 0], [0.5, 0, 0], [0.9, 0, 0]])
+            # if point i was not removed, check its neighbours
+            if not idx_to_remove[i]:
 
-    d = Base(X, verbose=True)
+                zero_dists = dists <= atol
 
-    d.compute_distances()
-    print(d.distances, d.dist_indices)
+                # if any neighbours is below a threshold, loop over neighbours below tolerance
+                if (zero_dists).any():
+                    removed = 0
+                    for neigh in idcs[zero_dists]:
 
-    d.compute_distances(period=1.1, metric="manhattan")
-    print(d.distances, d.dist_indices)
+                        # if neighbours have not been already removed, remove them
+                        if not idx_to_remove[neigh]:
+                            idx_to_remove[neigh] = True
+                            removed += 1
+
+                    # if no neighbour was eliminated, eliminate point i (by "transitivity" we can inver that
+                    # a previous point "eliminated" all neighbours
+                    if removed == 0:
+                        idx_to_remove[i] = True
+
+        to_keep = ~np.array(list(idx_to_remove.values()))
+        N_unique = sum(to_keep)
+
+        if N_unique < self.N:
+
+            print(
+                f"{self.N - N_unique} similar datapoints found: keeping {N_unique} unique elements",
+            )
+
+            indices_kept = np.arange(self.N)[to_keep]
+
+            self.X = self.X[to_keep]
+            self.N = N_unique
+            self.maxk = min(self.maxk, self.N - 1)
+
+            if self.distances is not None:
+                print("distances between points will be recomputed")
+                self.compute_distances()
+
+            return indices_kept
+
+        else:
+            print("No similar points were found")
