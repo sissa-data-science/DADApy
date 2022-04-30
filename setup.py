@@ -41,6 +41,7 @@ ext_modules += [
 
 setup(
     name="dadapy",
+    version="0.1.0",
     url="https://dadapy.readthedocs.io/",
     description="A Python package for Distance-based Analysis of DAta-manifolds.",
     long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
