@@ -93,6 +93,9 @@ class Clustering(DensityEstimation):
             Dthr (float): Likelihood ratio parameter used to compute optimal k when using PAK algorithm.
                 The value of Dthr=23.92 corresponds to a p-value of 1e-6.
 
+        Returns:
+            cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
+
         References:
             M. d’Errico, E. Facco, A. Laio, A. Rodriguez, Automatic topography  of  high-dimensional  data  sets  by
                 non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
@@ -199,6 +202,9 @@ class Clustering(DensityEstimation):
             dens_cut (float): cutoff on density values
             delta_cut (float): cutoff on distance values
             halo (bool): use or not halo points
+
+        Returns:
+            cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
 
         References:
             A. Rodriguez, A. Laio, Clustering by fast search and find of density peaks,
