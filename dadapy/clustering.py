@@ -292,7 +292,7 @@ class Clustering(DensityEstimation):
         if self.verb:
             print("Number of clusters before multimodality test=", Nclus)
 
-        cluster_init, cl_struct = self._cluster_assignation(g, centers)
+        cluster_init, cl_struct = self._preliminary_cluster_assignment(g, centers)
 
         sec2 = time.time()
         if self.verb:
@@ -388,8 +388,8 @@ class Clustering(DensityEstimation):
 
         return centers
 
-    def _cluster_assignation(self, g, centers):
-        """Find assignations of points to the closest density peak.
+    def _preliminary_cluster_assignment(self, g, centers):
+        """Find a preliminary assignment of points to the closest density peak.
 
         Args:
             g: scaled log density of points
