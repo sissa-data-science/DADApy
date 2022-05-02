@@ -100,13 +100,17 @@ class DensityEstimation(IdEstimation):
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
 
+        kstar = np.full(self.N, k, dtype=int)
+
         if self.verb:
             print(f"k-NN density estimation started (k={k})")
 
-        kstar = np.full(self.N, k, dtype=int)
-
         log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
-            self.distances, self.intrinsic_dim, kstar, interpolation=False
+            self.distances,
+            self.intrinsic_dim,
+            kstar,
+            interpolation=False,
+            verb=self.verb,
         )
 
         # Normalise density

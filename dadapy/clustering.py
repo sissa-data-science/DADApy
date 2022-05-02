@@ -79,10 +79,6 @@ class Clustering(DensityEstimation):
         self,
         Z=1.65,
         halo=False,
-        density_algorithm="PAk",
-        k=None,
-        Dthr=23.92812698,
-        overwrite_density=True,
     ):
         """Compute clustering according to the algorithm DPA.
 
@@ -107,19 +103,8 @@ class Clustering(DensityEstimation):
                 non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
 
         """
-        if self.log_den is None or overwrite_density is True:
-
-            if density_algorithm.lower() == "pak":
-                self.compute_density_PAk(Dthr=Dthr)
-
-            elif density_algorithm.lower() == "knn":
-                assert k is not None, "provide k to estimate the density with kNN"
-                self.compute_density_kNN(k=k)
-
-            else:
-                raise NameError(
-                    f'density estimator name must be "PAK" or "kNN"; found {density_algorithm.lower()}'
-                )
+        if self.log_den is None:
+            self.compute_density_PAk()
 
         if self.verb:
             print("Clustering started")
@@ -257,25 +242,10 @@ class Clustering(DensityEstimation):
         self,
         Z=1.65,
         halo=False,
-        density_algorithm="PAk",
-        k=None,
-        Dthr=23.92812698,
-        overwrite_density=True,
     ):
         """Compute ADP clustering, but without the cython optimization."""
-        if self.log_den is None or overwrite_density is True:
-
-            if density_algorithm.lower() == "pak":
-                self.compute_density_PAk()
-
-            elif density_algorithm.lower() == "knn":
-                assert k is not None, "provide k to estimate the density with kNN"
-                self.compute_density_kNN(k=k)
-
-            else:
-                raise NameError(
-                    f'density estimator name must be "PAK" or "kNN"; found {density_algorithm.lower()}'
-                )
+        if self.log_den is None:
+            self.compute_density_PAk()
 
         if self.verb:
             print("Clustering started")
