@@ -76,13 +76,7 @@ class Clustering(DensityEstimation):
         self.ref = None  # Index of the nearest element with higher density
 
     def compute_clustering_ADP(
-        self,
-        Z=1.65,
-        halo=False,
-        density_algorithm="pak",
-        k=None,
-        Dthr=23.92812698,
-        overwrite_density=True,
+        self, Z=1.65, halo=False, density_algorithm="PAk", k=None, Dthr=23.92812698
     ):
         """Compute clustering according to the algorithm DPA.
 
@@ -107,25 +101,23 @@ class Clustering(DensityEstimation):
                 non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
 
         """
-        if self.log_den is None or overwrite_density is True:
+        if self.log_den is None:
 
-            if density_algorithm.lower() == "pak":
+            if density_algorithm == "PAk":
                 self.compute_density_PAk(Dthr=Dthr)
 
-            elif density_algorithm.lower() == "knn":
-                assert k is not None, "provide k to estimate the density with knn"
+            elif density_algorithm == "kNN":
+                assert k is not None, "provide k to estimate the density with kNN"
                 self.compute_density_kNN(k=k)
 
             else:
-                raise NameError(
-                    f'density estimators name must be "pak" or "knn"; found "{density_algorithm.lower()}" '
-                )
+                raise NameError('density estimators name must be "PAK" or "kNN" ')
 
         if self.verb:
             print("Clustering started")
 
         # Make all values of log_den positives (this is important to help convergence)
-        # even when subtracting the value Z*log_den_err
+        # even when substracting the value Z*log_den_err
         log_den_min = np.min(self.log_den - Z * self.log_den_err)
 
         log_den_c = self.log_den - log_den_min + 1
@@ -253,53 +245,79 @@ class Clustering(DensityEstimation):
 
         return self.cluster_assignment
 
-    def compute_clustering_ADP_pure_python(
-        self,
-        Z=1.65,
-        halo=False,
-        density_algorithm="pak",
-        k=None,
-        Dthr=23.92812698,
-        overwrite_density=True,
+    def compute_clustering_ADP_pure_python(  # noqa: C901
+        self, Z=1.65, halo=False, density_algorithm="PAk", k=None
     ):
         """Compute ADP clustering, but without the cython optimization."""
-        if self.log_den is None or overwrite_density is True:
+        if self.log_den is None:
 
-            if density_algorithm.lower() == "pak":
-                self.compute_density_PAk(Dthr=Dthr)
+            if density_algorithm == "PAk":
+                self.compute_density_PAk()
 
-            elif density_algorithm.lower() == "knn":
-                assert k is not None, "provide k to estimate the density with knn"
+            elif density_algorithm == "kNN":
+                assert k is not None, "provide k to estimate the density with kNN"
                 self.compute_density_kNN(k=k)
 
             else:
-                raise NameError(
-                    f'density estimators name must be "pak" or "knn"; found "{density_algorithm.lower()}" '
-                )
+                raise NameError('density estimators name must be "PAK" or "kNN" ')
 
         if self.verb:
             print("Clustering started")
 
         # Make all values of log_den positives (this is important to help convergence)
-        # even when subtracting the value Z*log_den_err
+        # even when substracting the value Z*log_den_err
         log_den_min = np.min(self.log_den - Z * self.log_den_err)
-        # define a "log_den_c" specific to perform clustering
         log_den_c = self.log_den - log_den_min + 1
 
-        # Find the putative modes of the PDF as preliminary clusters
+        # Putative modes of the PDF as preliminary clusters
         sec = time.time()
-
+        N = self.N
         g = log_den_c - self.log_den_err
+        centers = []
+        for i in range(N):
+            t = 0
+            for j in range(1, self.kstar[i] + 1):
+                if g[i] < g[self.dist_indices[i, j]]:
+                    t = 1
+                    break
+            if t == 0:
+                centers.append(i)
 
-        centers = self._find_density_modes(g)
+        count = 0
+        centers_iter = centers.copy()
+        for i in centers_iter:
+            l, m = np.where(self.dist_indices == i)
+            for j in range(l.shape[0]):
+                if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
+                    centers.remove(i)
+                    count += 1
+                    break
 
-        Nclus = len(centers)
-
+        cluster_init = []
+        for _ in range(N):
+            cluster_init.append(-1)
+            Nclus = len(centers)
         if self.verb:
             print("Number of clusters before multimodality test=", Nclus)
 
-        cluster_init, cl_struct = self._preliminary_cluster_assignment(g, centers)
-
+        for i in centers:
+            cluster_init[i] = centers.index(i)
+        sortg = np.argsort(-g)  # Get the rank of the elements in the g vector
+        # sorted in descendent order.
+        # Perform preliminar assignation to clusters
+        for j in range(N):
+            ele = sortg[j]
+            nn = 0
+            while cluster_init[ele] == -1:
+                nn = nn + 1
+                cluster_init[ele] = cluster_init[self.dist_indices[ele, nn]]
+        clstruct = []  # useful list of points in the clusters
+        for i in range(Nclus):
+            x1 = []
+            for j in range(N):
+                if cluster_init[j] == i:
+                    x1.append(j)
+            clstruct.append(x1)
         sec2 = time.time()
         if self.verb:
             print(
@@ -307,169 +325,18 @@ class Clustering(DensityEstimation):
                     sec2 - sec
                 )
             )
-
-        # Find border points between putative clusters
-        sec = time.time()
-
-        (
-            log_den_bord,
-            log_den_bord_err,
-            bord_index,
-        ) = self._find_borders_between_clusters(
-            Nclus, g, cl_struct, centers, cluster_init, log_den_c
-        )
-
-        sec2 = time.time()
-        if self.verb:
-            print("{0:0.2f} seconds identifying the borders".format(sec2 - sec))
-
-        sec = time.time()
-        surviving_clusters = self._multimodality_test(
-            Nclus, Z, log_den_c, centers, cl_struct, log_den_bord, log_den_bord_err
-        )
-
-        sec2 = time.time()
-        if self.verb:
-            print("{0:0.2f} seconds with multimodality test".format(sec2 - sec))
-
-        (
-            N_clusters,
-            cluster_assignment,
-            cluster_indices,
-            cluster_centers,
-            log_den_bord,
-            log_den_bord_err,
-            bord_indices,
-        ) = self._finalise_clustering(
-            Nclus,
-            halo,
-            surviving_clusters,
-            cl_struct,
-            centers,
-            log_den_bord,
-            log_den_bord_err,
-            bord_index,
-            log_den_c,
-        )
-
-        self.cluster_indices = cluster_indices
-        self.N_clusters = N_clusters
-        self.cluster_assignment = cluster_assignment
-        self.cluster_centers = cluster_centers
-        self.log_den_bord = (
-            log_den_bord + log_den_min - 1
-        )  # remove wrong normalisation introduced earlier
-        self.log_den_bord_err = log_den_bord_err
-        self.bord_indices = bord_indices
-
-        if self.verb:
-            print("Clustering finished, {} clusters found".format(self.N_clusters))
-
-        return self.cluster_assignment
-
-    # ------------ helper methods for compute_clustering_ADP_pure_python ------------ #
-
-    def _find_density_modes(self, g):
-        """Find the modes of the density."""
-        centers = []
-        for i in range(self.N):
-            t = 0
-            for j in range(1, self.kstar[i] + 1):
-                if g[i] < g[self.dist_indices[i, j]]:
-                    t = 1
-                    break
-
-            # "i" is a center if it has no point at a higher density
-            if t == 0:
-                centers.append(i)
-
-        # remove centers from list if they are neighbours of higher density points
-        centers_iter = centers.copy()
-        for i in centers_iter:
-            l, m = np.where(self.dist_indices == i)
-            for j in range(l.shape[0]):
-                if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
-                    centers.remove(i)
-                    break
-
-        return centers
-
-    def _preliminary_cluster_assignment(self, g, centers):
-        """Find a preliminary assignment of points to the closest density peak.
-
-        Args:
-            g: scaled log density of points
-            centers: preliminary density peaks
-
-        Returns:
-            cluster_init (list(int)): preliminary assignations of points to clusters
-            cl_struct (list(list(int))): list of points in each cluster
-        """
-        # all points assigned to no clusters initially
-        cluster_init = [-1] * self.N
-
-        # assign centers to their own cluster
-        for i in centers:
-            cluster_init[i] = centers.index(i)
-
-        # Get the rank of the elements in the g vector
-        # sorted in decreasing order.
-        sortg = np.argsort(-g)
-
-        # Perform preliminary assignation to clusters
-        for j in range(self.N):
-            ele = sortg[j]
-            nn = 0
-            while cluster_init[ele] == -1:
-                nn = nn + 1
-                cluster_init[ele] = cluster_init[self.dist_indices[ele, nn]]
-
-        # useful list of points in the clusters
-        cl_struct = []
-        for i in range(len(centers)):
-            x1 = []
-            for j in range(self.N):
-                if cluster_init[j] == i:
-                    x1.append(j)
-            cl_struct.append(x1)
-
-        return cluster_init, cl_struct
-
-    def _find_borders_between_clusters(  # noqa: C901
-        self, Nclus, g, cl_struct, centers, cluster_init, log_den_c
-    ):
-        """Find saddle points between clusters.
-
-        Assume i and j are points belonging to the clusters c(i) and c(j).
-        Then, point i is a border point between c(i) and c(j) if:
-            a) It has in its neighborhood a point j belonging to other cluster.
-            b) There are no other points belonging to c(i) nearer from point j
-            c) It has the maximum density among the points that fulfill a) & b)
-
-        Args:
-            Nclus: number of clusters
-            g: scaled log density of points
-            cl_struct: points assigned to each cluster
-            centers: density peaks
-            cluster_init: cluster assignment
-            log_den_c: log density of points
-
-        Returns:
-            log_den_bord: log density of the saddle points
-            log_den_bord_err: error on the log density of saddle points
-            bord_index: square matrix providing the index of the saddle point between any two peaks
-        """
         log_den_bord = np.zeros((Nclus, Nclus), dtype=float)
         log_den_bord_err = np.zeros((Nclus, Nclus), dtype=float)
-
-        # set all bord indices to -1 (no points) initially
-        bord_index = np.ones((Nclus, Nclus), dtype=int) * -1
-
+        Point_bord = np.zeros((Nclus, Nclus), dtype=int)
+        # Find border points between putative clusters
+        sec = time.time()
+        for i in range(Nclus):
+            for j in range(Nclus):
+                Point_bord[i][j] = -1
         for c in range(Nclus):
-            for p1 in cl_struct[c]:
+            for p1 in clstruct[c]:
                 if p1 in centers:
                     pp = -1
-
                 else:
                     for k in range(1, self.kstar[p1] + 1):
                         p2 = self.dist_indices[p1, k]
@@ -490,96 +357,64 @@ class Clustering(DensityEstimation):
                     if g[p1] > log_den_bord[c][cp]:
                         log_den_bord[c][cp] = g[p1]
                         log_den_bord[cp][c] = g[p1]
-                        bord_index[cp][c] = p1
-                        bord_index[c][cp] = p1
+                        Point_bord[cp][c] = p1
+                        Point_bord[c][cp] = p1
 
-        # fill in matrices of bord densities and errors in a symmetric way
         for i in range(Nclus - 1):
             for j in range(i + 1, Nclus):
-                if bord_index[i][j] != -1:
-                    log_den_bord[i][j] = log_den_c[bord_index[i][j]]
-                    log_den_bord[j][i] = log_den_c[bord_index[j][i]]
-                    log_den_bord_err[i][j] = self.log_den_err[bord_index[i][j]]
-                    log_den_bord_err[j][i] = self.log_den_err[bord_index[j][i]]
-
-        # set diagonal to -1
+                if Point_bord[i][j] != -1:
+                    log_den_bord[i][j] = log_den_c[Point_bord[i][j]]
+                    log_den_bord[j][i] = log_den_c[Point_bord[j][i]]
+                    log_den_bord_err[i][j] = self.log_den_err[Point_bord[i][j]]
+                    log_den_bord_err[j][i] = self.log_den_err[Point_bord[j][i]]
         for i in range(Nclus):
             log_den_bord[i][i] = -1.0
             log_den_bord_err[i][i] = 0.0
-
-        return log_den_bord, log_den_bord_err, bord_index
-
-    def _multimodality_test(
-        self, Nclus, Z, log_den_c, centers, cl_struct, log_den_bord, log_den_bord_err
-    ):
-        """Merge couples of peaks if these are not statistically significant."""
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds identifying the borders".format(sec2 - sec))
         check = 1
-
-        # all clusters are initialised as "surviving"
-        surviving_clusters = [1] * Nclus
-
+        clsurv = []
+        sec = time.time()
+        for _ in range(Nclus):
+            clsurv.append(1)
         while check == 1:
-
-            # density and position of borders to be merged
             pos = []
             ipos = []
             jpos = []
-
             check = 0
-
-            # check whether there are statistically not-significant couples of peaks
             for i in range(Nclus - 1):
                 for j in range(i + 1, Nclus):
-                    # differences in peaks i->j and j->i
                     a1 = log_den_c[centers[i]] - log_den_bord[i][j]
                     a2 = log_den_c[centers[j]] - log_den_bord[i][j]
-
-                    # statistical thresholds
                     e1 = Z * (self.log_den_err[centers[i]] + log_den_bord_err[i][j])
                     e2 = Z * (self.log_den_err[centers[j]] + log_den_bord_err[i][j])
-
-                    # if two peaks are not statistically significant, save their border
                     if a1 < e1 or a2 < e2:
                         check = 1
                         pos.append(log_den_bord[i][j])
                         ipos.append(i)
                         jpos.append(j)
-
-            # merging process
             if check == 1:
-                # start merging from border of higher density
-                barrier_index = pos.index(max(pos))
-                imod = ipos[barrier_index]
-                jmod = jpos[barrier_index]
-
-                # normalised log density of first and second peak to be merged
+                barriers = pos.index(max(pos))
+                imod = ipos[barriers]
+                jmod = jpos[barriers]
                 c1 = (log_den_c[centers[imod]] - log_den_bord[imod][jmod]) / (
                     self.log_den_err[centers[imod]] + log_den_bord_err[imod][jmod]
                 )
                 c2 = (log_den_c[centers[jmod]] - log_den_bord[imod][jmod]) / (
                     self.log_den_err[centers[jmod]] + log_den_bord_err[imod][jmod]
                 )
-
-                # by default, the second peak is removed (c2) if however c1 < c2 the indices are
-                # exchanged and the first cluster is removed instead
                 if c1 < c2:
                     tmp = jmod
                     jmod = imod
                     imod = tmp
-
-                # cluster jmod is removed
-                surviving_clusters[jmod] = 0
-                # log_den_bord between the removed peaks is set to -1 and error to 0
+                clsurv[jmod] = 0
                 log_den_bord[imod][jmod] = -1.0
                 log_den_bord[jmod][imod] = -1.0
                 log_den_bord_err[imod][jmod] = 0.0
                 log_den_bord_err[jmod][imod] = 0.0
-
-                # the points of the jmod peak are added to the imod peak
-                cl_struct[imod].extend(cl_struct[jmod])
-                cl_struct[jmod] = []
-
-                # recompute the borders with the other peaks
+                clstruct[imod].extend(clstruct[jmod])
+                clstruct[jmod] = []
                 for i in range(Nclus):
                     if i != imod and i != jmod:
                         if log_den_bord[imod][i] < log_den_bord[jmod][i]:
@@ -591,51 +426,33 @@ class Clustering(DensityEstimation):
                         log_den_bord[i][jmod] = log_den_bord[jmod][i]
                         log_den_bord_err[jmod][i] = 0
                         log_den_bord_err[i][jmod] = log_den_bord_err[jmod][i]
-
-        return surviving_clusters
-
-    def _finalise_clustering(  # noqa: C901
-        self,
-        Nclus,
-        halo,
-        surviving_clusters,
-        cl_struct,
-        centers,
-        log_den_bord,
-        log_den_bord_err,
-        bord_index,
-        log_den_c,
-    ):
-        """Finalise clustering."""
-        # compute final N_clusters, cluster_indices and cluster_centers
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds with multimodality test".format(sec2 - sec))
         N_clusters = 0
         cluster_indices = []
         cluster_centers = []
         nnum = []
         for j in range(Nclus):
             nnum.append(-1)
-            if surviving_clusters[j] == 1:
+            if clsurv[j] == 1:
                 nnum[j] = N_clusters
-                N_clusters += 1
-                cluster_indices.append(cl_struct[j])
+                N_clusters = N_clusters + 1
+                cluster_indices.append(clstruct[j])
                 cluster_centers.append(centers[j])
-
-        # initialise the final arrays
-        bord_indices_m = np.zeros((N_clusters, N_clusters), dtype=int)
+        Point_bord_m = np.zeros((N_clusters, N_clusters), dtype=int)
         log_den_bord_m = np.zeros((N_clusters, N_clusters), dtype=float)
         log_den_bord_err_m = np.zeros((N_clusters, N_clusters), dtype=float)
-
         for j in range(Nclus):
-            if surviving_clusters[j] == 1:
+            if clsurv[j] == 1:
                 jj = nnum[j]
                 for k in range(Nclus):
-                    if surviving_clusters[k] == 1:
+                    if clsurv[k] == 1:
                         kk = nnum[k]
                         log_den_bord_m[jj][kk] = log_den_bord[j][k]
                         log_den_bord_err_m[jj][kk] = log_den_bord_err[j][k]
-                        bord_indices_m[jj][kk] = bord_index[j][k]
-
-        Last_cls = np.empty(self.N, dtype=int)
+                        Point_bord_m[jj][kk] = Point_bord[j][k]
+        Last_cls = np.empty(N, dtype=int)
         for j in range(N_clusters):
             for k in cluster_indices[j]:
                 Last_cls[k] = j
@@ -651,15 +468,17 @@ class Clustering(DensityEstimation):
             cluster_assignment = Last_cls_halo
         else:
             cluster_assignment = Last_cls
+        out_bord = np.copy(log_den_bord_m)
+        self.cluster_indices = cluster_indices
+        self.N_clusters = N_clusters
+        self.cluster_assignment = cluster_assignment
+        self.cluster_centers = cluster_centers
+        self.log_den_bord = (
+            out_bord + log_den_min - 1
+        )  # remove wrong normalisation introduced earlier
+        self.log_den_bord_err = log_den_bord_err_m
+        self.bord_indices = Point_bord_m
+        if self.verb:
+            print("Clustering finished, {} clusters found".format(self.N_clusters))
 
-        log_den_bord_m = np.copy(log_den_bord_m)
-
-        return (
-            N_clusters,
-            cluster_assignment,
-            cluster_indices,
-            cluster_centers,
-            log_den_bord_m,
-            log_den_bord_err_m,
-            bord_indices_m,
-        )
+        return self.cluster_assignment
