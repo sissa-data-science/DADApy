@@ -79,8 +79,6 @@ class Clustering(DensityEstimation):
         self,
         Z=1.65,
         halo=False,
-        density_algorithm="PAk",
-        k=None,
     ):
         """Compute clustering according to the algorithm DPA.
 
@@ -104,18 +102,7 @@ class Clustering(DensityEstimation):
 
         """
         if self.log_den is None:
-
-            if density_algorithm.lower() == "pak":
-                self.compute_density_PAk()
-
-            elif density_algorithm.lower() == "knn":
-                assert k is not None, "provide k to estimate the density with kNN"
-                self.compute_density_kNN(k=k)
-
-            else:
-                raise NameError(
-                    f'density estimator name must be "PAK" or "kNN"; found {density_algorithm.lower()}'
-                )
+            self.compute_density_PAk()
 
         if self.verb:
             print("Clustering started")
@@ -249,23 +236,14 @@ class Clustering(DensityEstimation):
 
         return self.cluster_assignment
 
-    def compute_clustering_ADP_pure_python(
-        self, Z=1.65, halo=False, density_algorithm="PAk", k=None
+    def compute_clustering_ADP_pure_python(  # noqa: C901
+        self,
+        Z=1.65,
+        halo=False,
     ):
         """Compute ADP clustering, but without the cython optimization."""
         if self.log_den is None:
-
-            if density_algorithm.lower() == "pak":
-                self.compute_density_PAk()
-
-            elif density_algorithm.lower() == "knn":
-                assert k is not None, "provide k to estimate the density with kNN"
-                self.compute_density_kNN(k=k)
-
-            else:
-                raise NameError(
-                    f'density estimator name must be "PAK" or "kNN"; found {density_algorithm.lower()}'
-                )
+            self.compute_density_PAk()
 
         if self.verb:
             print("Clustering started")
