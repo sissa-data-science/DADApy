@@ -81,8 +81,6 @@ class Clustering(DensityEstimation):
         halo=False,
         density_algorithm="PAk",
         k=None,
-        Dthr=23.92812698,
-        overwrite_density=True,
     ):
         """Compute clustering according to the algorithm DPA.
 
@@ -96,8 +94,6 @@ class Clustering(DensityEstimation):
             density_algorithm (str): method to compute the local density.
                 Use 'PAK' for adaptive neighbourhood, 'kNN' for fixed neighbourhood
             k (int): number of neighbours when using kNN algorithm
-            Dthr (float): Likelihood ratio parameter used to compute optimal k when using PAK algorithm.
-                The value of Dthr=23.92 corresponds to a p-value of 1e-6.
 
         Returns:
             cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
@@ -107,10 +103,10 @@ class Clustering(DensityEstimation):
                 non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
 
         """
-        if self.log_den is None or overwrite_density is True:
+        if self.log_den is None:
 
             if density_algorithm.lower() == "pak":
-                self.compute_density_PAk(Dthr=Dthr)
+                self.compute_density_PAk()
 
             elif density_algorithm.lower() == "knn":
                 assert k is not None, "provide k to estimate the density with kNN"
@@ -161,7 +157,7 @@ class Clustering(DensityEstimation):
         self.log_den_bord_err = out[6]
         self.bord_indices = out[7]
 
-        self.log_den_bord = out_bord + log_den_min - 1 - np.log(self.N)
+        self.log_den_bord = out_bord + log_den_min - 1
 
         if self.verb:
             print(f"Clustering finished, {self.N_clusters} clusters found")
@@ -257,7 +253,7 @@ class Clustering(DensityEstimation):
         self, Z=1.65, halo=False, density_algorithm="PAk", k=None
     ):
         """Compute ADP clustering, but without the cython optimization."""
-        if self.log_den is None or overwrite_density is True:
+        if self.log_den is None:
 
             if density_algorithm.lower() == "pak":
                 self.compute_density_PAk()
