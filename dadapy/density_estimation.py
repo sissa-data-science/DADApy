@@ -105,11 +105,12 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print(f"k-NN density estimation started (k={k})")
 
+
+        self.set_kstar(k)
+
         log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
-            self.distances,
-            self.intrinsic_dim,
-            kstar,
-            interpolation=False,
+            self.distances, self.intrinsic_dim, self.kstar, interpolation=False
+
         )
 
         # Normalise density
@@ -169,8 +170,7 @@ class DensityEstimation(IdEstimation):
             log_den (np.ndarray(float)): estimated log density
             log_den_err (np.ndarray(float)): estimated error on log density
         """
-        if self.kstar is None:
-            self.compute_kstar(Dthr)
+        self.compute_kstar(Dthr)
 
         if self.verb:
             print("kstar-NN density estimation started")
@@ -206,8 +206,7 @@ class DensityEstimation(IdEstimation):
             log_den (np.ndarray(float)): estimated log density
             log_den_err (np.ndarray(float)): estimated error on log density
         """
-        if self.kstar is None:
-            self.compute_kstar(Dthr)
+        self.compute_kstar(Dthr)
 
         if self.verb:
             print("Density estimation for k-peaks clustering started")
