@@ -140,3 +140,15 @@ def test_clustering_ADP_pure_python():
     assert cl.N_clusters == 2
 
     assert (cl.cluster_assignment == expected_cluster_assignment).all()
+
+
+def test_clustering_ADP_pure_python_with_merging():
+    """Test the clustering operations with the knn and merging work correctly."""
+    cl = Clustering(coordinates=X)
+
+    _ = cl.compute_density_kNN(k=5)
+    cl.kstar = np.ones(cl.N, dtype=int) * 5
+    _ = cl.compute_clustering_ADP_pure_python()
+
+    assert cl.N_clusters == 2
+    assert (cl.cluster_assignment == expected_cluster_assignment).all()
