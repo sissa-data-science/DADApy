@@ -20,10 +20,12 @@ from dadapy._cython import cython_maximum_likelihood_opt as cml
 
 
 def return_not_normalised_density_kstarNN(
-    distances, intrinsic_dim, kstar, interpolation=False, verb=False
+    distances,
+    intrinsic_dim,
+    kstar,
+    interpolation=False,
 ):
-    if verb:
-        ("computing prefactor")
+
     N = distances.shape[0]
     dc = np.zeros(N, dtype=float)
     prefactor = np.exp(
@@ -31,8 +33,6 @@ def return_not_normalised_density_kstarNN(
     )
     log_den_min = 9.9e300
 
-    if verb:
-        ("computing error")
     if not interpolation:
         log_den = np.log(kstar, dtype=float)
         log_den_err = 1.0 / np.sqrt(kstar, dtype=float)
@@ -41,8 +41,6 @@ def return_not_normalised_density_kstarNN(
         log_den = np.log(kstar - 1, dtype=float)
         log_den_err = 1.0 / np.sqrt(kstar - 1, dtype=float)
 
-    if verb:
-        ("compute log_den started")
     for i in range(N):
         dc[i] = distances[i, kstar[i]]
         log_den[i] = log_den[i] - (
@@ -85,26 +83,25 @@ def return_not_normalised_density_PAk(
         knn = 0
         for j in range(kstar[i]):
             # to avoid easy overflow
+
             # vi[j] = prefactor * (
             #     pow(distances[i, j + 1], intrinsic_dim)
             #     - pow(distances[i, j], intrinsic_dim)
             # )
+            #   maybe try to add a warning to the previous implementation:
+            #   in well behaved cases (e.g. IDs order of tens or lower) previous implementation
+            #   should not overflow
+
             r = distances[i, j]
             r1 = distances[i, j + 1]
-
             exponent = intrinsic_dim * np.log(r1) + np.log(
                 1 - (r / r1) ** intrinsic_dim
             )
             vi[j] = prefactor * np.exp(exponent)
-            # if (i+1)%100 ==0:
-            #     print(np.log(r1), np.log(1- (r/r1)**intrinsic_dim))
 
             if vi[j] < 1.0e-300:
                 knn = 1
                 break
-
-        # if (i+1)%100 ==0:
-        #     print(vi, intrinsic_dim, exponent)
 
         if knn == 0:
             log_den[i] = cml._nrmaxl(rr, kstar[i], vi)

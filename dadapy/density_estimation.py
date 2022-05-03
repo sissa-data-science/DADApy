@@ -110,7 +110,6 @@ class DensityEstimation(IdEstimation):
             self.intrinsic_dim,
             kstar,
             interpolation=False,
-            verb=self.verb,
         )
 
         # Normalise density
