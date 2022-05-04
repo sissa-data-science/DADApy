@@ -222,20 +222,3 @@ class Base:
 
         else:
             print("No identical identical points were found")
-
-
-if __name__ == "__main__":
-
-    from numpy.random import default_rng
-
-    rng = default_rng(0)
-
-    X = np.array([[0, 0, 0], [0.5, 0, 0], [0.9, 0, 0]])
-
-    d = Base(X, verbose=True)
-
-    d.compute_distances()
-    print(d.distances, d.dist_indices)
-
-    d.compute_distances(period=1.1, metric="manhattan")
-    print(d.distances, d.dist_indices)
