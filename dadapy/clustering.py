@@ -89,9 +89,6 @@ class Clustering(DensityEstimation):
         Args:
             Z(float): merging parameter
             halo (bool): compute (or not) the halo points
-            density_algorithm (str): method to compute the local density.
-                Use 'PAK' for adaptive neighbourhood, 'kNN' for fixed neighbourhood
-            k (int): number of neighbours when using kNN algorithm
 
         Returns:
             cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
