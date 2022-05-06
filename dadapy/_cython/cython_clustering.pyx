@@ -61,7 +61,7 @@ def _compute_clustering(floatTYPE_t Z,
     cdef DTYPE_t len_to_remove = 0
 
     if verb:
-        print("part one finished")
+        print("part one finished: Raw identification of the putative centers")
         # for i in range(len_centers):
         #     print(_centers_[i])
 
@@ -93,7 +93,7 @@ def _compute_clustering(floatTYPE_t Z,
     #                     break
 
     if verb:
-        print("part two finished")
+        print("part two finished: Further checking on centers")
         # print(len_centers, len(to_remove))
 
     cdef np.ndarray[DTYPE_t, ndim = 1]  centers = np.empty(len_centers - len_to_remove, dtype=int)
@@ -110,7 +110,7 @@ def _compute_clustering(floatTYPE_t Z,
             cindx += 1
 
     if verb:
-        print("part tree finished")
+        print("part tree finished: Pruning of the centers wrongly identified in part one.")
         # print(len(centers))
     #the selected centers can't belong to the neighborhood of points with higher density
     cdef np.ndarray[DTYPE_t, ndim = 1]  cluster_init_ = np.repeat(-1, Nele)

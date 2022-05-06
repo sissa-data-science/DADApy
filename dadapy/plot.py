@@ -52,7 +52,7 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
     plt.plot(x, x * slope, "-")
 
     print(
-        "slope is {:f}, average resitual is {:f}".format(
+        "slope is {:f}, average residual is {:f}".format(
             slope[0], residuals[0] / Nele_eff
         )
     )
@@ -95,7 +95,7 @@ def plot_SLAn(Data, linkage="single"):
     plt.show()
 
 
-def plot_MDS(Data, cmap="viridis"):
+def plot_MDS(Data, cmap="viridis", savefig=""):
     """Plot a multi-dimensional scaling visualisation of the density peaks."""
     Fmax = max(Data.log_den)
     Rho_bord_m = np.copy(Data.log_den_bord)
@@ -114,6 +114,14 @@ def plot_MDS(Data, cmap="viridis"):
         s.append(20.0 * np.sqrt(len(Data.cluster_indices[i])))
         col.append(i)
     plt.scatter(out[:, 0], out[:, 1], s=s, c=col, cmap=cmap)
+    left, right = plt.xlim()
+    xr = right - left
+    plt.xlim((left - xr * 0.05, right + xr * 0.05))
+    bottom, up = plt.ylim()
+    yr = up - bottom
+    plt.ylim((bottom - yr * 0.05, up + yr * 0.05))
+    plt.xticks([])
+    plt.yticks([])
     cmal = cm.get_cmap(cmap, Data.N_clusters)
     colors = cmal(np.arange(0, cmal.N))
     for i in range(Data.N_clusters):
@@ -149,11 +157,12 @@ def plot_MDS(Data, cmap="viridis"):
     lc.set_facecolor(np.full(len(segments), "black"))
     lc.set_linewidths(0.02 * Rho_bord_m.flatten())
     ax.add_collection(lc)
-    # fig.savefig('2D.png')
+    if savefig != "":
+        plt.savefig(savefig)
     plt.show()
 
 
-def plot_matrix(Data):
+def plot_matrix(Data, savefig=""):
     """Plot a matrix of density peaks and density saddle points intensity."""
     Rho_bord_m = np.copy(Data.log_den_bord)
     topography = np.copy(Rho_bord_m)
@@ -161,16 +170,21 @@ def plot_matrix(Data):
         topography[j, j] = Data.log_den[Data.cluster_centers[j]]
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
-    plt.imshow(topography, cmap="hot", interpolation=None)
-    # fig.savefig('matrix.png')
+    plt.imshow(topography, cmap="gray_r", interpolation=None)
+    plt.xticks(np.arange(0, Data.N_clusters, step=1))
+    plt.yticks(np.arange(0, Data.N_clusters, step=1))
+    if savefig != "":
+        plt.savefig(savefig)
     plt.show()
 
 
-def plot_DecGraph(Data):
+def plot_DecGraph(Data, savefig=""):
     """Plot the decision graph for the Density Peak clustering method."""
     plt.xlabel(r"$\rho$")
     plt.ylabel(r"$\delta$")
     plt.scatter(Data.log_den, Data.delta)
+    if savefig != "":
+        plt.savefig(savefig)
     plt.show()
 
 
