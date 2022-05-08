@@ -73,18 +73,19 @@ data.compute_clustering_ADP()
 # Installation
 The package is compatible with Python >= 3.7 (tested on 3.7, 3.8 and 3.9). We currently only support Unix-based systems, including Linux and macOS. 
 For Windows-machines we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
-The exact list of dependencies are given in setup.py and all of them will be automatically installed during setup.
+
+The package requires `numpy`, `scipy` and `scikit-learn`, and `matplotlib` for the visualisations.
 
 The package contains Cython-generated C extensions that are automatically compiled during install. 
 
-The latest stable release is (not yet!) available through pip: (add the `--user` flag if root access is not available
+The latest release is available through pip
 
 ```sh
 pip install dadapy
 ```
 
 To install the latest development version, clone the source code from github
-and install with pip from local file:
+and install it with pip as follows
 
 ```sh
 git clone https://github.com/sissa-data-science/DADApy.git
