@@ -400,7 +400,6 @@ class IdEstimation(Base):
         dist = copy.deepcopy(dist[:, : self.maxk + 1])
         neigh_ind = copy.deepcopy(neigh_ind[:, : self.maxk + 1])
 
-
         return dist, neigh_ind, mus, rs
 
     def _return_mus_scaling(self, range_scaling):
@@ -441,9 +440,14 @@ class IdEstimation(Base):
 
         neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
 
-        zero_dists = np.sum(neigh_dist[0][:, 1]<=1.1*np.finfo(neigh_dist[0].dtype).eps)
+        zero_dists = np.sum(
+            neigh_dist[0][:, 1] <= 1.1 * np.finfo(neigh_dist[0].dtype).eps
+        )
         if zero_dists > 0:
-            warnings.warn(f'there may be data with zero distance from each other; this may compromise the correct behavior of some routines')
+            warnings.warn(
+                """there may be data with zero distance from each other;
+                this may compromise the correct behavior of some routines"""
+            )
 
         return (
             np.vstack(neigh_dist),

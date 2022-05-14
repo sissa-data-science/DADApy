@@ -46,6 +46,7 @@ def test_compute_id_gride():
         [0.39476585, 0.56740507, 0.80139545, 1.13457408, 1.64776878], abs=0.01
     )
 
+
 def test_zero_dist():
     X = np.array([[0, 0, 0], [0, 0, 0], [0.9, 0, 0]])
     de = IdEstimation(coordinates=X)
