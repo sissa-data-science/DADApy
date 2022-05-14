@@ -18,10 +18,10 @@ The *id_estimation* module contains the *IdEstimation* class.
 
 The different algorithms of intrinsic dimension estimation are implemented as methods of this class.
 """
-import warnings
 import copy
 import math
 import multiprocessing
+import warnings
 from functools import partial
 
 import numpy as np

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import warnings
 import multiprocessing
 import re
+import warnings
 
 import numpy as np
 import scipy.special as sp

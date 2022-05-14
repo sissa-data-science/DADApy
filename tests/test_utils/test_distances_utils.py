@@ -1,6 +1,7 @@
-from dadapy._utils import utils
 import numpy as np
 import pytest
+
+from dadapy._utils import utils
 
 
 def test_zero_dist():
