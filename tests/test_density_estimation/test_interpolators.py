@@ -18,6 +18,7 @@
 import os
 
 import numpy as np
+import pytest
 
 from dadapy import DensityEstimation
 
@@ -41,4 +42,3 @@ def test_density_estimation_kNN():
     expected_diff = np.array([np.log(k) - np.log(k - 1)] * len(diff))
 
     assert diff == pytest.approx(expected_diff, abs=1e-6)
-    #assert (diff == expected_diff).all()
