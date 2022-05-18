@@ -40,4 +40,5 @@ def test_density_estimation_kNN():
 
     expected_diff = np.array([np.log(k) - np.log(k - 1)] * len(diff))
 
-    assert (diff == expected_diff).all()
+    assert diff == pytest.approx(expected_diff, abs=1e-6)
+    #assert (diff == expected_diff).all()
