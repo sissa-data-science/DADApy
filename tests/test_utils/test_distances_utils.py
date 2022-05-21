@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Module for testing utils functions"""
+"""Module for testing utils functions."""
 
 
 import numpy as np
