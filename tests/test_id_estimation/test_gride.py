@@ -48,6 +48,7 @@ def test_compute_id_gride():
 
 
 def test_zero_dist():
+    """Test that a warning message appear if there are overlapping datapoints."""
     X = np.array([[0, 0, 0], [0, 0, 0], [0.9, 0, 0]])
     de = IdEstimation(coordinates=X)
 
