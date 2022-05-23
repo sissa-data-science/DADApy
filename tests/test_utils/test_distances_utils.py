@@ -13,32 +13,17 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Module for testing the density interpolators."""
+"""Module for testing utils functions."""
 
-import os
 
 import numpy as np
 import pytest
 
-from dadapy import DensityEstimation
+from dadapy._utils import utils
 
 
-def test_density_estimation_kNN():
-    """Test the kNN interpolator is coherent with the kNN estimator."""
-    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
-
-    X = np.load(filename)[:25]
-
-    k = 5
-
-    de = DensityEstimation(coordinates=X)
-
-    computed, _ = de.compute_density_kNN(k)
-
-    interpolated, _ = de.return_interpolated_density_kNN(X, k)
-
-    diff = computed - interpolated
-
-    expected_diff = np.array([np.log(k) - np.log(k - 1)] * len(diff))
-
-    assert diff == pytest.approx(expected_diff, abs=1e-6)
+def test_zero_dist():
+    """Test that a warning message appear if there are overlapping datapoints."""
+    X = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.9, 0.0, 0.0]])
+    with pytest.warns(UserWarning):
+        utils.compute_nn_distances(X, maxk=2, metric="euclidean", period=None)

@@ -18,10 +18,10 @@ The *id_estimation* module contains the *IdEstimation* class.
 
 The different algorithms of intrinsic dimension estimation are implemented as methods of this class.
 """
-
 import copy
 import math
 import multiprocessing
+import warnings
 from functools import partial
 
 import numpy as np
@@ -439,6 +439,15 @@ class IdEstimation(Base):
         )
 
         neigh_dist, neigh_ind, mus, rs = zip(*chunked_results)
+
+        zero_dists = np.sum(
+            neigh_dist[0][:, 1] <= 1.1 * np.finfo(neigh_dist[0].dtype).eps
+        )
+        if zero_dists > 0:
+            warnings.warn(
+                """there may be data with zero distance from each other;
+                this may compromise the correct behavior of some routines"""
+            )
 
         return (
             np.vstack(neigh_dist),

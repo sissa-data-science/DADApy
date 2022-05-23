@@ -18,7 +18,6 @@ The *base* module contains the *Base* class.
 
 This class contains essential methods and attributes needed for all other classes.
 """
-
 import multiprocessing
 import time
 

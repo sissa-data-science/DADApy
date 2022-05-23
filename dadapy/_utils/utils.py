@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 import multiprocessing
 import re
+import warnings
 
 import numpy as np
 import scipy.special as sp
@@ -144,6 +144,13 @@ def compute_nn_distances(X, maxk, metric="euclidean", period=None):
     distances, dist_indices = compute_cross_nn_distances(
         X, X, maxk + 1, metric=metric, period=period
     )
+
+    zero_dists = np.sum(distances[:, 1] <= 1.1 * np.finfo(distances.dtype).eps)
+    if zero_dists > 0:
+        warnings.warn(
+            f"there may be data with zero distance from each other; this may compromise the correct behavior of some routines"
+        )
+
     return distances, dist_indices
 
 
