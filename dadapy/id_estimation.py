@@ -72,6 +72,7 @@ class IdEstimation(Base):
         self.intrinsic_dim = None
         self.intrinsic_dim_err = None
         self.intrinsic_dim_scale = None
+        self.intrinsic_dim_mus = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -110,7 +111,11 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
     def compute_id_2NN(
-        self, algorithm="base", fraction=0.9, decimation=1, set_attr=True
+        self,
+        algorithm="base",
+        fraction=0.9,
+        decimation=1,
+        set_attr=True,
     ):
         """Compute intrinsic dimension using the 2NN algorithm.
 
@@ -133,6 +138,9 @@ class IdEstimation(Base):
         ids = np.zeros(nrep)
         rs = np.zeros(nrep)
 
+        N_subset = int(np.rint(self.N * decimation))
+        mus = np.zeros((nrep, N_subset))
+
         for j in range(nrep):
 
             if decimation == 1 and self.distances is not None:
@@ -146,7 +154,6 @@ class IdEstimation(Base):
 
             else:
                 # if set_attr==False or for decimation < 1 random sample points don't save distances
-                N_subset = int(np.rint(self.N * decimation))
                 idx = np.random.choice(self.N, size=N_subset, replace=False)
                 X_decimated = self.X[idx]
 
@@ -157,8 +164,8 @@ class IdEstimation(Base):
                     period=self.period,
                 )
 
-            mus = np.log(distances[:, 2] / distances[:, 1])
-            ids[j] = self._compute_id_2NN(mus, fraction, algorithm)
+            mus[j] = np.log(distances[:, 2] / distances[:, 1])
+            ids[j] = self._compute_id_2NN(mus[j], fraction, algorithm)
             rs[j] = np.mean(distances[:, np.array([1, 2])])
 
         intrinsic_dim = np.mean(ids)
@@ -172,6 +179,7 @@ class IdEstimation(Base):
             self.intrinsic_dim = intrinsic_dim
             self.intrinsic_dim_err = intrinsic_dim_err
             self.intrinsic_dim_scale = intrinsic_dim_scale
+            self.intrinsic_dim_mus = mus
 
         return intrinsic_dim, intrinsic_dim_err, intrinsic_dim_scale
 
