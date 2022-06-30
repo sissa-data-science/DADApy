@@ -268,6 +268,7 @@ class IdDiscrete(Base):
         mask = self._my_mask(subset)
         n_eff = self.n[mask] - 1
         k_eff = self.k[mask] - 1
+
         if self._is_w:
             w_eff = self._weights[mask]
 
@@ -278,7 +279,9 @@ class IdDiscrete(Base):
                 print(
                     "no points in the inner shell, returning 0. Consider increasing ln and possibly lk"
                 )
-                return 0
+                self.intrinsic_dim = 0
+                self.intrinsic_dim_err = 0
+                return 0,0,self.lk
 
         # choice of the method
         if method == "mle":
@@ -293,8 +296,8 @@ class IdDiscrete(Base):
                 n_eff = n_eff.mean()
 
             # explicit computation of likelihood, not necessary when ln and lk are fixed, but more stable than root searching
-            # self.id_estimated_binom = df.find_d_likelihood(self.ln, self.lk, n_eff, k_eff, w_eff)
-            intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
+            intrinsic_dim = df.find_d_likelihood(self.ln, self.lk, n_eff, k_eff, w_eff)
+            #intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
 
             intrinsic_dim_err = (
                 df.binomial_cramer_rao(
@@ -332,6 +335,28 @@ class IdDiscrete(Base):
             self.intrinsic_dim_scale = self.lk
 
         return intrinsic_dim, intrinsic_dim_err, self.lk
+
+    # ----------------------------------------------------------------------------------------------
+
+    def return_id_scaling(self, Lks, r=0.5, method='mle', subset=None):
+    	"""Compute the ID by varying the radii
+
+        Args:
+            Lks (list or np.ndarray(int)): external radii lk
+            r (float, default = 0.5): ratio among ln and lk
+            method (string, default='mle'): method to compute the id
+
+        Returns:
+            ids (np.ndarray): intrinsic dimension at different scales
+            ids_err (np.ndarray): error estimate on intrinsic dimension at different scales
+        """
+    	ids = np.zeros_like(Lks)
+    	ids_e = np.zeros_like(Lks)
+    	for lk in Lks:
+    		id_i, id_er, scale = self.compute_id_binomial_lk(lk,int(lk*r),method=method,subset=subset)
+    		ids.append(id_i)
+    		ids_e.append(id_er)
+    	return ids, ids_e
 
     # ----------------------------------------------------------------------------------------------
 
@@ -586,7 +611,9 @@ class IdDiscrete(Base):
             print(
                 "no points in the inner shell, returning 0. Consider increasing lk and/or the ratio"
             )
-            return 0
+            self.intrinsic_dim = 0
+            self.intrinsic_dim_err = 0
+            return 0,0,lk_eff.mean()
 
         intrinsic_dim = df.find_d_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
         #  intrinsic_dim_err = df.binomial_cramer_rao(intrinsic_dim, ln_eff.mean(), lk_eff.mean(), mask.sum(), k.mean())
@@ -594,29 +621,40 @@ class IdDiscrete(Base):
         if set_attr:
             self.intrinsic_dim = intrinsic_dim
             # self.intrinsic_dim_err = intrinsic_dim_err
-            self.intrinsic_dim_scale = self.lk.mean()
+            self.intrinsic_dim_scale = lk_eff.mean()
 
-        return intrinsic_dim, 0, self.lk.mean()
+        return intrinsic_dim, 0, lk_eff.mean()
 
     # -------------------------------MODEL VALIDATION-----------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
-    def compute_local_density(self, plot=True):
+    def compute_local_density(self, plot=True, path=None):
 
         assert self.n is not None and self.k is not None, "find k and n before"
         assert isinstance(self.lk, int)
 
-        n = np.copy(self.n)
-        m = np.copy(self.k - self.n)
+        n = np.copy(self.n).astype(float)
+        m = np.copy(self.k - self.n).astype(float)
         n /= n.mean()
         m /= m.mean()
 
+        dist = abs(n-m)/np.sqrt(n**2+m**2)
+        print('average distance from line: ',dist.mean())
+
         if plot:
-            plt.scatter(n, m)
+            plt.scatter(n, m, s=1.)
             plt.plot(
                 np.arange(min(min(n), min(m)), max(max(n), max(m))),
                 np.arange(min(min(n), min(m)), max(max(n), max(m))),
             )
+            plt.xlabel(r'$n/\langle n \rangle$')
+            plt.ylabel(r'$(k-n)/\langle k-n \rangle$')
+
+        if path is not None:
+            path = path.rstrip("/") + "/"
+            os.system("mkdir -p " + path)
+            plt.savefig(path+'local_density.pdf')
+
 
         return n, m
 
@@ -747,8 +785,8 @@ class IdDiscrete(Base):
             os.system("mkdir -p " + path)
         obs = []
         mask = self._my_mask(subset)
-        n_eff = self.n[mask] - 1
-        k_eff = self.k[mask] - 1
+        n_eff = self.n[mask]# - 1
+        k_eff = self.k[mask]# - 1
 
         for i in range(len(k_win) - 1):
 
@@ -1066,8 +1104,8 @@ class IdDiscrete(Base):
     def set_lk_ln(self, lk, ln):
         assert (
             isinstance(ln, (np.int, np.int8, np.int16, np.int32, np.int64, int))
-            and ln > 0
-        ), "select a proper integer ln>0"
+            and ln >= 0
+        ), "select a proper integer ln>=0"
         assert (
             isinstance(lk, (np.int, np.int8, np.int16, np.int32, np.int64, int))
             and lk > 0
@@ -1079,7 +1117,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def set_ratio(self, r):
-        assert isinstance(r, float) and 0 < r < 1, "select a proper ratio 0<r<1"
+        assert isinstance(r, float) and 0 <= r < 1, "select a proper ratio 0<r<1"
         self.ratio = r
 
     # ----------------------------------------------------------------------------------------------
