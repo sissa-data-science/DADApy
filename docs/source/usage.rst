@@ -11,7 +11,7 @@ The results of the computations are typically available as attributes of the obj
 
     import numpy as np
     import matplotlib.pyplot as plt
-    from duly.data import Data
+    from dadapy.data import Data
 
     # Generate a simple 3D gaussian dataset
     X = np.random.normal(0, 1, (1000, 3))
