@@ -225,7 +225,7 @@ def _compute_binomial_logl(d, Rk, k, Rn, n, w=1):
     #     mask = np.where(log_binom == np.inf)[0]
     #     log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
 
-    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p)  # + log_binom
+    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) - np.log(correction) # + log_binom
     # add weights contribution
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
@@ -318,6 +318,65 @@ def find_d_likelihood(ln, lk, n, k, ww):
         method="bounded",
     ).x
 
+# --------------------------------------------------------------------------------------
+
+
+def profile_likelihood(ln, lk, n, k, ww, plot=False):
+
+    def p_d(d):
+        return _compute_binomial_logl(d, lk, k, ln, n, discrete=True, truncated=True, w=ww)
+
+    # in principle we don't know where the distribution is peaked, so
+    # we perform a blind search over the domain
+    dx = 1.0
+    d_left = D_MIN
+    d_right = D_MAX + dx + d_left
+    d_range = np.arange(d_left, d_right, dx)
+    P = np.array([p_d(di) for di in d_range]) * dx
+    counter = 0
+    mask = P != 0
+    elements = mask.sum()
+    # if less than 3 points !=0 are found, reduce the interval
+    while elements < 3:
+        dx /= 10
+        d_range = np.arange(d_left, d_right, dx)
+        P = np.array([p_d(di) for di in d_range]) * dx
+        mask = P != 0
+        elements = mask.sum()
+        counter += 1
+
+    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
+    # I choose 1000 points but such quantity can be varied according to necessity
+    ind = np.where(mask)[0]
+    d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
+    d_right = d_range[ind[-1]] + 0.5 * dx
+    d_range = np.linspace(d_left, d_right, 1000)
+    dx = d_range[1] - d_range[0]
+    P = np.array([p_d(di) for di in d_range]) * dx
+    P = P.reshape(P.shape[0])
+
+    # if verbose:
+    #   print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
+
+    if plot:
+        plt.figure()
+        plt.plot(d_range, P)
+        plt.xlabel("d")
+        plt.ylabel("P(d)")
+        plt.title("posterior of d")
+#        plt.xlim(1,5)
+#        plt.ylim(350,425)
+        plt.show()
+
+    E_d_emp = np.dot(d_range, P)
+    S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
+    if plot:
+        print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
+    #   theoretical results, valid only in the continuum case
+    #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
+    #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
+
+    return E_d_emp, S_d_emp, d_range, P
 
 # --------------------------------------------------------------------------------------
 

@@ -981,6 +981,12 @@ class IdDiscrete(Base):
             plt.xlabel(r"$n/\langle n \rangle$")
             plt.ylabel(r"$(k-n)/\langle k-n \rangle$")
 
+        if path is not None:
+            path = path.rstrip("/") + "/"
+            os.system("mkdir -p " + path)
+            plt.savefig(path+'local_density.pdf')
+
+
         return n, m
 
     # ----------------------------------------------------------------------------------------------
