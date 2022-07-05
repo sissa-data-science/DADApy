@@ -208,8 +208,8 @@ class IdDiscrete(Base):
                 )
 
             # checks-out
-            self._k = 0     # just a flag to remember whether id was computed at constant radius \
-                            # or constant number of neighbours
+            self._k = 0  # just a flag to remember whether id was computed at constant radius \
+            # or constant number of neighbours
             # compute mask
             if self.maxk == self.N - 1:
                 self._mask = np.ones(self.N, dtype=bool)
@@ -291,7 +291,7 @@ class IdDiscrete(Base):
                 )
                 self.intrinsic_dim = 0
                 self.intrinsic_dim_err = 0
-                return 0,0,self.lk
+                return 0, 0, self.lk
 
         # choice of the method
         if method == "mle":
@@ -308,7 +308,7 @@ class IdDiscrete(Base):
             # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
             # more stable than root searching
             intrinsic_dim = df.find_d_likelihood(self.ln, self.lk, n_eff, k_eff, w_eff)
-            #intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
+            # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
 
             intrinsic_dim_err = (
                 df.binomial_cramer_rao(
@@ -349,7 +349,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_id_scaling(self, Lks, r=0.5, method='mle', subset=None, plot=True):
+    def return_id_scaling(self, Lks, r=0.5, method="mle", subset=None, plot=True):
         """Compute the ID by varying the radii
 
         Args:
@@ -361,19 +361,21 @@ class IdDiscrete(Base):
             ids (np.ndarray): intrinsic dimension at different scales
             ids_err (np.ndarray): error estimate on intrinsic dimension at different scales
         """
-        ids = np.zeros_like(Lks,dtype=float)
-        ids_e = np.zeros_like(Lks,dtype=float)
+        ids = np.zeros_like(Lks, dtype=float)
+        ids_e = np.zeros_like(Lks, dtype=float)
 
-        for i,lk in enumerate(Lks):
-            id_i, id_er, scale = self.compute_id_binomial_lk(lk,int(lk*r),method=method,subset=subset)
+        for i, lk in enumerate(Lks):
+            id_i, id_er, scale = self.compute_id_binomial_lk(
+                lk, int(lk * r), method=method, subset=subset
+            )
             ids[i] = id_i
             ids_e[i] = id_er
 
         if plot:
-            plt.plot(Lks,ids)
-            plt.errorbar(Lks,ids,ids_e,fmt='None')
-            plt.xlabel('scale')
-            plt.ylabel('ID estimate')
+            plt.plot(Lks, ids)
+            plt.errorbar(Lks, ids, ids_e, fmt="None")
+            plt.xlabel("scale")
+            plt.ylabel("ID estimate")
             plt.show()
 
         return ids, ids_e
@@ -606,7 +608,7 @@ class IdDiscrete(Base):
         Returns:
             intrinsic_dim (float): the id esteem
             intrinsic_dim_err (float): the error estimate on the id
-            intrinsic_dim_scale (float): the scale at which the id was computed: <lk>        
+            intrinsic_dim_scale (float): the scale at which the id was computed: <lk>
         """
         # checks-in and initialisations
         assert (
@@ -637,10 +639,10 @@ class IdDiscrete(Base):
             )
             self.intrinsic_dim = 0
             self.intrinsic_dim_err = 0
-            return 0,0,lk_eff.mean()
+            return 0, 0, lk_eff.mean()
 
         intrinsic_dim = df.find_d_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
-        a,b,c,d = df.profile_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
+        a, b, c, d = df.profile_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
         intrinsic_dim_err = b
 
         if set_attr:
@@ -649,7 +651,6 @@ class IdDiscrete(Base):
             self.intrinsic_dim_scale = lk_eff.mean()
 
         return intrinsic_dim, intrinsic_dim_err, lk_eff.mean()
-
 
     # ----------------------------------------------------------------------------------------------
 
@@ -666,23 +667,24 @@ class IdDiscrete(Base):
             ids_err (np.ndarray(float)): error estimate on intrinsic dimension at different scales
             scale (np.ndarray(float)): scale at which the id was computed (mean values of lk)
         """
-        ids = np.zeros_like(Ks,dtype=float)
-        ids_e = np.zeros_like(Ks,dtype=float)
-        scale = np.zeros_like(Ks,dtype=float)
+        ids = np.zeros_like(Ks, dtype=float)
+        ids_e = np.zeros_like(Ks, dtype=float)
+        scale = np.zeros_like(Ks, dtype=float)
 
-        for i,k in enumerate(Ks):
-            ids[i], ids_e[i], scale[i]  = self.compute_id_binomial_k(k,False,r,subset=subset)
-            
+        for i, k in enumerate(Ks):
+            ids[i], ids_e[i], scale[i] = self.compute_id_binomial_k(
+                k, False, r, subset=subset
+            )
+
         if plot:
-            plt.plot(Ks,ids)
-            plt.errorbar(Ks,ids,ids_e,fmt='None')
-            plt.xlabel('scale')
-            plt.ylabel('ID estimate')
+            plt.plot(Ks, ids)
+            plt.errorbar(Ks, ids, ids_e, fmt="None")
+            plt.xlabel("scale")
+            plt.ylabel("ID estimate")
             plt.show()
 
         return ids, ids_e, scale
 
-        
     # -------------------------------MODEL VALIDATION-----------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
@@ -692,7 +694,7 @@ class IdDiscrete(Base):
         Compute and compare the local density of points inside inner and outer shells
         after fixing lk and ln as n/<n> and (k-n)/<k-n>.
         The closest the points to the y=x line, the more the local uniform density
-        hypothesis is respected, the better will be the id estimate 
+        hypothesis is respected, the better will be the id estimate
 
         Args:
             plot (bool, default=True): decide whether to plot the local density
@@ -716,28 +718,27 @@ class IdDiscrete(Base):
 
         # id computed at fixed k
         else:
-            Vk = df.compute_discrete_volume(self.lk,self.intrinsic_dim)
-            Vn = df.compute_discrete_volume(self.ln,self.intrinsic_dim)
+            Vk = df.compute_discrete_volume(self.lk, self.intrinsic_dim)
+            Vn = df.compute_discrete_volume(self.ln, self.intrinsic_dim)
             n /= Vn
-            m /= (Vk-Vn)
+            m /= Vk - Vn
 
-
-        dist = abs(n-m)/np.sqrt(n**2+m**2)
-        print('average distance from line: ',dist.mean())
+        dist = abs(n - m) / np.sqrt(n**2 + m**2)
+        print("average distance from line: ", dist.mean())
 
         if plot:
-            plt.scatter(n, m, s=1.)
+            plt.scatter(n, m, s=1.0)
             plt.plot(
-                np.linspace(min(min(n), min(m)), max(max(n), max(m)),100),
-                np.linspace(min(min(n), min(m)), max(max(n), max(m)),100),
+                np.linspace(min(min(n), min(m)), max(max(n), max(m)), 100),
+                np.linspace(min(min(n), min(m)), max(max(n), max(m)), 100),
             )
-            plt.xlabel(r'$n/\langle n \rangle$')
-            plt.ylabel(r'$(k-n)/\langle k-n \rangle$')
+            plt.xlabel(r"$n/\langle n \rangle$")
+            plt.ylabel(r"$(k-n)/\langle k-n \rangle$")
 
         if path is not None:
             path = path.rstrip("/") + "/"
             os.system("mkdir -p " + path)
-            plt.savefig(path+'local_density.pdf')
+            plt.savefig(path + "local_density.pdf")
 
         return n, m
 
@@ -868,8 +869,8 @@ class IdDiscrete(Base):
             os.system("mkdir -p " + path)
         obs = []
         mask = self._my_mask(subset)
-        n_eff = self.n[mask]# - 1
-        k_eff = self.k[mask]# - 1
+        n_eff = self.n[mask]  # - 1
+        k_eff = self.k[mask]  # - 1
 
         for i in range(len(k_win) - 1):
 
@@ -1185,7 +1186,6 @@ class IdDiscrete(Base):
 
         """
 
-
         assert d > 0, "cannot support negative dimensions (yet)"
         self.intrinsic_dim = d
 
@@ -1238,8 +1238,8 @@ class IdDiscrete(Base):
         """Compute the mask to be used when computing the id
 
         This function create a mask used to compute the id on a subset of datapoints.
-        It takes into account mask given by the fix_k or fix_lk methods and integrate 
-        it with the subset given as an argument. This can be an integer (and points 
+        It takes into account mask given by the fix_k or fix_lk methods and integrate
+        it with the subset given as an argument. This can be an integer (and points
         will be chosen randomly) or a list/np.ndarray of indices.
         If subset is left empty, just passes the mask from fix_k or fix_lk
 
