@@ -984,7 +984,7 @@ class IdDiscrete(Base):
         if path is not None:
             path = path.rstrip("/") + "/"
             os.system("mkdir -p " + path)
-            plt.savefig(path+'local_density.pdf')
+            plt.savefig(path + "local_density.pdf")
 
         return n, m
 

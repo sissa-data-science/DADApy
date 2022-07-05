@@ -225,7 +225,7 @@ def _compute_binomial_logl(d, Rk, k, Rn, n, w=1):
     #     mask = np.where(log_binom == np.inf)[0]
     #     log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
 
-    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) - np.log(correction) # + log_binom
+    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) - np.log(correction)  # + log_binom
     # add weights contribution
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
@@ -318,6 +318,7 @@ def find_d_likelihood(ln, lk, n, k, ww):
         method="bounded",
     ).x
 
+
 # --------------------------------------------------------------------------------------
 
 
@@ -379,8 +380,8 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         plt.xlabel("d")
         plt.ylabel("P(d)")
         plt.title("posterior of d")
-#        plt.xlim(1,5)
-#        plt.ylim(350,425)
+        #        plt.xlim(1,5)
+        #        plt.ylim(350,425)
         plt.show()
 
     E_d_emp = np.dot(d_range, P)
@@ -392,6 +393,7 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
     #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
     return E_d_emp, S_d_emp, d_range, P
+
 
 # --------------------------------------------------------------------------------------
 
@@ -581,6 +583,21 @@ def return_condensed_distances(points, metric, d_max=100, period=None, n_jobs=1)
         )
         return 0
 
+# --------------------------------------------------------------------------------------
+
+
+def manhattan_distances_condensed(points, d_max=100, period=None):
+    """Compute condensed distances according to manhattan metric
+    Args:
+        points (np.ndarray(int/strings)): datapoints
+        d_max (int, deafult=100): max distance around each point to look at
+        period (float or np.ndarray(float)): PBC boundaries
+    Returns:
+        distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
+                                     successive distances
+    """
+    d_max = min(d_max, points.shape[1] * points.max())
+    return mc(points, d_max, period), None
 
 # --------------------------------------------------------------------------------------
 
@@ -676,6 +693,17 @@ def hamming_distances_condensed(points, d_max, n_jobs=1):
 
 # --------------------------------------------------------------------------------------
 
+def hamming_distances_idx(points, d_max=100, maxk_ind=None):
+    """Compute condensed distances according to hamming metric
+    Args:
+        points (np.ndarray(int/strings)): datapoints
+        d_max (int, default=100): max distance around each point to look at
+        maxk_ind (int, default=None): number of neighbours' indices to be stored
+    Returns:
+        distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
+                                     successive distances
+        indices (optional, np.ndarray(int,int)): N x maxk_ind matrix of neighbours indices
+    """
 
 def hamming_distances_idx(points, d_max=100, maxk_ind=None):
     """Compute condensed distances according to hamming metric
