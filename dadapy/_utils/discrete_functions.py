@@ -7,6 +7,9 @@ from matplotlib import cm
 from scipy.optimize import minimize_scalar as SMin
 from scipy.special import binom, gamma, hyp2f1
 
+from dadapy._cython.cython_distances import _return_hamming_condensed_parallel as hc
+from dadapy._cython.cython_distances import _return_manhattan_condensed_parallel as mc
+
 cmap = cm.get_cmap("tab20b", 20)
 
 # --------------------------------------------------------------------------------------
@@ -15,7 +18,6 @@ D_MAX = 70.0
 D_MIN = np.finfo(np.float32).eps
 
 # load, just once and for all, the coefficients for the polynomials in d at fixed L
-
 
 volumes_path = os.path.join(os.path.split(__file__)[0], "discrete_volumes")
 coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
@@ -32,11 +34,11 @@ def compute_discrete_volume(l, d, O1=False):
         l (nd.array( integer or float )): radii of the volumes of which points will be enumerated
         d (float): dimension of the metric space
 
-
     Returns:
         V (nd.array( integer or float )): points within the given volumes
 
     """
+
     # OLD DEFINITIONS using series expansion with eventual approximation for large L
 
     # O1 (bool, default=False): first order approximation in the large L limit. Set to False in order to have the o(1/L) approx
@@ -81,7 +83,9 @@ def compute_discrete_volume(l, d, O1=False):
 
     #     return V
 
-    return binom(d + l, d) * hyp2f1(-d, -l, -d - l, -1)# - 1
+    # EXACT DEFINITION, acknowledgments to Mathematica
+
+    return binom(d + l, d) * hyp2f1(-d, -l, -d - l, -1)
 
 
 # --------------------------------------------------------------------------------------
@@ -104,6 +108,7 @@ def _compute_derivative_discrete_vol(l, d):
 
     # exact formula with polynomials, for small L
     #    assert isinstance(l, (int, np.int))
+
     if l < coeff.shape[0]:
         l = int(l)
 
@@ -114,12 +119,13 @@ def _compute_derivative_discrete_vol(l, d):
         )  # usual coefficient * coeff from first deriv
         return np.dot(coeff_d, D)
 
-        # faster version in case of array l, use 'if all(l<coeff.shape[0])'
-        # else:
-        # 	L = np.array(L, dtype=np.int)
-        # 	coeff_d = coeff*np.arange(coeff.shape[1])
-        # 	dV_dd = np.dot(coeff_d, D)
-        # 	return dV_dd[L]
+    # faster version in case of array l, use 'if all(l<coeff.shape[0])'
+    # else:
+    # 	L = np.array(L, dtype=np.int)
+    # 	coeff_d = coeff*np.arange(coeff.shape[1])
+    # 	dV_dd = np.dot(coeff_d, D)
+    # 	return dV_dd[L]
+
     # approximate definition for large L
     else:
 
@@ -192,7 +198,7 @@ def _compute_binomial_logl(d, Rk, k, Rn, n, discrete=True, truncated=False, w=1)
         p = compute_discrete_volume(Rn, d) / compute_discrete_volume(Rk, d)
 
         if truncated:
-            correction = 1-(1-p)**k
+            correction = 1 - (1 - p) ** k
         else:
             correction = 1
 
@@ -215,7 +221,7 @@ def _compute_binomial_logl(d, Rk, k, Rn, n, discrete=True, truncated=False, w=1)
     #     mask = np.where(log_binom == np.inf)[0]
     #     log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
 
-    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) - np.log(correction) # + log_binom
+    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) - np.log(correction)  # + log_binom
     # add weights contribution
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
@@ -248,6 +254,15 @@ def binomial_cramer_rao(d, ln, lk, N, k):
 
 
 def _eq_to_find_0(d, ln, lk, n, k):
+    """Equation whose roots gives the id when fixing radii
+    Args:
+        d (float): id, parameter to infer
+        ln (int): internal radius
+        lk (int): external radius
+        n (float): average number of points within internal shells
+        k (float): average number of points within external shells
+    Returns:
+    """
     return compute_discrete_volume(ln, d) / compute_discrete_volume(lk, d) - n / k
 
 
@@ -255,6 +270,15 @@ def _eq_to_find_0(d, ln, lk, n, k):
 
 
 def find_d_root(ln, lk, n, k):
+    """Find root (i.e. theintrinsic dimension) of polynomials
+    Args:
+        ln (int): internal radius
+        lk (int): external radius
+        n (float): average number of points within internal shells
+        k (float): average number of points within external shells
+    Returns:
+        id (float): the estimated intrinsic dimension
+    """
     if (
         n < 0.00001
     ):  # i.e. i'm dealing with a isolated points, there's no statistics on n
@@ -272,6 +296,16 @@ def find_d_root(ln, lk, n, k):
 
 
 def find_d_likelihood(ln, lk, n, k, ww):
+    """Finds the ID as maximum of the likelihood
+    Args:
+        ln (int or np.ndarray(int)): internal radius
+        lk (int or np.ndarray(int)): external radius
+        n (np.ndarray(int)): number of points within internal shells
+        k (np.ndarray(int)): number of points within external shells
+        ww (np.ndarray(int)): multiplicity of points
+    Returns:
+        id (float): the estimated intrinsic dimension
+    """
     # if isinstance(n, np.ndarray):
     #     n_check = n.mean()
     # else:
@@ -289,13 +323,30 @@ def find_d_likelihood(ln, lk, n, k, ww):
         method="bounded",
     ).x
 
+
 # --------------------------------------------------------------------------------------
 
 
 def profile_likelihood(ln, lk, n, k, ww, plot=False):
+    """Plot a profile of the likelihood as a function of the id given all observables
+    Args:
+        ln (int or np.ndarray(int)): internal radius
+        lk (int or np.ndarray(int)): external radius
+        n (float): number of points within internal shells
+        k (float): number of points within external shells
+        ww (np.ndarray(int)): multiplicity of points
+        plot (bool, default=False): whether to plot the likelihood or not
+    Returns:
+        E_d_emp (float): mean value of the likelihood
+        S_d_emp (float): std of the likelihood
+        d_range (ndarray(float)): domain of the likelihood
+        P (ndarray(float)): values of the likelihood
+    """
 
     def p_d(d):
-        return _compute_binomial_logl(d, lk, k, ln, n, discrete=True, truncated=True, w=ww)
+        return _compute_binomial_logl(
+            d, lk, k, ln, n, discrete=True, truncated=False, w=ww
+        )
 
     # in principle we don't know where the distribution is peaked, so
     # we perform a blind search over the domain
@@ -325,7 +376,8 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
     dx = d_range[1] - d_range[0]
     P = np.array([p_d(di) for di in d_range]) * dx
     P = P.reshape(P.shape[0])
-
+    P = np.exp(-P)
+    P /= P.sum()
     # if verbose:
     #   print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
 
@@ -335,8 +387,8 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         plt.xlabel("d")
         plt.ylabel("P(d)")
         plt.title("posterior of d")
-#        plt.xlim(1,5)
-#        plt.ylim(350,425)
+        #        plt.xlim(1,5)
+        #        plt.ylim(350,425)
         plt.show()
 
     E_d_emp = np.dot(d_range, P)
@@ -348,6 +400,7 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
     #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
     return E_d_emp, S_d_emp, d_range, P
+
 
 # --------------------------------------------------------------------------------------
 def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
@@ -437,29 +490,70 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
 
 
 def return_condensed_distances(
-    points, metric="manhattan", d_max=100, maxk_ind=None, period=None
+    points, metric="manhattan", d_max=100, period=None
 ):
+    """Compute number of points at each distance
+    
+    Instead of focusing on the distance of each neighbour, it just saves how many neighbours are
+    present at each distance and returns their cumulative distribution.
+    This saves loads of memory, as instead of having a matrix NxN (or Nxk_max)
+    it just saves N x d_max, where generally d_max is of order of 100, while k_max 
+    needs to be a finite fraction of N to have reliable results.
+    If you want to know the neighbours, compute distances with condensed=False
 
-    dist_count = np.zeros((points.shape[0], d_max + 1), dtype=int)
-
-    if maxk_ind is not None:
-        indexes = np.zeros((points.shape[0], maxk_ind), dtype=int)
+    Args:
+        points (np.ndarray(int/strings)): datapoints
+        metric (string, default='manhattan'): metric used to compute distances, 'manhattan' and\
+                                              'hamming' supported so far
+        d_max (int, default=100): max distance around each point to look at
+        period (float or np.ndarray(float)): PBC boundaries
+    Returns:
+        distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
+                                     successive distances
+        indices (optional, np.ndarray(int,int)): N x maxk_ind matrix of neighbours indices
+    """
 
     if metric == "manhattan":
-        return manhattan_distances(points, d_max, maxk_ind, period)
+        return manhattan_distances_condensed(points, d_max, period)
     elif metric == "hamming":
-        return hamming_distances(points, d_max, maxk_ind)
+        return hamming_distances_condensed(points, d_max)
     else:
         print(
             'insert a proper metric: up to now the supported ones are "manhattan" and "hamming"'
         )
         return 0
 
+# --------------------------------------------------------------------------------------
+
+
+def manhattan_distances_condensed(points, d_max=100, period=None):
+    """Compute condensed distances according to manhattan metric
+    Args:
+        points (np.ndarray(int/strings)): datapoints
+        d_max (int, deafult=100): max distance around each point to look at
+        period (float or np.ndarray(float)): PBC boundaries
+    Returns:
+        distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
+                                     successive distances
+    """
+    d_max = min(d_max, points.shape[1] * points.max())
+    return mc(points, d_max, period), None
 
 # --------------------------------------------------------------------------------------
 
 
-def manhattan_distances(points, d_max=100, maxk_ind=None, period=None):
+def manhattan_distances_idx(points, d_max=100, maxk_ind=None, period=None):
+    """Compute condensed distances according to manhattan metric
+    Args:
+        points (np.ndarray(int/strings)): datapoints
+        d_max (int, deafult=100): max distance around each point to look at
+        maxk_ind (int, deaful=None): number of neighbours' indices to be stored
+        period (float or np.ndarray(float)): PBC boundaries
+    Returns:
+        distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
+                                     successive distances
+        indices (optional, np.ndarray(int,int)): N x maxk_ind matrix of neighbours indices
+    """
 
     dist_count = np.zeros((points.shape[0], d_max + 1), dtype=int)
 
@@ -496,15 +590,32 @@ def manhattan_distances(points, d_max=100, maxk_ind=None, period=None):
 # --------------------------------------------------------------------------------------
 
 
-def hamming_distance_couple(a, b):
-    # assert len(a)==len(b)
-    return sum([a[i] != b[i] for i in range(len(a))])
+def hamming_distances_condensed(points, d_max):
+    """Compute condensed distances according to hamming metric
+    Args:
+        points (np.ndarray(int/strings)): datapoints
+        d_max (int, default=100): max distance around each point to look at
+    Returns:
+        distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
+                                     successive distances
+    """
+    d_max = min(d_max, points.shape[1])
+    return hc(points, d_max), None
 
 
 # --------------------------------------------------------------------------------------
 
-
-def hamming_distances(points, d_max=100, maxk_ind=None):
+def hamming_distances_idx(points, d_max=100, maxk_ind=None):
+    """Compute condensed distances according to hamming metric
+    Args:
+        points (np.ndarray(int/strings)): datapoints
+        d_max (int, default=100): max distance around each point to look at
+        maxk_ind (int, default=None): number of neighbours' indices to be stored
+    Returns:
+        distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
+                                     successive distances
+        indices (optional, np.ndarray(int,int)): N x maxk_ind matrix of neighbours indices
+    """
 
     dist_count = np.zeros((points.shape[0], d_max + 1), dtype=int)
 
@@ -512,7 +623,6 @@ def hamming_distances(points, d_max=100, maxk_ind=None):
         indexes = np.zeros((points.shape[0], maxk_ind), dtype=int)
 
     for i, pt in enumerate(points):
-
         appo = np.array([hamming_distance_couple(pt, pt_i) for pt_i in points])
 
         if maxk_ind is None:
