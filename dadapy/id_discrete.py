@@ -986,7 +986,6 @@ class IdDiscrete(Base):
             os.system("mkdir -p " + path)
             plt.savefig(path+'local_density.pdf')
 
-
         return n, m
 
     # ----------------------------------------------------------------------------------------------
