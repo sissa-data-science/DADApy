@@ -94,8 +94,8 @@ def return_not_normalised_density_PAk(
 
             r = distances[i, j]
             r1 = distances[i, j + 1]
-            if np.abs(r1-r) < np.finfo(r.dtype).resolution:
-                r1+= 10*np.finfo(r.dtype).resolution
+            if np.abs(r1 - r) < np.finfo(r.dtype).resolution:
+                r1 += 10 * np.finfo(r.dtype).resolution
             exponent = intrinsic_dim * np.log(r1) + np.log(
                 1 - (r / r1) ** intrinsic_dim
             )
