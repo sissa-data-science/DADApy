@@ -130,10 +130,46 @@ class IdEstimation(Base):
             id_err (float): the standard error on the id estimation
             rs (float): the average nearest neighbor distance (rs)
 
+        Quick Start:
+        ===========
+
+        .. code-block:: python
+
+                from dadapy import Data
+                from sklearn.datasets import make_swiss_roll
+
+                n_samples = 5000
+                X, _ = make_swiss_roll(n_samples, noise=0.0)
+
+                ie = Data(coordinates=X)
+                results = ie.compute_id_2NN()
+
+                results:
+                (1.96, 0.0, 0.38)       #(id, error, average distance to the first two neighborr)
+
+                results = ie.compute_id_2NN(fraction = 1)
+                results:
+                (1.98, 0.0, 0.38)       #(id, error, average distance to the first two neighborr)
+
+                results = ie.compute_id_2NN(decimation = 0.25)
+                results:
+                (1.99, 0.036, 0.76)     #(id, error, average distance to the first two neighbors)
+                                        #1/4 of the points are kept.
+                                        #'id' is the mean over 4 bootstrap samples;
+                                        #'error' is standard error of the sample mean.
+
         References:
             E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the intrinsic dimension of datasets by a minimal
             neighborhood information, Scientific reports 7 (1) (2017) 1–8
         """
+        assert (
+            0.0 < decimation and decimation <= 1.0
+        ), "'decimation' must be between 0 and 1"
+        assert 0.0 < fraction and fraction <= 1.0, "'fraction' must be between 0 and 1"
+        if fraction == 1.0 and algorithm == "base":
+            algorithm = "ml"
+            print("fraction = 1: algorithm set to ml")
+
         nrep = int(np.rint(1.0 / decimation))
         ids = np.zeros(nrep)
         rs = np.zeros(nrep)
@@ -209,7 +245,7 @@ class IdEstimation(Base):
 
         .. code-block:: python
 
-                from dadapy import IdEstimation
+                from dadapy import Data
                 from sklearn.datasets import make_swiss_roll
 
                 #two dimensional curved manifold embedded in 3d with noise
@@ -217,7 +253,7 @@ class IdEstimation(Base):
                 n_samples = 5000
                 X, _ = make_swiss_roll(n_samples, noise=0.3)
 
-                ie = IdEstimation(coordinates=X)
+                ie = Data(coordinates=X)
                 ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(N_min = 20)
 
                 ids_scaling:
@@ -273,7 +309,7 @@ class IdEstimation(Base):
 
         .. code-block:: python
 
-                from dadapy import IdEstimation
+                from dadapy import Data
                 from sklearn.datasets import make_swiss_roll
 
                 #two dimensional curved manifold embedded in 3d with noise
@@ -281,7 +317,7 @@ class IdEstimation(Base):
                 n_samples = 5000
                 X, _ = make_swiss_roll(n_samples, noise=0.3)
 
-                ie = IdEstimation(coordinates=X)
+                ie = Data(coordinates=X)
                 ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_gride(range_max = 512)
 
                 ids_scaling:
