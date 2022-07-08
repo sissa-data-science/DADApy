@@ -73,6 +73,7 @@ class IdEstimation(Base):
         self.intrinsic_dim_err = None
         self.intrinsic_dim_scale = None
         self.intrinsic_dim_mus = None
+        self.intrinsic_dim_mus_gride = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -288,7 +289,7 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7):
+    def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7, save_mus=False):
         """Compute the id at different scales using the Gride algorithm.
 
         Args:
@@ -359,9 +360,9 @@ class IdEstimation(Base):
                 range_scaling=max_rank
             )
             # returns:
-            # distances, dist_indices of shape (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
-            # mus of shape (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
-            # rs of shape (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data for kth in nn_ranks
+            # distances, dist_indices (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
+            # mus (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
+            # rs (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data, for every nn_ranks
             if self.verb:
                 print("distance computation finished")
 
@@ -396,6 +397,9 @@ class IdEstimation(Base):
             ) ** 0.5
         if self.verb:
             print("id inference finished")
+
+        if save_mus:
+            self.intrinsic_dim_mus_gride = mus
 
         return ids_scaling, ids_scaling_err, rs_scaling
 
