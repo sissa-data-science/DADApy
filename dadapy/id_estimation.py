@@ -375,16 +375,41 @@ class IdEstimation(Base):
                 self.dist_indices = dist_indices
                 self.N = distances.shape[0]
 
+        # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
+        if self.verb:
+            print("id inference started")
+        ids_scaling, ids_scaling_err = self._compute_id_gride(mus, d0, d1, eps)
+        if self.verb:
+            print("id inference finished")
+
+        "average of the kth and 2*kth neighbor distances taken over all datapoints for each id estimate"
+        rs_scaling = np.mean(rs, axis=(0, 1))
+
+        if save_mus:
+            self.intrinsic_dim_mus_gride = mus
+
+        return ids_scaling, ids_scaling_err, rs_scaling
+
+    # ----------------------------------------------------------------------------------------------
+    def _compute_id_gride(self, mus, d0, d1, eps):
+        """Compute the id using the gride algorithm.
+
+        Helper of return return_id_gride.
+
+        Args:
+            mus (np.ndarray(float)): ratio of the distances of nth and 2nth nearest neighbours (Ndata x log2(range_max))
+            d0 (float): minimum intrinsic dimension considered in the search;
+            d1 (float): maximum intrinsic dimension considered in the search;
+            eps (float): precision of the approximate id calculation.
+
+        Returns:
+            intrinsic_dim (np.ndarray(float): array of id estimates
+            intrinsic_dim_err (np.ndarray(float): array of error estimates
+        """
         # array of ids (as a function of the average distance to a point)
         ids_scaling = np.zeros(mus.shape[1])
         # array of error estimates (via fisher information)
         ids_scaling_err = np.zeros(mus.shape[1])
-        "average of the kth and 2*kth neighbor distances taken over all datapoints for each id estimate"
-        rs_scaling = np.mean(rs, axis=(0, 1))
-
-        # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
-        if self.verb:
-            print("id inference started")
         for i in range(mus.shape[1]):
             n1 = 2**i
             id = ut._argmax_loglik(
@@ -398,15 +423,9 @@ class IdEstimation(Base):
                     id, mus[:, i], n1, 2 * n1, eps=5 * self.eps
                 )  # eps=regularization small numbers
             ) ** 0.5
-        if self.verb:
-            print("id inference finished")
 
-        if save_mus:
-            self.intrinsic_dim_mus_gride = mus
+        return ids_scaling, ids_scaling_err
 
-        return ids_scaling, ids_scaling_err, rs_scaling
-
-    # ----------------------------------------------------------------------------------------------
     def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
 
