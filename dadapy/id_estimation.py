@@ -104,7 +104,7 @@ class IdEstimation(Base):
             def func(x, m):
                 return m * x
 
-            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
+            intrinsic_dim, _ = curve_fit(func, log_mus_reduced, y)
 
         else:
             raise ValueError("Please select a valid algorithm type")
