@@ -289,7 +289,9 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7, save_mus=False):
+    def return_id_scaling_gride(
+        self, range_max=64, d0=0.001, d1=1000, eps=1e-7, save_mus=False
+    ):
         """Compute the id at different scales using the Gride algorithm.
 
         Args:
