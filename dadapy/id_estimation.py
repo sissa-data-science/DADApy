@@ -92,10 +92,11 @@ class IdEstimation(Base):
         """
         N = mus.shape[0]
         N_eff = int(N * fraction)
-        mus_reduced = np.sort(mus)[:N_eff]
+        log_mus = np.log(mus)
+        log_mus_reduced = np.sort(log_mus)[:N_eff]
 
         if algorithm == "ml":
-            intrinsic_dim = (N - 1) / np.sum(mus)
+            intrinsic_dim = (N - 1) / np.sum(log_mus)
 
         elif algorithm == "base":
             y = -np.log(1 - np.arange(1, N_eff + 1) / N)
@@ -143,14 +144,14 @@ class IdEstimation(Base):
                 X, _ = make_swiss_roll(n_samples, noise=0.0)
 
                 ie = Data(coordinates=X)
-                results = ie.compute_id_2NN()
 
+                results = ie.compute_id_2NN()
                 results:
-                (1.96, 0.0, 0.38)       #(id, error, average distance to the first two neighborr)
+                (1.96, 0.0, 0.38)       #(id, error, average distance to the first two neighbors)
 
                 results = ie.compute_id_2NN(fraction = 1)
                 results:
-                (1.98, 0.0, 0.38)       #(id, error, average distance to the first two neighborr)
+                (1.98, 0.0, 0.38)       #(id, error, average distance to the first two neighbors)
 
                 results = ie.compute_id_2NN(decimation = 0.25)
                 results:
@@ -176,7 +177,7 @@ class IdEstimation(Base):
         rs = np.zeros(nrep)
 
         N_subset = int(np.rint(self.N * decimation))
-        mus = np.zeros((nrep, N_subset))
+        mus = np.zeros((N_subset, nrep))
 
         for j in range(nrep):
 
@@ -201,8 +202,8 @@ class IdEstimation(Base):
                     period=self.period,
                 )
 
-            mus[j] = np.log(distances[:, 2] / distances[:, 1])
-            ids[j] = self._compute_id_2NN(mus[j], fraction, algorithm)
+            mus[:, j] = distances[:, 2] / distances[:, 1]
+            ids[j] = self._compute_id_2NN(mus[:, j], fraction, algorithm)
             rs[j] = np.mean(distances[:, np.array([1, 2])])
 
         intrinsic_dim = np.mean(ids)
