@@ -119,23 +119,16 @@ class IdDiscrete(Base):
             self.period = period
             if period is not None:
                 if isinstance(period, np.ndarray) and period.shape == (self.dims,):
-                    self.period = period
-                elif isinstance(period, (int, float)):
-                    self.period = np.full(self.dims, fill_value=period, dtype=float)
+                    self.period = np.array(period,dtype=int)
+                elif isinstance(period, int):
+                    self.period = np.full(self.dims, fill_value=period, dtype=int)
                 else:
                     raise ValueError(
                         f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
                     )
 
-            if maxk is not None:
-                self.maxk = maxk
-            else:
-                assert (
-                    self.maxk is not None
-                ), "set parameter maxk in the function or for the class"
-
             self.distances, self.dist_indices = df.return_condensed_distances(
-                self.X, self.metric, d_max, self.maxk, self.period
+                self.X, self.metric, d_max, self.period
             )
 
         else:
@@ -356,6 +349,8 @@ class IdDiscrete(Base):
             Lks (list or np.ndarray(int)): external radii lk
             r (float, default = 0.5): ratio among ln and lk
             method (string, default='mle'): method to compute the id
+            subset (np.ndarray(int) or int, default=None): indices of points to be used for the estimate
+            plot (bool, default=True): whether to plot the id scaling
 
         Returns:
             ids (np.ndarray): intrinsic dimension at different scales
@@ -366,7 +361,7 @@ class IdDiscrete(Base):
 
         for i, lk in enumerate(Lks):
             id_i, id_er, scale = self.compute_id_binomial_lk(
-                lk, int(lk * r), method=method, subset=subset
+                lk, int(lk * r), method=method, subset=subset, set_attr=False
             )
             ids[i] = id_i
             ids_e[i] = id_er
@@ -604,6 +599,7 @@ class IdDiscrete(Base):
             shell (bool): k stands for number of neighbours or number of occupied shells
             ratio (float): ratio between internal and external shell
             subset (int): choose a random subset of the dataset to make the Id estimate
+            set_attr (bool, default=True): assign id, id error and scale to the class
 
         Returns:
             intrinsic_dim (float): the id esteem
@@ -659,8 +655,9 @@ class IdDiscrete(Base):
 
         Args:
             Ks (list or np.ndarray(int)): number of neighbours
-            r (float, default = 0.5): ratio among ln and lk
-            method (string, default='mle'): method to compute the id
+            r (float, default = 0.5): ratio between ln and lk
+            subset (int): choose a random subset of the dataset to make the Id estimate
+            plot (bool, default=True): whether to plot the id as a function of Ks
 
         Returns:
             ids (np.ndarray(float)): intrinsic dimension at different scales
@@ -673,7 +670,7 @@ class IdDiscrete(Base):
 
         for i, k in enumerate(Ks):
             ids[i], ids_e[i], scale[i] = self.compute_id_binomial_k(
-                k, False, r, subset=subset
+                k, False, r, subset=subset, set_attr=False
             )
 
         if plot:
