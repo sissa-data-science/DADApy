@@ -270,7 +270,7 @@ def _eq_to_find_0(d, ln, lk, n, k):
 
 
 def find_d_root(ln, lk, n, k):
-    """Find root (i.e. theintrinsic dimension) of polynomials
+    """Find root (i.e. the intrinsic dimension) of polynomials
     Args:
         ln (int): internal radius
         lk (int): external radius
@@ -421,7 +421,7 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
         dp_dd = _compute_jacobian(lk, ln, d)
         return abs(posterior.pdf(p) * dp_dd)
 
-    # in principle we don't know where the distribution is peaked, so
+    # in principle, we don't know where the distribution is peaked, so
     # we perform a blind search over the domain
     dx = 1.0
     d_left = D_MIN
@@ -475,9 +475,7 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
 # --------------------------------------------------------------------------------------
 
 
-def return_condensed_distances(
-    points, metric="manhattan", d_max=100, period=None
-):
+def return_condensed_distances(points, metric, d_max=100, period=None):
     """Compute number of points at each distance
     
     Instead of focusing on the distance of each neighbour, it just saves how many neighbours are
@@ -489,8 +487,7 @@ def return_condensed_distances(
 
     Args:
         points (np.ndarray(int/strings)): datapoints
-        metric (string, default='manhattan'): metric used to compute distances, 'manhattan' and\
-                                              'hamming' supported so far
+        metric (string): metric used to compute distances, 'manhattan' and 'hamming' supported so far
         d_max (int, default=100): max distance around each point to look at
         period (float or np.ndarray(float)): PBC boundaries
     Returns:
@@ -509,6 +506,7 @@ def return_condensed_distances(
         )
         return 0
 
+
 # --------------------------------------------------------------------------------------
 
 
@@ -516,24 +514,29 @@ def manhattan_distances_condensed(points, d_max=100, period=None):
     """Compute condensed distances according to manhattan metric
     Args:
         points (np.ndarray(int/strings)): datapoints
-        d_max (int, deafult=100): max distance around each point to look at
+        d_max (int, default=100): max distance around each point to look at
         period (float or np.ndarray(float)): PBC boundaries
     Returns:
         distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
                                      successive distances
     """
+
     d_max = min(d_max, points.shape[1] * points.max())
     return mc(points, d_max, period), None
+
 
 # --------------------------------------------------------------------------------------
 
 
 def manhattan_distances_idx(points, d_max=100, maxk_ind=None, period=None):
     """Compute condensed distances according to manhattan metric
+
+    Python version of the function above, slower. Possibly returns indices of NN
+
     Args:
         points (np.ndarray(int/strings)): datapoints
-        d_max (int, deafult=100): max distance around each point to look at
-        maxk_ind (int, deaful=None): number of neighbours' indices to be stored
+        d_max (int, default=100): max distance around each point to look at
+        maxk_ind (int, default=None): number of neighbours' indices to be stored
         period (float or np.ndarray(float)): PBC boundaries
     Returns:
         distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
@@ -591,8 +594,11 @@ def hamming_distances_condensed(points, d_max):
 
 # --------------------------------------------------------------------------------------
 
+
 def hamming_distances_idx(points, d_max=100, maxk_ind=None):
     """Compute condensed distances according to hamming metric
+
+    Python version of the cython function above (slower). Possibly returns the indices of NN if maxk is provided
     Args:
         points (np.ndarray(int/strings)): datapoints
         d_max (int, default=100): max distance around each point to look at

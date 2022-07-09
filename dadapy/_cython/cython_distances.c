@@ -2084,6 +2084,9 @@ static int __Pyx_ValidateAndInit_memviewslice(
 /* ObjectToMemviewSlice.proto */
 static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_Py_ssize_t(PyObject *, int writable_flag);
 
+/* ObjectToMemviewSlice.proto */
+static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_long(PyObject *, int writable_flag);
+
 /* RealImag.proto */
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -2314,6 +2317,7 @@ static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize
 static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *, PyObject *); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t = { "DTYPE_t", NULL, sizeof(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t), 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_Py_ssize_t = { "Py_ssize_t", NULL, sizeof(Py_ssize_t), { 0 }, 0, IS_UNSIGNED(Py_ssize_t) ? 'U' : 'I', IS_UNSIGNED(Py_ssize_t), 0 };
+static __Pyx_TypeInfo __Pyx_TypeInfo_long = { "long", NULL, sizeof(long), { 0 }, 0, IS_UNSIGNED(long) ? 'U' : 'I', IS_UNSIGNED(long), 0 };
 #define __Pyx_MODULE_NAME "dadapy._cython.cython_distances"
 extern int __pyx_module_is_main_dadapy___cython__cython_distances;
 int __pyx_module_is_main_dadapy___cython__cython_distances = 0;
@@ -2336,8 +2340,10 @@ static const char __pyx_k_d[] = "d";
 static const char __pyx_k_i[] = "i";
 static const char __pyx_k_j[] = "j";
 static const char __pyx_k_k[] = "k";
+static const char __pyx_k_l[] = "l";
 static const char __pyx_k_id[] = "id";
 static const char __pyx_k_np[] = "np";
+static const char __pyx_k_ind[] = "ind";
 static const char __pyx_k_new[] = "__new__";
 static const char __pyx_k_obj[] = "obj";
 static const char __pyx_k_appo[] = "appo";
@@ -2351,7 +2357,6 @@ static const char __pyx_k_pack[] = "pack";
 static const char __pyx_k_size[] = "size";
 static const char __pyx_k_step[] = "step";
 static const char __pyx_k_stop[] = "stop";
-static const char __pyx_k_temp[] = "temp";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_ASCII[] = "ASCII";
 static const char __pyx_k_class[] = "__class__";
@@ -2495,10 +2500,12 @@ static PyObject *__pyx_kp_s_got_differing_extents_in_dimensi;
 static PyObject *__pyx_n_s_i;
 static PyObject *__pyx_n_s_id;
 static PyObject *__pyx_n_s_import;
+static PyObject *__pyx_n_s_ind;
 static PyObject *__pyx_n_s_itemsize;
 static PyObject *__pyx_kp_s_itemsize_0_for_cython_array;
 static PyObject *__pyx_n_s_j;
 static PyObject *__pyx_n_s_k;
+static PyObject *__pyx_n_s_l;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_memview;
 static PyObject *__pyx_n_s_mode;
@@ -2545,7 +2552,6 @@ static PyObject *__pyx_kp_s_strided_and_direct_or_indirect;
 static PyObject *__pyx_kp_s_strided_and_indirect;
 static PyObject *__pyx_kp_s_stringsource;
 static PyObject *__pyx_n_s_struct;
-static PyObject *__pyx_n_s_temp;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_s_unable_to_allocate_array_data;
 static PyObject *__pyx_kp_s_unable_to_allocate_shape_and_str;
@@ -3500,8 +3506,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_2_return_hamming_c
  *                 distances_view[i,k] += distances_view[i,k-1]
  * 
  *     return distances             # <<<<<<<<<<<<<<
- * 
  * #------------------------------------------------------------------------------------------
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_v_distances);
@@ -3542,7 +3548,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_2_return_hamming_c
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_distances.pyx":82
+/* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
@@ -3588,17 +3594,17 @@ static PyObject *__pyx_pw_6dadapy_7_cython_16cython_distances_5_return_manhattan
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_d_max)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 1); __PYX_ERR(0, 82, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 1); __PYX_ERR(0, 81, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_period)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 2); __PYX_ERR(0, 82, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 2); __PYX_ERR(0, 81, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_manhattan_condensed") < 0)) __PYX_ERR(0, 82, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_manhattan_condensed") < 0)) __PYX_ERR(0, 81, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -3608,19 +3614,19 @@ static PyObject *__pyx_pw_6dadapy_7_cython_16cython_distances_5_return_manhattan
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_points = ((PyArrayObject *)values[0]);
-    __pyx_v_d_max = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_d_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 83, __pyx_L3_error)
+    __pyx_v_d_max = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_d_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 82, __pyx_L3_error)
     __pyx_v_period = ((PyArrayObject *)values[2]);
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 82, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 81, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("dadapy._cython.cython_distances._return_manhattan_condensed", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 82, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_period), __pyx_ptype_5numpy_ndarray, 1, "period", 0))) __PYX_ERR(0, 84, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 81, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_period), __pyx_ptype_5numpy_ndarray, 1, "period", 0))) __PYX_ERR(0, 83, __pyx_L1_error)
   __pyx_r = __pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan_condensed(__pyx_self, __pyx_v_points, __pyx_v_d_max, __pyx_v_period);
 
   /* function exit code */
@@ -3638,9 +3644,9 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
   int __pyx_v_i;
   int __pyx_v_j;
   int __pyx_v_k;
-  int __pyx_v_d;
-  int __pyx_v_temp;
-  int __pyx_v_appo;
+  int __pyx_v_ind;
+  double __pyx_v_d;
+  double __pyx_v_appo;
   PyArrayObject *__pyx_v_distances = 0;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_distances;
   __Pyx_Buffer __pyx_pybuffer_distances;
@@ -3691,41 +3697,41 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
   __pyx_pybuffernd_period.rcbuffer = &__pyx_pybuffer_period;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_points.rcbuffer->pybuffer, (PyObject*)__pyx_v_points, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 82, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_points.rcbuffer->pybuffer, (PyObject*)__pyx_v_points, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 81, __pyx_L1_error)
   }
   __pyx_pybuffernd_points.diminfo[0].strides = __pyx_pybuffernd_points.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_points.diminfo[0].shape = __pyx_pybuffernd_points.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_points.diminfo[1].strides = __pyx_pybuffernd_points.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_points.diminfo[1].shape = __pyx_pybuffernd_points.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_period.rcbuffer->pybuffer, (PyObject*)__pyx_v_period, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 82, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_period.rcbuffer->pybuffer, (PyObject*)__pyx_v_period, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 81, __pyx_L1_error)
   }
   __pyx_pybuffernd_period.diminfo[0].strides = __pyx_pybuffernd_period.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_period.diminfo[0].shape = __pyx_pybuffernd_period.rcbuffer->pybuffer.shape[0];
 
-  /* "dadapy/_cython/cython_distances.pyx":86
+  /* "dadapy/_cython/cython_distances.pyx":85
  *                             np.ndarray[DTYPE_t, ndim = 1] period):
  * 
  *     cdef int N = len(points)             # <<<<<<<<<<<<<<
  *     cdef int L = len(points[0])
- *     cdef int i, j, k, d, temp, appo
+ *     cdef int i, j, k, ind
  */
-  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_points)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 86, __pyx_L1_error)
+  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_points)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 85, __pyx_L1_error)
   __pyx_v_N = __pyx_t_1;
 
-  /* "dadapy/_cython/cython_distances.pyx":87
+  /* "dadapy/_cython/cython_distances.pyx":86
  * 
  *     cdef int N = len(points)
  *     cdef int L = len(points[0])             # <<<<<<<<<<<<<<
- *     cdef int i, j, k, d, temp, appo
- *     cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)
+ *     cdef int i, j, k, ind
+ *     cdef double d, appo
  */
-  __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_points), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_points), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_1 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_L = __pyx_t_1;
 
   /* "dadapy/_cython/cython_distances.pyx":89
- *     cdef int L = len(points[0])
- *     cdef int i, j, k, d, temp, appo
+ *     cdef int i, j, k, ind
+ *     cdef double d, appo
  *     cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)             # <<<<<<<<<<<<<<
  * 
  *     if period is None:
@@ -3825,15 +3831,15 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
  *             for j in range(i+1,N):
  *                 appo = 0             # <<<<<<<<<<<<<<
  *                 for k in range(L):
- *                     appo += (abs(points[i,k]-points[j,k]))
+ *                     appo += abs(points[i,k]-points[j,k])
  */
-        __pyx_v_appo = 0;
+        __pyx_v_appo = 0.0;
 
         /* "dadapy/_cython/cython_distances.pyx":96
  *             for j in range(i+1,N):
  *                 appo = 0
  *                 for k in range(L):             # <<<<<<<<<<<<<<
- *                     appo += (abs(points[i,k]-points[j,k]))
+ *                     appo += abs(points[i,k]-points[j,k])
  *                 if appo <= d_max:
  */
         __pyx_t_17 = __pyx_v_L;
@@ -3844,9 +3850,9 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
           /* "dadapy/_cython/cython_distances.pyx":97
  *                 appo = 0
  *                 for k in range(L):
- *                     appo += (abs(points[i,k]-points[j,k]))             # <<<<<<<<<<<<<<
+ *                     appo += abs(points[i,k]-points[j,k])             # <<<<<<<<<<<<<<
  *                 if appo <= d_max:
- *                     distances[i, appo] += 1
+ *                     ind = int(appo)
  */
           __pyx_t_13 = __pyx_v_i;
           __pyx_t_12 = __pyx_v_k;
@@ -3857,49 +3863,58 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
 
         /* "dadapy/_cython/cython_distances.pyx":98
  *                 for k in range(L):
- *                     appo += (abs(points[i,k]-points[j,k]))
+ *                     appo += abs(points[i,k]-points[j,k])
  *                 if appo <= d_max:             # <<<<<<<<<<<<<<
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1
  */
         __pyx_t_8 = ((__pyx_v_appo <= __pyx_v_d_max) != 0);
         if (__pyx_t_8) {
 
           /* "dadapy/_cython/cython_distances.pyx":99
- *                     appo += (abs(points[i,k]-points[j,k]))
+ *                     appo += abs(points[i,k]-points[j,k])
  *                 if appo <= d_max:
- *                     distances[i, appo] += 1             # <<<<<<<<<<<<<<
- *                     distances[j, appo] += 1
- *             for k in range(1,d_max+1):
+ *                     ind = int(appo)             # <<<<<<<<<<<<<<
+ *                     distances[i, ind] += 1
+ *                     distances[j, ind] += 1
  */
-          __pyx_t_21 = __pyx_v_i;
-          __pyx_t_20 = __pyx_v_appo;
-          *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
+          __pyx_v_ind = ((int)__pyx_v_appo);
 
           /* "dadapy/_cython/cython_distances.pyx":100
  *                 if appo <= d_max:
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1             # <<<<<<<<<<<<<<
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1             # <<<<<<<<<<<<<<
+ *                     distances[j, ind] += 1
+ *             for k in range(1,d_max+1):
+ */
+          __pyx_t_21 = __pyx_v_i;
+          __pyx_t_20 = __pyx_v_ind;
+          *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
+
+          /* "dadapy/_cython/cython_distances.pyx":101
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1
+ *                     distances[j, ind] += 1             # <<<<<<<<<<<<<<
  *             for k in range(1,d_max+1):
  *                 distances[i,k] += distances[i,k-1]
  */
           __pyx_t_20 = __pyx_v_j;
-          __pyx_t_21 = __pyx_v_appo;
+          __pyx_t_21 = __pyx_v_ind;
           *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
 
           /* "dadapy/_cython/cython_distances.pyx":98
  *                 for k in range(L):
- *                     appo += (abs(points[i,k]-points[j,k]))
+ *                     appo += abs(points[i,k]-points[j,k])
  *                 if appo <= d_max:             # <<<<<<<<<<<<<<
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1
  */
         }
       }
 
-      /* "dadapy/_cython/cython_distances.pyx":101
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1
+      /* "dadapy/_cython/cython_distances.pyx":102
+ *                     distances[i, ind] += 1
+ *                     distances[j, ind] += 1
  *             for k in range(1,d_max+1):             # <<<<<<<<<<<<<<
  *                 distances[i,k] += distances[i,k-1]
  * 
@@ -3909,8 +3924,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
       for (__pyx_t_14 = 1; __pyx_t_14 < __pyx_t_23; __pyx_t_14+=1) {
         __pyx_v_k = __pyx_t_14;
 
-        /* "dadapy/_cython/cython_distances.pyx":102
- *                     distances[j, appo] += 1
+        /* "dadapy/_cython/cython_distances.pyx":103
+ *                     distances[j, ind] += 1
  *             for k in range(1,d_max+1):
  *                 distances[i,k] += distances[i,k-1]             # <<<<<<<<<<<<<<
  * 
@@ -3934,7 +3949,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
     goto __pyx_L3;
   }
 
-  /* "dadapy/_cython/cython_distances.pyx":105
+  /* "dadapy/_cython/cython_distances.pyx":106
  * 
  *     else:
  *         for i in range(N):             # <<<<<<<<<<<<<<
@@ -3947,7 +3962,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
     for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
       __pyx_v_i = __pyx_t_11;
 
-      /* "dadapy/_cython/cython_distances.pyx":106
+      /* "dadapy/_cython/cython_distances.pyx":107
  *     else:
  *         for i in range(N):
  *             distances[i, 0] += 1             # <<<<<<<<<<<<<<
@@ -3958,7 +3973,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
       __pyx_t_21 = 0;
       *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
 
-      /* "dadapy/_cython/cython_distances.pyx":107
+      /* "dadapy/_cython/cython_distances.pyx":108
  *         for i in range(N):
  *             distances[i, 0] += 1
  *             for j in range(i+1, N):             # <<<<<<<<<<<<<<
@@ -3970,33 +3985,33 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
       for (__pyx_t_16 = (__pyx_v_i + 1); __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
         __pyx_v_j = __pyx_t_16;
 
-        /* "dadapy/_cython/cython_distances.pyx":108
+        /* "dadapy/_cython/cython_distances.pyx":109
  *             distances[i, 0] += 1
  *             for j in range(i+1, N):
  *                 appo = 0             # <<<<<<<<<<<<<<
  *                 for k in range(L):
  *                     d = points[i, k] - points[j, k]
  */
-        __pyx_v_appo = 0;
+        __pyx_v_appo = 0.0;
 
-        /* "dadapy/_cython/cython_distances.pyx":109
+        /* "dadapy/_cython/cython_distances.pyx":110
  *             for j in range(i+1, N):
  *                 appo = 0
  *                 for k in range(L):             # <<<<<<<<<<<<<<
  *                     d = points[i, k] - points[j, k]
- *                     temp = int(nearbyint(d/period[k]))
+ *                     appo += fabs(d - nearbyint(d/period[k])*period[k])
  */
         __pyx_t_17 = __pyx_v_L;
         __pyx_t_18 = __pyx_t_17;
         for (__pyx_t_19 = 0; __pyx_t_19 < __pyx_t_18; __pyx_t_19+=1) {
           __pyx_v_k = __pyx_t_19;
 
-          /* "dadapy/_cython/cython_distances.pyx":110
+          /* "dadapy/_cython/cython_distances.pyx":111
  *                 appo = 0
  *                 for k in range(L):
  *                     d = points[i, k] - points[j, k]             # <<<<<<<<<<<<<<
- *                     temp = int(nearbyint(d/period[k]))
- *                     appo += (abs(d - temp)*period[k])
+ *                     appo += fabs(d - nearbyint(d/period[k])*period[k])
+ *                 if appo <= d_max:
  */
           __pyx_t_21 = __pyx_v_i;
           __pyx_t_20 = __pyx_v_k;
@@ -4004,72 +4019,72 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
           __pyx_t_12 = __pyx_v_k;
           __pyx_v_d = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_points.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_points.diminfo[1].strides)));
 
-          /* "dadapy/_cython/cython_distances.pyx":111
+          /* "dadapy/_cython/cython_distances.pyx":112
  *                 for k in range(L):
  *                     d = points[i, k] - points[j, k]
- *                     temp = int(nearbyint(d/period[k]))             # <<<<<<<<<<<<<<
- *                     appo += (abs(d - temp)*period[k])
+ *                     appo += fabs(d - nearbyint(d/period[k])*period[k])             # <<<<<<<<<<<<<<
  *                 if appo <= d_max:
+ *                     ind = int(appo)
  */
           __pyx_t_12 = __pyx_v_k;
-          __pyx_v_temp = ((int)nearbyint((__pyx_v_d / (*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_period.diminfo[0].strides)))));
-
-          /* "dadapy/_cython/cython_distances.pyx":112
- *                     d = points[i, k] - points[j, k]
- *                     temp = int(nearbyint(d/period[k]))
- *                     appo += (abs(d - temp)*period[k])             # <<<<<<<<<<<<<<
- *                 if appo <= d_max:
- *                     distances[i, appo] += 1
- */
-          __pyx_t_12 = __pyx_v_k;
-          __pyx_v_appo = (__pyx_v_appo + (abs((__pyx_v_d - __pyx_v_temp)) * (*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_period.diminfo[0].strides))));
+          __pyx_t_13 = __pyx_v_k;
+          __pyx_v_appo = (__pyx_v_appo + fabs((__pyx_v_d - (nearbyint((__pyx_v_d / (*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_period.diminfo[0].strides)))) * (*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_period.diminfo[0].strides))))));
         }
 
         /* "dadapy/_cython/cython_distances.pyx":113
- *                     temp = int(nearbyint(d/period[k]))
- *                     appo += (abs(d - temp)*period[k])
+ *                     d = points[i, k] - points[j, k]
+ *                     appo += fabs(d - nearbyint(d/period[k])*period[k])
  *                 if appo <= d_max:             # <<<<<<<<<<<<<<
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1
  */
         __pyx_t_8 = ((__pyx_v_appo <= __pyx_v_d_max) != 0);
         if (__pyx_t_8) {
 
           /* "dadapy/_cython/cython_distances.pyx":114
- *                     appo += (abs(d - temp)*period[k])
+ *                     appo += fabs(d - nearbyint(d/period[k])*period[k])
  *                 if appo <= d_max:
- *                     distances[i, appo] += 1             # <<<<<<<<<<<<<<
- *                     distances[j, appo] += 1
- *             for k in range(1, d_max + 1):
+ *                     ind = int(appo)             # <<<<<<<<<<<<<<
+ *                     distances[i, ind] += 1
+ *                     distances[j, ind] += 1
  */
-          __pyx_t_12 = __pyx_v_i;
-          __pyx_t_13 = __pyx_v_appo;
-          *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
+          __pyx_v_ind = ((int)__pyx_v_appo);
 
           /* "dadapy/_cython/cython_distances.pyx":115
  *                 if appo <= d_max:
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1             # <<<<<<<<<<<<<<
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1             # <<<<<<<<<<<<<<
+ *                     distances[j, ind] += 1
+ *             for k in range(1, d_max + 1):
+ */
+          __pyx_t_13 = __pyx_v_i;
+          __pyx_t_12 = __pyx_v_ind;
+          *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
+
+          /* "dadapy/_cython/cython_distances.pyx":116
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1
+ *                     distances[j, ind] += 1             # <<<<<<<<<<<<<<
  *             for k in range(1, d_max + 1):
  *                 distances[i, k] += distances[i, k - 1]
  */
-          __pyx_t_13 = __pyx_v_j;
-          __pyx_t_12 = __pyx_v_appo;
-          *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
+          __pyx_t_12 = __pyx_v_j;
+          __pyx_t_13 = __pyx_v_ind;
+          *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_distances.diminfo[1].strides) += 1;
 
           /* "dadapy/_cython/cython_distances.pyx":113
- *                     temp = int(nearbyint(d/period[k]))
- *                     appo += (abs(d - temp)*period[k])
+ *                     d = points[i, k] - points[j, k]
+ *                     appo += fabs(d - nearbyint(d/period[k])*period[k])
  *                 if appo <= d_max:             # <<<<<<<<<<<<<<
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1
+ *                     ind = int(appo)
+ *                     distances[i, ind] += 1
  */
         }
       }
 
-      /* "dadapy/_cython/cython_distances.pyx":116
- *                     distances[i, appo] += 1
- *                     distances[j, appo] += 1
+      /* "dadapy/_cython/cython_distances.pyx":117
+ *                     distances[i, ind] += 1
+ *                     distances[j, ind] += 1
  *             for k in range(1, d_max + 1):             # <<<<<<<<<<<<<<
  *                 distances[i, k] += distances[i, k - 1]
  * 
@@ -4079,24 +4094,24 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
       for (__pyx_t_14 = 1; __pyx_t_14 < __pyx_t_23; __pyx_t_14+=1) {
         __pyx_v_k = __pyx_t_14;
 
-        /* "dadapy/_cython/cython_distances.pyx":117
- *                     distances[j, appo] += 1
+        /* "dadapy/_cython/cython_distances.pyx":118
+ *                     distances[j, ind] += 1
  *             for k in range(1, d_max + 1):
  *                 distances[i, k] += distances[i, k - 1]             # <<<<<<<<<<<<<<
  * 
  *     return distances
  */
-        __pyx_t_12 = __pyx_v_i;
-        __pyx_t_13 = (__pyx_v_k - 1);
+        __pyx_t_13 = __pyx_v_i;
+        __pyx_t_12 = (__pyx_v_k - 1);
         __pyx_t_20 = __pyx_v_i;
         __pyx_t_21 = __pyx_v_k;
-        *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_distances.diminfo[1].strides) += (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_distances.diminfo[1].strides));
+        *__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_distances.diminfo[1].strides) += (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_distances.diminfo[0].strides, __pyx_t_12, __pyx_pybuffernd_distances.diminfo[1].strides));
       }
     }
   }
   __pyx_L3:;
 
-  /* "dadapy/_cython/cython_distances.pyx":119
+  /* "dadapy/_cython/cython_distances.pyx":120
  *                 distances[i, k] += distances[i, k - 1]
  * 
  *     return distances             # <<<<<<<<<<<<<<
@@ -4108,7 +4123,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
   __pyx_r = ((PyObject *)__pyx_v_distances);
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_distances.pyx":82
+  /* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
@@ -4144,7 +4159,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_distances.pyx":127
+/* "dadapy/_cython/cython_distances.pyx":128
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
@@ -4190,17 +4205,17 @@ static PyObject *__pyx_pw_6dadapy_7_cython_16cython_distances_7_return_manhattan
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_d_max)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed_parallel", 1, 3, 3, 1); __PYX_ERR(0, 127, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed_parallel", 1, 3, 3, 1); __PYX_ERR(0, 128, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_period)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed_parallel", 1, 3, 3, 2); __PYX_ERR(0, 127, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed_parallel", 1, 3, 3, 2); __PYX_ERR(0, 128, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_manhattan_condensed_parallel") < 0)) __PYX_ERR(0, 127, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_manhattan_condensed_parallel") < 0)) __PYX_ERR(0, 128, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -4210,19 +4225,19 @@ static PyObject *__pyx_pw_6dadapy_7_cython_16cython_distances_7_return_manhattan
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_points = ((PyArrayObject *)values[0]);
-    __pyx_v_d_max = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_d_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 128, __pyx_L3_error)
+    __pyx_v_d_max = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_d_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 129, __pyx_L3_error)
     __pyx_v_period = ((PyArrayObject *)values[2]);
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed_parallel", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 127, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed_parallel", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 128, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("dadapy._cython.cython_distances._return_manhattan_condensed_parallel", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 127, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_period), __pyx_ptype_5numpy_ndarray, 1, "period", 0))) __PYX_ERR(0, 129, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 128, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_period), __pyx_ptype_5numpy_ndarray, 1, "period", 0))) __PYX_ERR(0, 130, __pyx_L1_error)
   __pyx_r = __pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan_condensed_parallel(__pyx_self, __pyx_v_points, __pyx_v_d_max, __pyx_v_period);
 
   /* function exit code */
@@ -4235,56 +4250,48 @@ static PyObject *__pyx_pw_6dadapy_7_cython_16cython_distances_7_return_manhattan
 }
 
 static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan_condensed_parallel(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_points, int __pyx_v_d_max, PyArrayObject *__pyx_v_period) {
-  int __pyx_v_N;
-  int __pyx_v_L;
-  int __pyx_v_i;
-  int __pyx_v_j;
-  int __pyx_v_k;
-  int __pyx_v_d;
-  int __pyx_v_temp;
+  Py_ssize_t __pyx_v_N;
+  Py_ssize_t __pyx_v_L;
+  Py_ssize_t __pyx_v_i;
+  Py_ssize_t __pyx_v_j;
+  Py_ssize_t __pyx_v_k;
+  Py_ssize_t __pyx_v_l;
   int __pyx_v_appo;
-  PyArrayObject *__pyx_v_distances = 0;
+  int __pyx_v_ind;
+  PyObject *__pyx_v_distances = NULL;
   __Pyx_memviewslice __pyx_v_distances_view = { 0, 0, { 0 }, { 0 }, { 0 } };
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_distances;
-  __Pyx_Buffer __pyx_pybuffer_distances;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_period;
   __Pyx_Buffer __pyx_pybuffer_period;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_points;
   __Pyx_Buffer __pyx_pybuffer_points;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  Py_ssize_t __pyx_t_1;
+  PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
-  PyObject *__pyx_t_5 = NULL;
-  PyArrayObject *__pyx_t_6 = NULL;
-  __Pyx_memviewslice __pyx_t_7 = { 0, 0, { 0 }, { 0 }, { 0 } };
-  int __pyx_t_8;
-  int __pyx_t_9;
-  int __pyx_t_10;
-  int __pyx_t_11;
-  int __pyx_t_12;
+  __Pyx_memviewslice __pyx_t_5 = { 0, 0, { 0 }, { 0 }, { 0 } };
+  int __pyx_t_6;
+  int __pyx_t_7;
+  Py_ssize_t __pyx_t_8;
+  Py_ssize_t __pyx_t_9;
+  Py_ssize_t __pyx_t_10;
+  Py_ssize_t __pyx_t_11;
+  Py_ssize_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
-  int __pyx_t_15;
-  int __pyx_t_16;
-  int __pyx_t_17;
-  int __pyx_t_18;
-  int __pyx_t_19;
-  int __pyx_t_20;
-  Py_ssize_t __pyx_t_21;
-  Py_ssize_t __pyx_t_22;
-  long __pyx_t_23;
-  long __pyx_t_24;
+  Py_ssize_t __pyx_t_15;
+  Py_ssize_t __pyx_t_16;
+  Py_ssize_t __pyx_t_17;
+  Py_ssize_t __pyx_t_18;
+  Py_ssize_t __pyx_t_19;
+  Py_ssize_t __pyx_t_20;
+  long __pyx_t_21;
+  long __pyx_t_22;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_return_manhattan_condensed_parallel", 0);
-  __pyx_pybuffer_distances.pybuffer.buf = NULL;
-  __pyx_pybuffer_distances.refcount = 0;
-  __pyx_pybuffernd_distances.data = NULL;
-  __pyx_pybuffernd_distances.rcbuffer = &__pyx_pybuffer_distances;
   __pyx_pybuffer_points.pybuffer.buf = NULL;
   __pyx_pybuffer_points.refcount = 0;
   __pyx_pybuffernd_points.data = NULL;
@@ -4295,118 +4302,102 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
   __pyx_pybuffernd_period.rcbuffer = &__pyx_pybuffer_period;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_points.rcbuffer->pybuffer, (PyObject*)__pyx_v_points, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 127, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_points.rcbuffer->pybuffer, (PyObject*)__pyx_v_points, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 128, __pyx_L1_error)
   }
   __pyx_pybuffernd_points.diminfo[0].strides = __pyx_pybuffernd_points.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_points.diminfo[0].shape = __pyx_pybuffernd_points.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_points.diminfo[1].strides = __pyx_pybuffernd_points.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_points.diminfo[1].shape = __pyx_pybuffernd_points.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_period.rcbuffer->pybuffer, (PyObject*)__pyx_v_period, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 127, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_period.rcbuffer->pybuffer, (PyObject*)__pyx_v_period, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 128, __pyx_L1_error)
   }
   __pyx_pybuffernd_period.diminfo[0].strides = __pyx_pybuffernd_period.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_period.diminfo[0].shape = __pyx_pybuffernd_period.rcbuffer->pybuffer.shape[0];
 
-  /* "dadapy/_cython/cython_distances.pyx":131
+  /* "dadapy/_cython/cython_distances.pyx":132
  *                             np.ndarray[DTYPE_t, ndim = 1] period):
  * 
- *     cdef int N = len(points)             # <<<<<<<<<<<<<<
- *     cdef int L = len(points[0])
- *     cdef int i, j, k, d, temp, appo
- */
-  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_points)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 131, __pyx_L1_error)
-  __pyx_v_N = __pyx_t_1;
-
-  /* "dadapy/_cython/cython_distances.pyx":132
- * 
- *     cdef int N = len(points)
- *     cdef int L = len(points[0])             # <<<<<<<<<<<<<<
- *     cdef int i, j, k, d, temp, appo
- *     cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)
- */
-  __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_points), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 132, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 132, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_L = __pyx_t_1;
-
-  /* "dadapy/_cython/cython_distances.pyx":134
- *     cdef int L = len(points[0])
- *     cdef int i, j, k, d, temp, appo
- *     cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)             # <<<<<<<<<<<<<<
- *     cdef Py_ssize_t [:,:] distances_view = distances
+ *     cdef Py_ssize_t N = points.shape[0]             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t L = points.shape[1]
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_v_N = (__pyx_v_points->dimensions[0]);
+
+  /* "dadapy/_cython/cython_distances.pyx":133
+ * 
+ *     cdef Py_ssize_t N = points.shape[0]
+ *     cdef Py_ssize_t L = points.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     cdef Py_ssize_t i, j, k, l
+ */
+  __pyx_v_L = (__pyx_v_points->dimensions[1]);
+
+  /* "dadapy/_cython/cython_distances.pyx":138
+ *     cdef int appo, ind
+ * 
+ *     distances = np.zeros((N, d_max + 1), dtype=int)             # <<<<<<<<<<<<<<
+ *     cdef long [:,:] distances_view = distances
+ * 
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 138, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = PyInt_FromSsize_t(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = __Pyx_PyInt_From_long((__pyx_v_d_max + 1)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 134, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyInt_From_long((__pyx_v_d_max + 1)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 138, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 134, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_GIVEREF(__pyx_t_2);
-  PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
+  __Pyx_GIVEREF(__pyx_t_3);
+  PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3);
+  __pyx_t_1 = 0;
+  __pyx_t_3 = 0;
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
-  PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4);
-  __pyx_t_2 = 0;
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 138, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_5);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_5);
-  __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 134, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_dtype, ((PyObject *)(&PyInt_Type))) < 0) __PYX_ERR(0, 134, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 134, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyInt_Type))) < 0) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 134, __pyx_L1_error)
-  __pyx_t_6 = ((PyArrayObject *)__pyx_t_2);
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_distances.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
-      __pyx_v_distances = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_distances.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 134, __pyx_L1_error)
-    } else {__pyx_pybuffernd_distances.diminfo[0].strides = __pyx_pybuffernd_distances.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_distances.diminfo[0].shape = __pyx_pybuffernd_distances.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_distances.diminfo[1].strides = __pyx_pybuffernd_distances.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_distances.diminfo[1].shape = __pyx_pybuffernd_distances.rcbuffer->pybuffer.shape[1];
-    }
-  }
-  __pyx_t_6 = 0;
-  __pyx_v_distances = ((PyArrayObject *)__pyx_t_2);
-  __pyx_t_2 = 0;
+  __pyx_v_distances = __pyx_t_1;
+  __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_distances.pyx":135
- *     cdef int i, j, k, d, temp, appo
- *     cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)
- *     cdef Py_ssize_t [:,:] distances_view = distances             # <<<<<<<<<<<<<<
+  /* "dadapy/_cython/cython_distances.pyx":139
  * 
- *     if period is None:
+ *     distances = np.zeros((N, d_max + 1), dtype=int)
+ *     cdef long [:,:] distances_view = distances             # <<<<<<<<<<<<<<
+ * 
+ * #    cdef np.ndarray[DTYPE_t, ndim = 1] appo = np.zeros(N, dtype=int)
  */
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_Py_ssize_t(((PyObject *)__pyx_v_distances), PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 135, __pyx_L1_error)
-  __pyx_v_distances_view = __pyx_t_7;
-  __pyx_t_7.memview = NULL;
-  __pyx_t_7.data = NULL;
+  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(__pyx_v_distances, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_v_distances_view = __pyx_t_5;
+  __pyx_t_5.memview = NULL;
+  __pyx_t_5.data = NULL;
 
-  /* "dadapy/_cython/cython_distances.pyx":137
- *     cdef Py_ssize_t [:,:] distances_view = distances
+  /* "dadapy/_cython/cython_distances.pyx":152
+ * 
  * 
  *     if period is None:             # <<<<<<<<<<<<<<
- *         with nogil, parallel(num_threads=16):
+ *         with nogil, parallel(num_threads=8):
  *             for i in prange(N, schedule='dynamic'):
  */
-  __pyx_t_8 = (((PyObject *)__pyx_v_period) == Py_None);
-  __pyx_t_9 = (__pyx_t_8 != 0);
-  if (__pyx_t_9) {
+  __pyx_t_6 = (((PyObject *)__pyx_v_period) == Py_None);
+  __pyx_t_7 = (__pyx_t_6 != 0);
+  if (__pyx_t_7) {
 
-    /* "dadapy/_cython/cython_distances.pyx":138
+    /* "dadapy/_cython/cython_distances.pyx":153
  * 
  *     if period is None:
- *         with nogil, parallel(num_threads=16):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=8):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i,0] += 1
+ *                 distances_view[i,0] = distances_view[i,0] + 1
  */
     {
         #ifdef WITH_THREAD
@@ -4423,50 +4414,54 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
                   #define unlikely(x) (x)
               #endif
               #ifdef _OPENMP
-              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_9) num_threads(16)
+              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_7, __pyx_t_8, __pyx_t_9) num_threads(8)
               #endif /* _OPENMP */
               {
 
-                  /* "dadapy/_cython/cython_distances.pyx":139
+                  /* "dadapy/_cython/cython_distances.pyx":154
  *     if period is None:
- *         with nogil, parallel(num_threads=16):
+ *         with nogil, parallel(num_threads=8):
  *             for i in prange(N, schedule='dynamic'):             # <<<<<<<<<<<<<<
- *                 distances_view[i,0] += 1
+ *                 distances_view[i,0] = distances_view[i,0] + 1
  *                 for j in range(i+1,N):
  */
-                  __pyx_t_10 = __pyx_v_N;
+                  __pyx_t_8 = __pyx_v_N;
                   if ((1 == 0)) abort();
                   {
-                      __pyx_t_12 = (__pyx_t_10 - 0 + 1 - 1/abs(1)) / 1;
-                      if (__pyx_t_12 > 0)
+                      __pyx_t_10 = (__pyx_t_8 - 0 + 1 - 1/abs(1)) / 1;
+                      if (__pyx_t_10 > 0)
                       {
                           #ifdef _OPENMP
-                          #pragma omp for lastprivate(__pyx_v_appo) firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_j) lastprivate(__pyx_v_k) schedule(dynamic)
+                          #pragma omp for lastprivate(__pyx_v_appo) firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_ind) lastprivate(__pyx_v_j) lastprivate(__pyx_v_k) lastprivate(__pyx_v_l) schedule(dynamic)
                           #endif /* _OPENMP */
-                          for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_12; __pyx_t_11++){
+                          for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_10; __pyx_t_9++){
                               {
-                                  __pyx_v_i = (int)(0 + 1 * __pyx_t_11);
+                                  __pyx_v_i = (Py_ssize_t)(0 + 1 * __pyx_t_9);
                                   /* Initialize private variables to invalid values */
                                   __pyx_v_appo = ((int)0xbad0bad0);
-                                  __pyx_v_j = ((int)0xbad0bad0);
-                                  __pyx_v_k = ((int)0xbad0bad0);
+                                  __pyx_v_ind = ((int)0xbad0bad0);
+                                  __pyx_v_j = ((Py_ssize_t)0xbad0bad0);
+                                  __pyx_v_k = ((Py_ssize_t)0xbad0bad0);
+                                  __pyx_v_l = ((Py_ssize_t)0xbad0bad0);
 
-                                  /* "dadapy/_cython/cython_distances.pyx":140
- *         with nogil, parallel(num_threads=16):
+                                  /* "dadapy/_cython/cython_distances.pyx":155
+ *         with nogil, parallel(num_threads=8):
  *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i,0] += 1             # <<<<<<<<<<<<<<
+ *                 distances_view[i,0] = distances_view[i,0] + 1             # <<<<<<<<<<<<<<
  *                 for j in range(i+1,N):
- *                     appo = 0
+ *                     appo= 0
  */
+                                  __pyx_t_11 = __pyx_v_i;
+                                  __pyx_t_12 = 0;
                                   __pyx_t_13 = __pyx_v_i;
                                   __pyx_t_14 = 0;
-                                  *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) )) += 1;
+                                  *((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) )) = ((*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_11 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_12 * __pyx_v_distances_view.strides[1]) ))) + 1);
 
-                                  /* "dadapy/_cython/cython_distances.pyx":141
+                                  /* "dadapy/_cython/cython_distances.pyx":156
  *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i,0] += 1
+ *                 distances_view[i,0] = distances_view[i,0] + 1
  *                 for j in range(i+1,N):             # <<<<<<<<<<<<<<
- *                     appo = 0
+ *                     appo= 0
  *                     for k in range(L):
  */
                                   __pyx_t_15 = __pyx_v_N;
@@ -4474,20 +4469,20 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
                                   for (__pyx_t_17 = (__pyx_v_i + 1); __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
                                     __pyx_v_j = __pyx_t_17;
 
-                                    /* "dadapy/_cython/cython_distances.pyx":142
- *                 distances_view[i,0] += 1
+                                    /* "dadapy/_cython/cython_distances.pyx":157
+ *                 distances_view[i,0] = distances_view[i,0] + 1
  *                 for j in range(i+1,N):
- *                     appo = 0             # <<<<<<<<<<<<<<
+ *                     appo= 0             # <<<<<<<<<<<<<<
  *                     for k in range(L):
- *                         appo = appo + (abs(points[i,k]-points[j,k]))
+ *                         appo = appo + abs(points[i,k]-points[j,k])
  */
                                     __pyx_v_appo = 0;
 
-                                    /* "dadapy/_cython/cython_distances.pyx":143
+                                    /* "dadapy/_cython/cython_distances.pyx":158
  *                 for j in range(i+1,N):
- *                     appo = 0
+ *                     appo= 0
  *                     for k in range(L):             # <<<<<<<<<<<<<<
- *                         appo = appo + (abs(points[i,k]-points[j,k]))
+ *                         appo = appo + abs(points[i,k]-points[j,k])
  *                     if appo <= d_max:
  */
                                     __pyx_t_18 = __pyx_v_L;
@@ -4495,90 +4490,99 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
                                     for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
                                       __pyx_v_k = __pyx_t_20;
 
-                                      /* "dadapy/_cython/cython_distances.pyx":144
- *                     appo = 0
+                                      /* "dadapy/_cython/cython_distances.pyx":159
+ *                     appo= 0
  *                     for k in range(L):
- *                         appo = appo + (abs(points[i,k]-points[j,k]))             # <<<<<<<<<<<<<<
+ *                         appo = appo + abs(points[i,k]-points[j,k])             # <<<<<<<<<<<<<<
  *                     if appo <= d_max:
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
+ *                         ind = int(appo)
  */
-                                      __pyx_t_14 = __pyx_v_i;
+                                      __pyx_t_12 = __pyx_v_i;
+                                      __pyx_t_11 = __pyx_v_k;
+                                      __pyx_t_14 = __pyx_v_j;
                                       __pyx_t_13 = __pyx_v_k;
-                                      __pyx_t_21 = __pyx_v_j;
-                                      __pyx_t_22 = __pyx_v_k;
-                                      __pyx_v_appo = (__pyx_v_appo + abs(((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_points.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_points.diminfo[1].strides)))));
+                                      __pyx_v_appo = (__pyx_v_appo + abs(((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_points.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_points.diminfo[1].strides)))));
                                     }
 
-                                    /* "dadapy/_cython/cython_distances.pyx":145
+                                    /* "dadapy/_cython/cython_distances.pyx":160
  *                     for k in range(L):
- *                         appo = appo + (abs(points[i,k]-points[j,k]))
+ *                         appo = appo + abs(points[i,k]-points[j,k])
  *                     if appo <= d_max:             # <<<<<<<<<<<<<<
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
+ *                         ind = int(appo)
+ *                         distances_view[i, ind] = distances_view[i, ind] + 1
  */
-                                    __pyx_t_9 = ((__pyx_v_appo <= __pyx_v_d_max) != 0);
-                                    if (__pyx_t_9) {
+                                    __pyx_t_7 = ((__pyx_v_appo <= __pyx_v_d_max) != 0);
+                                    if (__pyx_t_7) {
 
-                                      /* "dadapy/_cython/cython_distances.pyx":146
- *                         appo = appo + (abs(points[i,k]-points[j,k]))
+                                      /* "dadapy/_cython/cython_distances.pyx":161
+ *                         appo = appo + abs(points[i,k]-points[j,k])
  *                     if appo <= d_max:
- *                         distances_view[i, appo] = distances_view[i, appo] + 1             # <<<<<<<<<<<<<<
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- *                 for k in range(1,d_max+1):
+ *                         ind = int(appo)             # <<<<<<<<<<<<<<
+ *                         distances_view[i, ind] = distances_view[i, ind] + 1
+ *                         distances_view[j, ind] = distances_view[j, ind] + 1
  */
-                                      __pyx_t_22 = __pyx_v_i;
-                                      __pyx_t_21 = __pyx_v_appo;
+                                      __pyx_v_ind = __pyx_v_appo;
+
+                                      /* "dadapy/_cython/cython_distances.pyx":162
+ *                     if appo <= d_max:
+ *                         ind = int(appo)
+ *                         distances_view[i, ind] = distances_view[i, ind] + 1             # <<<<<<<<<<<<<<
+ *                         distances_view[j, ind] = distances_view[j, ind] + 1
+ *                 for l in range(1,d_max+1):
+ */
                                       __pyx_t_13 = __pyx_v_i;
-                                      __pyx_t_14 = __pyx_v_appo;
-                                      *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) )) = ((*((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_22 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_21 * __pyx_v_distances_view.strides[1]) ))) + 1);
+                                      __pyx_t_14 = __pyx_v_ind;
+                                      __pyx_t_11 = __pyx_v_i;
+                                      __pyx_t_12 = __pyx_v_ind;
+                                      *((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_11 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_12 * __pyx_v_distances_view.strides[1]) )) = ((*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) ))) + 1);
 
-                                      /* "dadapy/_cython/cython_distances.pyx":147
- *                     if appo <= d_max:
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1             # <<<<<<<<<<<<<<
- *                 for k in range(1,d_max+1):
- *                     distances_view[i,k] += distances_view[i,k-1]
+                                      /* "dadapy/_cython/cython_distances.pyx":163
+ *                         ind = int(appo)
+ *                         distances_view[i, ind] = distances_view[i, ind] + 1
+ *                         distances_view[j, ind] = distances_view[j, ind] + 1             # <<<<<<<<<<<<<<
+ *                 for l in range(1,d_max+1):
+ *                     distances_view[i,l] += distances_view[i,l-1]
  */
-                                      __pyx_t_21 = __pyx_v_j;
-                                      __pyx_t_22 = __pyx_v_appo;
                                       __pyx_t_14 = __pyx_v_j;
-                                      __pyx_t_13 = __pyx_v_appo;
-                                      *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_14 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_13 * __pyx_v_distances_view.strides[1]) )) = ((*((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_21 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_22 * __pyx_v_distances_view.strides[1]) ))) + 1);
+                                      __pyx_t_13 = __pyx_v_ind;
+                                      __pyx_t_12 = __pyx_v_j;
+                                      __pyx_t_11 = __pyx_v_ind;
+                                      *((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_12 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_11 * __pyx_v_distances_view.strides[1]) )) = ((*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_14 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_13 * __pyx_v_distances_view.strides[1]) ))) + 1);
 
-                                      /* "dadapy/_cython/cython_distances.pyx":145
+                                      /* "dadapy/_cython/cython_distances.pyx":160
  *                     for k in range(L):
- *                         appo = appo + (abs(points[i,k]-points[j,k]))
+ *                         appo = appo + abs(points[i,k]-points[j,k])
  *                     if appo <= d_max:             # <<<<<<<<<<<<<<
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
+ *                         ind = int(appo)
+ *                         distances_view[i, ind] = distances_view[i, ind] + 1
  */
                                     }
                                   }
 
-                                  /* "dadapy/_cython/cython_distances.pyx":148
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- *                 for k in range(1,d_max+1):             # <<<<<<<<<<<<<<
- *                     distances_view[i,k] += distances_view[i,k-1]
- * 
+                                  /* "dadapy/_cython/cython_distances.pyx":164
+ *                         distances_view[i, ind] = distances_view[i, ind] + 1
+ *                         distances_view[j, ind] = distances_view[j, ind] + 1
+ *                 for l in range(1,d_max+1):             # <<<<<<<<<<<<<<
+ *                     distances_view[i,l] += distances_view[i,l-1]
+ *     return distances
  */
-                                  __pyx_t_23 = (__pyx_v_d_max + 1);
-                                  __pyx_t_24 = __pyx_t_23;
-                                  for (__pyx_t_15 = 1; __pyx_t_15 < __pyx_t_24; __pyx_t_15+=1) {
-                                    __pyx_v_k = __pyx_t_15;
+                                  __pyx_t_21 = (__pyx_v_d_max + 1);
+                                  __pyx_t_22 = __pyx_t_21;
+                                  for (__pyx_t_15 = 1; __pyx_t_15 < __pyx_t_22; __pyx_t_15+=1) {
+                                    __pyx_v_l = __pyx_t_15;
 
-                                    /* "dadapy/_cython/cython_distances.pyx":149
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- *                 for k in range(1,d_max+1):
- *                     distances_view[i,k] += distances_view[i,k-1]             # <<<<<<<<<<<<<<
- * 
- *     else:
+                                    /* "dadapy/_cython/cython_distances.pyx":165
+ *                         distances_view[j, ind] = distances_view[j, ind] + 1
+ *                 for l in range(1,d_max+1):
+ *                     distances_view[i,l] += distances_view[i,l-1]             # <<<<<<<<<<<<<<
+ *     return distances
+ * """
  */
-                                    __pyx_t_22 = __pyx_v_i;
-                                    __pyx_t_21 = (__pyx_v_k - 1);
                                     __pyx_t_13 = __pyx_v_i;
-                                    __pyx_t_14 = __pyx_v_k;
-                                    *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) )) += (*((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_22 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_21 * __pyx_v_distances_view.strides[1]) )));
+                                    __pyx_t_14 = (__pyx_v_l - 1);
+                                    __pyx_t_11 = __pyx_v_i;
+                                    __pyx_t_12 = __pyx_v_l;
+                                    *((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_11 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_12 * __pyx_v_distances_view.strides[1]) )) += (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) )));
                                   }
                               }
                           }
@@ -4594,12 +4598,12 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
           #endif
         }
 
-        /* "dadapy/_cython/cython_distances.pyx":138
+        /* "dadapy/_cython/cython_distances.pyx":153
  * 
  *     if period is None:
- *         with nogil, parallel(num_threads=16):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=8):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i,0] += 1
+ *                 distances_view[i,0] = distances_view[i,0] + 1
  */
         /*finally:*/ {
           /*normal exit:*/{
@@ -4613,265 +4617,28 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
         }
     }
 
-    /* "dadapy/_cython/cython_distances.pyx":137
- *     cdef Py_ssize_t [:,:] distances_view = distances
+    /* "dadapy/_cython/cython_distances.pyx":152
+ * 
  * 
  *     if period is None:             # <<<<<<<<<<<<<<
- *         with nogil, parallel(num_threads=16):
+ *         with nogil, parallel(num_threads=8):
  *             for i in prange(N, schedule='dynamic'):
  */
-    goto __pyx_L3;
   }
 
-  /* "dadapy/_cython/cython_distances.pyx":152
- * 
- *     else:
- *         with nogil, parallel(num_threads=16):             # <<<<<<<<<<<<<<
- *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i, 0] += 1
- */
-  /*else*/ {
-    {
-        #ifdef WITH_THREAD
-        PyThreadState *_save;
-        Py_UNBLOCK_THREADS
-        __Pyx_FastGIL_Remember();
-        #endif
-        /*try:*/ {
-          {
-              #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-                  #undef likely
-                  #undef unlikely
-                  #define likely(x)   (x)
-                  #define unlikely(x) (x)
-              #endif
-              #ifdef _OPENMP
-              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_9) num_threads(16)
-              #endif /* _OPENMP */
-              {
-
-                  /* "dadapy/_cython/cython_distances.pyx":153
- *     else:
- *         with nogil, parallel(num_threads=16):
- *             for i in prange(N, schedule='dynamic'):             # <<<<<<<<<<<<<<
- *                 distances_view[i, 0] += 1
- *                 for j in range(i+1, N):
- */
-                  __pyx_t_12 = __pyx_v_N;
-                  if ((1 == 0)) abort();
-                  {
-                      __pyx_t_10 = (__pyx_t_12 - 0 + 1 - 1/abs(1)) / 1;
-                      if (__pyx_t_10 > 0)
-                      {
-                          #ifdef _OPENMP
-                          #pragma omp for lastprivate(__pyx_v_appo) lastprivate(__pyx_v_d) firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_j) lastprivate(__pyx_v_k) lastprivate(__pyx_v_temp) schedule(dynamic)
-                          #endif /* _OPENMP */
-                          for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11++){
-                              {
-                                  __pyx_v_i = (int)(0 + 1 * __pyx_t_11);
-                                  /* Initialize private variables to invalid values */
-                                  __pyx_v_appo = ((int)0xbad0bad0);
-                                  __pyx_v_d = ((int)0xbad0bad0);
-                                  __pyx_v_j = ((int)0xbad0bad0);
-                                  __pyx_v_k = ((int)0xbad0bad0);
-                                  __pyx_v_temp = ((int)0xbad0bad0);
-
-                                  /* "dadapy/_cython/cython_distances.pyx":154
- *         with nogil, parallel(num_threads=16):
- *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i, 0] += 1             # <<<<<<<<<<<<<<
- *                 for j in range(i+1, N):
- *                     appo = 0
- */
-                                  __pyx_t_21 = __pyx_v_i;
-                                  __pyx_t_22 = 0;
-                                  *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_21 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_22 * __pyx_v_distances_view.strides[1]) )) += 1;
-
-                                  /* "dadapy/_cython/cython_distances.pyx":155
- *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i, 0] += 1
- *                 for j in range(i+1, N):             # <<<<<<<<<<<<<<
- *                     appo = 0
- *                     for k in range(L):
- */
-                                  __pyx_t_15 = __pyx_v_N;
-                                  __pyx_t_16 = __pyx_t_15;
-                                  for (__pyx_t_17 = (__pyx_v_i + 1); __pyx_t_17 < __pyx_t_16; __pyx_t_17+=1) {
-                                    __pyx_v_j = __pyx_t_17;
-
-                                    /* "dadapy/_cython/cython_distances.pyx":156
- *                 distances_view[i, 0] += 1
- *                 for j in range(i+1, N):
- *                     appo = 0             # <<<<<<<<<<<<<<
- *                     for k in range(L):
- *                         d = points[i, k] - points[j, k]
- */
-                                    __pyx_v_appo = 0;
-
-                                    /* "dadapy/_cython/cython_distances.pyx":157
- *                 for j in range(i+1, N):
- *                     appo = 0
- *                     for k in range(L):             # <<<<<<<<<<<<<<
- *                         d = points[i, k] - points[j, k]
- *                         temp = int(nearbyint(d/period[k]))
- */
-                                    __pyx_t_18 = __pyx_v_L;
-                                    __pyx_t_19 = __pyx_t_18;
-                                    for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
-                                      __pyx_v_k = __pyx_t_20;
-
-                                      /* "dadapy/_cython/cython_distances.pyx":158
- *                     appo = 0
- *                     for k in range(L):
- *                         d = points[i, k] - points[j, k]             # <<<<<<<<<<<<<<
- *                         temp = int(nearbyint(d/period[k]))
- *                         appo = appo + (abs(d - temp)*period[k])
- */
-                                      __pyx_t_22 = __pyx_v_i;
-                                      __pyx_t_21 = __pyx_v_k;
-                                      __pyx_t_14 = __pyx_v_j;
-                                      __pyx_t_13 = __pyx_v_k;
-                                      __pyx_v_d = ((*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_points.diminfo[1].strides)) - (*__Pyx_BufPtrStrided2d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_points.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_points.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_points.diminfo[1].strides)));
-
-                                      /* "dadapy/_cython/cython_distances.pyx":159
- *                     for k in range(L):
- *                         d = points[i, k] - points[j, k]
- *                         temp = int(nearbyint(d/period[k]))             # <<<<<<<<<<<<<<
- *                         appo = appo + (abs(d - temp)*period[k])
- *                     if appo <= d_max:
- */
-                                      __pyx_t_13 = __pyx_v_k;
-                                      __pyx_v_temp = ((int)nearbyint((__pyx_v_d / (*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_period.diminfo[0].strides)))));
-
-                                      /* "dadapy/_cython/cython_distances.pyx":160
- *                         d = points[i, k] - points[j, k]
- *                         temp = int(nearbyint(d/period[k]))
- *                         appo = appo + (abs(d - temp)*period[k])             # <<<<<<<<<<<<<<
- *                     if appo <= d_max:
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- */
-                                      __pyx_t_13 = __pyx_v_k;
-                                      __pyx_v_appo = (__pyx_v_appo + (abs((__pyx_v_d - __pyx_v_temp)) * (*__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t *, __pyx_pybuffernd_period.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_period.diminfo[0].strides))));
-                                    }
-
-                                    /* "dadapy/_cython/cython_distances.pyx":161
- *                         temp = int(nearbyint(d/period[k]))
- *                         appo = appo + (abs(d - temp)*period[k])
- *                     if appo <= d_max:             # <<<<<<<<<<<<<<
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- */
-                                    __pyx_t_9 = ((__pyx_v_appo <= __pyx_v_d_max) != 0);
-                                    if (__pyx_t_9) {
-
-                                      /* "dadapy/_cython/cython_distances.pyx":162
- *                         appo = appo + (abs(d - temp)*period[k])
- *                     if appo <= d_max:
- *                         distances_view[i, appo] = distances_view[i, appo] + 1             # <<<<<<<<<<<<<<
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- *                 for k in range(1, d_max + 1):
- */
-                                      __pyx_t_13 = __pyx_v_i;
-                                      __pyx_t_14 = __pyx_v_appo;
-                                      __pyx_t_21 = __pyx_v_i;
-                                      __pyx_t_22 = __pyx_v_appo;
-                                      *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_21 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_22 * __pyx_v_distances_view.strides[1]) )) = ((*((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) ))) + 1);
-
-                                      /* "dadapy/_cython/cython_distances.pyx":163
- *                     if appo <= d_max:
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1             # <<<<<<<<<<<<<<
- *                 for k in range(1, d_max + 1):
- *                     distances_view[i, k] += distances_view[i, k - 1]
- */
-                                      __pyx_t_14 = __pyx_v_j;
-                                      __pyx_t_13 = __pyx_v_appo;
-                                      __pyx_t_22 = __pyx_v_j;
-                                      __pyx_t_21 = __pyx_v_appo;
-                                      *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_22 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_21 * __pyx_v_distances_view.strides[1]) )) = ((*((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_14 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_13 * __pyx_v_distances_view.strides[1]) ))) + 1);
-
-                                      /* "dadapy/_cython/cython_distances.pyx":161
- *                         temp = int(nearbyint(d/period[k]))
- *                         appo = appo + (abs(d - temp)*period[k])
- *                     if appo <= d_max:             # <<<<<<<<<<<<<<
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- */
-                                    }
-                                  }
-
-                                  /* "dadapy/_cython/cython_distances.pyx":164
- *                         distances_view[i, appo] = distances_view[i, appo] + 1
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- *                 for k in range(1, d_max + 1):             # <<<<<<<<<<<<<<
- *                     distances_view[i, k] += distances_view[i, k - 1]
- * 
- */
-                                  __pyx_t_23 = (__pyx_v_d_max + 1);
-                                  __pyx_t_24 = __pyx_t_23;
-                                  for (__pyx_t_15 = 1; __pyx_t_15 < __pyx_t_24; __pyx_t_15+=1) {
-                                    __pyx_v_k = __pyx_t_15;
-
-                                    /* "dadapy/_cython/cython_distances.pyx":165
- *                         distances_view[j, appo] = distances_view[j, appo] + 1
- *                 for k in range(1, d_max + 1):
- *                     distances_view[i, k] += distances_view[i, k - 1]             # <<<<<<<<<<<<<<
- * 
- *     return distances
- */
-                                    __pyx_t_13 = __pyx_v_i;
-                                    __pyx_t_14 = (__pyx_v_k - 1);
-                                    __pyx_t_21 = __pyx_v_i;
-                                    __pyx_t_22 = __pyx_v_k;
-                                    *((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_21 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_22 * __pyx_v_distances_view.strides[1]) )) += (*((Py_ssize_t *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_distances_view.data + __pyx_t_13 * __pyx_v_distances_view.strides[0]) ) + __pyx_t_14 * __pyx_v_distances_view.strides[1]) )));
-                                  }
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-          #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
-              #undef likely
-              #undef unlikely
-              #define likely(x)   __builtin_expect(!!(x), 1)
-              #define unlikely(x) __builtin_expect(!!(x), 0)
-          #endif
-        }
-
-        /* "dadapy/_cython/cython_distances.pyx":152
- * 
- *     else:
- *         with nogil, parallel(num_threads=16):             # <<<<<<<<<<<<<<
- *             for i in prange(N, schedule='dynamic'):
- *                 distances_view[i, 0] += 1
- */
-        /*finally:*/ {
-          /*normal exit:*/{
-            #ifdef WITH_THREAD
-            __Pyx_FastGIL_Forget();
-            Py_BLOCK_THREADS
-            #endif
-            goto __pyx_L28;
-          }
-          __pyx_L28:;
-        }
-    }
-  }
-  __pyx_L3:;
-
-  /* "dadapy/_cython/cython_distances.pyx":167
- *                     distances_view[i, k] += distances_view[i, k - 1]
- * 
+  /* "dadapy/_cython/cython_distances.pyx":166
+ *                 for l in range(1,d_max+1):
+ *                     distances_view[i,l] += distances_view[i,l-1]
  *     return distances             # <<<<<<<<<<<<<<
- * 
+ * """
+ *     cdef int inner(pi, pj):
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_INCREF(((PyObject *)__pyx_v_distances));
-  __pyx_r = ((PyObject *)__pyx_v_distances);
+  __Pyx_INCREF(__pyx_v_distances);
+  __pyx_r = __pyx_v_distances;
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_distances.pyx":127
+  /* "dadapy/_cython/cython_distances.pyx":128
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
@@ -4881,16 +4648,15 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
 
   /* function exit code */
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5);
-  __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_t_5, 1);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_distances.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_period.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_points.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
@@ -4898,11 +4664,10 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_distances.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_period.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_points.rcbuffer->pybuffer);
   __pyx_L2:;
-  __Pyx_XDECREF((PyObject *)__pyx_v_distances);
+  __Pyx_XDECREF(__pyx_v_distances);
   __PYX_XDEC_MEMVIEW(&__pyx_v_distances_view, 1);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
@@ -19777,10 +19542,12 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
   {&__pyx_n_s_id, __pyx_k_id, sizeof(__pyx_k_id), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
+  {&__pyx_n_s_ind, __pyx_k_ind, sizeof(__pyx_k_ind), 0, 0, 1, 1},
   {&__pyx_n_s_itemsize, __pyx_k_itemsize, sizeof(__pyx_k_itemsize), 0, 0, 1, 1},
   {&__pyx_kp_s_itemsize_0_for_cython_array, __pyx_k_itemsize_0_for_cython_array, sizeof(__pyx_k_itemsize_0_for_cython_array), 0, 0, 1, 0},
   {&__pyx_n_s_j, __pyx_k_j, sizeof(__pyx_k_j), 0, 0, 1, 1},
   {&__pyx_n_s_k, __pyx_k_k, sizeof(__pyx_k_k), 0, 0, 1, 1},
+  {&__pyx_n_s_l, __pyx_k_l, sizeof(__pyx_k_l), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_memview, __pyx_k_memview, sizeof(__pyx_k_memview), 0, 0, 1, 1},
   {&__pyx_n_s_mode, __pyx_k_mode, sizeof(__pyx_k_mode), 0, 0, 1, 1},
@@ -19827,7 +19594,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_strided_and_indirect, __pyx_k_strided_and_indirect, sizeof(__pyx_k_strided_and_indirect), 0, 0, 1, 0},
   {&__pyx_kp_s_stringsource, __pyx_k_stringsource, sizeof(__pyx_k_stringsource), 0, 0, 1, 0},
   {&__pyx_n_s_struct, __pyx_k_struct, sizeof(__pyx_k_struct), 0, 0, 1, 1},
-  {&__pyx_n_s_temp, __pyx_k_temp, sizeof(__pyx_k_temp), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_kp_s_unable_to_allocate_array_data, __pyx_k_unable_to_allocate_array_data, sizeof(__pyx_k_unable_to_allocate_array_data), 0, 0, 1, 0},
   {&__pyx_kp_s_unable_to_allocate_shape_and_str, __pyx_k_unable_to_allocate_shape_and_str, sizeof(__pyx_k_unable_to_allocate_shape_and_str), 0, 0, 1, 0},
@@ -20096,29 +19862,29 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__24);
   __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(2, 0, 10, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_hamming_condensed_parall, 51, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 51, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_distances.pyx":82
+  /* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
  *                             int d_max,
  *                             np.ndarray[DTYPE_t, ndim = 1] period):
  */
-  __pyx_tuple__26 = PyTuple_Pack(12, __pyx_n_s_points, __pyx_n_s_d_max, __pyx_n_s_period, __pyx_n_s_N, __pyx_n_s_L, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_d, __pyx_n_s_temp, __pyx_n_s_appo, __pyx_n_s_distances); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 82, __pyx_L1_error)
+  __pyx_tuple__26 = PyTuple_Pack(12, __pyx_n_s_points, __pyx_n_s_d_max, __pyx_n_s_period, __pyx_n_s_N, __pyx_n_s_L, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_ind, __pyx_n_s_d, __pyx_n_s_appo, __pyx_n_s_distances); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__26);
   __Pyx_GIVEREF(__pyx_tuple__26);
-  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_manhattan_condensed, 82, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 82, __pyx_L1_error)
+  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_manhattan_condensed, 81, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 81, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_distances.pyx":127
+  /* "dadapy/_cython/cython_distances.pyx":128
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
  *                             int d_max,
  *                             np.ndarray[DTYPE_t, ndim = 1] period):
  */
-  __pyx_tuple__28 = PyTuple_Pack(13, __pyx_n_s_points, __pyx_n_s_d_max, __pyx_n_s_period, __pyx_n_s_N, __pyx_n_s_L, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_d, __pyx_n_s_temp, __pyx_n_s_appo, __pyx_n_s_distances, __pyx_n_s_distances_view); if (unlikely(!__pyx_tuple__28)) __PYX_ERR(0, 127, __pyx_L1_error)
+  __pyx_tuple__28 = PyTuple_Pack(13, __pyx_n_s_points, __pyx_n_s_d_max, __pyx_n_s_period, __pyx_n_s_N, __pyx_n_s_L, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_l, __pyx_n_s_appo, __pyx_n_s_ind, __pyx_n_s_distances, __pyx_n_s_distances_view); if (unlikely(!__pyx_tuple__28)) __PYX_ERR(0, 128, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__28);
   __Pyx_GIVEREF(__pyx_tuple__28);
-  __pyx_codeobj__29 = (PyObject*)__Pyx_PyCode_New(3, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__28, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_manhattan_condensed_para, 127, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__29)) __PYX_ERR(0, 127, __pyx_L1_error)
+  __pyx_codeobj__29 = (PyObject*)__Pyx_PyCode_New(3, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__28, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_manhattan_condensed_para, 128, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__29)) __PYX_ERR(0, 128, __pyx_L1_error)
 
   /* "View.MemoryView":286
  *         return self.name
@@ -20625,28 +20391,28 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_hamming_condensed_parall, __pyx_t_1) < 0) __PYX_ERR(0, 51, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_distances.pyx":82
+  /* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
  *                             int d_max,
  *                             np.ndarray[DTYPE_t, ndim = 1] period):
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_16cython_distances_5_return_manhattan_condensed, NULL, __pyx_n_s_dadapy__cython_cython_distances); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_16cython_distances_5_return_manhattan_condensed, NULL, __pyx_n_s_dadapy__cython_cython_distances); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_manhattan_condensed, __pyx_t_1) < 0) __PYX_ERR(0, 82, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_manhattan_condensed, __pyx_t_1) < 0) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_distances.pyx":127
+  /* "dadapy/_cython/cython_distances.pyx":128
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
  *                             int d_max,
  *                             np.ndarray[DTYPE_t, ndim = 1] period):
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_16cython_distances_7_return_manhattan_condensed_parallel, NULL, __pyx_n_s_dadapy__cython_cython_distances); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 127, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_16cython_distances_7_return_manhattan_condensed_parallel, NULL, __pyx_n_s_dadapy__cython_cython_distances); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_manhattan_condensed_para, __pyx_t_1) < 0) __PYX_ERR(0, 127, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_manhattan_condensed_para, __pyx_t_1) < 0) __PYX_ERR(0, 128, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "dadapy/_cython/cython_distances.pyx":1
@@ -23955,6 +23721,29 @@ no_fail:
     retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, 0,
                                                  PyBUF_RECORDS_RO | writable_flag, 2,
                                                  &__Pyx_TypeInfo_Py_ssize_t, stack,
+                                                 &result, obj);
+    if (unlikely(retcode == -1))
+        goto __pyx_fail;
+    return result;
+__pyx_fail:
+    result.memview = NULL;
+    result.data = NULL;
+    return result;
+}
+
+/* ObjectToMemviewSlice */
+  static CYTHON_INLINE __Pyx_memviewslice __Pyx_PyObject_to_MemoryviewSlice_dsds_long(PyObject *obj, int writable_flag) {
+    __Pyx_memviewslice result = { 0, 0, { 0 }, { 0 }, { 0 } };
+    __Pyx_BufFmt_StackElem stack[1];
+    int axes_specs[] = { (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED), (__Pyx_MEMVIEW_DIRECT | __Pyx_MEMVIEW_STRIDED) };
+    int retcode;
+    if (obj == Py_None) {
+        result.memview = (struct __pyx_memoryview_obj *) Py_None;
+        return result;
+    }
+    retcode = __Pyx_ValidateAndInit_memviewslice(axes_specs, 0,
+                                                 PyBUF_RECORDS_RO | writable_flag, 2,
+                                                 &__Pyx_TypeInfo_long, stack,
                                                  &result, obj);
     if (unlikely(retcode == -1))
         goto __pyx_fail;
