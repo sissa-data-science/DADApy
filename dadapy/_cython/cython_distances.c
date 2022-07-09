@@ -3596,7 +3596,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_2_return_hamming_c
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_distances.pyx":82
+/* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
@@ -3642,17 +3642,17 @@ static PyObject *__pyx_pw_6dadapy_7_cython_16cython_distances_5_return_manhattan
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_d_max)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 1); __PYX_ERR(0, 82, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 1); __PYX_ERR(0, 81, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_period)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 2); __PYX_ERR(0, 82, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, 2); __PYX_ERR(0, 81, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_manhattan_condensed") < 0)) __PYX_ERR(0, 82, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "_return_manhattan_condensed") < 0)) __PYX_ERR(0, 81, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -3662,19 +3662,19 @@ static PyObject *__pyx_pw_6dadapy_7_cython_16cython_distances_5_return_manhattan
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_points = ((PyArrayObject *)values[0]);
-    __pyx_v_d_max = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_d_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 83, __pyx_L3_error)
+    __pyx_v_d_max = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_d_max == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 82, __pyx_L3_error)
     __pyx_v_period = ((PyArrayObject *)values[2]);
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 82, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_return_manhattan_condensed", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 81, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("dadapy._cython.cython_distances._return_manhattan_condensed", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 82, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_period), __pyx_ptype_5numpy_ndarray, 1, "period", 0))) __PYX_ERR(0, 84, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_points), __pyx_ptype_5numpy_ndarray, 1, "points", 0))) __PYX_ERR(0, 81, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_period), __pyx_ptype_5numpy_ndarray, 1, "period", 0))) __PYX_ERR(0, 83, __pyx_L1_error)
   __pyx_r = __pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan_condensed(__pyx_self, __pyx_v_points, __pyx_v_d_max, __pyx_v_period);
 
   /* function exit code */
@@ -3745,7 +3745,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
   __pyx_pybuffernd_period.rcbuffer = &__pyx_pybuffer_period;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_points.rcbuffer->pybuffer, (PyObject*)__pyx_v_points, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 82, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_points.rcbuffer->pybuffer, (PyObject*)__pyx_v_points, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_16cython_distances_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 81, __pyx_L1_error)
   }
   __pyx_pybuffernd_points.diminfo[0].strides = __pyx_pybuffernd_points.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_points.diminfo[0].shape = __pyx_pybuffernd_points.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_points.diminfo[1].strides = __pyx_pybuffernd_points.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_points.diminfo[1].shape = __pyx_pybuffernd_points.rcbuffer->pybuffer.shape[1];
   {
@@ -3761,19 +3761,19 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
  *     cdef int L = len(points[0])
  *     cdef int i, j, k, ind
  */
-  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_points)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 86, __pyx_L1_error)
+  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_points)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 85, __pyx_L1_error)
   __pyx_v_N = __pyx_t_1;
 
-  /* "dadapy/_cython/cython_distances.pyx":87
+  /* "dadapy/_cython/cython_distances.pyx":86
  * 
  *     cdef int N = len(points)
  *     cdef int L = len(points[0])             # <<<<<<<<<<<<<<
  *     cdef int i, j, k, ind
  *     cdef double d, appo
  */
-  __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_points), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_points), 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_1 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 86, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_L = __pyx_t_1;
 
@@ -4171,7 +4171,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_4_return_manhattan
   __pyx_r = ((PyObject *)__pyx_v_distances);
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_distances.pyx":82
+  /* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
@@ -4358,10 +4358,6 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_return_manhattan_condensed_parallel", 0);
-  __pyx_pybuffer_distances.pybuffer.buf = NULL;
-  __pyx_pybuffer_distances.refcount = 0;
-  __pyx_pybuffernd_distances.data = NULL;
-  __pyx_pybuffernd_distances.rcbuffer = &__pyx_pybuffer_distances;
   __pyx_pybuffer_points.pybuffer.buf = NULL;
   __pyx_pybuffer_points.refcount = 0;
   __pyx_pybuffernd_points.data = NULL;
@@ -4489,13 +4485,14 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
   /* "dadapy/_cython/cython_distances.pyx":146
  *     cdef double [:] period_v = period
  * 
+ * 
  *     if period is None:             # <<<<<<<<<<<<<<
  *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  */
-  __pyx_t_8 = (((PyObject *)__pyx_v_period) == Py_None);
-  __pyx_t_9 = (__pyx_t_8 != 0);
-  if (__pyx_t_9) {
+  __pyx_t_6 = (((PyObject *)__pyx_v_period) == Py_None);
+  __pyx_t_7 = (__pyx_t_6 != 0);
+  if (__pyx_t_7) {
 
     /* "dadapy/_cython/cython_distances.pyx":147
  * 
@@ -4530,18 +4527,18 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
  *                 for j in range(N):
  *                     ind = 0
  */
-                  __pyx_t_10 = __pyx_v_N;
+                  __pyx_t_8 = __pyx_v_N;
                   if ((1 == 0)) abort();
                   {
-                      __pyx_t_12 = (__pyx_t_10 - 0 + 1 - 1/abs(1)) / 1;
-                      if (__pyx_t_12 > 0)
+                      __pyx_t_10 = (__pyx_t_8 - 0 + 1 - 1/abs(1)) / 1;
+                      if (__pyx_t_10 > 0)
                       {
                           #ifdef _OPENMP
                           #pragma omp for firstprivate(__pyx_v_i) lastprivate(__pyx_v_i) lastprivate(__pyx_v_ind) lastprivate(__pyx_v_j) lastprivate(__pyx_v_k) lastprivate(__pyx_v_l) schedule(static)
                           #endif /* _OPENMP */
-                          for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_12; __pyx_t_11++){
+                          for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_10; __pyx_t_9++){
                               {
-                                  __pyx_v_i = (int)(0 + 1 * __pyx_t_11);
+                                  __pyx_v_i = (Py_ssize_t)(0 + 1 * __pyx_t_9);
                                   /* Initialize private variables to invalid values */
                                   __pyx_v_ind = ((int)0xbad0bad0);
                                   __pyx_v_j = ((int)0xbad0bad0);
@@ -4689,11 +4686,11 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
     /* "dadapy/_cython/cython_distances.pyx":146
  *     cdef double [:] period_v = period
  * 
+ * 
  *     if period is None:             # <<<<<<<<<<<<<<
  *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  */
-    goto __pyx_L3;
   }
 
   /* "dadapy/_cython/cython_distances.pyx":158
@@ -4918,8 +4915,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
  * """
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_INCREF(((PyObject *)__pyx_v_distances));
-  __pyx_r = ((PyObject *)__pyx_v_distances);
+  __Pyx_INCREF(__pyx_v_distances);
+  __pyx_r = __pyx_v_distances;
   goto __pyx_L0;
 
   /* "dadapy/_cython/cython_distances.pyx":129
@@ -4942,7 +4939,6 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_distances.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_period.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_points.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
@@ -4950,7 +4946,6 @@ static PyObject *__pyx_pf_6dadapy_7_cython_16cython_distances_6_return_manhattan
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_distances.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_period.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_points.rcbuffer->pybuffer);
   __pyx_L2:;
@@ -20172,7 +20167,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__24);
   __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_hamming_condensed_parall, 53, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 53, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_distances.pyx":82
+  /* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
@@ -20182,7 +20177,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__26 = PyTuple_Pack(12, __pyx_n_s_points, __pyx_n_s_d_max, __pyx_n_s_period, __pyx_n_s_N, __pyx_n_s_L, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_ind, __pyx_n_s_d, __pyx_n_s_appo, __pyx_n_s_distances); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 82, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__26);
   __Pyx_GIVEREF(__pyx_tuple__26);
-  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_manhattan_condensed, 82, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 82, __pyx_L1_error)
+  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_distances_pyx, __pyx_n_s_return_manhattan_condensed, 81, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 81, __pyx_L1_error)
 
   /* "dadapy/_cython/cython_distances.pyx":129
  * @cython.cdivision(True)
@@ -20701,16 +20696,16 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_hamming_condensed_parall, __pyx_t_1) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_distances.pyx":82
+  /* "dadapy/_cython/cython_distances.pyx":81
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * def _return_manhattan_condensed(np.ndarray[DTYPE_t, ndim = 2] points,             # <<<<<<<<<<<<<<
  *                             int d_max,
  *                             np.ndarray[floatTYPE_t, ndim = 1] period):
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_16cython_distances_5_return_manhattan_condensed, NULL, __pyx_n_s_dadapy__cython_cython_distances); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_16cython_distances_5_return_manhattan_condensed, NULL, __pyx_n_s_dadapy__cython_cython_distances); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_manhattan_condensed, __pyx_t_1) < 0) __PYX_ERR(0, 82, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_manhattan_condensed, __pyx_t_1) < 0) __PYX_ERR(0, 81, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "dadapy/_cython/cython_distances.pyx":129

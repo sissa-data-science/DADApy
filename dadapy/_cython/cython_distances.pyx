@@ -143,6 +143,23 @@ def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,
     cdef long [:,:] pv = points
     cdef double [:] period_v = period
 
+    cdef Py_ssize_t i, j, k, l
+    cdef int appo, ind
+
+    distances = np.zeros((N, d_max + 1), dtype=int)
+    cdef long [:,:] distances_view = distances
+
+#    cdef np.ndarray[DTYPE_t, ndim = 1] appo = np.zeros(N, dtype=int)
+#    cdef long [:] appov = appo
+
+#    cdef np.ndarray[DTYPE_t, ndim = 1] ind = np.zeros(N, dtype=int)
+#    cdef long [:] indv = ind
+
+#    cdef np.ndarray[DTYPE_t, ndim = 1] j = np.zeros(N, dtype=int)
+#    cdef Py_ssize_t [:] jv = j
+
+
+
     if period is None:
         with nogil, parallel(num_threads=n_jobs):
             for i in prange(N, schedule='static'):
@@ -168,7 +185,6 @@ def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,
                 for l in range(1,d_max+1):
                     dv[i,l] += dv[i,l-1]
 
-    return distances
 
 """
     # tentative of doing N**2/2 operation by using the indices from upper triangular matrix

@@ -583,6 +583,7 @@ def return_condensed_distances(points, metric, d_max=100, period=None, n_jobs=1)
         )
         return 0
 
+
 # --------------------------------------------------------------------------------------
 
 
@@ -590,14 +591,16 @@ def manhattan_distances_condensed(points, d_max=100, period=None):
     """Compute condensed distances according to manhattan metric
     Args:
         points (np.ndarray(int/strings)): datapoints
-        d_max (int, deafult=100): max distance around each point to look at
+        d_max (int, default=100): max distance around each point to look at
         period (float or np.ndarray(float)): PBC boundaries
     Returns:
         distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
                                      successive distances
     """
+
     d_max = min(d_max, points.shape[1] * points.max())
     return mc(points, d_max, period), None
+
 
 # --------------------------------------------------------------------------------------
 
@@ -693,8 +696,11 @@ def hamming_distances_condensed(points, d_max, n_jobs=1):
 
 # --------------------------------------------------------------------------------------
 
+
 def hamming_distances_idx(points, d_max=100, maxk_ind=None):
     """Compute condensed distances according to hamming metric
+
+    Python version of the cython function above (slower). Possibly returns the indices of NN if maxk is provided
     Args:
         points (np.ndarray(int/strings)): datapoints
         d_max (int, default=100): max distance around each point to look at
