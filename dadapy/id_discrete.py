@@ -177,6 +177,7 @@ class IdDiscrete(Base):
             ), "set lk and ln or insert proper values for the lk and ln parameters"
         self.set_ratio(float(self.ln) / float(self.lk))
 
+
         if self._condensed:
             self.n = np.copy(self.distances[:, self.ln])
             self.k = np.copy(self.distances[:, self.lk])
