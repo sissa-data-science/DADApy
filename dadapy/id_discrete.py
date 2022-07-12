@@ -171,9 +171,8 @@ class IdDiscrete(Base):
         self.set_ratio(float(self.ln) / float(self.lk))
 
         self._k = (
-            0  # just a flag to remember whether id was computed at constant radius \
+            0  # just a flag to remember that the id was computed at constant radius
         )
-        # or at constant number of neighbours
 
         if self._condensed:
             self.n = np.copy(self.distances[:, self.ln])
@@ -404,7 +403,7 @@ class IdDiscrete(Base):
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
         self.set_ratio(ratio)
-        self._k = k_eff
+        self._k = k_eff  # mark that the id is computed at fixed k
 
         if self._condensed:
 
