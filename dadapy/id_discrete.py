@@ -119,16 +119,16 @@ class IdDiscrete(Base):
             self.period = period
             if period is not None:
                 if isinstance(period, np.ndarray) and period.shape == (self.dims,):
-                    self.period = np.array(period,dtype=int)
+                    self.period = np.array(period, dtype=float)
                 elif isinstance(period, int):
-                    self.period = np.full(self.dims, fill_value=period, dtype=int)
+                    self.period = np.full(self.dims, fill_value=period, dtype=float)
                 else:
                     raise ValueError(
                         f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
                     )
 
             self.distances, self.dist_indices = df.return_condensed_distances(
-                self.X, self.metric, d_max, self.period
+                self.X, self.metric, d_max, self.period, self.njobs
             )
 
         else:
@@ -157,7 +157,7 @@ class IdDiscrete(Base):
         Returns:
 
         """
-        # checks-in and intialisations
+        # checks-in and initializations
         assert (
             self.distances is not None
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
@@ -169,6 +169,11 @@ class IdDiscrete(Base):
                 self.lk is not None and self.ln is not None
             ), "set lk and ln or insert proper values for the lk and ln parameters"
         self.set_ratio(float(self.ln) / float(self.lk))
+
+        self._k = (
+            0  # just a flag to remember whether id was computed at constant radius \
+        )
+        # or at constant number of neighbours
 
         if self._condensed:
             self.n = np.copy(self.distances[:, self.ln])
@@ -200,8 +205,6 @@ class IdDiscrete(Base):
                 )
 
             # checks-out
-            self._k = 0  # just a flag to remember whether id was computed at constant radius \
-            # or constant number of neighbours
             # compute mask
             if self.maxk == self.N - 1:
                 self._mask = np.ones(self.N, dtype=bool)
@@ -401,11 +404,35 @@ class IdDiscrete(Base):
         ), "first compute distances with the proper metric (manhattan of hamming presumably)"
 
         self.set_ratio(ratio)
+        self._k = k_eff
 
         if self._condensed:
-            self.lk = np.array(
-                [np.where(ddi <= k_eff)[0][-1] for ddi in self.distances]
-            )
+
+            self.lk = np.ones(self.N, dtype=int)
+            for i, ddi in enumerate(self.distances):
+                lk = 0
+                appo = 0
+                while (
+                    k_eff > ddi[lk + 1]
+                ):  # increase lk until you reach the proper amount of neighbours
+                    if ddi[lk + 1] != ddi[lk]:
+                        appo = (
+                            np.copy(lk) + 1
+                        )  # save at which range you last found a neighbour at a different distance
+                    lk += 1
+                if (
+                    ddi[lk + 1] == k_eff
+                ):  # go to next radius if it has exactly the number of k_eff
+                    lk += 1
+                    self.lk[i] = np.copy(lk)
+                    continue
+                if (
+                    ddi[lk] == ddi[appo]
+                ):  # go back to lower radius with same amount of neighbours if the next one is too big
+                    self.lk[i] = np.copy(appo)
+                else:
+                    self.lk[i] = np.copy(lk)
+
             self.ln = np.rint(self.lk * self.ratio).astype(int)
             self.k = np.take_along_axis(self.distances, self.lk[:, None], 1)[:, 0]
             self.n = np.take_along_axis(self.distances, self.ln[:, None], 1)[:, 0]
@@ -416,9 +443,10 @@ class IdDiscrete(Base):
             if k_eff is None:
                 k_eff = self.maxk - 1
             else:
-                assert (
-                    k_eff < self.maxk
-                ), "A k_eff > maxk was selected, recompute the distances with the proper amount on NN to see points up to that k_eff"
+                assert k_eff < self.maxk, (
+                    "A k_eff > maxk was selected, recompute the distances with the proper amount on NN to see points "
+                    "up to that k_eff "
+                )
 
             # routine
             self.lk, self.k, self.ln, self.n = (
@@ -481,7 +509,6 @@ class IdDiscrete(Base):
                     + "and thus will not be considered when computing the id. Consider increasing k."
                 )
 
-        self._k = k_eff
         if self.verb:
             print("n and k computed")
 
@@ -512,13 +539,22 @@ class IdDiscrete(Base):
 
         if self._condensed:
             assert k_shell < self.distances.shape[1]
-            self.lk = np.array(
-                [
-                    np.where(ddi != 0)[0][k_shell]
-                    for ddi in self.distances[:, 1:] - self.distances[:, :-1]
-                ]
-            )
+            self.lk = np.zeros(self.N, dtype=int)
+            for i, ddi in enumerate(self.distances):
+                counter = 0  # number of non-empty shell visited
+                lk = 1  # radius iterator
+                while counter < k_shell:
+                    if ddi[lk - 1] != ddi[lk]:
+                        counter += 1
+                    lk += 1
+
+                self.lk[i] = np.copy(lk) - 1
+
             self.ln = np.rint(self.lk * self.ratio).astype(int)
+            # check whether ln==lk, in that case reduce ln by 1
+            mask_ll = np.where(self.lk == self.ln)[0]
+            self.ln[mask_ll] -= 1
+
             self.k = np.take_along_axis(self.distances, self.lk[:, None], 1)[:, 0]
             self.n = np.take_along_axis(self.distances, self.ln[:, None], 1)[:, 0]
             self._mask = np.ones(self.N, dtype=bool)
@@ -535,16 +571,20 @@ class IdDiscrete(Base):
             self._mask = np.ones(self.N, dtype=bool)
 
             for i, dist_i in enumerate(self.distances):
+                counter = 0
+                cycle = 0
+                while counter < k_shell + 1:
+                    if dist_i[cycle] != dist_i[cycle + 1]:
+                        counter += 1  # update shell counter when neighbours at different distance are found
+                    cycle += 1
+                    if cycle == self.maxk:  # if you reach maxk do not use the point
+                        self._mask[i] = False
+                        continue
 
-                unique, index = np.unique(dist_i, return_index=True)
-
-                # check whether the point has enough shells, at least one more than the one we want to consider
-                if unique.shape[0] < k_shell + 1:
-                    self._mask[i] = False
-                    continue  # or lk_temp = unique[-1] even if the shell is not the wanted one???
-
-                # set lk to the distance of the selected shell
-                lk_temp = unique[k_shell]
+                self.k[i] = np.copy(cycle)
+                lk_temp = np.copy(
+                    dist_i[cycle - 1]
+                )  # set lk to the distance of the selected shell
                 # and ln according to the ratio
                 ln_temp = np.rint(lk_temp * self.ratio)
                 # if the inner shell is accidentally the same of the outer, go to the innerer one
@@ -562,7 +602,6 @@ class IdDiscrete(Base):
                         self._weights[self.dist_indices[i][which_n]]
                     ).astype(np.int64)
                 else:
-                    self.k[i] = index[k_shell + 1].astype(np.int64)
                     self.n[i] = sum(dist_i <= ln_temp).astype(np.int64)
 
                 self.lk[i] = lk_temp

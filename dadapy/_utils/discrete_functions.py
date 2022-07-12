@@ -7,8 +7,10 @@ from matplotlib import cm
 from scipy.optimize import minimize_scalar as SMin
 from scipy.special import binom, gamma, hyp2f1
 
-from dadapy._cython.cython_distances import _return_hamming_condensed_parallel as hc
-from dadapy._cython.cython_distances import _return_manhattan_condensed_parallel as mc
+from dadapy._cython.cython_distances import _return_hamming_condensed as hc
+from dadapy._cython.cython_distances import _return_hamming_condensed_parallel as hcp
+from dadapy._cython.cython_distances import _return_manhattan_condensed as mc
+from dadapy._cython.cython_distances import _return_manhattan_condensed_parallel as mcp
 
 cmap = cm.get_cmap("tab20b", 20)
 
@@ -363,6 +365,8 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         dx /= 10
         d_range = np.arange(d_left, d_right, dx)
         P = np.array([p_d(di) for di in d_range]) * dx
+        P = P.reshape(P.shape[0])
+        P = np.exp(-P)
         mask = P != 0
         elements = mask.sum()
         counter += 1
@@ -463,7 +467,7 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
     dx = d_range[1] - d_range[0]
     P = np.array([p_d(di) for di in d_range]) * dx
     P = P.reshape(P.shape[0])
-
+    P /= P.sum()
     #    if verbose:
     #        print("iter no\t", counter,'\nd_left\t', d_left,'\nd_right\t', d_right, elements)
 
@@ -487,9 +491,10 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
 
 
 # --------------------------------------------------------------------------------------
+# HELPER FUNCTIONS TO COMPUTE DISTANCES IN THE CONDENSED FORM
 
 
-def return_condensed_distances(points, metric, d_max=100, period=None):
+def return_condensed_distances(points, metric, d_max=100, period=None, n_jobs=1):
     """Compute number of points at each distance
     
     Instead of focusing on the distance of each neighbour, it just saves how many neighbours are
@@ -503,7 +508,8 @@ def return_condensed_distances(points, metric, d_max=100, period=None):
         points (np.ndarray(int/strings)): datapoints
         metric (string): metric used to compute distances, 'manhattan' and 'hamming' supported so far
         d_max (int, default=100): max distance around each point to look at
-        period (float or np.ndarray(float)): PBC boundaries
+        period (optional, float or np.ndarray(float)): possible PBC boundaries
+        n_jobs (int): number of CPUs used to make the calculation
     Returns:
         distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
                                      successive distances
@@ -511,9 +517,9 @@ def return_condensed_distances(points, metric, d_max=100, period=None):
     """
 
     if metric == "manhattan":
-        return manhattan_distances_condensed(points, d_max, period)
+        return manhattan_distances_condensed(points, d_max, period, n_jobs)
     elif metric == "hamming":
-        return hamming_distances_condensed(points, d_max)
+        return hamming_distances_condensed(points, d_max, n_jobs)
     else:
         print(
             'insert a proper metric: up to now the supported ones are "manhattan" and "hamming"'
@@ -524,19 +530,23 @@ def return_condensed_distances(points, metric, d_max=100, period=None):
 # --------------------------------------------------------------------------------------
 
 
-def manhattan_distances_condensed(points, d_max=100, period=None):
+def manhattan_distances_condensed(points, d_max=100, period=None, n_jobs=1):
     """Compute condensed distances according to manhattan metric
     Args:
-        points (np.ndarray(int/strings)): datapoints
+        points (np.ndarray(int)): datapoints
         d_max (int, default=100): max distance around each point to look at
         period (float or np.ndarray(float)): PBC boundaries
+        n_jobs (int): number of CPUs used to make the calculation
     Returns:
         distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
                                      successive distances
     """
 
     d_max = min(d_max, points.shape[1] * points.max())
-    return mc(points, d_max, period), None
+    if n_jobs > 2:
+        return mcp(points, d_max, period, n_jobs), None
+    else:
+        return mc(points, d_max, period), None
 
 
 # --------------------------------------------------------------------------------------
@@ -593,17 +603,21 @@ def manhattan_distances_idx(points, d_max=100, maxk_ind=None, period=None):
 # --------------------------------------------------------------------------------------
 
 
-def hamming_distances_condensed(points, d_max):
+def hamming_distances_condensed(points, d_max, n_jobs=1):
     """Compute condensed distances according to hamming metric
     Args:
         points (np.ndarray(int/strings)): datapoints
         d_max (int, default=100): max distance around each point to look at
+        n_jobs (int): number of CPUs used to make the calculation
     Returns:
         distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
                                      successive distances
     """
     d_max = min(d_max, points.shape[1])
-    return hc(points, d_max), None
+    if n_jobs > 2:
+        return hc(points, d_max), None
+    else:
+        return hcp(points, d_max), None
 
 
 # --------------------------------------------------------------------------------------
