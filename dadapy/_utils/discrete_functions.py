@@ -330,7 +330,6 @@ def find_d_likelihood(ln, lk, n, k, ww):
 
 
 def profile_likelihood(ln, lk, n, k, ww, plot=False):
-
     def p_d(d):
         return _compute_binomial_logl(
             d, lk, k, ln, n, discrete=True, truncated=False, w=ww
@@ -364,7 +363,7 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
     d_right = d_range[ind[-1]] + 0.5 * dx
     d_range = np.linspace(d_left, d_right, 1000)
     dx = d_range[1] - d_range[0]
-    P = np.array([p_d(di) for di in d_range])*dx
+    P = np.array([p_d(di) for di in d_range]) * dx
     P = P.reshape(P.shape[0])
     P = np.exp(-P)
     P /= P.sum()
@@ -622,6 +621,7 @@ def hamming_distances_idx(points, d_max=100, maxk_ind=None):
                                      successive distances
         indices (optional, np.ndarray(int,int)): N x maxk_ind matrix of neighbours indices
     """
+
 
 def hamming_distances(points, d_max=100, maxk_ind=None):
 
