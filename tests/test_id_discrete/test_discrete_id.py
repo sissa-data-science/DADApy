@@ -9,7 +9,7 @@ def test_distances():
 
     N = 500
     box = 20
-    d = 2
+    d = 5
     rng = np.random.default_rng(12345)
 
     X = rng.integers(0, box, size=(N, d))
@@ -18,15 +18,16 @@ def test_distances():
     I3D.compute_distances(metric="manhattan", period=box, condensed=False)
 
     I3D.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
-    assert I3D.intrinsic_dim == pytest.approx(2.047335150414252)
+    assert I3D.intrinsic_dim == pytest.approx(5.018707133975087)
 
     I3D.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
-    assert I3D.intrinsic_dim == pytest.approx(2.014968714680048)
+    assert I3D.intrinsic_dim == pytest.approx(5.602713972478171)
 
     I3D.compute_id_binomial_lk(
-        lk=4, ln=2, method="bayes", plot=False, subset=np.arange(100)
+        lk=10, ln=5, method="mle", plot=False, subset=np.arange(100)
     )
-    assert I3D.intrinsic_dim == pytest.approx(1.9951144462611552)
+
+    assert I3D.intrinsic_dim == pytest.approx(4.932003306470967)
 
     pv = I3D.model_validation_full(cdf=False)
     assert pv > 0.005
@@ -37,19 +38,19 @@ def test_distances_condensed():
 
     N = 500
     box = 20
-    d = 2
+    d = 5
     rng = np.random.default_rng(12345)
 
     X = rng.integers(0, box, size=(N, d))
 
-    I3D = IdDiscrete(X, maxk=X.shape[0])
-    I3D.compute_distances(metric="manhattan", period=box, condensed=True, d_max=d * box)
+    I3Dc = IdDiscrete(X, condensed=True)
+    I3Dc.compute_distances(metric="manhattan", period=box, d_max=d * box)
 
-    I3D.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
-    assert I3D.intrinsic_dim == pytest.approx(2.047335150414252)
+    I3Dc.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
+    assert I3Dc.intrinsic_dim == pytest.approx(5.018707133975087)
 
-    I3D.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
-    assert I3D.intrinsic_dim == pytest.approx(2.014968714680048)
+    I3Dc.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
+    assert I3Dc.intrinsic_dim == pytest.approx(5.602713972478171)
 
-    I3D.compute_id_binomial_lk(lk=4, ln=2, method="mle")
-    assert I3D.intrinsic_dim == pytest.approx(2.012434143811029)
+    I3Dc.compute_id_binomial_lk(lk=4, ln=2, method="mle")
+    assert I3Dc.intrinsic_dim == pytest.approx(4.575392144773673)
