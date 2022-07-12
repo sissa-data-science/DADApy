@@ -356,6 +356,8 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         dx /= 10
         d_range = np.arange(d_left, d_right, dx)
         P = np.array([p_d(di) for di in d_range]) * dx
+        P = P.reshape(P.shape[0])
+        P = np.exp(-P)
         mask = P != 0
         elements = mask.sum()
         counter += 1
@@ -587,19 +589,23 @@ def return_condensed_distances(points, metric, d_max=100, period=None, n_jobs=1)
 # --------------------------------------------------------------------------------------
 
 
-def manhattan_distances_condensed(points, d_max=100, period=None):
+def manhattan_distances_condensed(points, d_max=100, period=None, n_jobs=1):
     """Compute condensed distances according to manhattan metric
     Args:
-        points (np.ndarray(int/strings)): datapoints
+        points (np.ndarray(int)): datapoints
         d_max (int, default=100): max distance around each point to look at
         period (float or np.ndarray(float)): PBC boundaries
+        n_jobs (int): number of CPUs used to make the calculation
     Returns:
         distances (np.ndarray(int,int)): N x d_max matrix of cumulatives number of points at \
                                      successive distances
     """
 
     d_max = min(d_max, points.shape[1] * points.max())
-    return mc(points, d_max, period), None
+    if n_jobs > 2:
+        return mcp(points, d_max, period, n_jobs), None
+    else:
+        return mc(points, d_max, period), None
 
 
 # --------------------------------------------------------------------------------------

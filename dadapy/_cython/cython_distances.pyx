@@ -27,7 +27,7 @@ def _return_hamming_condensed(np.ndarray[DTYPE_t, ndim = 2] points,
     cdef int N = len(points)
     cdef int L = len(points[0])
     cdef int i, j, k, appo
-    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)
+    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=np.int)
 
     for i in range(N):
         distances[i,0] += 1
@@ -146,19 +146,10 @@ def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,
     cdef Py_ssize_t i, j, k, l
     cdef int appo, ind
 
-    distances = np.zeros((N, d_max + 1), dtype=int)
-    cdef long [:,:] distances_view = distances
-
-#    cdef np.ndarray[DTYPE_t, ndim = 1] appo = np.zeros(N, dtype=int)
-#    cdef long [:] appov = appo
-
-#    cdef np.ndarray[DTYPE_t, ndim = 1] ind = np.zeros(N, dtype=int)
-#    cdef long [:] indv = ind
-
-#    cdef np.ndarray[DTYPE_t, ndim = 1] j = np.zeros(N, dtype=int)
-#    cdef Py_ssize_t [:] jv = j
-
-
+    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=np.int)
+    cdef long [:,:] dv = distances
+    cdef long [:,:] pv = points
+    cdef double [:] period_v = period
 
     if period is None:
         with nogil, parallel(num_threads=n_jobs):
