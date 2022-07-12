@@ -358,6 +358,8 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         dx /= 10
         d_range = np.arange(d_left, d_right, dx)
         P = np.array([p_d(di) for di in d_range]) * dx
+        P = P.reshape(P.shape[0])
+        P = np.exp(-P)
         mask = P != 0
         elements = mask.sum()
         counter += 1
@@ -666,7 +668,7 @@ def return_condensed_distances(points, metric, d_max=100, period=None, n_jobs=1)
 # --------------------------------------------------------------------------------------
 
 
-def manhattan_distances_condensed(points, d_max=100, period=None):
+def manhattan_distances_condensed(points, d_max=100, period=None, n_jobs=1):
     """Compute condensed distances according to manhattan metric
     Args:
         points (np.ndarray(int/strings)): datapoints
