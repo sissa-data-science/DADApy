@@ -11,6 +11,7 @@ from dadapy._cython.cython_distances import _return_hamming_condensed as hc
 from dadapy._cython.cython_distances import _return_hamming_condensed_parallel as hcp
 from dadapy._cython.cython_distances import _return_manhattan_condensed as mc
 from dadapy._cython.cython_distances import _return_manhattan_condensed_parallel as mcp
+from dadapy._utils import get_data
 
 cmap = cm.get_cmap("tab20b", 20)
 
@@ -21,10 +22,11 @@ D_MIN = np.finfo(np.float32).eps
 
 # load, just once and for all, the coefficients for the polynomials in d at fixed L
 
-volumes_path = os.path.join(os.path.split(__file__)[0], "discrete_volumes")
-coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
+# volumes_path = os.path.join(os.path.split(__file__)[0], "discrete_volumes")
+# coeff = np.loadtxt(volumes_path + "/L_coefficients_float.dat", dtype=np.float64)
 
-# V_exact_int = np.loadtxt(volume_path + '/V_exact.dat',dtype=np.uint64)
+coeff = np.loadtxt(get_data("L_coefficients_float.dat"), dtype=np.float64)
+# V_exact_int = np.loadtxt(get_data('V_exact.dat'),dtype=np.uint64)
 
 # --------------------------------------------------------------------------------------
 
@@ -392,7 +394,7 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
 
 
 # --------------------------------------------------------------------------------------
-def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True, verbose=True):
+def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True):
     """Compute the posterior distribution of d given the input aggregates
     Since the likelihood is given by a binomial distribution, its conjugate prior is a beta distribution.
     However, the binomial is defined on the ratio of volumes and so do the beta distribution. As a
