@@ -256,14 +256,18 @@ class Clustering(DensityEstimation):
 
         g = log_den_c - self.log_den_err
 
-        centers = self._find_density_modes(g)
+        centers, removed_centers = self._find_density_modes(g)
+        # centers= self._find_density_modes(g)
 
         Nclus = len(centers)
 
         if self.verb:
             print("Number of clusters before multimodality test=", Nclus)
 
-        cluster_init, cl_struct = self._preliminary_cluster_assignment(g, centers)
+        cluster_init, cl_struct = self._preliminary_cluster_assignment(
+            g, centers, removed_centers
+        )
+        # cluster_init, cl_struct = self._preliminary_cluster_assignment(g, centers)
 
         sec2 = time.time()
         if self.verb:
@@ -349,17 +353,44 @@ class Clustering(DensityEstimation):
                 centers.append(i)
 
         # remove centers from list if they are neighbours of higher density points
+        # centers_iter = centers.copy()
+        # for i in centers_iter:
+        #     l, m = np.where(self.dist_indices == i)
+        #     for j in range(l.shape[0]):
+        #         if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
+        #             centers.remove(i)
+        #             break
+
         centers_iter = centers.copy()
-        for i in centers_iter:
-            l, m = np.where(self.dist_indices == i)
-            for j in range(l.shape[0]):
-                if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
-                    centers.remove(i)
-                    break
 
-        return centers
+        removed_centers = []
+        for i, i_center in enumerate(centers_iter):
+            l, m = np.where(self.dist_indices == i_center)
 
-    def _preliminary_cluster_assignment(self, g, centers):
+            # keep only neighborhoods where i_center is within kstar
+            mask = m <= self.kstar[l]
+            l, m = l[mask], m[mask]
+            # index of the point of maximum density in these neighborhoods
+            max_rho = np.argmax(g[l])
+            max_rho = l[max_rho]
+
+            # if the density of 'max_rho' is higher than that of i_center,
+            # remove i_center and store [i_center,  max_rho] (see later)
+            if g[max_rho] > g[i_center]:
+
+                # check if this max_rho is already in removed centers
+                if len(removed_centers) > 0:
+                    is_valid = np.where(np.array(removed_centers)[:, 0] == max_rho)[0]
+                    # if current max_rho is in removed centers use its max_rho
+                    if is_valid.size > 0:
+                        max_rho = removed_centers[is_valid[0]][1]
+
+                removed_centers.append([i_center, max_rho])
+                centers.remove(i_center)
+
+        return centers, np.array(removed_centers)
+
+    def _preliminary_cluster_assignment(self, g, centers, removed_centers):
         """Find a preliminary assignment of points to the closest density peak.
 
         Args:
@@ -382,12 +413,44 @@ class Clustering(DensityEstimation):
         sortg = np.argsort(-g)
 
         # Perform preliminary assignation to clusters
+        maxk = self.dist_indices.shape[1]
         for j in range(self.N):
             ele = sortg[j]
             nn = 0
-            while cluster_init[ele] == -1:
+            while cluster_init[ele] == -1 and nn < maxk - 1:
                 nn = nn + 1
                 cluster_init[ele] = cluster_init[self.dist_indices[ele, nn]]
+
+            # if in ther first maxk there is no point assigned to a cluster,
+            # assign the point to the nearby center of max density
+            if cluster_init[ele] == -1:
+                # all the neighbors of ele (ele included!)
+                ele_neighbors = self.dist_indices[ele]
+
+                # indices (in 'removed_centers') of removed centers in the neighbor of ele (may include ele itself!)
+                # (all_removed_centers --> indices of the centers that have been removed)
+                all_removed_centers = removed_centers[:, 0]
+
+                _, _, ind_removed_centers_ele = np.intersect1d(
+                    ele_neighbors, all_removed_centers, return_indices=True
+                )
+
+                # indices (in 'removed_centers') of the centers of higher density
+                # in the neighborhood of 'removed centers'
+                # (higher_density_centers --> centers of higher density that have a
+                # 'removed center' in their neighborhood)
+                higher_density_centers = removed_centers[:, 1]
+                higher_density_centers_ele = higher_density_centers[
+                    ind_removed_centers_ele
+                ]
+
+                # index (in 'cluster_init') of the 'maximum density center' of such neighboring centers
+                max_center = higher_density_centers_ele[
+                    np.argmax(g[higher_density_centers_ele])
+                ]
+
+                # new_highest_neighbor = index_highest_nb_density[index_highest_nb_density]
+                cluster_init[ele] = cluster_init[max_center]
 
         # useful list of points in the clusters
         cl_struct = []
