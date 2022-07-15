@@ -17,6 +17,8 @@ import numpy as np
 from scipy.special import gammaln
 
 from dadapy._cython import cython_maximum_likelihood_opt as cml
+import time
+
 
 
 def return_not_normalised_density_kstarNN(
@@ -74,6 +76,8 @@ def return_not_normalised_density_PAk(
             (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
         )
 
+    time_maxl =0
+    start =time.time()
     for i in range(N):
         vi = np.zeros(maxk, dtype=float)
         dc[i] = distances[i, kstar[i]]
@@ -104,10 +108,17 @@ def return_not_normalised_density_PAk(
                 break
 
         if knn == 0:
+            start_maxl=time.time()
             log_den[i] = cml._nrmaxl(rr, kstar[i], vi)
+            end_maxl = time.time()
+            time_maxl += end_maxl-start_maxl
+
         else:
             log_den[i] = rr
         if log_den[i] < log_den_min:
             log_den_min = log_den[i]
+    end = time.time()
 
-    return log_den, log_den_err, dc
+    tot_time = end-start
+
+    return log_den, log_den_err, dc, tot_time, time_maxl

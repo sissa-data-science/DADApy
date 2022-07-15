@@ -258,14 +258,14 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
 
-        log_den, log_den_err, dc = return_not_normalised_density_PAk(
+        log_den, log_den_err, dc, tot_time, maxl_time = return_not_normalised_density_PAk(
             self.distances,
             self.intrinsic_dim,
             self.kstar,
             self.maxk,
             interpolation=False,
         )
-
+        print(tot_time, maxl_time)
         sec2 = time.time()
 
         if self.verb:
