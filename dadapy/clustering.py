@@ -257,7 +257,6 @@ class Clustering(DensityEstimation):
         g = log_den_c - self.log_den_err
 
         centers, removed_centers = self._find_density_modes(g)
-        # centers= self._find_density_modes(g)
 
         Nclus = len(centers)
 
@@ -267,7 +266,6 @@ class Clustering(DensityEstimation):
         cluster_init, cl_struct = self._preliminary_cluster_assignment(
             g, centers, removed_centers
         )
-        # cluster_init, cl_struct = self._preliminary_cluster_assignment(g, centers)
 
         sec2 = time.time()
         if self.verb:
@@ -352,19 +350,10 @@ class Clustering(DensityEstimation):
             if t == 0:
                 centers.append(i)
 
-        # remove centers from list if they are neighbours of higher density points
-        # centers_iter = centers.copy()
-        # for i in centers_iter:
-        #     l, m = np.where(self.dist_indices == i)
-        #     for j in range(l.shape[0]):
-        #         if (g[l[j]] > g[i]) & (m[j] <= self.kstar[l[j]]):
-        #             centers.remove(i)
-        #             break
-
         centers_iter = centers.copy()
 
         removed_centers = []
-        for i, i_center in enumerate(centers_iter):
+        for i_center in centers_iter:
             l, m = np.where(self.dist_indices == i_center)
 
             # keep only neighborhoods where i_center is within kstar
