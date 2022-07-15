@@ -127,8 +127,13 @@ class IdDiscrete(Base):
                         f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
                     )
 
+            if ~isinstance(self.X[0, 0], int):
+                print(
+                    "N.B. the data will be passed to the routine to compute distances as integers"
+                )
+
             self.distances, self.dist_indices = df.return_condensed_distances(
-                self.X, self.metric, d_max, self.period, self.njobs
+                np.array(self.X, dtype=int), self.metric, d_max, self.period, self.njobs
             )
 
         else:
@@ -310,7 +315,6 @@ class IdDiscrete(Base):
                 )
                 ** 0.5
             )
-
         elif method == "bayes":
             if self._is_w:
                 k_tot = w_eff * k_eff
@@ -328,7 +332,7 @@ class IdDiscrete(Base):
                 self.posterior_domain,
                 self.posterior,
             ) = df.beta_prior_d(
-                k_tot, n_tot, self.lk, self.ln, plot=plot, verbose=self.verb
+                k_tot, n_tot, self.lk, self.ln, plot=plot
             )
         else:
             print("select a proper method for id computation")
@@ -415,19 +419,17 @@ class IdDiscrete(Base):
                     k_eff > ddi[lk + 1]
                 ):  # increase lk until you reach the proper amount of neighbours
                     if ddi[lk + 1] != ddi[lk]:
-                        appo = (
-                            np.copy(lk) + 1
-                        )  # save at which range you last found a neighbour at a different distance
+                        # save at which range you last found a neighbour at a different distance
+                        appo = np.copy(lk) + 1
                     lk += 1
-                if (
-                    ddi[lk + 1] == k_eff
-                ):  # go to next radius if it has exactly the number of k_eff
+
+                # go to next radius if it has exactly the number of k_eff
+                if ddi[lk + 1] == k_eff:
                     lk += 1
                     self.lk[i] = np.copy(lk)
                     continue
-                if (
-                    ddi[lk] == ddi[appo]
-                ):  # go back to lower radius with same amount of neighbours if the next one is too big
+                # go back to lower radius with same amount of neighbours if the next one is too big
+                if ddi[lk] == ddi[appo]:
                     self.lk[i] = np.copy(appo)
                 else:
                     self.lk[i] = np.copy(lk)
@@ -438,7 +440,6 @@ class IdDiscrete(Base):
             self._mask = np.ones(self.N, dtype=bool)
 
         else:
-
             if k_eff is None:
                 k_eff = self.maxk - 1
             else:
@@ -903,8 +904,8 @@ class IdDiscrete(Base):
             os.system("mkdir -p " + path)
         obs = []
         mask = self._my_mask(subset)
-        n_eff = self.n[mask]  # - 1
-        k_eff = self.k[mask]  # - 1
+        n_eff = self.n[mask] - 1
+        k_eff = self.k[mask] - 1
 
         for i in range(len(k_win) - 1):
 
