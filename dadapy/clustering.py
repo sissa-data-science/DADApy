@@ -438,7 +438,6 @@ class Clustering(DensityEstimation):
                     np.argmax(g[higher_density_centers_ele])
                 ]
 
-                # new_highest_neighbor = index_highest_nb_density[index_highest_nb_density]
                 cluster_init[ele] = cluster_init[max_center]
 
         # useful list of points in the clusters
