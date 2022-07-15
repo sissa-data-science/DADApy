@@ -60,4 +60,6 @@ setup(
     extras_require={"dev": ["tox", "black", "isort", "pytest"]},
     cmdclass=cmdclass,
     ext_modules=ext_modules,
+    include_package_data=True,
+    package_data={'dadapy': ['_utils/discrete_volumes/*.dat']},
 )
