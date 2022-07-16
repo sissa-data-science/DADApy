@@ -20,14 +20,12 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
             np.ndarray[floatTYPE_t, ndim = 2] volumes):
 
     # declarations
-    cdef DTYPE_t i, j, niter, flag
+    cdef DTYPE_t                                i, j, niter, flag
+    cdef floatTYPE_t                            a, stepmax, lr, grad_a, delta_a, grad_f, delta_f, gf_tmp, l, func
+    cdef floatTYPE_t                            fepsilon    = np.finfo(float).eps
+    cdef np.ndarray[floatTYPE_t, ndim = 2]      Hess        = np.zeros((2, 2))
+    cdef np.ndarray[floatTYPE_t, ndim = 2]      HessInv     = np.zeros((2, 2))
 
-    cdef floatTYPE_t a, stepmax, lr, grad_a, delta_a, grad_f, delta_f, gf_tmp, l, func
-
-    cdef np.ndarray[floatTYPE_t, ndim = 2] Hess = np.zeros((2, 2))
-    cdef np.ndarray[floatTYPE_t, ndim = 2] HessInv = np.zeros((2, 2))
-
-    cdef floatTYPE_t fepsilon=np.finfo(float).eps
 
     #Helper funcion computes the inverse Hessian (2x2)
     def invert(np.ndarray[floatTYPE_t, ndim = 2] A, np.ndarray[floatTYPE_t, ndim = 2] B):
@@ -81,7 +79,7 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
                 delta_f = (HessInv[0,0]*grad_f+HessInv[0,1]*grad_a)
                 delta_a = (HessInv[1,0]*grad_f+HessInv[1,1]*grad_a)
 
-                #learning rate update
+                #learning rate/counter update
                 niter=niter+1
                 lr=0.1
                 if (abs(lr*delta_f) > stepmax) :
