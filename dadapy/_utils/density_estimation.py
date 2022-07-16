@@ -85,7 +85,7 @@ def return_not_normalised_density_PAk(
         )
         knn = 0
         for j in range(kstar[i]):
-            
+
             vi[j] = prefactor * (
                 pow(distances[i, j + 1], intrinsic_dim)
                 - pow(distances[i, j], intrinsic_dim)
@@ -114,7 +114,10 @@ def return_not_normalised_density_PAk(
         if log_den[i] < log_den_min:
             log_den_min = log_den[i]
 
-    return log_den, log_den_err,
+    return (
+        log_den,
+        log_den_err,
+    )
 
 
 def return_not_normalised_density_PAk_optimized(
