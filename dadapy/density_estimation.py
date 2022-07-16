@@ -28,6 +28,7 @@ from dadapy._cython import cython_density as cd
 from dadapy._utils.density_estimation import (
     return_not_normalised_density_kstarNN,
     return_not_normalised_density_PAk,
+    return_not_normalised_density_PAk_optimized,
 )
 from dadapy._utils.utils import compute_cross_nn_distances
 from dadapy.id_estimation import IdEstimation
@@ -238,7 +239,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_PAk(self, Dthr=23.92812698):
+    def compute_density_PAk(self, Dthr=23.92812698, optimized=True):
         """Compute the density of each point using the PAk estimator.
 
         Args:
@@ -258,14 +259,24 @@ class DensityEstimation(IdEstimation):
 
         sec = time.time()
 
-        log_den, log_den_err, dc, tot_time, maxl_time = return_not_normalised_density_PAk(
-            self.distances,
-            self.intrinsic_dim,
-            self.kstar,
-            self.maxk,
-            interpolation=False,
-        )
-        print(tot_time, maxl_time)
+        if optimized:
+            log_den, log_den_err, dc = return_not_normalised_density_PAk_optimized(
+                self.distances,
+                self.intrinsic_dim,
+                self.kstar,
+                self.maxk,
+                interpolation=False,
+            )
+
+        else:
+            log_den, log_den_err, dc = return_not_normalised_density_PAk(
+                self.distances,
+                self.intrinsic_dim,
+                self.kstar,
+                self.maxk,
+                interpolation=False,
+            )
+
         sec2 = time.time()
 
         if self.verb:
