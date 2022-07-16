@@ -85,11 +85,12 @@ def return_not_normalised_density_PAk(
         )
         knn = 0
         for j in range(kstar[i]):
-
+            
             vi[j] = prefactor * (
                 pow(distances[i, j + 1], intrinsic_dim)
                 - pow(distances[i, j], intrinsic_dim)
             )
+
             # to avoid easy overflow
             #   maybe try to add a warning to the previous implementation:
             #   in well behaved cases (e.g. IDs order of tens or lower) previous implementation
@@ -100,7 +101,7 @@ def return_not_normalised_density_PAk(
             # exponent = intrinsic_dim * np.log(r1) + np.log(
             #     1 - (r / r1) ** intrinsic_dim
             # )
-            # vi[i, j] = prefactor * np.exp(exponent)
+            # vi[j] = prefactor * np.exp(exponent)
 
             if vi[j] < 1.0e-300:
                 knn = 1
@@ -108,14 +109,12 @@ def return_not_normalised_density_PAk(
 
         if knn == 0:
             log_den[i] = cml._nrmaxl(rr, kstar[i], vi)
-            end_maxl = time.time()
-
         else:
             log_den[i] = rr
         if log_den[i] < log_den_min:
             log_den_min = log_den[i]
 
-    return log_den, log_den_err, dc
+    return log_den, log_den_err,
 
 
 def return_not_normalised_density_PAk_optimized(
