@@ -29,7 +29,6 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
 
     cdef floatTYPE_t fepsilon=np.finfo(float).eps
 
-
     #Helper funcion computes the inverse Hessian (2x2)
     def invert(np.ndarray[floatTYPE_t, ndim = 2] A, np.ndarray[floatTYPE_t, ndim = 2] B):
         cdef floatTYPE_t detinv
@@ -42,7 +41,7 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
 
     N = F.shape[0]
     for i in range(N):
-        
+
         flag = 0
         for vol in volumes[i]:
             if vol<1.0e-300:
@@ -52,39 +51,12 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
         if flag==0:
             a=0.
             stepmax=0.1*abs(F[i])
-            grad_f = float(kstar[i])
-            grad_a = float(kstar[i] + 1) * float(kstar[i]) / 2.
-
-            for j in range(kstar[i]):
-                l=float(j+1)
-
-                gf_tmp = volumes[i, j]*exp(F[i]+a*l)
-
-                grad_f = grad_f - gf_tmp
-                grad_a = grad_a - l*gf_tmp
-
-                Hess[0,0] = Hess[0,0] - gf_tmp
-                Hess[0,1] = Hess[0,1] - l*gf_tmp
-                Hess[1,1] = Hess[1,1] - l**2*gf_tmp
-
-            Hess[1,0]=Hess[0,1]
-            invert(Hess, HessInv)
-
             func=100.
             niter=0
-            while ( ((func)>1e-3) and (niter < 10000) ):
 
-                delta_f = (HessInv[0,0]*grad_f+HessInv[0,1]*grad_a)
-                delta_a = (HessInv[1,0]*grad_f+HessInv[1,1]*grad_a)
+            while ( ((func)>1e-3) and (niter < 10001) ):
 
-                niter=niter+1
-                lr=0.1
-                if (abs(lr*delta_f) > stepmax) :
-                    lr=abs(stepmax/delta_f)
-
-                F[i] = F[i] - lr*delta_f
-                a = a - lr*delta_a
-
+                #hessian and gradient update
                 grad_f = float(kstar[i])
                 grad_a = float(kstar[i] + 1) * float(kstar[i]) / 2.
                 Hess[0,0]=0.
@@ -105,6 +77,21 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
 
                 invert(Hess, HessInv)
 
+                #parameter step calculation
+                delta_f = (HessInv[0,0]*grad_f+HessInv[0,1]*grad_a)
+                delta_a = (HessInv[1,0]*grad_f+HessInv[1,1]*grad_a)
+
+                #learning rate update
+                niter=niter+1
+                lr=0.1
+                if (abs(lr*delta_f) > stepmax) :
+                    lr=abs(stepmax/delta_f)
+
+                #parameter update
+                F[i] = F[i] - lr*delta_f
+                a = a - lr*delta_a
+
+                #
                 if ((abs(a) <= fepsilon ) or (abs(F[i]) <= fepsilon )):
                     func = max(abs(grad_f),abs(grad_a))
                 else:
