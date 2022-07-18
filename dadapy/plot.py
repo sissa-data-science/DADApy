@@ -308,12 +308,14 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
     x = []
     y = []
     label = []
+    join_distance = []
     for i in range(len(sorted_elements)):
         label.append(sorted_elements[i])
         j = Data.cluster_centers[label[i]]
         y.append(Data.log_den[j])
         x.append(add + 0.5 * pop[sorted_elements[i]])
         add = add + pop[sorted_elements[i]]
+        join_distance.append(add)
 
     xs = x.copy()
     ys = y.copy()
@@ -323,7 +325,10 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
         c1 = label.index(Li1[jj])
         c2 = label.index(Li2[jj])
         label.append(L[jj])
-        x.append((x[c1] + x[c2]) / 2.0)
+        if c1 < len(sorted_elements):
+            x.append(join_distance[c1])
+        else:
+            x.append((x[c1] + x[c2]) / 2.0)
         ynew = Fmax - Ldis[jj]
         y.append(ynew)
         x1 = x[c1]
