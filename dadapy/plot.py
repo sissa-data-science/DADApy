@@ -370,7 +370,13 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
             c=cc,
             weight="bold",
         )
-    plt.xlim([0, xr])
+    plt.xlim([-0.02 * xr, xr])
+    xname = "Population"
+    if logscale:
+        xname = "ln(Population)"
+        plt.xlim([0, xr])
+    plt.xlabel(xname)
+    plt.ylabel(r"ln($\rho$)")
     if savefig != "":
         plt.savefig(savefig)
     plt.show()
