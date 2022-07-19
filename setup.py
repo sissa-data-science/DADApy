@@ -32,6 +32,15 @@ ext_modules += [
 
 ext_modules += [
     Extension(
+        "dadapy._cython.cython_maximum_likelihood_opt_full",
+        sources=["dadapy/_cython/cython_maximum_likelihood_opt_full.c"],
+        include_dirs=[get_numpy_include()],
+    )
+]
+
+
+ext_modules += [
+    Extension(
         "dadapy._cython.cython_density",
         sources=["dadapy/_cython/cython_density.c"],
         include_dirs=[get_numpy_include()],
