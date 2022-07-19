@@ -191,14 +191,14 @@ def plot_DecGraph(Data, savefig=""):
 def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
     """Generate a visualisation of the topography computed with ADP.
 
-    This visualisation fundamentally corresponds to a hierarchy of the clusters build
+    This visualisation fundamentally corresponds to a hierarchy of the clusters built
     with Single Linkage taking as similarity measure the density at the
     border between clusters.
     At difference from classical dendrograms, where all the branches have the same height,
     in this case the height of the branches is proportional to the density of the cluster
     centre.
     To convey more information, the distance in the x-axis between
-    clusters is proportional to the population (or its logarithm). TODO: Alex, is this sentence true?
+    clusters is proportional to the population (or its logarithm).
 
     Args:
         Data: A dadapy data object for which ADP has been already run.
