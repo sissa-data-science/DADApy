@@ -21,6 +21,7 @@ The code can be found on GitHub at https://github.com/sissa-data-science/DADApy.
    jupyter_example_1
    jupyter_example_2
    jupyter_example_3
+   jupyter_example_4
    hands_on_tutorial_at_SISSA
    citing
    
