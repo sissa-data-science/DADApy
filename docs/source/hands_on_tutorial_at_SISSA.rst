@@ -20,5 +20,5 @@ Finally, the three Colab notebooks used in the tutorial are
  * `Tutorial 1: Intrinsic dimension estimation <https://colab.research.google.com/drive/1tW6PsTOiWfDFqi5mIV2k9l7zSvsvTaLW?usp=sharing>`_
  * `Tutorial 2: Density and density peaks estimation <https://colab.research.google.com/drive/1eOZLPr-sEegujRSYNQ20JL52_LEDwLko?usp=sharing>`_
 
-and the dataset mentioned at the end for experimenting freely with the package can be download from
-`here <https://drive.google.com/drive/folders/1zmVYwNCbnpMtlRFnplZB4pYWmxLdG1cG?usp=sharing>`_.
+and the notebook mentioned at the end for experimenting freely with the package is available
+`here <https://github.com/sissa-data-science/DADApy/blob/main/examples/notebook_beta_hairpin.ipynb>`_.
