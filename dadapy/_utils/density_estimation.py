@@ -136,10 +136,32 @@ def return_not_normalised_density_PAk_optimized(
         intrinsic_dim / 2.0 * np.log(np.pi) - gammaln((intrinsic_dim + 2.0) / 2.0)
     )
     indices_radii = np.arange(max(kstar) + 1)
-    volumes = prefactor * (
-        distances[:, indices_radii[1:]] ** intrinsic_dim
-        - distances[:, indices_radii[:-1]] ** intrinsic_dim
-    )
+    r = distances[:, indices_radii[:-1]]
+    r1 = distances[:, indices_radii[1:]]
+    ratio = r / r1
+
+    mask = np.abs(ratio - 1.0) < np.finfo(r.dtype).resolution
+    if np.any(mask):
+        warnings.warn(
+            f'Found {np.sum(mask)} nearest neighbours at identical distance, adding a small amount of noise'
+        )
+        ratio[mask] = 10 * np.finfo(r.dtype).resolution
+
+    exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio**intrinsic_dim)
+
+    overflow = exponent > 300
+    if np.any(overflow):
+        warnings.warn(
+            f'ID too high. Found {np.sum(overflow)} shell volumes > e^300: settting volumes to e^300'
+        )
+        exponent[overflow] = np.random.normal(size=(np.sum(overflow))) + 300
+
+    volumes = prefactor * np.exp(exponent)
+    # volumes = prefactor * (
+    #     distances[:, indices_radii[1:]] ** intrinsic_dim
+    #     - distances[:, indices_radii[:-1]] ** intrinsic_dim
+    # )
+
 
     # caluculation of the NEGATIVE free energy that maximizes the likelihood
     starting_roots = logkstars - (
