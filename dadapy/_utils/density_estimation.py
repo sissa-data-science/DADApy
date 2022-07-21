@@ -145,7 +145,11 @@ def return_not_normalised_density_PAk_optimized(
     starting_roots = logkstars - (
         np.log(np.repeat(prefactor, N)) + intrinsic_dim * np.log(dc)
     )
-    log_den = cml_full._nrmaxl(starting_roots, kstar, volumes)
+    log_den, is_singular = cml_full._nrmaxl(starting_roots, kstar, volumes)
+    if is_singular:
+        warnings.warn(
+            f"Hessian matrix in NR max likelihood maximization is sigular: using fixed point step"
+        )
 
     return log_den, log_den_err, dc
 
