@@ -88,7 +88,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kNN(self, k=10):
+    def compute_density_kNN(self, k=10, bias = False):
         """Compute the density of each point using a simple kNN estimator.
 
         Args:
@@ -107,7 +107,7 @@ class DensityEstimation(IdEstimation):
         self.set_kstar(k)
 
         log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
-            self.distances, self.intrinsic_dim, self.kstar, interpolation=False
+            self.distances, self.intrinsic_dim, self.kstar, interpolation=False, bias = bias
         )
 
         # Normalise density
@@ -156,7 +156,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kstarNN(self, Dthr=23.92812698):
+    def compute_density_kstarNN(self, Dthr=23.92812698, bias = False):
         """Compute the density of each point using a simple kNN estimator with an optimal choice of k.
 
         Args:
@@ -173,7 +173,7 @@ class DensityEstimation(IdEstimation):
             print("kstar-NN density estimation started")
 
         log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
-            self.distances, self.intrinsic_dim, self.kstar, interpolation=False
+            self.distances, self.intrinsic_dim, self.kstar, interpolation=False, bias = bias
         )
 
         # Normalise density
@@ -239,7 +239,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_PAk(self, Dthr=23.92812698, optimized=True):
+    def compute_density_PAk(self, Dthr=23.92812698, optimized=True, bias = False):
         """Compute the density of each point using the PAk estimator.
 
         Args:
@@ -266,6 +266,7 @@ class DensityEstimation(IdEstimation):
                 self.kstar,
                 self.maxk,
                 interpolation=False,
+                bias = bias
             )
 
         else:
@@ -275,6 +276,7 @@ class DensityEstimation(IdEstimation):
                 self.kstar,
                 self.maxk,
                 interpolation=False,
+                bias = bias
             )
 
         sec2 = time.time()
