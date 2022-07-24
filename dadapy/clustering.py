@@ -26,6 +26,7 @@ import numpy as np
 import scipy as sp
 
 from dadapy._cython import cython_clustering as cf
+from dadapy._cython import cython_clustering_v2 as cf2
 from dadapy.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()
@@ -79,6 +80,7 @@ class Clustering(DensityEstimation):
         self,
         Z=1.65,
         halo=False,
+        v2 = False
     ):
         """Compute clustering according to the algorithm DPA.
 
@@ -107,7 +109,6 @@ class Clustering(DensityEstimation):
         # Make all values of log_den positives (this is important to help convergence)
         # even when subtracting the value Z*log_den_err
         log_den_min = np.min(self.log_den - Z * self.log_den_err)
-
         log_den_c = self.log_den - log_den_min + 1
 
         # Putative modes of the PDF as preliminary clusters
@@ -116,19 +117,32 @@ class Clustering(DensityEstimation):
         # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
         seci = time.time()
 
-        out = cf._compute_clustering(
-            Z,
-            halo,
-            self.kstar,
-            self.dist_indices.astype(int),
-            self.maxk,
-            self.verb,
-            self.log_den_err,
-            log_den_min,
-            log_den_c,
-            g,
-            self.N,
-        )
+        if v2:
+            out = cf2._compute_clustering(
+                Z,
+                halo,
+                self.kstar,
+                self.dist_indices.astype(int),
+                self.maxk,
+                self.verb,
+                self.log_den_err,
+                log_den_c,
+                g,
+                self.N,
+            )
+        else:
+            out = cf._compute_clustering(
+                Z,
+                halo,
+                self.kstar,
+                self.dist_indices.astype(int),
+                self.maxk,
+                self.verb,
+                self.log_den_err,
+                log_den_c,
+                g,
+                self.N,
+            )
 
         secf = time.time()
 
@@ -137,15 +151,15 @@ class Clustering(DensityEstimation):
         self.cluster_assignment = out[2]
         self.cluster_centers = out[3]
         out_bord = out[4]
-        log_den_min = out[5]
-        self.log_den_bord_err = out[6]
-        self.bord_indices = out[7]
+        self.log_den_bord_err = out[5]
+        self.bord_indices = out[6]
 
         self.log_den_bord = out_bord + log_den_min - 1
 
         if self.verb:
             print(f"Clustering finished, {self.N_clusters} clusters found")
             print(f"total time is, {secf - seci}")
+        
 
         return self.cluster_assignment
 
@@ -983,6 +997,7 @@ class Clustering(DensityEstimation):
         log_den_bord_m += log_den_bord_m.T
         log_den_bord_err_m += log_den_bord_err_m.T
         bord_indices_m += bord_indices_m.T
+
         log_den_bord_m[np.diag_indices(N_clusters)] =-1
 
         Last_cls = np.empty(self.N, dtype=int)
