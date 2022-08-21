@@ -367,7 +367,7 @@ def _compute_clustering(floatTYPE_t                         Z,
             cluster_indices.append(cl_struct[i])
             cluster_centers.append(centers[i])
 
-    bord_indices_m = np.zeros((N_clusters, N_clusters), dtype=int)
+    bord_indices_m = -np.ones((N_clusters, N_clusters), dtype=int)
     log_den_bord_m = np.zeros((N_clusters, N_clusters), dtype=float)
     log_den_bord_err_m = np.zeros((N_clusters, N_clusters), dtype=float)
 
@@ -377,13 +377,13 @@ def _compute_clustering(floatTYPE_t                         Z,
             j, k = mapping[ saddle_indices[i, 1]  ], mapping[ saddle_indices[i, 2] ]
 
             log_den_bord_m[j, k] = saddle_density[i, 0]
-            log_den_bord_m[j, k] = log_den_bord_m[k, j]
+            log_den_bord_m[k, j] = log_den_bord_m[j, k]
 
             log_den_bord_err_m[j, k] = saddle_density[i, 1]
-            log_den_bord_err_m[j, k] = log_den_bord_err_m[k, j]
+            log_den_bord_err_m[k, j] = log_den_bord_err_m[j, k]
 
             bord_indices_m[j, k] = saddle_indices[i, 0]
-            bord_indices_m[j, k] = bord_indices_m[k, j]
+            bord_indices_m[k, j] = bord_indices_m[j, k]
 
     log_den_bord_m[np.diag_indices(N_clusters)] =-1
 

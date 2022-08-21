@@ -96,7 +96,7 @@ class Clustering(DensityEstimation):
 
         """
         if self.log_den is None:
-            self.compute_density_PAk()
+            self.compute_density_PAk(optimized=True)
 
         if self.verb:
             print("Clustering started")
@@ -145,11 +145,9 @@ class Clustering(DensityEstimation):
         self.N_clusters = out[1]
         self.cluster_assignment = out[2]
         self.cluster_centers = out[3]
-        out_bord = out[4]
+        self.log_den_bord = out[4] + log_den_min - 1
         self.log_den_bord_err = out[5]
         self.bord_indices = out[6]
-
-        self.log_den_bord = out_bord + log_den_min - 1
 
         if self.verb:
             print(f"Clustering finished, {self.N_clusters} clusters found")
@@ -242,7 +240,7 @@ class Clustering(DensityEstimation):
         return self.cluster_assignment
 
     def compute_clustering_ADP_pure_python(  # noqa: C901
-        self, Z=1.65, halo=False, new_version=True
+        self, Z=1.65, halo=False, v2=False
     ):
         """Compute ADP clustering, but without the cython optimization."""
         if self.log_den is None:
@@ -283,7 +281,7 @@ class Clustering(DensityEstimation):
 
         # Find border points between putative clusters
         sec = time.time()
-        if not new_version:
+        if not v2:
             (
                 log_den_bord,
                 log_den_bord_err,
@@ -301,9 +299,16 @@ class Clustering(DensityEstimation):
             print("{0:0.2f} seconds identifying the borders".format(sec2 - sec))
 
         sec = time.time()
-        if not new_version:
-            surviving_clusters = self._multimodality_test(
-                Nclus, Z, log_den_c, centers, cl_struct, log_den_bord, log_den_bord_err
+        if not v2:
+            surviving_clusters, bord_index = self._multimodality_test(
+                Nclus,
+                Z,
+                log_den_c,
+                centers,
+                cl_struct,
+                log_den_bord,
+                log_den_bord_err,
+                bord_index,
             )
         else:
             (
@@ -318,7 +323,7 @@ class Clustering(DensityEstimation):
         if self.verb:
             print("{0:0.2f} seconds with multimodality test".format(sec2 - sec))
 
-        if not new_version:
+        if not v2:
             (
                 N_clusters,
                 cluster_assignment,
@@ -576,7 +581,15 @@ class Clustering(DensityEstimation):
         return log_den_bord, log_den_bord_err, bord_index
 
     def _multimodality_test(
-        self, Nclus, Z, log_den_c, centers, cl_struct, log_den_bord, log_den_bord_err
+        self,
+        Nclus,
+        Z,
+        log_den_c,
+        centers,
+        cl_struct,
+        log_den_bord,
+        log_den_bord_err,
+        bord_index,
     ):
         """Merge couples of peaks if these are not statistically significant."""
         check = 1
@@ -654,17 +667,21 @@ class Clustering(DensityEstimation):
                 for i in range(Nclus):
                     if i != imod and i != jmod:
                         if log_den_bord[imod][i] < log_den_bord[jmod][i]:
-                            # print(i, log_den_bord[imod][i], log_den_bord[jmod][i])
+                            bord_index[imod][i] = bord_index[jmod][i]
+                            bord_index[i][imod] = bord_index[imod][i]
+
                             log_den_bord[imod][i] = log_den_bord[jmod][i]
                             log_den_bord[i][imod] = log_den_bord[imod][i]
+
                             log_den_bord_err[imod][i] = log_den_bord_err[jmod][i]
                             log_den_bord_err[i][imod] = log_den_bord_err[imod][i]
+
                         log_den_bord[jmod][i] = -1
                         log_den_bord[i][jmod] = log_den_bord[jmod][i]
                         log_den_bord_err[jmod][i] = 0
                         log_den_bord_err[i][jmod] = log_den_bord_err[jmod][i]
 
-        return surviving_clusters
+        return surviving_clusters, bord_index
 
     def _finalise_clustering(  # noqa: C901
         self,
@@ -702,6 +719,7 @@ class Clustering(DensityEstimation):
                 jj = nnum[j]
                 for k in range(Nclus):
                     if surviving_clusters[k] == 1:
+
                         kk = nnum[k]
                         log_den_bord_m[jj][kk] = log_den_bord[j][k]
                         log_den_bord_err_m[jj][kk] = log_den_bord_err[j][k]
@@ -726,6 +744,7 @@ class Clustering(DensityEstimation):
 
         log_den_bord_m = np.copy(log_den_bord_m)
 
+        # print(bord_indices_m)
         return (
             N_clusters,
             cluster_assignment,
@@ -932,7 +951,7 @@ class Clustering(DensityEstimation):
                 saddle_indices = self._find_neighbor_clusters_v2(
                     saddle_density, saddle_indices, to_remove, nsaddles, c1, c2
                 )
-
+                #
                 # neighbors1 = np.zeros((len(saddle_density), 3), dtype=int)
                 # neighbors2 = np.zeros((len(saddle_density), 3), dtype=int)
                 # m, l = 0, 0
@@ -1014,13 +1033,13 @@ class Clustering(DensityEstimation):
         cluster_indices, cluster_centers = [], []
         for i in range(Nclus):
             if surviving_clusters[i] == 1:
-                mapping[i] = N_clusters  # centeri is surviving
+                mapping[i] = N_clusters  # center is surviving
                 N_clusters += 1
                 # !!!!!! check the index i is correct?
                 cluster_indices.append(cl_struct[i])
                 cluster_centers.append(centers[i])
 
-        bord_indices_m = np.zeros((N_clusters, N_clusters), dtype=int)
+        bord_indices_m = -np.ones((N_clusters, N_clusters), dtype=int)
         log_den_bord_m = np.zeros((N_clusters, N_clusters), dtype=float)
         log_den_bord_err_m = np.zeros((N_clusters, N_clusters), dtype=float)
 
@@ -1031,12 +1050,13 @@ class Clustering(DensityEstimation):
                     mapping[saddle_indices[i, 2]],
                 )  # map the two valid centers in the corresponding valid new cluster labels
                 log_den_bord_m[j, k] = saddle_density[i, 0]
-                log_den_bord_err_m[j, k] = saddle_density[i, 1]
-                bord_indices_m[j, k] = saddle_indices[i, 0]
+                log_den_bord_m[k, j] = log_den_bord_m[j, k]
 
-        log_den_bord_m += log_den_bord_m.T
-        log_den_bord_err_m += log_den_bord_err_m.T
-        bord_indices_m += bord_indices_m.T
+                log_den_bord_err_m[j, k] = saddle_density[i, 1]
+                log_den_bord_err_m[k, j] = log_den_bord_err_m[j, k]
+
+                bord_indices_m[j, k] = saddle_indices[i, 0]
+                bord_indices_m[k, j] = bord_indices_m[j, k]
 
         log_den_bord_m[np.diag_indices(N_clusters)] = -1
 

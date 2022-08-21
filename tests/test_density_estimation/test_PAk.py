@@ -56,11 +56,21 @@ def test_compute_density_PAk():
 
     X = np.load(filename)[:25]
 
+    # optimized version
     de = DensityEstimation(coordinates=X)
+    log_den_opt, log_den_err_opt = de.compute_density_PAk(optimized=True)
 
-    de.compute_density_PAk()
+    # original version
+    de = DensityEstimation(coordinates=X)
+    log_den, log_den_err = de.compute_density_PAk(optimized=False)
 
-    np.set_printoptions(8)
-    print(de.log_den)
+    # np.set_printoptions(8)
+    # print(de.log_den)
 
-    assert np.allclose(de.log_den, expected_log_den)
+    # check consistency with ground truth
+    assert np.allclose(log_den_opt, expected_log_den)
+
+    # check consistency between original and optimized
+    assert np.allclose(log_den, log_den_opt)
+
+    assert np.allclose(log_den_err, log_den_err_opt)

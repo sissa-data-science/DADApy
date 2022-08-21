@@ -228,7 +228,6 @@ def _compute_clustering(floatTYPE_t Z,
                     Point_bord[c, cp] = p1
 
     # Symmetrize matrix
-
     for i in range(Nclus - 1):
         for j in range(i + 1, Nclus):
             if (Point_bord[i, j] != -1):
@@ -314,8 +313,13 @@ def _compute_clustering(floatTYPE_t Z,
             for i in range(Nclus):
                 if (i != imod and i != jmod):
                     if (Rho_bord[imod, i] < Rho_bord[jmod, i]):
+
+                        Point_bord[imod, i] = Point_bord[jmod, i]
+                        Point_bord[i, imod] = Point_bord[imod, i]
+
                         Rho_bord[imod, i] = Rho_bord[jmod, i]
                         Rho_bord[i, imod] = Rho_bord[imod, i]
+
                         Rho_bord_err[imod, i] = Rho_bord_err[jmod, i]
                         Rho_bord_err[i, imod] = Rho_bord_err[imod, i]
 
