@@ -66,10 +66,9 @@ class Base:
             ), "Coordinates must be in numpy ndarray format"
 
             if self.X.dtype == np.float32:
-                self.X = self.X.astype(np.float64, casting = 'safe')
+                self.X = self.X.astype(np.float64, casting="safe")
 
-            self.dtype = self.X.dtype
-
+            # self.dtype = self.X.dtype
             self.N = self.X.shape[0]
             self.dims = coordinates.shape[1]
             self.distances = None
@@ -114,13 +113,15 @@ class Base:
                 )
 
             if self.distances.dtype == np.float32:
-                self.distances = self.distances.astype(np.float64, casting = 'safe')
+                self.distances = self.distances.astype(np.float64, casting="safe")
 
-            self.dtype = self.distances.dtype
-        try:
-            self.eps = np.finfo(self.dtype).eps
-        except BaseException:
-            self.eps = None
+        self.dtype = np.float64
+        self.eps = np.finfo(self.dtype).eps
+        #     self.dtype = self.distances.dtype
+        # try:
+        #     self.eps = np.finfo(self.dtype).eps
+        # except BaseException:
+        #     self.eps = None
 
     # ----------------------------------------------------------------------------------------------
 

@@ -76,12 +76,7 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering_ADP(
-        self,
-        Z=1.65,
-        halo=False,
-        v2 = False
-    ):
+    def compute_clustering_ADP(self, Z=1.65, halo=False, v2=False):
         """Compute clustering according to the algorithm DPA.
 
         The only free parameter is the merging factor Z, which controls how the different density peaks are merged
@@ -159,7 +154,6 @@ class Clustering(DensityEstimation):
         if self.verb:
             print(f"Clustering finished, {self.N_clusters} clusters found")
             print(f"total time is, {secf - seci}")
-        
 
         return self.cluster_assignment
 
@@ -248,10 +242,7 @@ class Clustering(DensityEstimation):
         return self.cluster_assignment
 
     def compute_clustering_ADP_pure_python(  # noqa: C901
-        self,
-        Z=1.65,
-        halo=False,
-        new_version = True
+        self, Z=1.65, halo=False, new_version=True
     ):
         """Compute ADP clustering, but without the cython optimization."""
         if self.log_den is None:
@@ -293,11 +284,17 @@ class Clustering(DensityEstimation):
         # Find border points between putative clusters
         sec = time.time()
         if not new_version:
-            log_den_bord, log_den_bord_err, bord_index = self._find_borders_between_clusters(
-                Nclus, g, cl_struct, centers, cluster_init, log_den_c)
+            (
+                log_den_bord,
+                log_den_bord_err,
+                bord_index,
+            ) = self._find_borders_between_clusters(
+                Nclus, g, cl_struct, centers, cluster_init, log_den_c
+            )
         else:
-            saddle_density, saddle_indices = self._my_find_borders_between_clusters(
-                Nclus, g, cl_struct, centers, cluster_init, log_den_c)
+            saddle_density, saddle_indices = self._find_borders_between_clusters_v2(
+                Nclus, g, cl_struct, centers, cluster_init, log_den_c
+            )
 
         sec2 = time.time()
         if self.verb:
@@ -309,7 +306,11 @@ class Clustering(DensityEstimation):
                 Nclus, Z, log_den_c, centers, cl_struct, log_den_bord, log_den_bord_err
             )
         else:
-            surviving_clusters, saddle_density, saddle_indices = self._my_multimodality_test(
+            (
+                surviving_clusters,
+                saddle_density,
+                saddle_indices,
+            ) = self._multimodality_test_v2(
                 Nclus, Z, log_den_c, centers, cl_struct, saddle_density, saddle_indices
             )
 
@@ -347,13 +348,14 @@ class Clustering(DensityEstimation):
                 log_den_bord,
                 log_den_bord_err,
                 bord_indices,
-            ) = self._my_finalise_clustering(
+            ) = self._finalise_clustering_v2(
                 Nclus,
                 halo,
                 surviving_clusters,
                 cl_struct,
                 centers,
-                log_den_bord,
+                saddle_density,
+                saddle_indices,
                 log_den_c,
             )
 
@@ -521,31 +523,37 @@ class Clustering(DensityEstimation):
 
         for c in range(Nclus):
 
-            for p1 in cl_struct[c]: #p1 points in a given cluster
+            for p1 in cl_struct[c]:  # p1 points in a given cluster
                 if p1 in centers:
                     pp = -1
 
                 else:
-                    #a point p2 in the neighborhood of p1 belongs to a cluster cp different from p1
+                    # a point p2 in the neighborhood of p1 belongs to a cluster cp different from p1
                     for k in range(1, self.kstar[p1] + 1):
                         p2 = self.dist_indices[p1, k]
                         pp = -1
-                        if cluster_init[p2] != c:        #a point in the neighborhood of p1 belongs to another cluster
+                        if (
+                            cluster_init[p2] != c
+                        ):  # a point in the neighborhood of p1 belongs to another cluster
                             pp = p2
-                            cp = cluster_init[pp]        #neighbor cluster index
+                            cp = cluster_init[pp]  # neighbor cluster index
                             break
                 if pp != -1:
                     for k in range(1, self.maxk):
-                        po = self.dist_indices[pp, k]   #pp here is p2
-                        if po == p1:                    #p1 is the closest point of p2 belonging to c
+                        po = self.dist_indices[pp, k]  # pp here is p2
+                        if po == p1:  # p1 is the closest point of p2 belonging to c
                             break
-                        if cluster_init[po] == c:       #there is a point of c closest to p2 than p1
+                        if (
+                            cluster_init[po] == c
+                        ):  # there is a point of c closest to p2 than p1
                             pp = -1
                             break
 
-                #here check if the border point is a saddle point
+                # here check if the border point is a saddle point
                 if pp != -1:
-                    if g[p1] > log_den_bord[c][cp]:     #g = log_den_c - self.log_den_err different from next log_den_bord without log_den_err
+                    if (
+                        g[p1] > log_den_bord[c][cp]
+                    ):  # g = log_den_c - self.log_den_err different from next log_den_bord without log_den_err
                         log_den_bord[c][cp] = g[p1]
                         log_den_bord[cp][c] = g[p1]
                         bord_index[cp][c] = p1
@@ -566,8 +574,6 @@ class Clustering(DensityEstimation):
             log_den_bord_err[i][i] = 0.0
 
         return log_den_bord, log_den_bord_err, bord_index
-
-
 
     def _multimodality_test(
         self, Nclus, Z, log_den_c, centers, cl_struct, log_den_bord, log_den_bord_err
@@ -609,10 +615,10 @@ class Clustering(DensityEstimation):
             if check == 1:
                 # start merging from border of higher density
                 barrier_index = pos.index(max(pos))
-                #print(barrier_index)
+                # print(barrier_index)
                 imod = ipos[barrier_index]
                 jmod = jpos[barrier_index]
-                #print(imod, jmod)
+                # print(imod, jmod)
 
                 # normalised log density of first and second peak to be merged
                 c1 = (log_den_c[centers[imod]] - log_den_bord[imod][jmod]) / (
@@ -629,11 +635,11 @@ class Clustering(DensityEstimation):
                     jmod = imod
                     imod = tmp
 
-                #print(jmod)
+                # print(jmod)
 
                 # cluster jmod is removed
                 surviving_clusters[jmod] = 0
-                #print(jmod, surviving_clusters[: 10])
+                # print(jmod, surviving_clusters[: 10])
                 # log_den_bord between the removed peaks is set to -1 and error to 0
                 log_den_bord[imod][jmod] = -1.0
                 log_den_bord[jmod][imod] = -1.0
@@ -648,7 +654,7 @@ class Clustering(DensityEstimation):
                 for i in range(Nclus):
                     if i != imod and i != jmod:
                         if log_den_bord[imod][i] < log_den_bord[jmod][i]:
-                            #print(i, log_den_bord[imod][i], log_den_bord[jmod][i])
+                            # print(i, log_den_bord[imod][i], log_den_bord[jmod][i])
                             log_den_bord[imod][i] = log_den_bord[jmod][i]
                             log_den_bord[i][imod] = log_den_bord[imod][i]
                             log_den_bord_err[imod][i] = log_den_bord_err[jmod][i]
@@ -659,7 +665,6 @@ class Clustering(DensityEstimation):
                         log_den_bord_err[i][jmod] = log_den_bord_err[jmod][i]
 
         return surviving_clusters
-
 
     def _finalise_clustering(  # noqa: C901
         self,
@@ -731,8 +736,7 @@ class Clustering(DensityEstimation):
             bord_indices_m,
         )
 
-
-    def _my_find_borders_between_clusters(  # noqa: C901
+    def _find_borders_between_clusters_v2(  # noqa: C901
         self, Nclus, g, cl_struct, centers, cluster_init, log_den_c
     ):
         """Find saddle points between clusters.
@@ -759,49 +763,62 @@ class Clustering(DensityEstimation):
 
         saddle_count = 0
         for c in range(Nclus):
-            #saddle point index, saddle point density, saddle point error, cluster1 index, cluster2 index, valid_saddle
-            #create another array of indices
+            # saddle point index, saddle point density, saddle point error, cluster1 index, cluster2 index, valid_saddle
+            # create another array of indices
 
-            saddle_density_tmp = np.zeros((Nclus, 3), dtype = float)    #density, density_error, normalized_density
-            saddle_indices_tmp = -np.ones((Nclus, 4), dtype = int)      #saddle point, cluster1, cluster2, is_valid saddle
-            #log_den_bord_tmp = -np.ones((Nclus, 6), dtype=float)
+            saddle_density_tmp = np.zeros(
+                (Nclus, 3), dtype=float
+            )  # density, density_error, normalized_density
+            saddle_indices_tmp = -np.ones(
+                (Nclus, 4), dtype=int
+            )  # saddle point, cluster1, cluster2, is_valid saddle
+            # log_den_bord_tmp = -np.ones((Nclus, 6), dtype=float)
 
             if c == 0:
                 saddle_density = saddle_density_tmp
-                saddle_indices = saddle_indices_tmp                                 #array of saddle points of cluster  c (will be eventually much less than Nclus)
+                saddle_indices = saddle_indices_tmp
+                # array of saddle points of cluster  c (will be eventually much less than Nclus)
             else:
-                saddle_density = np.concatenate((saddle_density, saddle_density_tmp), axis = 0)
-                saddle_indices = np.concatenate((saddle_indices, saddle_indices_tmp), axis = 0)
+                saddle_density = np.concatenate(
+                    (saddle_density, saddle_density_tmp), axis=0
+                )
+                saddle_indices = np.concatenate(
+                    (saddle_indices, saddle_indices_tmp), axis=0
+                )
 
-            for p1 in cl_struct[c]:                                 #p1 point in a given cluster
+            for p1 in cl_struct[c]:  # p1 point in a given cluster
                 if p1 in centers:
                     pp = -1
 
                 else:
-                    #a point p2 in the neighborhood of p1 belongs to a cluster cp different from p1
+                    # a point p2 in the neighborhood of p1 belongs to a cluster cp different from p1
                     for k in range(1, self.kstar[p1] + 1):
                         p2 = self.dist_indices[p1, k]
                         pp = -1
-                        if cluster_init[p2] != c:               #a point in the neighborhood of p1 belongs to another cluster
+                        if (
+                            cluster_init[p2] != c
+                        ):  # a point in the neighborhood of p1 belongs to another cluster
                             pp = p2
-                            cp = cluster_init[pp]               #neighbor cluster index
+                            cp = cluster_init[pp]  # neighbor cluster index
                             break
 
                 if pp != -1:
-                    #p1 is the closest point in c to p2
-                    for k in range(1, self.maxk):               #why maxk?
-                        po = self.dist_indices[pp, k]           #pp here is p2
-                        if po == p1:                            #p1 is the closest point of p2 belonging to c
+                    # p1 is the closest point in c to p2
+                    for k in range(1, self.maxk):  # why maxk?
+                        po = self.dist_indices[pp, k]  # pp here is p2
+                        if po == p1:  # p1 is the closest point of p2 belonging to c
                             break
-                        if cluster_init[po] == c:               #p1 is NOT the closest point of p2 belonging to c
+                        if (
+                            cluster_init[po] == c
+                        ):  # p1 is NOT the closest point of p2 belonging to c
                             pp = -1
                             break
 
-                #here check if the border point is a saddle point
+                # here check if the border point is a saddle point
                 if pp != -1:
-                    #maybe contrunct a matrix of border points [p, g, c1, c2]
-                    #in log_den_bord_tmp the cluster are coupled with indices that go from smaller to bigger
-                    if c>cp:
+                    # maybe contrunct a matrix of border points [p, g, c1, c2]
+                    # in log_den_bord_tmp the cluster are coupled with indices that go from smaller to bigger
+                    if c > cp:
                         c1 = cp
                         c2 = c
                     else:
@@ -811,21 +828,26 @@ class Clustering(DensityEstimation):
                     flag = 0
                     for i in range(saddle_count):
                         if c1 == saddle_indices[i, 1] and c2 == saddle_indices[i, 2]:
-                            flag = 1    #there is already a border point between c and cp
+                            flag = 1  # there is already a border point between c and cp
                             if g[p1] > saddle_density[i, 2]:
-                                #if c <1:                    #check that the which density is bigger
-                                    #print(g[p1], saddle_density[i, 0], p1, c1, c2)
-                                saddle_indices[i, 0] = p1                         #useful at the end
-                                saddle_density[i] = np.array( [log_den_c[p1], self.log_den_err[p1], g[p1]] )
+                                # if c <1:                    #check that the which density is bigger
+                                # print(g[p1], saddle_density[i, 0], p1, c1, c2)
+                                saddle_indices[i, 0] = p1  # useful at the end
+                                saddle_density[i] = np.array(
+                                    [log_den_c[p1], self.log_den_err[p1], g[p1]]
+                                )
                                 break
 
                     if flag == 0:
-                        #if c <1:
-                            #print(g[p1], saddle_density[saddle_count, 0], p1, c1, c2)
-                        saddle_indices[saddle_count] = np.array([p1, c1, c2, 1], dtype = int)
-                        saddle_density[saddle_count] = np.array( [log_den_c[p1], self.log_den_err[p1], g[p1]] )
-                        saddle_count+=1
-
+                        # if c <1:
+                        # print(g[p1], saddle_density[saddle_count, 0], p1, c1, c2)
+                        saddle_indices[saddle_count] = np.array(
+                            [p1, c1, c2, 1], dtype=int
+                        )
+                        saddle_density[saddle_count] = np.array(
+                            [log_den_c[p1], self.log_den_err[p1], g[p1]]
+                        )
+                        saddle_count += 1
 
             saddle_density = saddle_density[:saddle_count]
             saddle_indices = saddle_indices[:saddle_count]
@@ -834,19 +856,11 @@ class Clustering(DensityEstimation):
         saddle_density = saddle_density[sort_indices]
         saddle_indices = saddle_indices[sort_indices]
 
-
         return saddle_density[:, :2], saddle_indices
 
-
-    def _my_multimodality_test(
-        self,
-        Nclus,
-        Z,
-        log_den_c,
-        centers,
-        cl_struct,
-        saddle_density,
-        saddle_indices):
+    def _multimodality_test_v2(
+        self, Nclus, Z, log_den_c, centers, cl_struct, saddle_density, saddle_indices
+    ):
 
         """Merge couples of peaks if these are not statistically significant.
         Args:
@@ -859,18 +873,26 @@ class Clustering(DensityEstimation):
         """
         check = 1
         # all clusters are initialised as "surviving"
-        surviving_clusters = np.ones(Nclus, dtype = int)
+        surviving_clusters = np.ones(Nclus, dtype=int)
         nsaddles = len(saddle_density)
 
         while check == 1:
             check = 0
-            current_saddle = -1.
-            for i in range(nsaddles):                                               #log_den_bord already sorted
-                if saddle_indices[i, 3]==1:
-                    clus1, clus2 = saddle_indices[i, 1], saddle_indices[i, 2]      #cluster indices
-                    center1, center2 = centers[clus1], centers[clus2]              #data indices peak of clus1, clus2
+            current_saddle = -1.0
+            for i in range(nsaddles):  # log_den_bord already sorted
+                if saddle_indices[i, 3] == 1:
+                    clus1, clus2 = (
+                        saddle_indices[i, 1],
+                        saddle_indices[i, 2],
+                    )  # cluster indices
+                    center1, center2 = (
+                        centers[clus1],
+                        centers[clus2],
+                    )  # data indices peak of clus1, clus2
 
-                    a1 = log_den_c[center1] - saddle_density[i, 0]      #log_den_c is an array of the density of all the points
+                    a1 = (
+                        log_den_c[center1] - saddle_density[i, 0]
+                    )  # log_den_c is an array of the density of all the points
                     a2 = log_den_c[center2] - saddle_density[i, 0]
                     sum_err1 = self.log_den_err[center1] + saddle_density[i, 1]
                     sum_err2 = self.log_den_err[center2] + saddle_density[i, 1]
@@ -887,79 +909,94 @@ class Clustering(DensityEstimation):
                             current_saddle = saddle_density[i, 0]
 
             if check == 1:
-                saddle_indices[to_remove, -1] = 0             #the couple center1, center2 is removed
-                margin1 = max_a1/max_sum_err1
-                margin2 = max_a2/max_sum_err2
+                saddle_indices[
+                    to_remove, -1
+                ] = 0  # the couple center1, center2 is removed
+                margin1 = max_a1 / max_sum_err1
+                margin2 = max_a2 / max_sum_err2
 
-                #only the peak with the highest margin is kept:
-                #by convention we set this peak to be center1
+                # only the peak with the highest margin is kept:
+                # by convention we set this peak to be center1
                 if margin1 < margin2:
                     c1, c2 = saddle_indices[to_remove, 2], saddle_indices[to_remove, 1]
                 else:
                     c1, c2 = saddle_indices[to_remove, 1], saddle_indices[to_remove, 2]
 
-                surviving_clusters[c2] = 0                  #the second peak is removed
+                surviving_clusters[c2] = 0  # the second peak is removed
                 cl_struct[c1].extend(cl_struct[c2])
                 cl_struct[c2] = []
 
-                #select the clusters that are neighbors to cluster1 and cluster2
-                #cluster label, saddle label, position of c1/c2 in saddle_indices[:, 1:3]
-                neighbors1 = np.zeros((len(saddle_density), 3), dtype = int)
-                neighbors2 = np.zeros((len(saddle_density), 3), dtype = int)
-                m, l = 0, 0
-                for i in range(nsaddles):
-                    if i != to_remove and saddle_indices[i, 3]==1:
-                        cluster_couple = saddle_indices[i, 1:3]
+                # select the clusters that are neighbors to cluster1 and cluster2
+                # cluster label, saddle label, position of c1/c2 in saddle_indices[:, 1:3]
 
-                        if c1 in cluster_couple:
-                            neighbors1[l] = np.array([cluster_couple[0], i, 2])
-                            if cluster_couple[0] == c1:
-                                neighbors1[l] = np.array([cluster_couple[1], i, 1])
-                            l+=1
+                saddle_indices = self._find_neighbor_clusters_v2(
+                    saddle_density, saddle_indices, to_remove, nsaddles, c1, c2
+                )
 
-                        elif c2 in cluster_couple:
-                            neighbors2[m] = np.array([cluster_couple[0], i, 2])
-                            if cluster_couple[0] == c2:
-                                neighbors2[m] = np.array([cluster_couple[1], i, 1])
-                            m+=1
-
-                neighbors1, neighbors2 = neighbors1[:l], neighbors2[:m]
-
-                #check which are the common neighbors between cluster1 and cluster2
-                neighbors1 = neighbors1[neighbors1[:, 0].argsort()]
-                neighbors2 = neighbors2[neighbors2[:, 0].argsort()]
-                i, j = 0, 0
-                while i < len(neighbors1) and j < len(neighbors2):
-                    if neighbors1[i, 0] == neighbors2[j, 0]:                            #there is a common element
-                        index1, index2 = neighbors1[i, 1], neighbors2[j, 1]             #index common neighbor w.r.t cluster1
-                        if saddle_density[index1, 0] < saddle_density[index2, 0]:
-                            #if the density of the saddle is higher between cluster2 and common neighbor,
-                            #use this as new saddle between cluster1 and common neighbor
-                            saddle_density[index1, 0] = saddle_density[index2, 0]       #saddle density
-                            saddle_density[index1, 1] = saddle_density[index2, 1]       #saddle error
-                        #the couples of common elements with the c2 are "deleted"
-                        saddle_indices[index2, -1] = 0
-                        i += 1
-                        j += 1
-
-                    elif neighbors1[i, 0] < neighbors2[j, 0]:
-                        i += 1
-                    else:
-                        #neighbors of c2 which were not neighbors of c1 become neighbors of c1
-                        index2, c2_index = neighbors2[j, 1], neighbors2[j, 2]
-                        saddle_indices[index2, c2_index] = c1
-                        j += 1
-
-                #some js in the comparison may not have been taken into account
-                while j<len(neighbors2):
-                    index2, c2_index = neighbors2[j, 1], neighbors2[j, 2]
-                    saddle_indices[index2, c2_index] = c1
-                    j+=1
+                # neighbors1 = np.zeros((len(saddle_density), 3), dtype=int)
+                # neighbors2 = np.zeros((len(saddle_density), 3), dtype=int)
+                # m, l = 0, 0
+                # for i in range(nsaddles):
+                #     if i != to_remove and saddle_indices[i, 3] == 1:
+                #         cluster_couple = saddle_indices[i, 1:3]
+                #
+                #         if c1 in cluster_couple:
+                #             neighbors1[l] = np.array([cluster_couple[0], i, 2])
+                #             if cluster_couple[0] == c1:
+                #                 neighbors1[l] = np.array([cluster_couple[1], i, 1])
+                #             l += 1
+                #
+                #         elif c2 in cluster_couple:
+                #             neighbors2[m] = np.array([cluster_couple[0], i, 2])
+                #             if cluster_couple[0] == c2:
+                #                 neighbors2[m] = np.array([cluster_couple[1], i, 1])
+                #             m += 1
+                #
+                # neighbors1, neighbors2 = neighbors1[:l], neighbors2[:m]
+                #
+                # # check which are the common neighbors between cluster1 and cluster2
+                # neighbors1 = neighbors1[neighbors1[:, 0].argsort()]
+                # neighbors2 = neighbors2[neighbors2[:, 0].argsort()]
+                # i, j = 0, 0
+                # while i < len(neighbors1) and j < len(neighbors2):
+                #     if (
+                #         neighbors1[i, 0] == neighbors2[j, 0]
+                #     ):  # there is a common element
+                #         index1, index2 = (
+                #             neighbors1[i, 1],
+                #             neighbors2[j, 1],
+                #         )  # index common neighbor w.r.t cluster1
+                #         if saddle_density[index1, 0] < saddle_density[index2, 0]:
+                #             # if the density of the saddle is higher between cluster2 and common neighbor,
+                #             # use this as new saddle between cluster1 and common neighbor
+                #             saddle_density[index1, 0] = saddle_density[
+                #                 index2, 0
+                #             ]  # saddle density
+                #             saddle_density[index1, 1] = saddle_density[
+                #                 index2, 1
+                #             ]  # saddle error
+                #         # the couples of common elements with the c2 are "deleted"
+                #         saddle_indices[index2, -1] = 0
+                #         i += 1
+                #         j += 1
+                #
+                #     elif neighbors1[i, 0] < neighbors2[j, 0]:
+                #         i += 1
+                #     else:
+                #         # neighbors of c2 which were not neighbors of c1 become neighbors of c1
+                #         index2, c2_index = neighbors2[j, 1], neighbors2[j, 2]
+                #         saddle_indices[index2, c2_index] = c1
+                #         j += 1
+                #
+                # # some js in the comparison may not have been taken into account
+                # while j < len(neighbors2):
+                #     index2, c2_index = neighbors2[j, 1], neighbors2[j, 2]
+                #     saddle_indices[index2, c2_index] = c1
+                #     j += 1
 
         return surviving_clusters, saddle_density, saddle_indices
 
-
-    def _my_finalise_clustering(  # noqa: C901
+    def _finalise_clustering_v2(  # noqa: C901
         self,
         Nclus,
         halo,
@@ -970,16 +1007,16 @@ class Clustering(DensityEstimation):
         saddle_indices,
         log_den_c,
     ):
-        """"Finalise clustering."""
+        """ "Finalise clustering."""
 
         N_clusters = 0
-        mapping = -np.ones(Nclus, dtype = int)  #all original centers
+        mapping = -np.ones(Nclus, dtype=int)  # all original centers
         cluster_indices, cluster_centers = [], []
         for i in range(Nclus):
-            if surviving_clusters[i]==1:
-                mapping[i] = N_clusters             #centeri is surviving
-                N_clusters+=1
-                #!!!!!! check the index i is correct?
+            if surviving_clusters[i] == 1:
+                mapping[i] = N_clusters  # centeri is surviving
+                N_clusters += 1
+                # !!!!!! check the index i is correct?
                 cluster_indices.append(cl_struct[i])
                 cluster_centers.append(centers[i])
 
@@ -987,9 +1024,12 @@ class Clustering(DensityEstimation):
         log_den_bord_m = np.zeros((N_clusters, N_clusters), dtype=float)
         log_den_bord_err_m = np.zeros((N_clusters, N_clusters), dtype=float)
 
-        for i in range(len(saddle_density)):   #all original saddles
-            if saddle_indices[i, 3]==1:     #a valid saddle is between two valid centers
-                j, k = mapping[ saddle_indices[i, 1]  ], mapping[ saddle_indices[i, 2] ]  #map the two valid centers in the corresponding valid new cluster labels
+        for i in range(len(saddle_density)):  # all original saddles
+            if saddle_indices[i, 3] == 1:  # a valid saddle is between two valid centers
+                j, k = (
+                    mapping[saddle_indices[i, 1]],
+                    mapping[saddle_indices[i, 2]],
+                )  # map the two valid centers in the corresponding valid new cluster labels
                 log_den_bord_m[j, k] = saddle_density[i, 0]
                 log_den_bord_err_m[j, k] = saddle_density[i, 1]
                 bord_indices_m[j, k] = saddle_indices[i, 0]
@@ -998,7 +1038,7 @@ class Clustering(DensityEstimation):
         log_den_bord_err_m += log_den_bord_err_m.T
         bord_indices_m += bord_indices_m.T
 
-        log_den_bord_m[np.diag_indices(N_clusters)] =-1
+        log_den_bord_m[np.diag_indices(N_clusters)] = -1
 
         Last_cls = np.empty(self.N, dtype=int)
         for j in range(N_clusters):
@@ -1028,3 +1068,74 @@ class Clustering(DensityEstimation):
             log_den_bord_err_m,
             bord_indices_m,
         )
+
+    def _find_neighbor_clusters_v2(  # noqa: C901
+        self,
+        saddle_density,
+        saddle_indices,
+        to_remove,
+        nsaddles,
+        c1,
+        c2,
+    ):
+
+        neighbors1 = np.zeros((len(saddle_density), 3), dtype=int)
+        neighbors2 = np.zeros((len(saddle_density), 3), dtype=int)
+        len_neigh1, len_neigh2 = 0, 0
+        for i in range(nsaddles):
+            if i != to_remove and saddle_indices[i, 3] == 1:
+                cluster_couple = saddle_indices[i, 1:3]
+
+                if c1 in cluster_couple:
+                    neighbors1[len_neigh1] = np.array([cluster_couple[0], i, 2])
+                    if cluster_couple[0] == c1:
+                        neighbors1[len_neigh1] = np.array([cluster_couple[1], i, 1])
+                    len_neigh1 += 1
+
+                elif c2 in cluster_couple:
+                    neighbors2[len_neigh2] = np.array([cluster_couple[0], i, 2])
+                    if cluster_couple[0] == c2:
+                        neighbors2[len_neigh2] = np.array([cluster_couple[1], i, 1])
+                    len_neigh2 += 1
+
+        neighbors1, neighbors2 = neighbors1[:len_neigh1], neighbors2[:len_neigh2]
+
+        # check which are the common neighbors between cluster1 and cluster2
+        neighbors1 = neighbors1[neighbors1[:, 0].argsort()]
+        neighbors2 = neighbors2[neighbors2[:, 0].argsort()]
+        i, j = 0, 0
+        while i < len(neighbors1) and j < len(neighbors2):
+            if neighbors1[i, 0] == neighbors2[j, 0]:  # there is a common element
+                index1, index2 = (
+                    neighbors1[i, 1],
+                    neighbors2[j, 1],
+                )  # index common neighbor w.r.t cluster1
+                if saddle_density[index1, 0] < saddle_density[index2, 0]:
+                    # if the density of the saddle is higher between cluster2 and common neighbor,
+                    # use this as new saddle between cluster1 and common neighbor
+                    saddle_density[index1, 0] = saddle_density[
+                        index2, 0
+                    ]  # saddle density
+                    saddle_density[index1, 1] = saddle_density[
+                        index2, 1
+                    ]  # saddle error
+                # the couples of common elements with the c2 are "deleted"
+                saddle_indices[index2, -1] = 0
+                i += 1
+                j += 1
+
+            elif neighbors1[i, 0] < neighbors2[j, 0]:
+                i += 1
+            else:
+                # neighbors of c2 which were not neighbors of c1 become neighbors of c1
+                index2, c2_index = neighbors2[j, 1], neighbors2[j, 2]
+                saddle_indices[index2, c2_index] = c1
+                j += 1
+
+        # some js in the comparison may not have been taken into account
+        while j < len(neighbors2):
+            index2, c2_index = neighbors2[j, 1], neighbors2[j, 2]
+            saddle_indices[index2, c2_index] = c1
+            j += 1
+
+        return saddle_indices
