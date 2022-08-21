@@ -13,10 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 import numpy as np
-
-np.log10(np.finfo(dtype="float").max)
-
-
 import copy
 import time
 import warnings
@@ -51,6 +47,9 @@ def return_not_normalised_density_kstarNN(
         log_den = np.log(kstar - 1, dtype=float)
         log_den_err = 1.0 / np.sqrt(kstar - 1, dtype=float)
     if bias:
+        warnings.warn(
+            f"bias contribution to the density error is an experimental feature and might change in the future"
+        )
         log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
     for i in range(N):
@@ -87,6 +86,9 @@ def return_not_normalised_density_PAk(
         )
 
     if bias:
+        warnings.warn(
+            f"bias contribution to the density error is an experimental feature and might change in the future"
+        )
         log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
     dc = distances[np.arange(N), kstar]
