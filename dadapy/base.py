@@ -60,10 +60,13 @@ class Base:
         self.metric = "euclidean"
         self.period = period
 
-        if coordinates is not None:
+        if self.X is not None:
             assert isinstance(
                 self.X, np.ndarray
             ), "Coordinates must be in numpy ndarray format"
+
+            if self.X.dtype == np.float32:
+                self.X = self.X.astype(np.float64, casting = 'safe')
 
             self.dtype = self.X.dtype
 
@@ -90,6 +93,7 @@ class Base:
                     self.maxk = min(100, distances[0].shape[1] - 1)
 
                 self.N = distances[0].shape[0]
+
                 self.distances = distances[0][:, : self.maxk + 1]
                 self.dist_indices = distances[1][:, : self.maxk + 1]
 
@@ -108,6 +112,9 @@ class Base:
                 self.distances, self.dist_indices = from_all_distances_to_nndistances(
                     distances, self.maxk
                 )
+
+            if self.distances.dtype == np.float32:
+                self.distances = self.distances.astype(np.float64, casting = 'safe')
 
             self.dtype = self.distances.dtype
         try:

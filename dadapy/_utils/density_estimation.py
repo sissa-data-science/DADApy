@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import numpy as np
+np.log10(np.finfo(dtype = 'float').max)
+
 
 import time
 import warnings
@@ -21,6 +24,9 @@ from scipy.special import gammaln
 
 from dadapy._cython import cython_maximum_likelihood_opt as cml
 from dadapy._cython import cython_maximum_likelihood_opt_full as cml_full
+import copy
+
+
 
 
 def return_not_normalised_density_kstarNN(
@@ -84,13 +90,23 @@ def return_not_normalised_density_PAk(
     if bias:
         log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
+    dc = distances[np.arange(N), kstar]
+
+    if intrinsic_dim*np.log(np.max(dc)) > np.log(np.max(np.finfo(np.float64).max)):
+        warnings.warn(f'Some volumes (r^intrisic_dim) may cause overflow: those values will be silently set to e^300.')
+        noverflows = np.sum( intrinsic_dim*np.log(dc) + np.log(prefactor) > np.log(np.max(np.finfo(np.float64).max) ) )
+        print(f'intrinsic_dim = {intrinsic_dim}, rmax = {np.max(dc)}, rmin = {np.min(dc)}, float type = {dc[0].dtype}, fraction of potential overflows = {noverflows}/{N}')
+
+    max_ratio = 0.
     for i in range(N):
-        vi = np.zeros(maxk, dtype=float)
-        dc[i] = distances[i, kstar[i]]
+        vi = np.zeros(max(kstar), dtype=np.float64)
+
         rr = logkstars[i] - (
             np.log(prefactor) + intrinsic_dim * np.log(distances[i, kstar[i]])
         )
+
         knn = 0
+
         for j in range(kstar[i]):
 
             # vi[j] = prefactor * (
@@ -106,6 +122,8 @@ def return_not_normalised_density_PAk(
             r = distances[i, j]
             r1 = distances[i, j + 1]
             ratio = r / r1
+            if ratio > max_ratio:
+                max_ratio = ratio
             if np.abs(ratio - 1.0) < np.finfo(r.dtype).resolution:
                 warnings.warn(
                     "Found nearest neighbours at identical distance, adding a small amount of noise to one distance."
@@ -114,9 +132,8 @@ def return_not_normalised_density_PAk(
 
             exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio**intrinsic_dim)
 
-            if exponent > 100:
-                print("hi")
-                vi[j] = prefactor * np.exp(100.0)
+            if exponent > 300:
+                vi[j] = prefactor * np.exp(300.0)
             else:
                 vi[j] = prefactor * np.exp(exponent)
 
@@ -130,6 +147,7 @@ def return_not_normalised_density_PAk(
             log_den[i] = rr
         if log_den[i] < log_den_min:
             log_den_min = log_den[i]
+
 
     return log_den, log_den_err, dc
 
@@ -155,27 +173,32 @@ def return_not_normalised_density_PAk_optimized(
         intrinsic_dim / 2.0 * np.log(np.pi) - gammaln((intrinsic_dim + 2.0) / 2.0)
     )
 
-    indices_radii = np.arange(max(kstar) + 1)
+    indices_radii = np.arange(max(kstar)+1)
 
     r = distances[:, indices_radii[:-1]]
     r1 = distances[:, indices_radii[1:]]
     ratio = r / r1
 
     mask = np.abs(ratio - 1.0) < np.finfo(r.dtype).resolution
+
     if np.any(mask):
-        warnings.warn(
-            f"Found {np.sum(mask)} nearest neighbours at identical distance, adding a small amount of noise"
-        )
-        ratio[mask] = 10 * np.finfo(r.dtype).resolution
+        ratio[mask] -= 10 * np.finfo(r.dtype).resolution
+        nidentical = 0
+        for i in range(N):
+            nidentical += np.sum(mask[i, :kstar[i]+1])
+
+        if nidentical>0:
+            warnings.warn(
+                f"Found {np.sum(mask)} nearest neighbours at identical distance, adding a small amount of noise"
+            )
 
     exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio**intrinsic_dim)
-
-    overflow = exponent > 300
+    overflow = exponent > 300.
     if np.any(overflow):
         warnings.warn(
             f"ID too high. Found {np.sum(overflow)} shell volumes > e^300: settting volumes to e^300"
         )
-        exponent[overflow] = np.random.normal(size=(np.sum(overflow))) + 300
+        exponent[overflow] = 300. #+ np.random.normal(size=(np.sum(overflow)))
 
     volumes = prefactor * np.exp(exponent)
     # volumes = prefactor * (
@@ -187,15 +210,16 @@ def return_not_normalised_density_PAk_optimized(
     starting_roots = logkstars - (
         np.log(np.repeat(prefactor, N)) + intrinsic_dim * np.log(dc)
     )
-    log_den, is_singular = cml_full._nrmaxl(starting_roots, kstar, volumes)
+
+    log_den, is_singular = cml_full._nrmaxl(copy.deepcopy(starting_roots), kstar, volumes)
     if is_singular:
         warnings.warn(
             f"Hessian matrix in NR max likelihood maximization is sigular: using fixed point step"
         )
 
-    # log_den = nrmaxl(starting_roots, kstar, volumes)
-
     return log_den, log_den_err, dc
+
+
 
 
 # def nrmaxl(F, kstar, volumes):

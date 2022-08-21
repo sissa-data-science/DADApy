@@ -250,8 +250,9 @@ def _compute_clustering(floatTYPE_t                         Z,
     cdef floatTYPE_t                        a1, a2, sum_err1, sum_err2, current_saddle, margin1, margin2
     cdef np.ndarray[DTYPE_t, ndim = 1]      surviving_clusters = np.ones(Nclus, dtype = int)
     cdef DTYPE_t                            len1, len2, index1, index2, c2_index
-    cdef np.ndarray[DTYPE_t, ndim = 2]      neighbors1 = np.zeros((len(saddle_density), 3), dtype = int)
-    cdef np.ndarray[DTYPE_t, ndim = 2]      neighbors2 = np.zeros((len(saddle_density), 3), dtype = int)
+    cdef np.ndarray[DTYPE_t, ndim = 2]      neighbors1_tmp = np.zeros((len(saddle_density), 3), dtype = int)
+    cdef np.ndarray[DTYPE_t, ndim = 2]      neighbors2_tmp = np.zeros((len(saddle_density), 3), dtype = int)
+    cdef np.ndarray[DTYPE_t, ndim = 2]      neighbors1, neighbors2
     cdef np.ndarray[DTYPE_t, ndim = 1]      cluster_couple
 
     # Here we start the merging process through multimodality test.
@@ -296,8 +297,8 @@ def _compute_clustering(floatTYPE_t                         Z,
 
             #select the clusters that are neighbors to cluster1 and cluster2
             #cluster label, saddle label, position of c1/c2 in saddle_indices[:, 1:3]
-            neighbors1 = np.zeros((len(saddle_density), 3), dtype = int)
-            neighbors2 = np.zeros((len(saddle_density), 3), dtype = int)
+            neighbors1_tmp[:] = 0
+            neighbors2_tmp[:] = 0
 
             len1, len2 = 0, 0
             for i in range(len(saddle_density)):
@@ -305,21 +306,22 @@ def _compute_clustering(floatTYPE_t                         Z,
                     cluster_couple = saddle_indices[i, 1:3]
 
                     if c1 in cluster_couple:
-                        neighbors1[len1] = np.array([cluster_couple[0], i, 2])
+                        neighbors1_tmp[len1] = np.array([cluster_couple[0], i, 2])
                         if cluster_couple[0] == c1:
-                            neighbors1[len1] = np.array([cluster_couple[1], i, 1])
+                            neighbors1_tmp[len1] = np.array([cluster_couple[1], i, 1])
                         len1+=1
 
                     elif c2 in cluster_couple:
-                        neighbors2[len2] = np.array([cluster_couple[0], i, 2])
+                        neighbors2_tmp[len2] = np.array([cluster_couple[0], i, 2])
                         if cluster_couple[0] == c2:
-                            neighbors2[len2] = np.array([cluster_couple[1], i, 1])
+                            neighbors2_tmp[len2] = np.array([cluster_couple[1], i, 1])
                         len2+=1
 
-            neighbors1, neighbors2 = neighbors1[:len1], neighbors2[:len2]
+            neighbors1, neighbors2 = neighbors1_tmp[:len1], neighbors2_tmp[:len2]
             #check which are the common neighbors between cluster1 and cluster2
             neighbors1 = neighbors1[neighbors1[:, 0].argsort()]
             neighbors2 = neighbors2[neighbors2[:, 0].argsort()]
+
             i, j = 0, 0
             while i < len1 and j < len2:
                 if neighbors1[i, 0] == neighbors2[j, 0]:                            #there is a common element

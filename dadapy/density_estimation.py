@@ -270,7 +270,7 @@ class DensityEstimation(IdEstimation):
             )
 
         else:
-            log_den, log_den_err, dc = return_not_normalised_density_PAk(
+            log_den, log_den_err, dc  = return_not_normalised_density_PAk(
                 self.distances,
                 self.intrinsic_dim,
                 self.kstar,
