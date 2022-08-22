@@ -97,7 +97,7 @@ class Clustering(DensityEstimation):
 
         """
         if self.log_den is None:
-            self.compute_density_PAk(optimized=True)
+            self.compute_density_PAk()
 
         if self.verb:
             print("Clustering started")
