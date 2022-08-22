@@ -1,4 +1,5 @@
 import time
+import warnings
 
 import cython
 import numpy as np
@@ -172,6 +173,15 @@ def _compute_clustering(floatTYPE_t Z,
       print("Number of clusters before multimodality test=", Nclus)
       sec = time.time()
 
+
+    #this implementation can be vry costly if Nclus is > 10^4
+    if Nclus > 10000:
+        warnings.warn(
+        """There are > 10k initial putative clusters:
+        the matrices of the saddle points may cause out of memory error (6x Nclus x Nclus --> > 4.8 GB required).
+        If this is the case, call compute_clustering_ADP_pure_python(v2 = True). Ignore the warning otherwise."""
+        )
+
     cdef np.ndarray[floatTYPE_t, ndim = 2]  Rho_bord = np.zeros((Nclus, Nclus))
     cdef np.ndarray[floatTYPE_t, ndim = 2]  Rho_bord_err = np.zeros((Nclus, Nclus))
     cdef np.ndarray[DTYPE_t, ndim = 2]  Point_bord = np.zeros((Nclus, Nclus), dtype=int)
@@ -181,6 +191,7 @@ def _compute_clustering(floatTYPE_t Z,
     cdef np.ndarray[DTYPE_t, ndim = 1]  jpos = np.zeros(Nclus * Nclus, dtype=int)
 
     cdef np.ndarray[DTYPE_t, ndim = 1]  cluster_init = np.array(cluster_init_)
+
 
 
     # Find border points between putative clusters

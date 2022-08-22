@@ -21,6 +21,7 @@ Density-based clustering algorithms are implemented as methods of this class.
 
 import multiprocessing
 import time
+import warnings
 
 import numpy as np
 import scipy as sp
@@ -100,6 +101,12 @@ class Clustering(DensityEstimation):
 
         if self.verb:
             print("Clustering started")
+
+        if v2 is True:
+            warnings.warn(
+                """using adp implementation v2: this requires less memory but can
+                be two times slower than the original implementation"""
+            )
 
         # Make all values of log_den positives (this is important to help convergence)
         # even when subtracting the value Z*log_den_err
@@ -248,6 +255,12 @@ class Clustering(DensityEstimation):
 
         if self.verb:
             print("Clustering started")
+
+        if v2 is True:
+            warnings.warn(
+                """using adp implementation v2: this requires less memory but
+                can be two times slower than the original implementation"""
+            )
 
         # Make all values of log_den positives (this is important to help convergence)
         # even when subtracting the value Z*log_den_err
@@ -520,11 +533,23 @@ class Clustering(DensityEstimation):
             log_den_bord_err: error on the log density of saddle points
             bord_index: square matrix providing the index of the saddle point between any two peaks
         """
-        log_den_bord = np.zeros((Nclus, Nclus), dtype=float)
-        log_den_bord_err = np.zeros((Nclus, Nclus), dtype=float)
+        # this implementation can be vry costly if Nclus is > 10^4
+        if Nclus > 10000:
+            warnings.warn(
+                """There are > 10k initial putative clusters:
+            the matrices of the saddle points may cause out of memory error (3x Nclus x Nclus --> > 2.4 GB required).
+            If this is the case, call compute_clustering_ADP_pure_python(v2 = True). Ignore the warning otherwise."""
+            )
 
-        # set all bord indices to -1 (no points) initially
-        bord_index = np.ones((Nclus, Nclus), dtype=int) * -1
+        try:
+            log_den_bord = np.zeros((Nclus, Nclus), dtype=np.float64)
+            log_den_bord_err = np.zeros((Nclus, Nclus), dtype=np.float64)
+            # set all bord indices to -1 (no points) initially
+            bord_index = np.ones((Nclus, Nclus), dtype=int) * -1
+        except MemoryError:
+            print(
+                f"Nclus = {Nclus}. Out of memory error: call compute_clustering_ADP_pure_python(v2 = True)"
+            )
 
         for c in range(Nclus):
 
