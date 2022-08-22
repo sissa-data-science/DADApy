@@ -68,7 +68,6 @@ class Base:
             if self.X.dtype == np.float32:
                 self.X = self.X.astype(np.float64, casting="safe")
 
-            # self.dtype = self.X.dtype
             self.N = self.X.shape[0]
             self.dims = coordinates.shape[1]
             self.distances = None
@@ -117,11 +116,6 @@ class Base:
 
         self.dtype = np.float64
         self.eps = np.finfo(self.dtype).eps
-        #     self.dtype = self.distances.dtype
-        # try:
-        #     self.eps = np.finfo(self.dtype).eps
-        # except BaseException:
-        #     self.eps = None
 
     # ----------------------------------------------------------------------------------------------
 

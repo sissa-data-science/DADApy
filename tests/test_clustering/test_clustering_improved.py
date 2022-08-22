@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
-"""Module for testing clustering methods ADP (original/v2), pure python (original/v2)"""
+"""Module for testing clustering methods ADP (original/v2), pure python (original/v2)."""
 
 import os
 
@@ -112,11 +111,3 @@ assert np.all(centers_adp == centers_pp_v2)
 assert np.all(bord_indices_adp == bord_indices_pp_v2)
 assert np.allclose(saddle_density_adp, saddle_density_pp_v2)
 assert np.allclose(saddle_err_adp, saddle_err_pp_v2)
-
-
-# np.save('nclusters5k.npy', nclusters_adp)
-# np.save('assignment5k.npy', assignment_adp)
-# np.save('centers5k.npy', centers_adp)
-# np.save('bord_indices5k.npy', bord_indices_adp)
-# np.save('saddle_density5k.npy', saddle_density_adp)
-# np.save('saddle_err5k.npy', saddle_err_adp)

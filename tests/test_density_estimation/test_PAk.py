@@ -64,9 +64,6 @@ def test_compute_density_PAk():
     de = DensityEstimation(coordinates=X)
     log_den, log_den_err = de.compute_density_PAk(optimized=False)
 
-    # np.set_printoptions(8)
-    # print(de.log_den)
-
     # check consistency with ground truth
     assert np.allclose(log_den_opt, expected_log_den)
 
