@@ -7,9 +7,9 @@ from scipy.special import gammaln
 
 from libc.math cimport exp, log, pi, pow
 
-DTYPE = np.int
-floatTYPE = np.float
-boolTYPE = np.bool
+DTYPE = np.int64
+floatTYPE = np.float64
+
 
 ctypedef np.int_t DTYPE_t
 ctypedef np.float64_t floatTYPE_t

@@ -1166,7 +1166,7 @@ typedef npy_double __pyx_t_5numpy_double_t;
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
 /* "dadapy/_cython/cython_maximum_likelihood_opt.pyx":13
- * boolTYPE = np.bool
+ * 
  * 
  * ctypedef np.int_t DTYPE_t             # <<<<<<<<<<<<<<
  * ctypedef np.float64_t floatTYPE_t
@@ -1869,9 +1869,7 @@ static const char __pyx_k_sb[] = "sb";
 static const char __pyx_k_tt[] = "tt";
 static const char __pyx_k_vi[] = "vi";
 static const char __pyx_k_eps[] = "eps";
-static const char __pyx_k_int[] = "int";
 static const char __pyx_k_Cov2[] = "Cov2";
-static const char __pyx_k_bool[] = "bool";
 static const char __pyx_k_func[] = "func";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "__name__";
@@ -1879,7 +1877,7 @@ static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_time[] = "time";
 static const char __pyx_k_DTYPE[] = "DTYPE";
 static const char __pyx_k_finfo[] = "finfo";
-static const char __pyx_k_float[] = "float";
+static const char __pyx_k_int64[] = "int64";
 static const char __pyx_k_niter[] = "niter";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
@@ -1890,10 +1888,10 @@ static const char __pyx_k_detinv[] = "detinv";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_nrmaxl[] = "_nrmaxl";
 static const char __pyx_k_Covinv2[] = "Covinv2";
+static const char __pyx_k_float64[] = "float64";
 static const char __pyx_k_kstar_i[] = "kstar_i";
 static const char __pyx_k_matinv2[] = "_matinv2";
 static const char __pyx_k_stepmax[] = "stepmax";
-static const char __pyx_k_boolTYPE[] = "boolTYPE";
 static const char __pyx_k_fepsilon[] = "fepsilon";
 static const char __pyx_k_floatTYPE[] = "floatTYPE";
 static const char __pyx_k_ImportError[] = "ImportError";
@@ -1912,8 +1910,6 @@ static PyObject *__pyx_n_s_ImportError;
 static PyObject *__pyx_n_s_L0;
 static PyObject *__pyx_n_s_a;
 static PyObject *__pyx_n_s_b;
-static PyObject *__pyx_n_s_bool;
-static PyObject *__pyx_n_s_boolTYPE;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_kp_s_cython_maximum_likelihood_opt_py;
 static PyObject *__pyx_n_s_dadapy__cython_cython_maximum_li;
@@ -1921,13 +1917,13 @@ static PyObject *__pyx_n_s_detinv;
 static PyObject *__pyx_n_s_eps;
 static PyObject *__pyx_n_s_fepsilon;
 static PyObject *__pyx_n_s_finfo;
-static PyObject *__pyx_n_s_float;
+static PyObject *__pyx_n_s_float64;
 static PyObject *__pyx_n_s_floatTYPE;
 static PyObject *__pyx_n_s_func;
 static PyObject *__pyx_n_s_ga;
 static PyObject *__pyx_n_s_gb;
 static PyObject *__pyx_n_s_import;
-static PyObject *__pyx_n_s_int;
+static PyObject *__pyx_n_s_int64;
 static PyObject *__pyx_n_s_j;
 static PyObject *__pyx_n_s_jf;
 static PyObject *__pyx_n_s_kstar_i;
@@ -4256,8 +4252,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_L0, __pyx_k_L0, sizeof(__pyx_k_L0), 0, 0, 1, 1},
   {&__pyx_n_s_a, __pyx_k_a, sizeof(__pyx_k_a), 0, 0, 1, 1},
   {&__pyx_n_s_b, __pyx_k_b, sizeof(__pyx_k_b), 0, 0, 1, 1},
-  {&__pyx_n_s_bool, __pyx_k_bool, sizeof(__pyx_k_bool), 0, 0, 1, 1},
-  {&__pyx_n_s_boolTYPE, __pyx_k_boolTYPE, sizeof(__pyx_k_boolTYPE), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
   {&__pyx_kp_s_cython_maximum_likelihood_opt_py, __pyx_k_cython_maximum_likelihood_opt_py, sizeof(__pyx_k_cython_maximum_likelihood_opt_py), 0, 0, 1, 0},
   {&__pyx_n_s_dadapy__cython_cython_maximum_li, __pyx_k_dadapy__cython_cython_maximum_li, sizeof(__pyx_k_dadapy__cython_cython_maximum_li), 0, 0, 1, 1},
@@ -4265,13 +4259,13 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_eps, __pyx_k_eps, sizeof(__pyx_k_eps), 0, 0, 1, 1},
   {&__pyx_n_s_fepsilon, __pyx_k_fepsilon, sizeof(__pyx_k_fepsilon), 0, 0, 1, 1},
   {&__pyx_n_s_finfo, __pyx_k_finfo, sizeof(__pyx_k_finfo), 0, 0, 1, 1},
-  {&__pyx_n_s_float, __pyx_k_float, sizeof(__pyx_k_float), 0, 0, 1, 1},
+  {&__pyx_n_s_float64, __pyx_k_float64, sizeof(__pyx_k_float64), 0, 0, 1, 1},
   {&__pyx_n_s_floatTYPE, __pyx_k_floatTYPE, sizeof(__pyx_k_floatTYPE), 0, 0, 1, 1},
   {&__pyx_n_s_func, __pyx_k_func, sizeof(__pyx_k_func), 0, 0, 1, 1},
   {&__pyx_n_s_ga, __pyx_k_ga, sizeof(__pyx_k_ga), 0, 0, 1, 1},
   {&__pyx_n_s_gb, __pyx_k_gb, sizeof(__pyx_k_gb), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
-  {&__pyx_n_s_int, __pyx_k_int, sizeof(__pyx_k_int), 0, 0, 1, 1},
+  {&__pyx_n_s_int64, __pyx_k_int64, sizeof(__pyx_k_int64), 0, 0, 1, 1},
   {&__pyx_n_s_j, __pyx_k_j, sizeof(__pyx_k_j), 0, 0, 1, 1},
   {&__pyx_n_s_jf, __pyx_k_jf, sizeof(__pyx_k_jf), 0, 0, 1, 1},
   {&__pyx_n_s_kstar_i, __pyx_k_kstar_i, sizeof(__pyx_k_kstar_i), 0, 0, 1, 1},
@@ -4725,13 +4719,13 @@ if (!__Pyx_RefNanny) {
   /* "dadapy/_cython/cython_maximum_likelihood_opt.pyx":9
  * from libc.math cimport exp
  * 
- * DTYPE = np.int             # <<<<<<<<<<<<<<
- * floatTYPE = np.float
- * boolTYPE = np.bool
+ * DTYPE = np.int64             # <<<<<<<<<<<<<<
+ * floatTYPE = np.float64
+ * 
  */
   __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 9, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_2) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
@@ -4739,33 +4733,18 @@ if (!__Pyx_RefNanny) {
 
   /* "dadapy/_cython/cython_maximum_likelihood_opt.pyx":10
  * 
- * DTYPE = np.int
- * floatTYPE = np.float             # <<<<<<<<<<<<<<
- * boolTYPE = np.bool
+ * DTYPE = np.int64
+ * floatTYPE = np.float64             # <<<<<<<<<<<<<<
+ * 
  * 
  */
   __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_floatTYPE, __pyx_t_1) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "dadapy/_cython/cython_maximum_likelihood_opt.pyx":11
- * DTYPE = np.int
- * floatTYPE = np.float
- * boolTYPE = np.bool             # <<<<<<<<<<<<<<
- * 
- * ctypedef np.int_t DTYPE_t
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_bool); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_boolTYPE, __pyx_t_2) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "dadapy/_cython/cython_maximum_likelihood_opt.pyx":18
  * @cython.boundscheck(False)
@@ -4774,20 +4753,20 @@ if (!__Pyx_RefNanny) {
  *             DTYPE_t kstar_i,
  *             np.ndarray[floatTYPE_t, ndim = 1] vi):
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_29cython_maximum_likelihood_opt_1_nrmaxl, NULL, __pyx_n_s_dadapy__cython_cython_maximum_li); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_nrmaxl, __pyx_t_2) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_29cython_maximum_likelihood_opt_1_nrmaxl, NULL, __pyx_n_s_dadapy__cython_cython_maximum_li); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_nrmaxl, __pyx_t_1) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "dadapy/_cython/cython_maximum_likelihood_opt.pyx":1
  * import time             # <<<<<<<<<<<<<<
  * 
  * import cython
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "../../../../../../../anaconda3/envs/pynn1/lib/python3.8/site-packages/numpy/__init__.pxd":1014
  * 

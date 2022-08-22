@@ -1166,7 +1166,7 @@ typedef npy_double __pyx_t_5numpy_double_t;
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
 /* "dadapy/_cython/cython_clustering_v2.pyx":13
- * boolTYPE = np.bool
+ * 
  * 
  * ctypedef np.int_t DTYPE_t             # <<<<<<<<<<<<<<
  * ctypedef np.float64_t floatTYPE_t
@@ -1934,12 +1934,10 @@ static const char __pyx_k_pp[] = "pp";
 static const char __pyx_k_x1[] = "x1";
 static const char __pyx_k_ele[] = "ele";
 static const char __pyx_k_end[] = "end";
-static const char __pyx_k_int[] = "int";
 static const char __pyx_k_lag[] = "lag";
 static const char __pyx_k_max[] = "max";
 static const char __pyx_k_sec[] = " sec";
 static const char __pyx_k_Nele[] = "Nele";
-static const char __pyx_k_bool[] = "bool";
 static const char __pyx_k_copy[] = "copy";
 static const char __pyx_k_file[] = "file";
 static const char __pyx_k_flag[] = "flag";
@@ -1960,7 +1958,7 @@ static const char __pyx_k_check[] = "check";
 static const char __pyx_k_cindx[] = "cindx";
 static const char __pyx_k_dtype[] = "dtype";
 static const char __pyx_k_empty[] = "empty";
-static const char __pyx_k_float[] = "float";
+static const char __pyx_k_int64[] = "int64";
 static const char __pyx_k_kstar[] = "kstar";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_print[] = "print";
@@ -1981,12 +1979,12 @@ static const char __pyx_k_argsort[] = "argsort";
 static const char __pyx_k_center1[] = "center1";
 static const char __pyx_k_center2[] = "center2";
 static const char __pyx_k_centers[] = "_centers_";
+static const char __pyx_k_float64[] = "float64";
 static const char __pyx_k_mapping[] = "mapping";
 static const char __pyx_k_margin1[] = "margin1";
 static const char __pyx_k_margin2[] = "margin2";
 static const char __pyx_k_max_rho[] = "max_rho";
 static const char __pyx_k_Last_cls[] = "Last_cls";
-static const char __pyx_k_boolTYPE[] = "boolTYPE";
 static const char __pyx_k_c2_index[] = "c2_index";
 static const char __pyx_k_sum_err1[] = "sum_err1";
 static const char __pyx_k_sum_err2[] = "sum_err2";
@@ -2074,8 +2072,6 @@ static PyObject *__pyx_n_s_all_removed_centers;
 static PyObject *__pyx_n_s_argmax;
 static PyObject *__pyx_n_s_argsort;
 static PyObject *__pyx_n_s_array;
-static PyObject *__pyx_n_s_bool;
-static PyObject *__pyx_n_s_boolTYPE;
 static PyObject *__pyx_n_s_bord_indices_m;
 static PyObject *__pyx_n_s_c;
 static PyObject *__pyx_n_s_c1;
@@ -2111,7 +2107,7 @@ static PyObject *__pyx_n_s_end;
 static PyObject *__pyx_n_s_extend;
 static PyObject *__pyx_n_s_file;
 static PyObject *__pyx_n_s_flag;
-static PyObject *__pyx_n_s_float;
+static PyObject *__pyx_n_s_float64;
 static PyObject *__pyx_n_s_floatTYPE;
 static PyObject *__pyx_n_s_g;
 static PyObject *__pyx_n_s_halo;
@@ -2123,7 +2119,7 @@ static PyObject *__pyx_n_s_ind_removed_centers_ele;
 static PyObject *__pyx_n_s_index1;
 static PyObject *__pyx_n_s_index2;
 static PyObject *__pyx_kp_s_init_succeded;
-static PyObject *__pyx_n_s_int;
+static PyObject *__pyx_n_s_int64;
 static PyObject *__pyx_n_s_intersect1d;
 static PyObject *__pyx_n_s_j;
 static PyObject *__pyx_n_s_k;
@@ -9550,8 +9546,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_argmax, __pyx_k_argmax, sizeof(__pyx_k_argmax), 0, 0, 1, 1},
   {&__pyx_n_s_argsort, __pyx_k_argsort, sizeof(__pyx_k_argsort), 0, 0, 1, 1},
   {&__pyx_n_s_array, __pyx_k_array, sizeof(__pyx_k_array), 0, 0, 1, 1},
-  {&__pyx_n_s_bool, __pyx_k_bool, sizeof(__pyx_k_bool), 0, 0, 1, 1},
-  {&__pyx_n_s_boolTYPE, __pyx_k_boolTYPE, sizeof(__pyx_k_boolTYPE), 0, 0, 1, 1},
   {&__pyx_n_s_bord_indices_m, __pyx_k_bord_indices_m, sizeof(__pyx_k_bord_indices_m), 0, 0, 1, 1},
   {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
   {&__pyx_n_s_c1, __pyx_k_c1, sizeof(__pyx_k_c1), 0, 0, 1, 1},
@@ -9587,7 +9581,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_extend, __pyx_k_extend, sizeof(__pyx_k_extend), 0, 0, 1, 1},
   {&__pyx_n_s_file, __pyx_k_file, sizeof(__pyx_k_file), 0, 0, 1, 1},
   {&__pyx_n_s_flag, __pyx_k_flag, sizeof(__pyx_k_flag), 0, 0, 1, 1},
-  {&__pyx_n_s_float, __pyx_k_float, sizeof(__pyx_k_float), 0, 0, 1, 1},
+  {&__pyx_n_s_float64, __pyx_k_float64, sizeof(__pyx_k_float64), 0, 0, 1, 1},
   {&__pyx_n_s_floatTYPE, __pyx_k_floatTYPE, sizeof(__pyx_k_floatTYPE), 0, 0, 1, 1},
   {&__pyx_n_s_g, __pyx_k_g, sizeof(__pyx_k_g), 0, 0, 1, 1},
   {&__pyx_n_s_halo, __pyx_k_halo, sizeof(__pyx_k_halo), 0, 0, 1, 1},
@@ -9599,7 +9593,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_index1, __pyx_k_index1, sizeof(__pyx_k_index1), 0, 0, 1, 1},
   {&__pyx_n_s_index2, __pyx_k_index2, sizeof(__pyx_k_index2), 0, 0, 1, 1},
   {&__pyx_kp_s_init_succeded, __pyx_k_init_succeded, sizeof(__pyx_k_init_succeded), 0, 0, 1, 0},
-  {&__pyx_n_s_int, __pyx_k_int, sizeof(__pyx_k_int), 0, 0, 1, 1},
+  {&__pyx_n_s_int64, __pyx_k_int64, sizeof(__pyx_k_int64), 0, 0, 1, 1},
   {&__pyx_n_s_intersect1d, __pyx_k_intersect1d, sizeof(__pyx_k_intersect1d), 0, 0, 1, 1},
   {&__pyx_n_s_j, __pyx_k_j, sizeof(__pyx_k_j), 0, 0, 1, 1},
   {&__pyx_n_s_k, __pyx_k_k, sizeof(__pyx_k_k), 0, 0, 1, 1},
@@ -10112,13 +10106,13 @@ if (!__Pyx_RefNanny) {
   /* "dadapy/_cython/cython_clustering_v2.pyx":9
  * from libc.math cimport exp
  * 
- * DTYPE = np.int             # <<<<<<<<<<<<<<
- * floatTYPE = np.float
- * boolTYPE = np.bool
+ * DTYPE = np.int64             # <<<<<<<<<<<<<<
+ * floatTYPE = np.float64
+ * 
  */
   __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 9, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_2) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
@@ -10126,33 +10120,18 @@ if (!__Pyx_RefNanny) {
 
   /* "dadapy/_cython/cython_clustering_v2.pyx":10
  * 
- * DTYPE = np.int
- * floatTYPE = np.float             # <<<<<<<<<<<<<<
- * boolTYPE = np.bool
+ * DTYPE = np.int64
+ * floatTYPE = np.float64             # <<<<<<<<<<<<<<
+ * 
  * 
  */
   __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_floatTYPE, __pyx_t_1) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "dadapy/_cython/cython_clustering_v2.pyx":11
- * DTYPE = np.int
- * floatTYPE = np.float
- * boolTYPE = np.bool             # <<<<<<<<<<<<<<
- * 
- * ctypedef np.int_t DTYPE_t
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_bool); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_boolTYPE, __pyx_t_2) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "dadapy/_cython/cython_clustering_v2.pyx":19
  * @cython.cdivision(True)
@@ -10161,20 +10140,20 @@ if (!__Pyx_RefNanny) {
  *                         bint                                halo,
  *                         np.ndarray[DTYPE_t, ndim = 1]       kstar,
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_20cython_clustering_v2_1_compute_clustering, NULL, __pyx_n_s_dadapy__cython_cython_clustering); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 19, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_clustering, __pyx_t_2) < 0) __PYX_ERR(0, 19, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6dadapy_7_cython_20cython_clustering_v2_1_compute_clustering, NULL, __pyx_n_s_dadapy__cython_cython_clustering); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 19, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_clustering, __pyx_t_1) < 0) __PYX_ERR(0, 19, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "dadapy/_cython/cython_clustering_v2.pyx":1
  * import time             # <<<<<<<<<<<<<<
  * 
  * import cython
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "../../../../../../../anaconda3/envs/pynn1/lib/python3.8/site-packages/numpy/__init__.pxd":1014
  * 
