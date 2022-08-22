@@ -24,6 +24,14 @@ ext_modules += [
 
 ext_modules += [
     Extension(
+        "dadapy._cython.cython_clustering_v2",
+        sources=["dadapy/_cython/cython_clustering_v2.c"],
+        include_dirs=[get_numpy_include()],
+    )
+]
+
+ext_modules += [
+    Extension(
         "dadapy._cython.cython_maximum_likelihood_opt",
         sources=["dadapy/_cython/cython_maximum_likelihood_opt.c"],
         include_dirs=[get_numpy_include()],
