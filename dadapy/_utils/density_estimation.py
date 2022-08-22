@@ -181,11 +181,14 @@ def return_not_normalised_density_PAk_optimized(
 
     indices_radii = np.arange(max(kstar) + 1)
 
+
+
     r = distances[:, indices_radii[:-1]]
     r1 = distances[:, indices_radii[1:]]
     ratio = r / r1
 
     mask = np.abs(ratio - 1.0) < np.finfo(r.dtype).resolution
+
 
     if np.any(mask):
         ratio[mask] -= 10 * np.finfo(r.dtype).resolution
@@ -200,11 +203,14 @@ def return_not_normalised_density_PAk_optimized(
 
     exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio**intrinsic_dim)
     overflow = exponent > 300.0
+
     if np.any(overflow):
         warnings.warn(
             f"ID too high. Found {np.sum(overflow)} shell volumes > e^300: settting volumes to e^300"
         )
+
         exponent[overflow] = 300.0  # + np.random.normal(size=(np.sum(overflow)))
+
 
     volumes = prefactor * np.exp(exponent)
     # volumes = prefactor * (
@@ -217,9 +223,11 @@ def return_not_normalised_density_PAk_optimized(
         np.log(np.repeat(prefactor, N)) + intrinsic_dim * np.log(dc)
     )
 
+
     log_den, is_singular = cml_full._nrmaxl(
         copy.deepcopy(starting_roots), kstar, volumes
     )
+
     if is_singular:
         warnings.warn(
             f"Hessian matrix in NR max likelihood maximization is sigular: using fixed point step"

@@ -112,9 +112,11 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
                     Hess[0,1] = Hess[0,1] - l*gf_tmp
                     Hess[1,1] = Hess[1,1] - l**2*gf_tmp
                 Hess[1,0] = Hess[0,1]
+
                 detHess = Hess[0,0]*Hess[1,1] - Hess[0,1]*Hess[1,0]
                 if detHess < fepsilon:
                   is_singular = 1
+
                 else:
                   #inversion of the hessian matrix
                   detinv = 1./(Hess[0,0]*Hess[1,1] - Hess[0,1]*Hess[1,0])
@@ -123,9 +125,13 @@ def _nrmaxl(np.ndarray[floatTYPE_t, ndim = 1] F,
                   HessInv[0,1] = -detinv * Hess[0,1]
                   HessInv[1,1] = +detinv * Hess[0,0]
 
+
+
                 if ((abs(a) <= fepsilon ) or (abs(F[i]) <= fepsilon )):
                     func = max(abs(grad_f),abs(grad_a))
                 else:
                     func = max(abs(grad_f/F[i]),abs(grad_a/a))
+
+
 
     return F, is_singular
