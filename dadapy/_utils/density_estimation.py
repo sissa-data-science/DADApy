@@ -181,14 +181,11 @@ def return_not_normalised_density_PAk_optimized(
 
     indices_radii = np.arange(max(kstar) + 1)
 
-
-
     r = distances[:, indices_radii[:-1]]
     r1 = distances[:, indices_radii[1:]]
     ratio = r / r1
 
     mask = np.abs(ratio - 1.0) < np.finfo(r.dtype).resolution
-
 
     if np.any(mask):
         ratio[mask] -= 10 * np.finfo(r.dtype).resolution
@@ -211,7 +208,6 @@ def return_not_normalised_density_PAk_optimized(
 
         exponent[overflow] = 300.0  # + np.random.normal(size=(np.sum(overflow)))
 
-
     volumes = prefactor * np.exp(exponent)
     # volumes = prefactor * (
     #     distances[:, indices_radii[1:]] ** intrinsic_dim
@@ -222,7 +218,6 @@ def return_not_normalised_density_PAk_optimized(
     starting_roots = logkstars - (
         np.log(np.repeat(prefactor, N)) + intrinsic_dim * np.log(dc)
     )
-
 
     log_den, is_singular = cml_full._nrmaxl(
         copy.deepcopy(starting_roots), kstar, volumes
