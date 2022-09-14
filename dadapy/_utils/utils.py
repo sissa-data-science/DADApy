@@ -175,7 +175,8 @@ def _loglik(d, mus, n1, n2, N, eps):
 def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
     # mu can't be == 1 add some noise
     indx = np.nonzero(mus == 1)
-    mus[indx] += 1e-10  # np.finfo(dtype).eps
+    mus[indx] += 10 * np.finfo(dtype).eps
+    # mus[indx] += 1e-10  # np.finfo(dtype).eps
 
     l1 = _loglik(d1, mus, n1, n2, N, eps)
     while abs(d0 - d1) > eps:

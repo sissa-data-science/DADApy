@@ -152,6 +152,7 @@ class DensityEstimation(IdEstimation):
             self.dist_indices.astype("int64"),
             self.distances.astype("float64"),
         )
+
         self.set_kstar(kstar)
 
         sec2 = time.time()
