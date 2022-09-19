@@ -20,6 +20,7 @@ This class contains essential methods and attributes needed for all other classe
 """
 import multiprocessing
 import time
+import warnings
 
 import numpy as np
 
@@ -45,7 +46,8 @@ class Base:
 
         Args:
             coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
-            distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+            distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float)) ): Distance matrix (N x N),
+                                        or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
             verbose (bool): whether you want the code to speak or shut up
@@ -60,12 +62,18 @@ class Base:
         self.metric = "euclidean"
         self.period = period
 
-        if coordinates is not None:
+        if self.X is not None:
             assert isinstance(
                 self.X, np.ndarray
             ), "Coordinates must be in numpy ndarray format"
-
-            self.dtype = self.X.dtype
+            if self.X.dtype == np.float64:
+                pass
+            elif self.X.dtype == np.float32 or self.X.dtype == np.float16:
+                self.X = self.X.astype(np.float64, casting="safe")
+            else:
+                warnings.warn(
+                    f"data type is {self.X.dtype}: most methods work only with float-type inputs"
+                )
 
             self.N = self.X.shape[0]
             self.dims = coordinates.shape[1]
@@ -74,46 +82,67 @@ class Base:
                 self.maxk = min(100, self.N - 1)
 
         if distances is not None:
-            if isinstance(distances, tuple):
-                assert isinstance(
-                    distances[0], np.ndarray
-                ), "distances must be in numpy ndarray format"
-                assert isinstance(
-                    distances[1], np.ndarray
-                ), "distance indices must be in numpy ndarray format"
 
-                assert (
-                    distances[0].shape[0] == distances[1].shape[0]
-                ), "distances and indices must have the same shape"
+            self.distances, self.dist_indices, self.N, self.maxk = self._init_distances(
+                distances, self.maxk
+            )
 
-                if self.maxk is None:
-                    self.maxk = min(100, distances[0].shape[1] - 1)
+        self.dtype = np.float64
+        self.eps = np.finfo(self.dtype).eps
 
-                self.N = distances[0].shape[0]
-                self.distances = distances[0][:, : self.maxk + 1]
-                self.dist_indices = distances[1][:, : self.maxk + 1]
+    # this function is useful for overlap with another dataset and makes __init__ little bit shorter
+    def _init_distances(self, distances, maxk=None):
 
-            else:
-                assert isinstance(
-                    distances, np.ndarray
-                ), "distances must be in numpy ndarray format"
-                assert (
-                    distances.shape[0] == distances.shape[1]
-                ), "distance matrix shape must be N x N"
+        if isinstance(distances, tuple):
+            assert isinstance(
+                distances[0], np.ndarray
+            ), "distances must be in numpy ndarray format"
+            assert isinstance(
+                distances[1], np.ndarray
+            ), "distance indices must be in numpy ndarray format"
 
-                self.N = distances.shape[0]
-                if self.maxk is None:
-                    self.maxk = min(100, distances.shape[1] - 1)
+            assert (
+                distances[0].shape[0] == distances[1].shape[0]
+            ), "distances and indices must have the same shape"
 
-                self.distances, self.dist_indices = from_all_distances_to_nndistances(
-                    distances, self.maxk
+            if maxk is None:
+                maxk = min(100, distances[0].shape[1] - 1)
+
+            elif maxk > (distances[0].shape[1] - 1):
+                maxk = distances[0].shape[1] - 1
+                warnings.warn(
+                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}"
                 )
 
-            self.dtype = self.distances.dtype
-        try:
-            self.eps = np.finfo(self.dtype).eps
-        except BaseException:
-            self.eps = None
+            N = distances[0].shape[0]
+
+            dist = distances[0][:, : maxk + 1]
+            dist_indices = distances[1][:, : maxk + 1]
+
+        else:
+            assert isinstance(
+                distances, np.ndarray
+            ), "distances must be in numpy ndarray format"
+            assert (
+                distances.shape[0] == distances.shape[1]
+            ), "distance matrix shape must be N x N"
+
+            N = distances.shape[0]
+            if maxk is None:
+                maxk = min(100, distances.shape[1] - 1)
+
+            elif maxk > (distances.shape[1] - 1):
+                maxk = distances.shape[1] - 1
+                warnings.warn(
+                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}"
+                )
+
+            dist, dist_indices = from_all_distances_to_nndistances(distances, maxk)
+
+        if dist.dtype == np.float32:
+            dist = dist.astype(np.float64, casting="safe")
+
+        return dist, dist_indices, N, maxk
 
     # ----------------------------------------------------------------------------------------------
 

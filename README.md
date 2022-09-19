@@ -105,7 +105,7 @@ Please consider citing it if you found this package useful for your research
     title = {{DADApy: Distance-based Analysis of DAta-manifolds in Python}},
     journal = {arXiv preprint arXiv:2205.03373},
     year = {2022},
-    doi = {https://doi.org/10.48550/arXiv.2205.03373},
+    doi = {10.48550/arXiv.2205.03373},
     url = {https://arxiv.org/abs/2205.03373},
     }
 ```

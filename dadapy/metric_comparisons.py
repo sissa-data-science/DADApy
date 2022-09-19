@@ -481,6 +481,59 @@ class MetricComparisons(Base):
         overlap = np.mean(overlaps)
         return overlap
 
+    def return_data_overlap(self, coordinates=None, distances=None, k=30, coords=None):
+        """Return the neighbour overlap between the full space and another dataset.
+
+        An overlap of 1 means that all neighbours of a point are the same in the two spaces.
+
+        Args:
+            coordinates (np.ndarray(float)): the data set to compare, of shape (N , dimension of embedding space)
+            distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float)) ):
+                                        Distance matrix (see base class for shape explanation)
+            k (int): the number of neighbours considered for the overlap
+
+        Returns:
+            (float): the neighbour overlap of the points
+        """
+        if self.distances is None:
+            assert self.X is not None
+            self.compute_distances()
+
+        if distances is None:
+            assert coordinates is not None
+            _, dist_indices = compute_nn_distances(
+                coordinates, self.maxk, self.metric, self.period
+            )
+        else:
+            distances, dist_indices, N, maxk = self._init_distances(
+                distances, self.maxk
+            )
+
+        if self.maxk < k:
+            k = self.maxk
+
+        assert self.N == dist_indices.shape[0]
+
+        overlaps = -np.ones((self.N))
+        # print(dist_indices[:4, :5],   self.dist_indices[:4, :5])
+
+        for i in range(self.N):
+
+            overlaps[i] = (
+                len(
+                    np.intersect1d(
+                        self.dist_indices[i, 1 : k + 1], dist_indices[i, 1 : k + 1]
+                    )
+                )
+                / k
+            )
+            # if i ==0:
+            # print(overlaps[i])
+
+        overlap = np.mean(overlaps)
+
+        return overlap
+
     def return_label_overlap_coords(self, labels, coords, k=30):
         """Return the neighbour overlap between a selection of coordinates and a set of labels.
 

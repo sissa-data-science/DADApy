@@ -6,9 +6,9 @@ import numpy as np
 cimport numpy as np
 from libc.math cimport exp
 
-DTYPE = np.int
-floatTYPE = np.float
-boolTYPE = np.bool
+DTYPE = np.int64
+floatTYPE = np.float64
+
 
 ctypedef np.int_t DTYPE_t
 ctypedef np.float64_t floatTYPE_t
@@ -77,6 +77,7 @@ def _nrmaxl(floatTYPE_t rinit,
             sigma=abs(stepmax/sb)
         b=b-sigma*sb
         a=a-sigma*sa
+
         L0=0.
         gb= float(kstar_i)
         ga= float(kstar_i + 1) * float(kstar_i) / 2.
@@ -102,10 +103,10 @@ def _nrmaxl(floatTYPE_t rinit,
             func=max(abs(gb),abs(ga))
         else:
             func=max(abs(gb/b),abs(ga/a))
+
     #Cov2=-Cov2
     #Covinv2=np.linalg.inv(Cov2)
     #Covinv2=_matinv2(Cov2)
     #_matinv2(Cov2,Covinv2)
-    #print("N iterations: ", niter)
-    #print(func)
+
     return b

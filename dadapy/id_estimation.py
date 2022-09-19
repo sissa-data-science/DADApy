@@ -72,6 +72,8 @@ class IdEstimation(Base):
         self.intrinsic_dim = None
         self.intrinsic_dim_err = None
         self.intrinsic_dim_scale = None
+        self.intrinsic_dim_mus = None
+        self.intrinsic_dim_mus_gride = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -90,10 +92,11 @@ class IdEstimation(Base):
         """
         N = mus.shape[0]
         N_eff = int(N * fraction)
-        mus_reduced = np.sort(mus)[:N_eff]
+        log_mus = np.log(mus)
+        log_mus_reduced = np.sort(log_mus)[:N_eff]
 
         if algorithm == "ml":
-            intrinsic_dim = (N - 1) / np.sum(mus)
+            intrinsic_dim = (N - 1) / np.sum(log_mus)
 
         elif algorithm == "base":
             y = -np.log(1 - np.arange(1, N_eff + 1) / N)
@@ -101,7 +104,7 @@ class IdEstimation(Base):
             def func(x, m):
                 return m * x
 
-            intrinsic_dim, _ = curve_fit(func, mus_reduced, y)
+            intrinsic_dim, _ = curve_fit(func, log_mus_reduced, y)
 
         else:
             raise ValueError("Please select a valid algorithm type")
@@ -110,7 +113,11 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
     def compute_id_2NN(
-        self, algorithm="base", fraction=0.9, decimation=1, set_attr=True
+        self,
+        algorithm="base",
+        fraction=0.9,
+        decimation=1,
+        set_attr=True,
     ):
         """Compute intrinsic dimension using the 2NN algorithm.
 
@@ -125,13 +132,52 @@ class IdEstimation(Base):
             id_err (float): the standard error on the id estimation
             rs (float): the average nearest neighbor distance (rs)
 
+        Quick Start:
+        ===========
+
+        .. code-block:: python
+
+                from dadapy import Data
+                from sklearn.datasets import make_swiss_roll
+
+                n_samples = 5000
+                X, _ = make_swiss_roll(n_samples, noise=0.0)
+
+                ie = Data(coordinates=X)
+
+                results = ie.compute_id_2NN()
+                results:
+                (1.96, 0.0, 0.38)       #(id, error, average distance to the first two neighbors)
+
+                results = ie.compute_id_2NN(fraction = 1)
+                results:
+                (1.98, 0.0, 0.38)       #(id, error, average distance to the first two neighbors)
+
+                results = ie.compute_id_2NN(decimation = 0.25)
+                results:
+                (1.99, 0.036, 0.76)     #(id, error, average distance to the first two neighbors)
+                                        #1/4 of the points are kept.
+                                        #'id' is the mean over 4 bootstrap samples;
+                                        #'error' is standard error of the sample mean.
+
         References:
             E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the intrinsic dimension of datasets by a minimal
             neighborhood information, Scientific reports 7 (1) (2017) 1–8
         """
+        assert (
+            0.0 < decimation and decimation <= 1.0
+        ), "'decimation' must be between 0 and 1"
+        assert 0.0 < fraction and fraction <= 1.0, "'fraction' must be between 0 and 1"
+        if fraction == 1.0 and algorithm == "base":
+            algorithm = "ml"
+            print("fraction = 1: algorithm set to ml")
+
         nrep = int(np.rint(1.0 / decimation))
         ids = np.zeros(nrep)
         rs = np.zeros(nrep)
+
+        N_subset = int(np.rint(self.N * decimation))
+        mus = np.zeros((N_subset, nrep))
 
         for j in range(nrep):
 
@@ -146,7 +192,6 @@ class IdEstimation(Base):
 
             else:
                 # if set_attr==False or for decimation < 1 random sample points don't save distances
-                N_subset = int(np.rint(self.N * decimation))
                 idx = np.random.choice(self.N, size=N_subset, replace=False)
                 X_decimated = self.X[idx]
 
@@ -157,8 +202,8 @@ class IdEstimation(Base):
                     period=self.period,
                 )
 
-            mus = np.log(distances[:, 2] / distances[:, 1])
-            ids[j] = self._compute_id_2NN(mus, fraction, algorithm)
+            mus[:, j] = distances[:, 2] / distances[:, 1]
+            ids[j] = self._compute_id_2NN(mus[:, j], fraction, algorithm)
             rs[j] = np.mean(distances[:, np.array([1, 2])])
 
         intrinsic_dim = np.mean(ids)
@@ -172,6 +217,7 @@ class IdEstimation(Base):
             self.intrinsic_dim = intrinsic_dim
             self.intrinsic_dim_err = intrinsic_dim_err
             self.intrinsic_dim_scale = intrinsic_dim_scale
+            self.intrinsic_dim_mus = mus
 
         return intrinsic_dim, intrinsic_dim_err, intrinsic_dim_scale
 
@@ -201,7 +247,7 @@ class IdEstimation(Base):
 
         .. code-block:: python
 
-                from dadapy import IdEstimation
+                from dadapy import Data
                 from sklearn.datasets import make_swiss_roll
 
                 #two dimensional curved manifold embedded in 3d with noise
@@ -209,7 +255,7 @@ class IdEstimation(Base):
                 n_samples = 5000
                 X, _ = make_swiss_roll(n_samples, noise=0.3)
 
-                ie = IdEstimation(coordinates=X)
+                ie = Data(coordinates=X)
                 ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(N_min = 20)
 
                 ids_scaling:
@@ -244,7 +290,9 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def return_id_scaling_gride(self, range_max=64, d0=0.001, d1=1000, eps=1e-7):
+    def return_id_scaling_gride(
+        self, range_max=64, d0=0.001, d1=1000, eps=1e-7, save_mus=False
+    ):
         """Compute the id at different scales using the Gride algorithm.
 
         Args:
@@ -265,7 +313,7 @@ class IdEstimation(Base):
 
         .. code-block:: python
 
-                from dadapy import IdEstimation
+                from dadapy import Data
                 from sklearn.datasets import make_swiss_roll
 
                 #two dimensional curved manifold embedded in 3d with noise
@@ -273,7 +321,7 @@ class IdEstimation(Base):
                 n_samples = 5000
                 X, _ = make_swiss_roll(n_samples, noise=0.3)
 
-                ie = IdEstimation(coordinates=X)
+                ie = Data(coordinates=X)
                 ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_gride(range_max = 512)
 
                 ids_scaling:
@@ -315,9 +363,9 @@ class IdEstimation(Base):
                 range_scaling=max_rank
             )
             # returns:
-            # distances, dist_indices of shape (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
-            # mus of shape (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
-            # rs of shape (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data for kth in nn_ranks
+            # distances, dist_indices (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
+            # mus (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
+            # rs (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data, for every nn_ranks
             if self.verb:
                 print("distance computation finished")
 
@@ -327,16 +375,41 @@ class IdEstimation(Base):
                 self.dist_indices = dist_indices
                 self.N = distances.shape[0]
 
+        # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
+        if self.verb:
+            print("id inference started")
+        ids_scaling, ids_scaling_err = self._compute_id_gride(mus, d0, d1, eps)
+        if self.verb:
+            print("id inference finished")
+
+        "average of the kth and 2*kth neighbor distances taken over all datapoints for each id estimate"
+        rs_scaling = np.mean(rs, axis=(0, 1))
+
+        if save_mus:
+            self.intrinsic_dim_mus_gride = mus
+
+        return ids_scaling, ids_scaling_err, rs_scaling
+
+    # ----------------------------------------------------------------------------------------------
+    def _compute_id_gride(self, mus, d0, d1, eps):
+        """Compute the id using the gride algorithm.
+
+        Helper of return return_id_gride.
+
+        Args:
+            mus (np.ndarray(float)): ratio of the distances of nth and 2nth nearest neighbours (Ndata x log2(range_max))
+            d0 (float): minimum intrinsic dimension considered in the search;
+            d1 (float): maximum intrinsic dimension considered in the search;
+            eps (float): precision of the approximate id calculation.
+
+        Returns:
+            intrinsic_dim (np.ndarray(float): array of id estimates
+            intrinsic_dim_err (np.ndarray(float): array of error estimates
+        """
         # array of ids (as a function of the average distance to a point)
         ids_scaling = np.zeros(mus.shape[1])
         # array of error estimates (via fisher information)
         ids_scaling_err = np.zeros(mus.shape[1])
-        "average of the kth and 2*kth neighbor distances taken over all datapoints for each id estimate"
-        rs_scaling = np.mean(rs, axis=(0, 1))
-
-        # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
-        if self.verb:
-            print("id inference started")
         for i in range(mus.shape[1]):
             n1 = 2**i
             id = ut._argmax_loglik(
@@ -350,12 +423,9 @@ class IdEstimation(Base):
                     id, mus[:, i], n1, 2 * n1, eps=5 * self.eps
                 )  # eps=regularization small numbers
             ) ** 0.5
-        if self.verb:
-            print("id inference finished")
 
-        return ids_scaling, ids_scaling_err, rs_scaling
+        return ids_scaling, ids_scaling_err
 
-    # ----------------------------------------------------------------------------------------------
     def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
 

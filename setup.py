@@ -24,11 +24,28 @@ ext_modules += [
 
 ext_modules += [
     Extension(
+        "dadapy._cython.cython_clustering_v2",
+        sources=["dadapy/_cython/cython_clustering_v2.c"],
+        include_dirs=[get_numpy_include()],
+    )
+]
+
+ext_modules += [
+    Extension(
         "dadapy._cython.cython_maximum_likelihood_opt",
         sources=["dadapy/_cython/cython_maximum_likelihood_opt.c"],
         include_dirs=[get_numpy_include()],
     )
 ]
+
+ext_modules += [
+    Extension(
+        "dadapy._cython.cython_maximum_likelihood_opt_full",
+        sources=["dadapy/_cython/cython_maximum_likelihood_opt_full.c"],
+        include_dirs=[get_numpy_include()],
+    )
+]
+
 
 ext_modules += [
     Extension(
@@ -51,7 +68,7 @@ ext_modules += [
 
 setup(
     name="dadapy",
-    version="0.1.0",
+    version="0.1.1",
     url="https://dadapy.readthedocs.io/",
     description="A Python package for Distance-based Analysis of DAta-manifolds.",
     long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
