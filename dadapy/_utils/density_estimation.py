@@ -49,7 +49,7 @@ def return_not_normalised_density_kstarNN(
         warnings.warn(
             f"bias contribution to the density error is an experimental feature and might change in the future"
         )
-        log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
+        log_den_err = (log_den_err ** 2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
     for i in range(N):
         dc[i] = distances[i, kstar[i]]
@@ -88,7 +88,7 @@ def return_not_normalised_density_PAk(
         warnings.warn(
             f"bias contribution to the density error is an experimental feature and might change in the future"
         )
-        log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
+        log_den_err = (log_den_err ** 2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
     dc = distances[np.arange(N), kstar]
 
@@ -137,7 +137,7 @@ def return_not_normalised_density_PAk(
                 )
                 ratio -= 10 * np.finfo(r.dtype).resolution
 
-            exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio**intrinsic_dim)
+            exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio ** intrinsic_dim)
 
             if exponent > 300:
                 vi[j] = prefactor * np.exp(300.0)
@@ -171,7 +171,7 @@ def return_not_normalised_density_PAk_optimized(
             (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
         )
     if bias:
-        log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
+        log_den_err = (log_den_err ** 2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
     dc = distances[np.arange(N), kstar]
 
@@ -198,7 +198,7 @@ def return_not_normalised_density_PAk_optimized(
                 f"Found {np.sum(mask)} nearest neighbours at identical distance, adding a small amount of noise"
             )
 
-    exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio**intrinsic_dim)
+    exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio ** intrinsic_dim)
     overflow = exponent > 300.0
 
     if np.any(overflow):

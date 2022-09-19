@@ -57,6 +57,14 @@ ext_modules += [
 
 ext_modules += [
     Extension(
+        "dadapy._cython.cython_grads",
+        sources=["dadapy/_cython/cython_grads.c"],
+        include_dirs=[get_numpy_include()],
+    )
+]
+
+ext_modules += [
+    Extension(
         "dadapy._cython.cython_distances",
         sources=["dadapy/_cython/cython_distances.c"],
         extra_compile_args=['-fopenmp'],
@@ -64,7 +72,6 @@ ext_modules += [
         include_dirs=[get_numpy_include()],
     )
 ]
-
 
 setup(
     name="dadapy",

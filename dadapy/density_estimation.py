@@ -23,8 +23,11 @@ import multiprocessing
 import time
 
 import numpy as np
+from scipy import sparse
+from scipy import linalg as slin
 
 from dadapy._cython import cython_density as cd
+from dadapy.cython_ import cython_grads as cgr
 from dadapy._utils.density_estimation import (
     return_not_normalised_density_kstarNN,
     return_not_normalised_density_PAk,
@@ -41,12 +44,25 @@ class DensityEstimation(IdEstimation):
 
     Inherits from class IdEstimation. Can estimate the optimal number k* of neighbors for each points.
     Can compute the log-density and its error at each point choosing among various kNN-based methods.
+    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component.
+    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component.
 
     Attributes:
         kstar (np.array(float)): array containing the chosen number k* in the neighbourhood of each of the N points
         dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the N points
+        nspar (int): total number of edges in the directed graph defined by kstar (sum over all points of kstar minus N)
+        nind_list (np.ndarray(int), optional): size nspar x 2. Each row is a couple of indices of the connected graph stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
+        nind_iptr (np.array(int), optional): size N+1. For each elemen i stores the 0-th index in nind_list at which the edges starting from point i start. The last entry is set to nind_list.shape[0]
+        common_neighs (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa
+        neigh_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k*-1 nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
+        neigh_dists (np.array(float), optional): stores distances from each point to its k*-1 nearest neighbors in the order defined by nind_list
         log_den (np.array(float), optional): array containing the N log-densities
         log_den_err (np.array(float), optional): array containing the N errors on the log_den
+        grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i
+        grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
+        check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance matrices of the gradients
+        Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j
+        Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared errors on the values in Fij_array
 
     """
 
@@ -63,9 +79,20 @@ class DensityEstimation(IdEstimation):
         )
 
         self.kstar = None
+        self.nspar = None
+        self.nind_list = None
+        self.nind_iptr = None
+        self.common_neighs = None
+        self.neigh_vector_diffs = None
+        self.neigh_dists = None
         self.dc = None
         self.log_den = None
         self.log_den_err = None
+        self.grads = None
+        self.grads_var = None
+        self.check_grads_covmat = False
+        self.Fij_array = None
+        self.Fij_var_array = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -82,9 +109,20 @@ class DensityEstimation(IdEstimation):
         else:
             self.kstar = np.full(self.N, k, dtype=int)
 
+        self.nspar = None
+        self.nind_list = None
+        self.nind_iptr = None
+        self.common_neighs = None
+        self.neigh_vector_diffs = None
+        self.neigh_dists = None
         self.dc = None
         self.log_den = None
         self.log_den_err = None
+        self.grads = None
+        self.grads_var = None
+        self.check_grads_covmat = False
+        self.Fij_array = None
+        self.Fij_var_array = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -158,6 +196,149 @@ class DensityEstimation(IdEstimation):
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds computing kstar".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_neigh_indices(self):
+        """Computes the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest (excluded).
+        The couples of indices are stored in a numpy ndarray of rank 2 and secondary dimension = 2.
+        The index of the corresponding AAAAAAAAAAAAA make indpointer which is a np.array of length N which indicates for each i the starting index of the corresponding [i,.] subarray.
+
+        """
+
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if self.verb:
+            print("Computation of the neighbour indices started")
+
+        sec = time.time()
+
+        # self.get_vector_diffs = sparse.csr_matrix((self.N, self.N),dtype=np.int_)
+        self.nind_list, self.nind_iptr = cgr.return_neigh_ind(
+            self.dist_indices, self.kstar
+        )
+
+        self.nspar = len(self.nind_list)
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing neighbour indices".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_neigh_dists(self):
+        """Computes the (directed) neighbour distances graph using kstar[i] neighbours for each point i.
+        Distances are stored in np.array form according to the order of nind_list.
+
+        """
+
+        if self.distances is None:
+            self.compute_distances()
+
+        if self.kstar is None:
+            self.compute_kstar()
+
+        if self.verb:
+            print("Computation of the neighbour distances started")
+
+        sec = time.time()
+
+        self.neigh_dists = cgr.return_neigh_distances_array(
+            self.distances, self.dist_indices, self.kstar
+        )
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing neighbour distances".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def return_sparse_distance_graph(self):
+        """Returns the (directed) neighbour distances graph using kstar[i] neighbours for each point i in N x N sparse csr_matrix form."""
+
+        if self.neigh_dists is None:
+            self.compute_neigh_dists()
+
+        dgraph = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+
+        for ind_spar, indices in enumerate(self.nind_list):
+            dgraph[indices[0], indices[1]] = self.neigh_dists[ind_spar]
+
+        return dgraph.tocsr()
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_neigh_vector_diffs(self):
+        """Compute the vector differences from each point to its k* nearest neighbors.
+        The resulting vectors are stored in a numpy ndarray of rank 2 and secondary dimension = dims.
+        The index of  scipy sparse csr_matrix format.
+
+        AAA better implement periodicity to take both a scalar and a vector
+
+        """
+        # compute neighbour indices
+        if self.nind_list is None:
+            self.compute_neigh_indices()
+
+        if self.verb:
+            print("Computation of the vector differences started")
+        sec = time.time()
+
+        # self.get_vector_diffs = sparse.csr_matrix((self.N, self.N),dtype=np.int_)
+        if self.period is None:
+            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs(
+                self.X, self.nind_list
+            )
+        else:
+            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_periodic(
+                self.X, self.nind_list, self.period
+            )
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing vector differences".format(sec2 - sec))
+
+        # ----------------------------------------------------------------------------------------------
+
+        # def return_neigh_vector_diffs(self, i, j):
+        """Return the vector difference between points i and j.
+
+        Args:
+            i and j, indices of the two points
+
+        Returns:
+            self.X[j] - self.X[i]
+        """
+
+    #    return self.neigh_vector_diffs[self.nind_mat[i, j]]
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_common_neighs(self):
+        """Compute the common number of neighbours between couple of points (i,j) such that j is\
+        in the neighbourhod of i. The numbers are stored in a scipy sparse csr_matrix format.
+
+        Args:
+
+        Returns:
+
+        """
+
+        # compute neighbour indices
+        if self.nind_list is None:
+            self.compute_neigh_indices()
+
+        if self.verb:
+            print("Computation of the numbers of common neighbours started")
+
+        sec = time.time()
+        self.common_neighs = cgr.return_common_neighs(
+            self.kstar, self.dist_indices, self.nind_list
+        )
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds to carry out the computation.".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 
@@ -308,6 +489,227 @@ class DensityEstimation(IdEstimation):
             print("PAk density estimation finished")
 
         return self.log_den, self.log_den_err
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_gCorr(self, use_variance=True, comp_err=True):
+        # TODO: matrix A should be in sparse format!
+
+        # compute changes in free energy
+        if self.Fij_array is None:
+            self.compute_deltaFs_grads_semisum()
+
+        if self.verb:
+            print("gCorr density estimation started")
+            sec = time.time()
+
+        # compute adjacency matrix and cumulative changes
+        A = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+
+        supp_deltaF = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+
+        # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+        k1 = self.kstar[self.nind_list[:, 0]]
+        k2 = self.kstar[self.nind_list[:, 1]]
+
+        redundancy = np.sqrt(k1 * k2)
+        # redundancy = k1
+        # la cosa giusta e' forse sqrt(k1_inout * k2_inout) con ki_inout che conta tutte le volte che il punto i compare nella sommatoria
+        #   cioe' ki + {numero di volte che k_i}
+        # oppure (k1-1)/np.sqrt(k1*k2) che da' media ~1
+        # redundancy = np.full_like(k1,fill_value=1.,dtype=np.float_)
+        # print(redundancy)
+
+        if use_variance:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = 1.0 / self.Fij_var_array[nspar] / redundancy[nspar]
+                A[i, j] = -tmp
+                supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
+        else:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                # A[i, j] = -1.0
+                A[i, j] = -1.0 / redundancy[nspar]
+                supp_deltaF[i, j] = self.Fij_array[nspar]
+
+        A = sparse.lil_matrix(A + A.transpose())
+
+        diag = np.array(-A.sum(axis=1)).reshape((self.N,))
+
+        A.setdiag(diag)
+
+        # print("Diag = {}".format(diag))
+
+        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(
+            supp_deltaF.sum(axis=1)
+        ).reshape((self.N,))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
+
+        log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+        if self.verb:
+            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        sec2 = time.time()
+
+        self.log_den = log_den
+        # self.log_den_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
+
+        if comp_err is True:
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            # self.B = slin.inv(self.A)
+            self.log_den_err = np.sqrt(np.diag(self.B))
+
+        if self.verb:
+            print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+        sec2 = time.time()
+
+        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
+        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_grads(self, comp_covmat=False):
+        """Compute the gradient of the log density each point using k* nearest neighbors.
+        The gradient is estimated via a linear expansion of the density propagated to the log-density.
+
+        Args:
+
+        Returns:
+
+        MODIFICARE QUI E ANCHE NEGLI ATTRIBUTI
+
+        """
+        # compute optimal k
+        if self.kstar is None:
+            self.compute_kstar()
+
+        # check or compute vector_diffs
+        if self.neigh_vector_diffs is None:
+            self.compute_neigh_vector_diffs()
+
+        if self.verb:
+            print("Estimation of the density gradient started")
+
+        sec = time.time()
+        if comp_covmat is False:
+            # self.grads, self.grads_var = cgr.return_grads_and_var_from_coords(self.X, self.dist_indices, self.kstar, self.intrinsic_dim)
+            self.grads, self.grads_var = cgr.return_grads_and_var_from_nnvecdiffs(
+                self.neigh_vector_diffs,
+                self.nind_list,
+                self.nind_iptr,
+                self.kstar,
+                self.intrinsic_dim,
+            )
+            self.grads_var = np.einsum(
+                "ij, i -> ij", self.grads_var, self.kstar / (self.kstar - 1)
+            )  # Bessel's correction for the unbiased sample variance estimator
+
+        else:
+            # self.grads, self.grads_var = cgr.return_grads_and_covmat_from_coords(self.X, self.dist_indices, self.kstar, self.intrinsic_dim)
+            self.grads, self.grads_var = cgr.return_grads_and_covmat_from_nnvecdiffs(
+                self.neigh_vector_diffs,
+                self.nind_list,
+                self.nind_iptr,
+                self.kstar,
+                self.intrinsic_dim,
+            )
+            self.check_grads_covmat = True
+
+            self.grads_var = np.einsum(
+                "ijk, i -> ijk", self.grads_var, self.kstar / (self.kstar - 1)
+            )  # Bessel's correction for the unbiased sample variance estimator
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing gradients".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_deltaFs_grads_semisum(self, chi="auto"):
+        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using\
+            a linear expansion with as slope the semisum of the average gradient of the log-density over the neighbourhood of points i and j. \
+            The parameter chi is used in the estimation of the squared error of the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), \
+            where E_i is the error on the estimate of grad_i*DeltaX_ij.
+
+        Args:
+            chi: the Pearson correlation coefficient between the estimates of the gradient in i and j. Can take a numerical value between 0 and 1.\
+                The option 'auto' takes a geometrical estimate of chi based on AAAAAAAAA
+
+        Returns:
+
+        """
+
+        # check or compute vector_diffs
+        if self.neigh_vector_diffs is None:
+            self.compute_neigh_vector_diffs()
+
+        # check or compute gradients and their covariance matrices
+        if self.grads is None:
+            self.compute_grads(comp_covmat=True)
+
+        elif self.check_grads_covmat is False:
+            self.compute_grads(comp_covmat=True)
+
+        if self.verb:
+            print(
+                "Estimation of the gradient semisum (linear) corrections deltaFij to the log-density started"
+            )
+        sec = time.time()
+
+        Fij_array = np.zeros(self.nspar)
+        Fij_var_array = np.zeros(self.nspar)
+
+        k1 = self.kstar[self.nind_list[:, 0]]
+        k2 = self.kstar[self.nind_list[:, 1]]
+        g1 = self.grads[self.nind_list[:, 0]]
+        g2 = self.grads[self.nind_list[:, 1]]
+        g_var1 = self.grads_var[self.nind_list[:, 0]]
+        g_var2 = self.grads_var[self.nind_list[:, 1]]
+
+        if chi == "auto":
+            # check or compute common_neighs
+            if self.common_neighs is None:
+                self.compute_common_neighs()
+
+            # chi = self.common_neighs / (k1 + k2 - self.common_neighs)
+            # chi = self.common_neighs**2 / (k1 * k2)
+            chi = self.common_neighs / np.sqrt(k1 * k2)
+
+        else:
+            assert chi >= 0.0 and chi <= 1.0, "Invalid value for argument 'chi'"
+
+        Fij_array = 0.5 * np.einsum("ij, ij -> i", g1 + g2, self.neigh_vector_diffs)
+        vari = np.einsum(
+            "ij, ij -> i",
+            self.neigh_vector_diffs,
+            np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
+        )
+        varj = np.einsum(
+            "ij, ij -> i",
+            self.neigh_vector_diffs,
+            np.einsum("ijk, ik -> ij", g_var2, self.neigh_vector_diffs),
+        )
+        Fij_var_array = 0.25 * (vari + varj + 2 * chi * np.sqrt(vari * varj))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
+
+        self.Fij_array = Fij_array
+        self.Fij_var_array = Fij_var_array
+        # self.Fij_var_array = Fij_var_array*k1/(k1-1) #Bessel's correction for the unbiased sample variance estimator
 
     # ----------------------------------------------------------------------------------------------
 
