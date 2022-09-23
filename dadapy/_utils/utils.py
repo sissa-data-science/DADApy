@@ -179,11 +179,14 @@ def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
     # mus[indx] += 1e-10  # np.finfo(dtype).eps
     mus = np.sort(mus)
 
-    q3, q2 = np.percentile(mus, [95 ,50])
-    mu_max = 20*(q3-q2)+q2              #very generous threshold: to accomodate fat tailed distributions
-    mus = mus[mus < mu_max]             #remove high mu values related very likely to overlapping datapoints
+    q3, q2 = np.percentile(mus, [95, 50])
+    mu_max = (
+        20 * (q3 - q2) + q2
+    )  # very generous threshold: to accomodate fat tailed distributions
+    mus = mus[
+        mus < mu_max
+    ]  # remove high mu values related very likely to overlapping datapoints
     N = len(mus)
-
 
     l1 = _loglik(d1, mus, n1, n2, N, eps)
     while abs(d0 - d1) > eps:
