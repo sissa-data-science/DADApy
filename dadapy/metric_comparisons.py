@@ -457,7 +457,7 @@ class MetricComparisons(Base):
 
         return np.array(coord_list), np.array(imbalances)
 
-    def return_label_overlap(self, labels, k=30, avg = True):
+    def return_label_overlap(self, labels, k=30, avg=True):
         """Return the neighbour overlap between the full space and a set of labels.
 
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
@@ -480,7 +480,7 @@ class MetricComparisons(Base):
 
         if avg:
             overlaps = np.mean(overlaps)
-            
+
         return overlaps
 
     def return_data_overlap(self, coordinates=None, distances=None, k=30, avg=True):
