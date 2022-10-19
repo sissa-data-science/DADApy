@@ -21,6 +21,7 @@ import numpy as np
 from scipy.stats import ks_2samp as KS
 
 import dadapy._utils.discrete_functions as df
+from dadapy._utils import utils as ut
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
@@ -34,16 +35,16 @@ class IdDiscrete(Base):
 
     Attributes:
 
-            lk (int, np.ndarray(int)): radius of the external shells
-            ln (int, np.ndarray(int)): radius of the internal shells
-            k (np.ndarray(int)): total number of points within the external shell
-            n (np.ndarray(int)): total number of points within the internal shell
-            ratio (float): ratio between internal and external radii
-            intrinsic_dim (float): intrinsic dimension obtained with the binomial estimator
-            intrinsic_dim_err (float): error associated with the id estimation. computed through Cramer-Rao or Bayesian inference
-            intrinsic_dim_scale (float): scale at which the id has been computed
-            posterior_domain (np.ndarray(float)): eventual support of the posterior distribution of the id
-            posterior (np.ndarray(float)): posterior distribution when evaluated with Bayesian inference
+        lk (int, np.ndarray(int)): radius of the external shells
+        ln (int, np.ndarray(int)): radius of the internal shells
+        k (np.ndarray(int)): total number of points within the external shell
+        n (np.ndarray(int)): total number of points within the internal shell
+        ratio (float): ratio between internal and external radii
+        intrinsic_dim (float): intrinsic dimension obtained with the binomial estimator
+        intrinsic_dim_err (float): error associated with the id estimation. computed through Cramer-Rao or Bayesian inference
+        intrinsic_dim_scale (float): scale at which the id has been computed
+        posterior_domain (np.ndarray(float)): eventual support of the posterior distribution of the id
+        posterior (np.ndarray(float)): posterior distribution when evaluated with Bayesian inference
 
     """
 
@@ -115,7 +116,6 @@ class IdDiscrete(Base):
 
         if self._condensed:
             self.metric = metric
-
             self.period = period
             if period is not None:
                 if isinstance(period, np.ndarray) and period.shape == (self.dims,):
@@ -234,7 +234,14 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_id_binomial_lk(
-        self, lk=None, ln=None, method="bayes", subset=None, plot=True, set_attr=True
+        self,
+        lk=None,
+        ln=None,
+        method="bayes",
+        subset=None,
+        plot=True,
+        set_attr=True,
+        cont=False,
     ):
         """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
@@ -249,6 +256,7 @@ class IdDiscrete(Base):
                     gives the distribution of the id, while mle only the max of the likelihood
             plot (bool): if bayes method is used, one can decide whether to plot the posterior
             set_attr (bool): changes class attributes after computation
+            cont (bool): use continuous definition of volume instead of discrete one
 
         Returns:
             intrinsic_dim (float): the id esteem
@@ -304,17 +312,27 @@ class IdDiscrete(Base):
                 k_eff = k_eff.mean()
                 n_eff = n_eff.mean()
 
-            # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
-            # more stable than root searching
-            intrinsic_dim = df.find_d_likelihood(self.ln, self.lk, n_eff, k_eff, w_eff)
-            # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
-
-            intrinsic_dim_err = (
-                df.binomial_cramer_rao(
-                    d=intrinsic_dim, ln=self.ln, lk=self.lk, N=N, k=k_eff
+            if cont:
+                intrinsic_dim = np.log(n_eff / k_eff) / np.log(float(self.ln) / self.lk)
+                intrinsic_dim_err = np.sqrt(
+                    ut._compute_binomial_cramerrao(
+                        intrinsic_dim, k_eff, float(self.ln) / self.lk, N
+                    )
                 )
-                ** 0.5
-            )
+            else:
+                # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
+                # more stable than root searching
+                intrinsic_dim = df.find_d_likelihood(
+                    self.ln, self.lk, n_eff, k_eff, w_eff
+                )
+                # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
+
+                intrinsic_dim_err = (
+                    df.binomial_cramer_rao(
+                        d=intrinsic_dim, ln=self.ln, lk=self.lk, N=N, k=k_eff
+                    )
+                    ** 0.5
+                )
         elif method == "bayes":
             if self._is_w:
                 k_tot = w_eff * k_eff
@@ -331,9 +349,7 @@ class IdDiscrete(Base):
                 intrinsic_dim_err,
                 self.posterior_domain,
                 self.posterior,
-            ) = df.beta_prior_d(
-                k_tot, n_tot, self.lk, self.ln, plot=plot
-            )
+            ) = df.beta_prior_d(k_tot, n_tot, self.lk, self.ln, plot=plot)
         else:
             print("select a proper method for id computation")
             return 0
@@ -347,7 +363,9 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_id_scaling(self, Lks, r=0.5, method="mle", subset=None, plot=True):
+    def return_id_scaling(
+        self, Lks, r=0.5, method="mle", subset=None, plot=True, cont=False
+    ):
         """Compute the ID by varying the radii
 
         Args:
@@ -360,13 +378,43 @@ class IdDiscrete(Base):
         Returns:
             ids (np.ndarray): intrinsic dimension at different scales
             ids_err (np.ndarray): error estimate on intrinsic dimension at different scales
+
+        Quick Start:
+        ===========
+
+        .. code-block:: python
+
+                import numpy as np
+                import matplotlib.pyplot as plt
+                rng = np.random.default_rng(12345)
+                from dadapy.id_discrete import IdDiscrete
+
+                #uniformly sampled points on 5d lattice
+
+                N = 2500
+                box = 50
+                d = 5
+                data = rng.integers(0,box,size=(N, d))
+
+                I3D = IdDiscrete(data, condensed=True, maxk=data.shape[0])
+                I3D.compute_distances(metric='manhattan',d_max=box*d,period=box)
+
+                scales = np.arange(15,30)
+
+                ids_scaling, ids_scaling_err = I3D.return_id_scaling(scales,r=0.75)
+
+                ids_scaling:
+                array([4.91, 4.86, 4.86, 4.94, 4.98, 5.  , 5.  , 4.99, 5.01, 5.  , 5.01, 5.01, 5.02, 5.01, 5.01])
+
+                ids_scaling_err:
+                array([0.09, 0.08, 0.07, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03, 0.03, 0.03, 0.02, 0.02, 0.02, 0.02])
         """
         ids = np.zeros_like(Lks, dtype=float)
         ids_e = np.zeros_like(Lks, dtype=float)
 
         for i, lk in enumerate(Lks):
             id_i, id_er, scale = self.compute_id_binomial_lk(
-                lk, int(lk * r), method=method, subset=subset, set_attr=False
+                lk, int(lk * r), method=method, subset=subset, set_attr=False, cont=cont
             )
             ids[i] = id_i
             ids_e[i] = id_er
@@ -720,6 +768,155 @@ class IdDiscrete(Base):
 
         return ids, ids_e, scale
 
+    # ----------------------------------------------------------------------------------------------
+
+    def return_id_fit(self, scales, subset=None, plot=True):
+        """Find the ID as least square fit between the actual and the theoretical number of points
+
+        Compute the id as least square fit between the average number of neighbours N(r) and the theoretical number
+        of points within a given shell \rho*V(r). Given a radius r, the fit takes into account all points with r_i <= r.
+        The fit is performed both between N and \rho*V and their logarithms.
+
+        Args:
+            scales (list(int) or np.ndarray(int)): radii at which the number of neighbours is computed
+            subset (np.ndarray(int)): indices of points to be used for the estimate
+            plot (bool): plot the fit taking into account all given radii in R and ID(r)
+
+        Returns:
+            ids (np.ndarray(float)): the intrinsic dimension estimates as a function of R with "normal" fit
+            ids (np.ndarray(float)): the intrinsic dimension estimates as a function of R with "log" fit
+            scales (np.ndarray(int)): the scales at which the ID is computed (the first point is excluded)
+
+        """
+
+        from scipy.optimize import curve_fit
+
+        def fit_func(r, d, rho):
+            return df.compute_discrete_volume(r, d) * rho
+
+        def fit_func_log(r, d, rho):
+            return np.log(df.compute_discrete_volume(r, d)) + np.log(rho)
+
+        ids, idsl = [], []
+        N = np.zeros_like(scales)
+        mask = self._my_mask(subset)
+
+        for i, ri in enumerate(scales):
+            if self._condensed:
+                N[i] = np.mean(self.distances[mask, ri])
+            else:
+                N[i] = np.mean(self.distances[mask] <= ri)
+
+            if i == 0:
+                continue
+
+            popt, pcov = curve_fit(fit_func, scales[: i + 1], N[: i + 1])
+            ids.append(popt)
+            poptl, pcovl = curve_fit(fit_func_log, scales[: i + 1], np.log(N[: i + 1]))
+            idsl.append(poptl)
+
+        ids = np.array(ids)
+        idsl = np.array(idsl)
+
+        if plot:
+            plt.figure()
+            plt.plot(N, fit_func(scales, *popt), label="fit")
+            plt.plot(N, np.exp(fit_func_log(scales, *poptl)), label="log fit")
+            plt.scatter(N, N, label="x=y")
+            plt.legend()
+
+            plt.figure()
+            plt.plot(scales[1:], ids[:, 0], label="fit")
+            plt.plot(scales[1:], idsl[:, 0], label="log fit")
+            plt.legend()
+
+        return ids[:, 0], idsl[:, 0], scales[1:]
+
+    # ----------------------------------------------------------------------------------------------
+
+    def return_id_fit_continuum(self, R, fit_intercept=True, subset=None, plot=True):
+        """Find the ID as linear fit between Log(n) vs Log(r), assuming N~r**d
+
+        Compute the id fitting a line between Log(n) and Log(r). Given a radius r_i, the fit takes into account
+        all points with r <= r_i.
+        Since no prescription has been given for this method on how to deal with points lying at discrete distances,
+        we suppose to apply a small smearing, so that half of the points will end up a bit further than their initial
+        distance and half will be slightly closer. As a consequence, when looking at distance r, we will be considering
+        all points up to r-1 and half of those at distance r
+
+        Args:
+            R (list(int) or np.ndarray(int)): radii at which the number of neighbours is computed
+            fit_intercept (bool, default=True): decide whether to fit the intercept or fix it to N(r=1)
+            subset (np.ndarray(int)): indices of points to be used for the estimate
+            plot (bool): plot the fit taking into account all given radii in R and ID(r)
+
+        Returns:
+            ids (np.ndarray(float)): the intrinsic dimension estimates as a function of R
+            R (np.ndarray(int)): the scales at which the ID is computed (the first point is excluded)
+
+        """
+        self._mask = np.ones(self.N, dtype=bool)
+        mask = self._my_mask(subset)
+        el = mask.sum()
+
+        from scipy.optimize import curve_fit
+
+        if fit_intercept:
+
+            def fit_func(x, a, b):
+                return a * x + b
+
+        else:
+            if self._condensed:
+                b = np.log(np.mean(self.distances[mask, 1])) - el
+            else:
+                b = np.log(np.mean(self.distances[mask] <= 1)) - el
+            print(b)
+
+            def fit_func(x, a):
+                return a * x + b
+
+        N = []
+        ids_i = []
+
+        if np.any(R < 1e-10):
+            print("we cannot use the R=0 as we have to take the log, start with R=1")
+
+        for i, r in enumerate(R):
+            if self._condensed:
+                shell = (
+                    np.sum(self.distances[mask, r] - self.distances[mask, r - 1]) * 0.5
+                )
+                n = np.sum(self.distances[mask, r - 1]) + shell - el
+            else:
+                shell = (
+                    np.sum((r - 1 < self.distances[mask]) * (self.distances[mask] <= r))
+                    * 0.5
+                )
+                n = np.sum(self.distances[mask] < r) + shell - el
+            # normalization is pointless when fitting log log
+            # n/=el/(el-1)
+
+            N.append(n)
+
+            if i == 0:
+                continue
+            popt, pcov = curve_fit(fit_func, np.log(R[: i + 1]), np.log(N[: i + 1]))
+            ids_i.append(popt)
+
+        ids = np.array(ids_i)
+
+        if plot:
+            plt.figure(figsize=(5, 3))
+            plt.scatter(np.log(R), np.log(N), label="points")
+            plt.plot(np.log(R), fit_func(np.log(R), *ids[-1]), label="linear fit")
+            plt.legend()
+
+            plt.figure(figsize=(5, 3))
+            plt.plot(R[1:], ids[:, 0], label="curve_fit")
+
+        return ids[:, 0], R[1:]
+
     # -------------------------------MODEL VALIDATION-----------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
@@ -733,7 +930,7 @@ class IdDiscrete(Base):
 
         Args:
             plot (bool, default=True): decide whether to plot the local density
-            path (string, deafult=None): filename to save the plot
+            path (string, default=None): filename to save the plot
         Returns:
             n (np.ndarray(float)): n/<n>
             m (np.ndarray(float)): (k-n)/<k-n>
@@ -782,7 +979,7 @@ class IdDiscrete(Base):
     def model_validation_full(
         self, alpha=0.05, subset=None, pdf=False, cdf=True, path=None
     ):
-        """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate
+        """Use Kolmogorov-Smirnoff test to assess the goodness of the id estimate
 
         In order to validate estimate of the intrinsic dimension and the model
         and the goodness of the binomial estimator we perform a KS test. In
@@ -1217,7 +1414,7 @@ class IdDiscrete(Base):
     def set_id(self, d):
         """Set id manually
         Args:
-            id (float): intrisic dimension to assign to the class
+            id (float): intrinsic dimension to assign to the class
 
         """
 
@@ -1230,7 +1427,7 @@ class IdDiscrete(Base):
         """Assign lk and ln to class
         Args:
             lk (int): radius of external shells
-            ln (int): radiuf of internal shells
+            ln (int): radius of internal shells
         """
 
         assert (
@@ -1270,7 +1467,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def _my_mask(self, subset=None):
-        """Compute the mask to be used when computing the id
+        """Compute the mask to select points to be used when computing the id
 
         This function create a mask used to compute the id on a subset of datapoints.
         It takes into account mask given by the fix_k or fix_lk methods and integrate
@@ -1343,3 +1540,30 @@ class IdDiscrete(Base):
 #     ide.compute_id_2NN(decimation=1)
 #
 #     print(ide.id_estimated_2NN,ide.intrinsic_dim)
+
+"""
+Quick Start:
+        ===========
+
+        .. code-block:: python
+
+                from dadapy import IdEstimation
+                from sklearn.datasets import make_swiss_roll
+
+                #two dimensional curved manifold embedded in 3d with noise
+
+                n_samples = 5000
+                X, _ = make_swiss_roll(n_samples, noise=0.3)
+
+                ie = IdEstimation(coordinates=X)
+                ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(N_min = 20)
+
+                ids_scaling:
+                array([2.88 2.77 2.65 2.42 2.22 2.2  2.1  2.23])
+
+                ids_scaling_err:
+                array([0.   0.02 0.05 0.04 0.04 0.03 0.04 0.04])
+
+                rs_scaling:
+                array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
+"""

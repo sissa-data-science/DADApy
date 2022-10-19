@@ -457,7 +457,7 @@ class MetricComparisons(Base):
 
         return np.array(coord_list), np.array(imbalances)
 
-    def return_label_overlap(self, labels, k=30):
+    def return_label_overlap(self, labels, k=30, avg=True):
         """Return the neighbour overlap between the full space and a set of labels.
 
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
@@ -473,15 +473,17 @@ class MetricComparisons(Base):
             assert self.X is not None
             self.compute_distances()
 
-        overlaps = []
+        overlaps = -np.ones(self.N)
         for i in range(self.N):
             neigh_idx_i = self.dist_indices[i, 1 : k + 1]
-            overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
+            overlaps[i] = sum(labels[neigh_idx_i] == labels[i]) / k
 
-        overlap = np.mean(overlaps)
-        return overlap
+        if avg:
+            overlaps = np.mean(overlaps)
 
-    def return_data_overlap(self, coordinates=None, distances=None, k=30, coords=None):
+        return overlaps
+
+    def return_data_overlap(self, coordinates=None, distances=None, k=30, avg=True):
         """Return the neighbour overlap between the full space and another dataset.
 
         An overlap of 1 means that all neighbours of a point are the same in the two spaces.
@@ -515,7 +517,6 @@ class MetricComparisons(Base):
         assert self.N == dist_indices.shape[0]
 
         overlaps = -np.ones((self.N))
-        # print(dist_indices[:4, :5],   self.dist_indices[:4, :5])
 
         for i in range(self.N):
 
@@ -527,12 +528,11 @@ class MetricComparisons(Base):
                 )
                 / k
             )
-            # if i ==0:
-            # print(overlaps[i])
 
-        overlap = np.mean(overlaps)
+        if avg:
+            overlaps = np.mean(overlaps)
 
-        return overlap
+        return overlaps
 
     def return_label_overlap_coords(self, labels, coords, k=30):
         """Return the neighbour overlap between a selection of coordinates and a set of labels.

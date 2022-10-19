@@ -1,17 +1,19 @@
 Citing DADApy
 ============================
 
-A description of the package is available `here <https://arxiv.org/abs/2205.03373>`_.
+A description of the package is available `here <https://www.sciencedirect.com/science/article/pii/S2666389922002070>`_.
 
 Please consider citing it if you found this package useful for your research
 
 .. code-block:: bib
 
     @article{dadapy,
-        author = {Glielmo, Aldo and Macocco, Iuri and Doimo, Diego and Carli, Matteo and Zeni, Claudio and Wild, Romina and d'Errico, Maria and Rodriguez, Alex and Laio Alessandro},
-        title = {{DADApy: Distance-based Analysis of DAta-manifolds in Python}},
-        journal = {arXiv preprint arXiv:2205.03373},
+        title = {DADApy: Distance-based analysis of data-manifolds in Python},
+        journal = {Patterns},
+        pages = {100589},
         year = {2022},
-        doi = {https://doi.org/10.48550/arXiv.2205.03373},
-        url = {https://arxiv.org/abs/2205.03373},
+        issn = {2666-3899},
+        doi = {https://doi.org/10.1016/j.patter.2022.100589},
+        url = {https://www.sciencedirect.com/science/article/pii/S2666389922002070},
+        author = {Aldo Glielmo and Iuri Macocco and Diego Doimo and Matteo Carli and Claudio Zeni and Romina Wild and Maria d’Errico and Alex Rodriguez and Alessandro Laio},
         }
