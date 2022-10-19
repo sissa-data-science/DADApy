@@ -1,4 +1,17 @@
-import os
+# Copyright 2021 The DADApy Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -107,8 +120,8 @@ def _compute_derivative_discrete_vol(l, d):
 
     """
 
-    # TODO: write derivative of expression above. Not that simple to derive the hypergeometric
-    #       probably need SymPy
+    # TODO: write derivative of expression above. Might do it numerically, as
+    #  analytically it is not that simple. For the time being, we use the exact polynomial formulation
 
     # exact formula with polynomials, for small L
     #    assert isinstance(l, (int, np.int))
@@ -258,7 +271,7 @@ def binomial_cramer_rao(d, ln, lk, N, k):
 
 
 def _eq_to_find_0(d, ln, lk, n, k):
-    """Equation whose roots gives the id when fixing radii
+    """Equation whose root gives the id when fixing radii
     Args:
         d (float): id, parameter to infer
         ln (int): internal radius
@@ -310,16 +323,7 @@ def find_d_likelihood(ln, lk, n, k, ww):
     Returns:
         id (float): the estimated intrinsic dimension
     """
-    # if isinstance(n, np.ndarray):
-    #     n_check = n.mean()
-    # else:
-    #     n_check = n
-    # if (
-    #     n_check < 0.00001
-    # ):  # i.e. i'm dealing with isolated points, there's no statistics on n
-    #     return 0
-    # #    if abs(k-n)<0.00001: #i.e. there's internal and external shell have the same amount of points
-    # #        return 0
+
     return SMin(
         _compute_binomial_logl,
         args=(lk, k, ln, n, True, False, ww),
@@ -332,41 +336,57 @@ def find_d_likelihood(ln, lk, n, k, ww):
 
 
 def profile_likelihood(ln, lk, n, k, ww, plot=False):
+    """Compute the likelihood of the binomial process and find the ID when ln and lk vary for each point
+
+    Args:
+        ln (np.ndarray(int)): inner shell radii
+        lk (np.ndarray(int)): outer shell radii
+        n (np.ndarray(int)): number of points within the internal shells
+        k (np.ndarray(int)): number of points within the external shells
+        ww (np.ndarray(int)): multiplicity of datapoints
+        plot (bool, default=False): plot the posterior
+    Returns:
+        E_d_emp (float): mean value of the posterior
+        S_d_emp (float): std of the posterior
+        d_range (ndarray(float)): domain of the posterior
+        P (ndarray(float)): probability of the posterior
+    """
+
     def p_d(d):
         return _compute_binomial_logl(
             d, lk, k, ln, n, discrete=True, truncated=False, w=ww
         )
 
-    # in principle we don't know where the distribution is peaked, so
+    # in principle, we don't know where the distribution is peaked, so
     # we perform a blind search over the domain
-    dx = 1.0
+    dx = 10.0
     d_left = D_MIN
     d_right = D_MAX + dx + d_left
-    d_range = np.arange(d_left, d_right, dx)
-    P = np.array([p_d(di) for di in d_range]) * dx
+    elements = 0
     counter = 0
-    mask = P != 0
-    elements = mask.sum()
-    # if less than 3 points !=0 are found, reduce the interval
+    # if less than 3 points have P!=0 are found, reduce the interval
     while elements < 3:
-        dx /= 10
-        d_range = np.arange(d_left, d_right, dx)
-        P = np.array([p_d(di) for di in d_range]) * dx
-        P = P.reshape(P.shape[0])
-        P = np.exp(-P)
-        mask = P != 0
-        elements = mask.sum()
+        dx /= 10.0
         counter += 1
+        #        print('iter no.', counter, '\nmesh size', dx)
+        d_range = np.arange(d_left, d_right, dx)
+        P = np.array([p_d(di) for di in d_range])  # * dx
+        P = P.reshape(P.shape[0])
+        P -= P.min()
+        P = np.exp(-P)
+        mask = P > 1e-20
+        elements = mask.sum()
 
-    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
+    # with more than 3 points where P!=0 we can restrict the domain in that interval and build a smooth distribution
     # I choose 1000 points but such quantity can be varied according to necessity
     ind = np.where(mask)[0]
     d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
     d_right = d_range[ind[-1]] + 0.5 * dx
     d_range = np.linspace(d_left, d_right, 1000)
     dx = d_range[1] - d_range[0]
-    P = np.array([p_d(di) for di in d_range]) * dx
+    P = np.array([p_d(di) for di in d_range])  # * dx
     P = P.reshape(P.shape[0])
+    P -= P.min()
     P = np.exp(-P)
     P /= P.sum()
     # if verbose:
@@ -377,18 +397,13 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         plt.plot(d_range, P)
         plt.xlabel("d")
         plt.ylabel("P(d)")
-        plt.title("posterior of d")
-        #        plt.xlim(1,5)
-        #        plt.ylim(350,425)
+        plt.title("Posterior of d")
         plt.show()
 
     E_d_emp = np.dot(d_range, P)
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
     if plot:
         print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
-    #   theoretical results, valid only in the continuum case
-    #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
-    #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
     return E_d_emp, S_d_emp, d_range, P
 
@@ -401,18 +416,18 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True):
     consequence one has to change variable to have the distribution over d
 
     Args:
-            k (nd.array(int)): number of points within the external shells
-            n (nd.array(int)): number of points within the internal shells
-            lk (int): outer shell radius
-            ln (int): inner shell radius
-            a0 (float): beta distribution parameter, default =1 for flat prior
-            b0 (float): prior initializer, default =1 for flat prior
-            plot (bool, default=False): plot the posterior
+        k (nd.array(int)): number of points within the external shells
+        n (nd.array(int)): number of points within the internal shells
+        lk (int): outer shell radius
+        ln (int): inner shell radius
+        a0 (float): beta distribution parameter, default =1 for flat prior
+        b0 (float): prior initializer, default =1 for flat prior
+        plot (bool, default=False): plot the posterior
     Returns:
-            E_d_emp (float): mean value of the posterior
-            S_d_emp (float): std of the posterior
-            d_range (ndarray(float)): domain of the posterior
-            P (ndarray(float)): probability of the posterior
+        E_d_emp (float): mean value of the posterior
+        S_d_emp (float): std of the posterior
+        d_range (ndarray(float)): domain of the posterior
+        P (ndarray(float)): probability of the posterior
     """
     # from scipy.special import beta as beta_f
     from scipy.stats import beta as beta_d
@@ -426,33 +441,32 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True):
         dp_dd = _compute_jacobian(lk, ln, d)
         return abs(posterior.pdf(p) * dp_dd)
 
-    # in principle, we don't know where the distribution is peaked, so
-    # we perform a blind search over the domain
-    dx = 1.0
+    dx = 10.0
     d_left = D_MIN
     d_right = D_MAX + dx + d_left
-    d_range = np.arange(d_left, d_right, dx)
-    P = np.array([p_d(di) for di in d_range]) * dx
     counter = 0
-    mask = P != 0
-    elements = mask.sum()
+    elements = 0
+    # in principle, we don't know where the distribution is peaked, so
+    # we perform a blind search over the domain
     # if less than 3 points !=0 are found, reduce the interval
+    #    print('building posterior')
     while elements < 3:
         dx /= 10
-        d_range = np.arange(d_left, d_right, dx)
-        P = np.array([p_d(di) for di in d_range]) * dx
-        mask = P != 0
-        elements = mask.sum()
         counter += 1
+        #        print('inter no.', counter, '\nmesh size:', dx)
+        d_range = np.arange(d_left, d_right, dx)
+        P = np.array([p_d(di) for di in d_range])  # * dx
+        mask = P > 1e-20
+        elements = mask.sum()
 
-    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
+    # with more than 3 points where P!=0, we can restrict the domain in that interval and build a smooth distribution
     # I choose 1000 points but such quantity can be varied according to necessity
     ind = np.where(mask)[0]
     d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
     d_right = d_range[ind[-1]] + 0.5 * dx
     d_range = np.linspace(d_left, d_right, 1000)
     dx = d_range[1] - d_range[0]
-    P = np.array([p_d(di) for di in d_range]) * dx
+    P = np.array([p_d(di) for di in d_range])  # * dx
     P = P.reshape(P.shape[0])
     P /= P.sum()
     #    if verbose:
@@ -470,9 +484,6 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True):
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
     if plot:
         print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
-    #   theoretical results, valid only in the continuum case
-    #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
-    #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
     return E_d_emp, S_d_emp, d_range, P
 
@@ -602,9 +613,9 @@ def hamming_distances_condensed(points, d_max, n_jobs=1):
     """
     d_max = min(d_max, points.shape[1])
     if n_jobs > 2:
-        return hc(points, d_max), None
+        return hcp(points, d_max, n_jobs), None
     else:
-        return hcp(points, d_max), None
+        return hc(points, d_max), None
 
 
 # --------------------------------------------------------------------------------------
@@ -624,13 +635,14 @@ def hamming_distances_idx(points, d_max=100, maxk_ind=None):
         indices (optional, np.ndarray(int,int)): N x maxk_ind matrix of neighbours indices
     """
 
-
-def hamming_distances(points, d_max=100, maxk_ind=None):
-
     dist_count = np.zeros((points.shape[0], d_max + 1), dtype=int)
 
     if maxk_ind is not None:
         indexes = np.zeros((points.shape[0], maxk_ind), dtype=int)
+
+    def hamming_distance_couple(a, b):
+        assert len(a) == len(b)
+        return sum([a[i] == b[i] for i in range(len(a))])
 
     for i, pt in enumerate(points):
         appo = np.array([hamming_distance_couple(pt, pt_i) for pt_i in points])
@@ -647,7 +659,7 @@ def hamming_distances(points, d_max=100, maxk_ind=None):
         dist_count[i] = np.cumsum(dist_count[i])
 
     if maxk_ind is None:
-        return dist_count, _
+        return dist_count, None
     else:
         return dist_count, indexes
 
@@ -727,3 +739,225 @@ def plot_id_pv(x, idd, pv, title, xlabel, fileout):
         plt.savefig(fileout)
     else:
         plt.show()
+
+
+# --------------------------------------------------------------------------------------
+
+
+def box_counting(
+    array,
+    box_boundaries,
+    max_box_size=None,
+    min_box_size=1,
+    n_samples=20,
+    n_offsets=0,
+    plot=False,
+    out=None,
+    verb=True,
+    int_scale=False,
+    log_space=True,
+):
+    """Calculates the fractal dimension of a D-dimensional ensemble of points with given boundaries.
+
+    Args:
+        array (np.ndarray): The array to calculate the fractal dimension of.
+        box_boundaries (list(int) or array((int,int)): extremes of boxes in each dimension
+        max_box_size (int): The largest box size
+        min_box_size (int): The smallest box size. Default value 1.
+        n_samples (int): number of scales to measure over.
+        n_offsets (int): number of offsets to search over to find the smallest set N(s) to cover all points.
+        plot (bool): set to true to see the analytical plot of a calculation.
+        out (string): where to save the ids
+        verb (bool): when True, print some intermediate information
+        int_scale (bool): give integer values for the scale
+        log_space (bool): logarithmic space of the steps
+
+    Returns:
+        scales (np.array(int or float)): size of boxes used to cover the dataset
+        ids (np.array(float)): intrinsic dimensions found at different scales
+
+    """
+    # determine the scales to measure on
+    if log_space:
+        scales = np.logspace(
+            np.log2(min_box_size), np.log2(max_box_size), num=n_samples, base=2
+        )
+    else:
+        scales = np.linspace(min_box_size, max_box_size, n_samples)
+
+    if int_scale:
+        scales = np.rint(scales).astype(int)
+        scales = np.unique(
+            scales
+        )  # remove duplicates that could occur as a result of the floor
+
+    if verb:
+        print("box sizes selected: ", scales)
+    # get the locations of all non-zero pixels
+    # locs = np.where(array > 0)
+    # voxels = np.array([(x,y) for x,y in zip(*locs)])
+
+    inf = box_boundaries[0]
+    sup = box_boundaries[1]
+
+    # count the minimum amount of boxes touched
+    Ns = []
+    # loop over all scales
+    for scale in scales:
+        bin_temp = np.array(
+            [np.arange(inf, sup + 2 * scale, scale) for i in range(1)]
+        )  # array.shape[1])])
+        # print(bin_temp[0])
+        touched = []
+        if n_offsets == 0:
+            offsets = [0]
+        else:
+            offsets = np.linspace(0, scale, n_offsets + 1)[:-1]
+        # search over all offsets
+        for offset in offsets:
+            bin_edges = np.array(
+                [
+                    np.hstack([inf - 1e-5 - offset, x - 1e-5 - offset])
+                    for x in bin_temp[:, 1:]
+                ]
+            )
+            # bin_edges = np.array([np.hstack([inf-scale+offset+1e-5,x + offset+1e-5]) for x in bin_temp])
+            ind = np.where((bin_edges[0] < sup - 1) == False)[0][0]
+            bin_edges = bin_edges[:, : ind + 1]
+
+            H1, e = np.histogramdd(array, bins=bin_edges)
+            # print(e[0],e[0][0],e[0][-1])
+            # if verb:
+            #    print(H1.sum())
+            #    if int(H1.sum()) != array.shape[0]:
+            #       print('for scale ', scale, ' and offset ', offset, ' the covering is badly shaped')
+            # touched.append(np.inf)
+            # continue
+            touched.append(np.sum(H1 > 0))
+        Ns.append(touched)
+    Ns = np.array(Ns)
+    if verb:
+        print(Ns)
+    # From all sets N found, keep the smallest one at each scale
+    Ns = Ns.min(axis=1)
+    # Only keep scales at which Ns changed
+    scales = np.array([np.min(scales[Ns == x]) for x in np.unique(Ns)])
+    Ns = np.unique(Ns)
+    Ns = Ns[Ns > 0]
+    scales = scales[: len(Ns)]
+    ind = np.argsort(scales)
+    scales = scales[ind]
+    Ns = Ns[ind]
+    if verb:
+        print("effective scales: ", scales, Ns)
+    # perform fit with growing number of boxes
+    cfs = []
+    start = 1
+    for i in range(start, len(scales)):
+        coeffs = np.polyfit(
+            np.log(1 / scales[start - 1 : i + 1]), np.log(Ns[start - 1 : i + 1]), 1
+        )
+        cfs.append(coeffs[0])
+
+    # print(scales,cfs)
+    coeffs = np.polyfit(np.log(1 / scales), np.log(Ns), 1)
+    if verb:
+        print(np.log(Ns) / np.log(1 / scales[::-1]))
+    # make plot
+    if plot:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        ax.scatter(np.log(1 / scales), np.log(Ns), c="teal", label="Measured ratios")
+        ax.set_ylabel("$\log N(\epsilon)$")
+        ax.set_xlabel("$\log 1/ \epsilon$")
+        fitted_y_vals = np.polyval(coeffs, np.log(1 / scales))
+        ax.plot(
+            np.log(1 / scales),
+            fitted_y_vals,
+            "k--",
+            label=f"Fit: {np.round(coeffs[0],3)}X+{coeffs[1]}",
+        )
+        ax.legend()
+        # plt.savefig('d2_HD.pdf')
+
+        plt.figure()
+        plt.plot(scales[start:], cfs)
+        plt.xlabel("scale")
+        plt.ylabel("ID estimated")
+        if log_space:
+            plt.xscale("log")
+
+    if out != None:
+        np.savetxt(out, np.c_[scales[1:], cfs])
+
+    return np.array(cfs), scales[1:]
+
+
+# --------------------------------------------------------------------------------------
+
+
+def correlation_integral(dists, scales, cond=True, plot=True, verb=False):
+    """Calculates the fractal dimension of a D-dimensional ensemble of points using the Correlation Integral (Grassberger-Procaccia, 1983).
+
+    Args:
+        dists (np.ndarray(float,float)): Distances between points.
+        cond (bool): wheteher distances are saved in the condensed form.
+        max_dist (int): The largest distance to look at.
+        min_dist (int): The smallest distance to look at.
+        n_samples (int): number of scales to measure over.
+        plot (bool): set to true to see the analytical plot of a calculation.
+        out (string): where to save the ids
+        verb (bool): when True, print some intermediate information
+        int_scale (bool): give integer values for the scale
+        log_space (bool): logarithmic space of the steps
+
+    Returns:
+        scales (np.array(int or float)): size of boxes used to cover the dataset
+        ids (np.array(float)): intrinsic dimensions found at different scales
+
+    """
+
+    # determine the scales to measure on
+    # if log_space:
+    #     scales = np.logspace(np.log2(min_box_size), np.log2(max_box_size), num=n_samples, base=2 )
+    # else:
+    #     scales = np.linspace(min_box_size,max_box_size,n_samples)
+
+    # if int_scale:
+    #     scales = np.floor(scales).astype(int)
+    #     scales = np.unique(scales) #remove duplicates that could occur as a result of the floor
+
+    if verb:
+        print("box sizes selected: ", scales)
+
+    N = len(dists)
+    CI = []
+    ids = []
+
+    for i, r in enumerate(scales):
+        if cond:
+            ci = np.sum(dists[:, r - 1]) - N
+        else:
+            ci = np.sum(dists < r) - N
+
+        if verb:
+            print(ci / N)
+
+        ci = ci / N / (N - 1)
+        if ci < 1e-10:
+            ci = 1.0 / N / (N - 1)
+
+        CI.append(ci)
+
+        if i < 1:
+            continue
+
+        coeffs = np.polyfit(np.log(scales[: i + 1]), np.log(CI[: i + 1]), 1)
+        ids.append(coeffs[0])
+
+    if plot:
+        plt.scatter(np.log(scales), np.log(CI))
+
+        plt.figure()
+        plt.plot(scales[1:], ids)
+
+    return ids, scales[1:]
