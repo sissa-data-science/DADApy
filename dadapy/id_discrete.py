@@ -267,6 +267,7 @@ class IdDiscrete(Base):
                     gives the distribution of the id, while mle only the max of the likelihood
             plot (bool): if bayes method is used, one can decide whether to plot the posterior
             set_attr (bool): changes class attributes after computation
+            cont (bool): use continuous definition of volume instead of discrete one
 
         Returns:
             intrinsic_dim (float): the id esteem
@@ -322,17 +323,27 @@ class IdDiscrete(Base):
                 k_eff = k_eff.mean()
                 n_eff = n_eff.mean()
 
-            # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
-            # more stable than root searching
-            intrinsic_dim = df.find_d_likelihood(self.ln, self.lk, n_eff, k_eff, w_eff)
-            # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
-
-            intrinsic_dim_err = (
-                df.binomial_cramer_rao(
-                    d=intrinsic_dim, ln=self.ln, lk=self.lk, N=N, k=k_eff
+            if cont:
+                intrinsic_dim = np.log(n_eff / k_eff) / np.log(float(self.ln) / self.lk)
+                intrinsic_dim_err = np.sqrt(
+                    ut._compute_binomial_cramerrao(
+                        intrinsic_dim, k_eff, float(self.ln) / self.lk, N
+                    )
                 )
-                ** 0.5
-            )
+            else:
+                # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
+                # more stable than root searching
+                intrinsic_dim = df.find_d_likelihood(
+                    self.ln, self.lk, n_eff, k_eff, w_eff
+                )
+                # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
+
+                intrinsic_dim_err = (
+                    df.binomial_cramer_rao(
+                        d=intrinsic_dim, ln=self.ln, lk=self.lk, N=N, k=k_eff
+                    )
+                    ** 0.5
+                )
         elif method == "bayes":
             if self._is_w:
                 k_tot = w_eff * k_eff
@@ -363,7 +374,9 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_id_scaling(self, Lks, r=0.5, method="mle", subset=None, plot=True):
+    def return_id_scaling(
+        self, Lks, r=0.5, method="mle", subset=None, plot=True, cont=False
+    ):
         """Compute the ID by varying the radii
 
         Args:
@@ -416,7 +429,7 @@ class IdDiscrete(Base):
 
         for i, lk in enumerate(Lks):
             id_i, id_er, scale = self.compute_id_binomial_lk(
-                lk, int(lk * r), method=method, subset=subset, set_attr=False
+                lk, int(lk * r), method=method, subset=subset, set_attr=False, cont=cont
             )
             ids[i] = id_i
             ids_e[i] = id_er
@@ -1459,3 +1472,30 @@ class IdDiscrete(Base):
 #     ide.compute_id_2NN(decimation=1)
 #
 #     print(ide.id_estimated_2NN,ide.intrinsic_dim)
+
+"""
+Quick Start:
+        ===========
+
+        .. code-block:: python
+
+                from dadapy import IdEstimation
+                from sklearn.datasets import make_swiss_roll
+
+                #two dimensional curved manifold embedded in 3d with noise
+
+                n_samples = 5000
+                X, _ = make_swiss_roll(n_samples, noise=0.3)
+
+                ie = IdEstimation(coordinates=X)
+                ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(N_min = 20)
+
+                ids_scaling:
+                array([2.88 2.77 2.65 2.42 2.22 2.2  2.1  2.23])
+
+                ids_scaling_err:
+                array([0.   0.02 0.05 0.04 0.04 0.03 0.04 0.04])
+
+                rs_scaling:
+                array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
+"""

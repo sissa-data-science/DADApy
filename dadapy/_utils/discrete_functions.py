@@ -323,41 +323,57 @@ def find_d_likelihood(ln, lk, n, k, ww):
 
 
 def profile_likelihood(ln, lk, n, k, ww, plot=False):
+    """Compute the likelihood of the binomial process and find the ID when ln and lk vary for each point
+
+    Args:
+        ln (np.ndarray(int)): inner shell radii
+        lk (np.ndarray(int)): outer shell radii
+        n (np.ndarray(int)): number of points within the internal shells
+        k (np.ndarray(int)): number of points within the external shells
+        ww (np.ndarray(int)): multiplicity of datapoints
+        plot (bool, default=False): plot the posterior
+    Returns:
+        E_d_emp (float): mean value of the posterior
+        S_d_emp (float): std of the posterior
+        d_range (ndarray(float)): domain of the posterior
+        P (ndarray(float)): probability of the posterior
+    """
+
     def p_d(d):
         return _compute_binomial_logl(
             d, lk, k, ln, n, discrete=True, truncated=False, w=ww
         )
 
-    # in principle we don't know where the distribution is peaked, so
+    # in principle, we don't know where the distribution is peaked, so
     # we perform a blind search over the domain
-    dx = 1.0
+    dx = 10.0
     d_left = D_MIN
     d_right = D_MAX + dx + d_left
-    d_range = np.arange(d_left, d_right, dx)
-    P = np.array([p_d(di) for di in d_range]) * dx
+    elements = 0
     counter = 0
-    mask = P != 0
-    elements = mask.sum()
-    # if less than 3 points !=0 are found, reduce the interval
+    # if less than 3 points have P!=0 are found, reduce the interval
     while elements < 3:
-        dx /= 10
-        d_range = np.arange(d_left, d_right, dx)
-        P = np.array([p_d(di) for di in d_range]) * dx
-        P = P.reshape(P.shape[0])
-        P = np.exp(-P)
-        mask = P != 0
-        elements = mask.sum()
+        dx /= 10.0
         counter += 1
+        #        print('iter no.', counter, '\nmesh size', dx)
+        d_range = np.arange(d_left, d_right, dx)
+        P = np.array([p_d(di) for di in d_range])  # * dx
+        P = P.reshape(P.shape[0])
+        P -= P.min()
+        P = np.exp(-P)
+        mask = P > 1e-20
+        elements = mask.sum()
 
-    # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
+    # with more than 3 points where P!=0 we can restrict the domain in that interval and build a smooth distribution
     # I choose 1000 points but such quantity can be varied according to necessity
     ind = np.where(mask)[0]
     d_left = d_range[ind[0]] - 0.5 * dx if d_range[ind[0]] - dx > 0 else D_MIN
     d_right = d_range[ind[-1]] + 0.5 * dx
     d_range = np.linspace(d_left, d_right, 1000)
     dx = d_range[1] - d_range[0]
-    P = np.array([p_d(di) for di in d_range]) * dx
+    P = np.array([p_d(di) for di in d_range])  # * dx
     P = P.reshape(P.shape[0])
+    P -= P.min()
     P = np.exp(-P)
     P /= P.sum()
     # if verbose:
@@ -368,18 +384,13 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         plt.plot(d_range, P)
         plt.xlabel("d")
         plt.ylabel("P(d)")
-        plt.title("posterior of d")
-        #        plt.xlim(1,5)
-        #        plt.ylim(350,425)
+        plt.title("Posterior of d")
         plt.show()
 
     E_d_emp = np.dot(d_range, P)
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
     if plot:
         print("empirical average:\t", E_d_emp, "\nempirical std:\t\t", S_d_emp)
-    #   theoretical results, valid only in the continuum case
-    #   E_d = ( sp.digamma(a) - sp.digamma(a+b) )/np.log(r)
-    #   S_d = np.sqrt( ( sp.polygamma(1,a) - sp.polygamma(1,a+b) )/np.log(r)**2 )
 
     return E_d_emp, S_d_emp, d_range, P
 
