@@ -195,7 +195,7 @@ def return_not_normalised_density_PAk_optimized(
 
         if nidentical > 0:
             warnings.warn(
-                f"Found {np.sum(mask)} nearest neighbours at identical distance, adding a small amount of noise"
+                f"Found {nidentical} nearest neighbours at identical distance, adding a small amount of noise"
             )
 
     exponent = intrinsic_dim * np.log(r1) + np.log(1 - ratio**intrinsic_dim)
