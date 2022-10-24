@@ -477,7 +477,7 @@ class MetricComparisons(Base):
         neighbor_index = self.dist_indices[:, 1 : k + 1]
         ground_truth_labels = np.repeat(np.array([labels]).T, repeats=k, axis=1)
         overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
-        
+
         overlaps = np.mean(overlaps, axis=1)
         if avg:
             overlaps = np.mean(overlaps)
