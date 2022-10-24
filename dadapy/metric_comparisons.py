@@ -463,7 +463,7 @@ class MetricComparisons(Base):
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
 
         Args:
-            labels (np.ndarray): the labels with respect to which the overlap is computed
+            labels (list): the labels with respect to which the overlap is computed
             k (int): the number of neighbours considered for the overlap
 
         Returns:
@@ -473,11 +473,16 @@ class MetricComparisons(Base):
             assert self.X is not None
             self.compute_distances()
 
-        overlaps = -np.ones(self.N)
-        for i in range(self.N):
-            neigh_idx_i = self.dist_indices[i, 1 : k + 1]
-            overlaps[i] = sum(labels[neigh_idx_i] == labels[i]) / k
+        assert len(labels)==d.dist_indices.shape[0]
+        neighbor_index = d.dist_indices[:, 1 : k + 1]
+        ground_truth_labels = np.repeat(np.array([labels]).T, repeats = k, axis = 1)
+        overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
+        # overlaps = -np.ones(self.N)
+        # for i in range(self.N):
+        #     neigh_idx_i = self.dist_indices[i, 1 : k + 1]
+        #     overlaps[i] = sum(labels[neigh_idx_i] == labels[i]) / k
 
+        overlaps = np.mean(overlaps, axis = 1)
         if avg:
             overlaps = np.mean(overlaps)
 
