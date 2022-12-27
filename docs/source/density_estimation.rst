@@ -1,5 +1,5 @@
 The density_estimation module
-==============================
+================================
 
-.. automodule:: dadapy.density_estimation
+.. automodule:: density_estimation
     :members:

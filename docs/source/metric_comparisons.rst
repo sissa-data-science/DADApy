@@ -1,5 +1,6 @@
 The metric_comparisons module
-=============================
+================================
 
-.. automodule:: dadapy.metric_comparisons
+.. automodule:: metric_comparisons
     :members:
+    :undoc-members:

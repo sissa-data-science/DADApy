@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.abspath("../../dadapy/_cython"))
 sys.path.insert(0, os.path.abspath("../examples"))
 sys.path.insert(0, os.path.abspath("../../examples"))
 
-sys.path.insert(0, os.path.abspath("../../dadapy/_utils"))
+#sys.path.insert(0, os.path.abspath("../../dadapy/_utils"))
 
 # -- Project information -----------------------------------------------------
 
@@ -46,7 +46,8 @@ extensions = ["sphinx.ext.todo",
               "sphinx.ext.autodoc",
               "nbsphinx",
               "nbsphinx_link",
-              "sphinx.ext.napoleon"]
+              "sphinx.ext.napoleon",
+              "IPython.sphinxext.ipython_console_highlighting"]
 
 napoleon_custom_sections = [("Returns", "params_style")]
 

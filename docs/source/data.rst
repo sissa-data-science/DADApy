@@ -1,5 +1,5 @@
 The data module
-==========================
+================================
 
-.. automodule:: dadapy.data
+.. automodule:: data
     :members:
