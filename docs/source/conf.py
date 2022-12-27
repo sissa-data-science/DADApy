@@ -81,6 +81,8 @@ html_theme_options = {
 
 autodoc_mock_imports = [
     "dadapy._cython.cython_clustering",
+    "dadapy._cython.cython_clustering_v2",
     "dadapy._cython.cython_maximum_likelihood_opt",
+    "dadapy._cython.cython_maximum_likelihood_opt_full",
     "dadapy._cython.cython_density",
 ]
