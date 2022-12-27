@@ -3,8 +3,9 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![codecov](https://codecov.io/gh/sissa-data-science/DADApy/branch/main/graph/badge.svg?token=X4M0KWAPO5)](https://codecov.io/gh/sissa-data-science/DADApy)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/sissa-data-science/dadapy/test?label=test)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/sissa-data-science/dadapy/lint?label=lint)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sissa-data-science/dadapy/test.yml?label=test)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sissa-data-science/dadapy/lint.yml?label=lint)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sissa-data-science/dadapy/lint.yml?label=docs)
 
 DADApy is a Python package for the characterisation of manifolds in high dimensional spaces.
 
