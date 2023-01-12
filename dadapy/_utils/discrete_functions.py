@@ -895,39 +895,19 @@ def box_counting(
 # --------------------------------------------------------------------------------------
 
 
-def correlation_integral(dists, scales, cond=True, plot=True, verb=False):
+def correlation_integral(dists, scales, cond=True, plot=True):
     """Calculates the fractal dimension of a D-dimensional ensemble of points using the Correlation Integral (Grassberger-Procaccia, 1983).
 
     Args:
         dists (np.ndarray(float,float)): Distances between points.
-        cond (bool): wheteher distances are saved in the condensed form.
-        max_dist (int): The largest distance to look at.
-        min_dist (int): The smallest distance to look at.
-        n_samples (int): number of scales to measure over.
-        plot (bool): set to true to see the analytical plot of a calculation.
-        out (string): where to save the ids
-        verb (bool): when True, print some intermediate information
-        int_scale (bool): give integer values for the scale
-        log_space (bool): logarithmic space of the steps
-
+        scales (np.ndarray): range of scales used to compute the CD
+        cond (bool): wheteher distances are saved in the condensed form (set to False for point in continuum spaces).
+        
     Returns:
         scales (np.array(int or float)): size of boxes used to cover the dataset
         ids (np.array(float)): intrinsic dimensions found at different scales
 
     """
-
-    # determine the scales to measure on
-    # if log_space:
-    #     scales = np.logspace(np.log2(min_box_size), np.log2(max_box_size), num=n_samples, base=2 )
-    # else:
-    #     scales = np.linspace(min_box_size,max_box_size,n_samples)
-
-    # if int_scale:
-    #     scales = np.floor(scales).astype(int)
-    #     scales = np.unique(scales) #remove duplicates that could occur as a result of the floor
-
-    if verb:
-        print("box sizes selected: ", scales)
 
     N = len(dists)
     CI = []
@@ -938,9 +918,6 @@ def correlation_integral(dists, scales, cond=True, plot=True, verb=False):
             ci = np.sum(dists[:, r - 1]) - N
         else:
             ci = np.sum(dists < r) - N
-
-        if verb:
-            print(ci / N)
 
         ci = ci / N / (N - 1)
         if ci < 1e-10:
@@ -955,7 +932,9 @@ def correlation_integral(dists, scales, cond=True, plot=True, verb=False):
         ids.append(coeffs[0])
 
     if plot:
-        plt.scatter(np.log(scales), np.log(CI))
+        plt.figure()
+        plt.scatter(np.log(scales), np.log(CI),s=5)
+        plt.plot(np.log(scales), np.log(scales**coeffs[0])+coeffs[1],color='orange')
 
         plt.figure()
         plt.plot(scales[1:], ids)

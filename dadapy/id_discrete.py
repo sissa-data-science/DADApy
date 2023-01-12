@@ -226,7 +226,7 @@ class IdDiscrete(Base):
                         + " points, the counting of k could be wrong, "
                         + "as more points might be present within the selected Rk. In order not to affect "
                         + "the statistics a mask is provided to remove them from the calculation of the "
-                        + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
+                        + "likelihood or posterior.\nConsiself.kder recomputing NN with higher maxk or lowering Rk."
                     )
         if self.verb:
             print("n and k computed")
@@ -420,6 +420,7 @@ class IdDiscrete(Base):
             ids_e[i] = id_er
 
         if plot:
+            plt.figure()
             plt.plot(Lks, ids)
             plt.errorbar(Lks, ids, ids_e, fmt="None")
             plt.xlabel("scale")
@@ -670,7 +671,7 @@ class IdDiscrete(Base):
     # --------------------------------------------------------------------------------------
 
     def compute_id_binomial_k(
-        self, k, shell=False, ratio=None, subset=None, set_attr=True
+        self, k, shell=False, ratio=None, subset=None, approx_err=False, set_attr=True
     ):
         """Calculate Id using the binomial estimator by fixing the number of neighbours or shells
 
@@ -685,6 +686,8 @@ class IdDiscrete(Base):
             shell (bool): k stands for number of neighbours or number of occupied shells
             ratio (float): ratio between internal and external shell
             subset (int): choose a random subset of the dataset to make the Id estimate
+            approx_err (bool, default=False): if True, computes the error on the estimate using the CR.\
+                Otherwise it profiles the likelihood and compute its std
             set_attr (bool, default=True): assign id, id error and scale to the class
 
         Returns:
@@ -724,8 +727,13 @@ class IdDiscrete(Base):
             return 0, 0, lk_eff.mean()
 
         intrinsic_dim = df.find_d_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
-        a, b, c, d = df.profile_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
-        intrinsic_dim_err = b
+        if approx_err:
+            intrinsic_dim_err = df.binomial_cramer_rao(
+                        d=intrinsic_dim, ln=int(ln_eff.mean()), lk=int(lk_eff.mean()), N=mask.sum(), k=k_eff.mean()
+                    )** 0.5
+        else:
+            _, b, _, _ = df.profile_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
+            intrinsic_dim_err = b
 
         if set_attr:
             self.intrinsic_dim = intrinsic_dim
