@@ -1453,11 +1453,11 @@ class IdDiscrete(Base):
         """
 
         assert (
-            isinstance(ln, (np.int, np.int8, np.int16, np.int32, np.int64, int))
+            isinstance(ln, (np.int8, np.int16, np.int32, np.int64, int))
             and ln >= 0
         ), "select a proper integer ln>=0"
         assert (
-            isinstance(lk, (np.int, np.int8, np.int16, np.int32, np.int64, int))
+            isinstance(lk, (np.int8, np.int16, np.int32, np.int64, int))
             and lk > 0
         ), "select a proper integer lk>0"
         assert lk > ln, "select lk and ln, s.t. lk > ln"
