@@ -41,7 +41,8 @@ class IdDiscrete(Base):
         n (np.ndarray(int)): total number of points within the internal shell
         ratio (float): ratio between internal and external radii
         intrinsic_dim (float): intrinsic dimension obtained with the binomial estimator
-        intrinsic_dim_err (float): error associated with the id estimation. computed through Cramer-Rao or Bayesian inference
+        intrinsic_dim_err (float): error associated with the id estimation.
+            Computed through Cramer-Rao or Bayesian inference
         intrinsic_dim_scale (float): scale at which the id has been computed
         posterior_domain (np.ndarray(float)): eventual support of the posterior distribution of the id
         posterior (np.ndarray(float)): posterior distribution when evaluated with Bayesian inference
@@ -233,7 +234,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_lk(
+    def compute_id_binomial_lk(  # noqa: C901
         self,
         lk=None,
         ln=None,
@@ -431,7 +432,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def fix_k(self, k_eff=None, ratio=0.5):
+    def fix_k(self, k_eff=None, ratio=0.5):  # noqa: C901
         """Computes Rk, Rn, n for each point given a selected value of k
 
         This routine computes external radii lk, internal radii ln and internal points n.
@@ -486,7 +487,7 @@ class IdDiscrete(Base):
             self.ln = np.rint(self.lk * self.ratio).astype(int)
             self.k = np.take_along_axis(self.distances, self.lk[:, None], 1)[:, 0]
             self.n = np.take_along_axis(self.distances, self.ln[:, None], 1)[:, 0]
-            self._mask = np.ones(self.N, dtype=bool)
+            self._mask = self.lk > 0
 
         else:
             if k_eff is None:
@@ -516,7 +517,8 @@ class IdDiscrete(Base):
 
                 # case 2: only some NN are considered -> work on surely "complete" shells
                 else:
-                    # Group distances according to shell. Returns radii of shell and cumulative number of points at that radius.
+                    # Group distances according to shell. Returns radii of shell and cumulative number
+                    # of points at that radius.
                     # The index at which a distance is first met == number of points at smaller distance
                     # EXAMPLE:
                     # a = np.array([0,1,1,2,3,3,4,4,4,6,6])     and suppose it would go on as 6,6,6,7,8...
@@ -526,8 +528,8 @@ class IdDiscrete(Base):
                     unique, index = np.unique(dist_i, return_index=True)
 
                     if unique.shape[0] < 3:
-                        # lk=0 may happen when we have smtg like dist_i = [0,0,0,0,0] or dist_i = [0,3,3,3,3,3]. As we don't have the full
-                        # information for at least two shells, we skip the point
+                        # lk=0 may happen when we have smtg like dist_i = [0,0,0,0,0] or dist_i = [0,3,3,3,3,3].
+                        # As we don't have the full information for at least two shells, we skip the point
                         self._mask[i] = False
                         continue
 
@@ -563,12 +565,13 @@ class IdDiscrete(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def fix_k_shell(self, k_shell, ratio):
+    def fix_k_shell(self, k_shell, ratio):  # noqa: C901
         """Computes the lk, ln, n given k_shell
 
-        This routine computes the external radius lk, the associated points k, internal radius ln and associated points n.
-        The computation is performed starting from a given number of shells.
-        It ensures that Rk is scaled onto the most external shell for which we are sure to have all points.
+        This routine computes the external radius lk, the associated points k,
+        internal radius ln and associated points n. The computation is performed
+        starting from a given number of shells. It ensures that Rk is scaled onto
+        the most external shell for which we are sure to have all points.
         NB in this case we will have an effective, point dependent k
 
         Args:
@@ -728,9 +731,16 @@ class IdDiscrete(Base):
 
         intrinsic_dim = df.find_d_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
         if approx_err:
-            intrinsic_dim_err = df.binomial_cramer_rao(
-                        d=intrinsic_dim, ln=int(ln_eff.mean()), lk=int(lk_eff.mean()), N=mask.sum(), k=k_eff.mean()
-                    )** 0.5
+            intrinsic_dim_err = (
+                df.binomial_cramer_rao(
+                    d=intrinsic_dim,
+                    ln=int(ln_eff.mean()),
+                    lk=int(lk_eff.mean()),
+                    N=mask.sum(),
+                    k=k_eff.mean(),
+                )
+                ** 0.5
+            )
         else:
             _, b, _, _ = df.profile_likelihood(ln_eff, lk_eff, n_eff, k_eff, ww)
             intrinsic_dim_err = b
@@ -984,7 +994,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def model_validation_full(
+    def model_validation_full(  # noqa: C901
         self, alpha=0.05, subset=None, pdf=False, cdf=True, path=None
     ):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the id estimate
@@ -1087,7 +1097,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def R_mod_val(
+    def R_mod_val(  # noqa: C901
         self, k_win, subset=None, path=None, pdf=False, cdf=True, recap=False
     ):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
@@ -1136,7 +1146,7 @@ class IdDiscrete(Base):
                 ** 0.5
             )
 
-            ## model validation
+            # model validation
             # compute the p of the binomial distribution
             p = df.compute_discrete_volume(self.ln, id_i) / df.compute_discrete_volume(
                 self.lk, id_i
@@ -1180,7 +1190,9 @@ class IdDiscrete(Base):
                 )
             )
             # PLOT
-            title = r"R=" + str(self.lk) + "\t$\overline{k}=$" + str(k_ave)
+            title = (
+                r"R=" + str(self.lk) + "\t$\overline{k}=$" + str(k_ave)  # noqa: W605
+            )
             # DATA------------------------------------------------------
             # plt.figure()
             # plt.title('values')
@@ -1249,7 +1261,7 @@ class IdDiscrete(Base):
                 print(ob)
 
     # ----------------------------------------------------------------------------------------------
-    def K_mod_val(
+    def K_mod_val(  # noqa: C901
         self, R_win, subset=None, path=None, pdf=False, cdf=True, recap=False
     ):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
@@ -1305,7 +1317,7 @@ class IdDiscrete(Base):
                 ** 0.5
             )
 
-            ## model validation
+            # model validation
             # compute the p of the binomial distribution
             # p = df.compute_discrete_volume(np.rint(R_ave * self.ratio), id_i) /\
             #    df.compute_discrete_volume(np.rint(R_ave), id_i)
@@ -1350,7 +1362,9 @@ class IdDiscrete(Base):
                 )
             )
             # PLOT
-            title = r"K=" + str(self._k) + "\t$\overline{R}=$" + str(R_ave)
+            title = (
+                r"K=" + str(self._k) + "\t$\overline{R}=$" + str(R_ave)  # noqa: W605
+            )
             # DATA------------------------------------------------------
             # plt.figure()
             # plt.title('values')
@@ -1517,7 +1531,7 @@ class IdDiscrete(Base):
                 my_mask = np.zeros(self._mask.shape[0], dtype=bool)
                 idx = np.sort(
                     rng.choice(
-                        np.where(self._mask == True)[0],
+                        np.where(self._mask)[0],
                         subset,
                         replace=False,
                         shuffle=False,

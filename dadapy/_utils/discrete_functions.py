@@ -902,7 +902,7 @@ def correlation_integral(dists, scales, cond=True, plot=True):
         dists (np.ndarray(float,float)): Distances between points.
         scales (np.ndarray): range of scales used to compute the CD
         cond (bool): wheteher distances are saved in the condensed form (set to False for point in continuum spaces).
-        
+
     Returns:
         scales (np.array(int or float)): size of boxes used to cover the dataset
         ids (np.array(float)): intrinsic dimensions found at different scales
@@ -933,8 +933,10 @@ def correlation_integral(dists, scales, cond=True, plot=True):
 
     if plot:
         plt.figure()
-        plt.scatter(np.log(scales), np.log(CI),s=5)
-        plt.plot(np.log(scales), np.log(scales**coeffs[0])+coeffs[1],color='orange')
+        plt.scatter(np.log(scales), np.log(CI), s=5)
+        plt.plot(
+            np.log(scales), np.log(scales ** coeffs[0]) + coeffs[1], color="orange"
+        )
 
         plt.figure()
         plt.plot(scales[1:], ids)
