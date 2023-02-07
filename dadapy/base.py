@@ -82,7 +82,6 @@ class Base:
                 self.maxk = min(100, self.N - 1)
 
         if distances is not None:
-
             self.distances, self.dist_indices, self.N, self.maxk = self._init_distances(
                 distances, self.maxk
             )
@@ -92,7 +91,6 @@ class Base:
 
     # this function is useful for overlap with another dataset and makes __init__ little bit shorter
     def _init_distances(self, distances, maxk=None):
-
         if isinstance(distances, tuple):
             assert isinstance(
                 distances[0], np.ndarray
@@ -234,7 +232,6 @@ class Base:
         N_unique = X_unique.shape[0]
 
         if N_unique < self.N:
-
             print(
                 f"{self.N - N_unique} overlapping datapoints found: keeping {N_unique} unique elements",
                 "WARNING: the order of points has been changed!",

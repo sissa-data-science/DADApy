@@ -424,7 +424,6 @@ class Clustering(DensityEstimation):
             # if the density of 'max_rho' is higher than that of i_center,
             # remove i_center and store [i_center,  max_rho] (see later)
             if g[max_rho] > g[i_center]:
-
                 # check if this max_rho is already in removed centers
                 if len(removed_centers) > 0:
                     is_valid = np.where(np.array(removed_centers)[:, 0] == max_rho)[0]
@@ -552,7 +551,6 @@ class Clustering(DensityEstimation):
             )
 
         for c in range(Nclus):
-
             for p1 in cl_struct[c]:  # p1 points in a given cluster
                 if p1 in centers:
                     pp = -1
@@ -623,7 +621,6 @@ class Clustering(DensityEstimation):
         surviving_clusters = [1] * Nclus
 
         while check == 1:
-
             # density and position of borders to be merged
             pos = []
             ipos = []
@@ -739,7 +736,6 @@ class Clustering(DensityEstimation):
                 jj = nnum[j]
                 for k in range(Nclus):
                     if surviving_clusters[k] == 1:
-
                         kk = nnum[k]
                         log_den_bord_m[jj][kk] = log_den_bord[j][k]
                         log_den_bord_err_m[jj][kk] = log_den_bord_err[j][k]
@@ -1049,7 +1045,6 @@ class Clustering(DensityEstimation):
         c1,
         c2,
     ):
-
         neighbors1 = np.zeros((len(saddle_density), 3), dtype=int)
         neighbors2 = np.zeros((len(saddle_density), 3), dtype=int)
         len_neigh1, len_neigh2 = 0, 0

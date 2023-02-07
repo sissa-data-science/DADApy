@@ -101,7 +101,6 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None):
     """
 
     if period is None:
-
         # nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, p=p).fit(X)
         nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric).fit(X)
 

@@ -180,7 +180,6 @@ class IdEstimation(Base):
         mus = np.zeros((N_subset, nrep))
 
         for j in range(nrep):
-
             if decimation == 1 and self.distances is not None:
                 # with decimation == 1 use saved distances if present
                 distances, dist_indices = self.distances, self.dist_indices
@@ -229,7 +228,8 @@ class IdEstimation(Base):
         algorithm="base",
         fraction=0.9,
     ):
-        """Compute the id at different scales using the 2NN algorithm.
+        """Compute the id at different scales using the 2NN algorithm. The id is iteratively computed on
+        bootstrap subsets cointaining [N, N/2, N/4, N/8, ...] data points.
 
         Args:
             N_min (int): minimum number of points considered when decimating the dataset,
@@ -279,7 +279,6 @@ class IdEstimation(Base):
         rs_scaling = np.zeros((Nsubsets.shape[0]))
 
         for i, N_subset in enumerate(Nsubsets):
-
             ids_scaling[i], ids_scaling_err[i], rs_scaling[i] = self.compute_id_2NN(
                 algorithm=algorithm,
                 fraction=fraction,
@@ -353,7 +352,6 @@ class IdEstimation(Base):
             rs = self.distances[:, np.array([nn_ranks[:-1], nn_ranks[1:]])]
 
         elif self.X is not None:
-
             if self.verb:
                 print(
                     f"distance not computed up to {max_rank}. distance computation started"

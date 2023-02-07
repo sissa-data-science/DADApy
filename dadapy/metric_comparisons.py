@@ -520,7 +520,6 @@ class MetricComparisons(Base):
         overlaps = -np.ones((self.N))
 
         for i in range(self.N):
-
             overlaps[i] = (
                 len(
                     np.intersect1d(

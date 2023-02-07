@@ -50,7 +50,6 @@ class Data(Clustering, MetricComparisons):
         njobs=cores,
         working_memory=1024,
     ):
-
         super().__init__(
             coordinates=coordinates,
             distances=distances,

@@ -30,7 +30,6 @@ def return_not_normalised_density_kstarNN(
     interpolation=False,
     bias=False,
 ):
-
     N = distances.shape[0]
     dc = np.zeros(N, dtype=float)
     prefactor = np.exp(
@@ -115,7 +114,6 @@ def return_not_normalised_density_PAk(
         knn = 0
 
         for j in range(kstar[i]):
-
             # vi[j] = prefactor * (
             #     pow(distances[i, j + 1], intrinsic_dim)
             #     - pow(distances[i, j], intrinsic_dim)
