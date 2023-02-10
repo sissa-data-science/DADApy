@@ -199,35 +199,31 @@ class Base:
     # -------------------------------------------------------------------------------
 
     # better to use this formulation which can be applied to _mus_scaling_reduce_func
-    def _remove_zero_dists(self, distances):
-        """Find zero nearest neighhbour distances and substitute the numerical zeros with a very small number.
+    def remove_zero_dists(self):
+        """Find zero neighbour distances and substitute the numerical zeros with a very small number.
 
         This method is mostly useful to regularize the computation of certain id estimators.
-
-        Args:
-            distances: distances to modify
-
-        Returns:
-            distances with regularised zeros
-
         """
-        # find all points with any zero distance
-        indx_ = np.nonzero(distances[:, 1] < np.finfo(self.dtype).eps)[0]
-        # set nearest distance to eps:
-        distances[indx_, 1] = np.finfo(self.dtype).eps
+        # find all distances which are 0
+        indices = np.nonzero(self.distances[:, 1:] < np.finfo(self.dtype).eps)
+        # set distance to epsilon
+        self.distances[indices] = np.finfo(self.dtype).eps
 
-        return distances
+        pass
 
     def remove_identical_points(self):
         """Find points that are numerically identical and remove them.
 
-        For very large datasets this method might be slow and you might want to use a command like: awk '!seen[$0]++' .
+        For very large datasets this method might be slow; you might want to use a command like: awk '!seen[$0]++' .
         See
         https://unix.stackexchange.com/questions/11939/how-to-get-only-the-unique-results-without-having-to-sort-data
         for more information
         """
         if self.N > 100000:
-            print("WARNING: this method might be very slow for large datasets. ")
+            print(
+                "WARNING: this method might be very slow for large datasets.\n"
+                "We suggest to use something like \"awk '!seen[$0]++'\""
+            )
 
         # removal of overlapping data points
         X_unique = np.unique(self.X, axis=0)

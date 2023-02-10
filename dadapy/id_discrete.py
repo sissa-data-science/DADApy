@@ -284,8 +284,8 @@ class IdDiscrete(Base):
             ), "set lk and ln through set_lk_ln or insert proper values for the lk and ln parameters"
 
         mask = self._my_mask(subset)
-        n_eff = self.n[mask] - 1
-        k_eff = self.k[mask] - 1
+        n_eff = self.n[mask]  # - 1
+        k_eff = self.k[mask]  # - 1
 
         if self._is_w:
             w_eff = self._weights[mask]
@@ -1453,12 +1453,10 @@ class IdDiscrete(Base):
         """
 
         assert (
-            isinstance(ln, (np.int8, np.int16, np.int32, np.int64, int))
-            and ln >= 0
+            isinstance(ln, (np.int8, np.int16, np.int32, np.int64, int)) and ln >= 0
         ), "select a proper integer ln>=0"
         assert (
-            isinstance(lk, (np.int8, np.int16, np.int32, np.int64, int))
-            and lk > 0
+            isinstance(lk, (np.int8, np.int16, np.int32, np.int64, int)) and lk > 0
         ), "select a proper integer lk>0"
         assert lk > ln, "select lk and ln, s.t. lk > ln"
         self.ln = ln
