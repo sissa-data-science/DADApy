@@ -228,8 +228,9 @@ class IdEstimation(Base):
         algorithm="base",
         fraction=0.9,
     ):
-        """Computes the id with the 2NN algorithm on bootstrap subsets of [N, N/2, N/4, N/8, ...]
-        data points up to N_min data points.
+        """Compute the id with the 2NN algorithm at different scales.
+
+        The different scales are obtained by bootstrapping subsets of [N, N/2, N/4, N/8, ..., N_min] data points.
 
         Args:
             N_min (int): minimum number of points considered when decimating the dataset,
