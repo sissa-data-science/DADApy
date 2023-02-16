@@ -44,7 +44,7 @@ def test_distances():
     )
     assert I3D.intrinsic_dim == pytest.approx(4.906996203360682)
 
-    pv = I3D.model_validation_full(cdf=False)
+    ks, pv = I3D.model_validation_full(cdf=False)
     assert pv > 0.005
 
 
@@ -68,6 +68,9 @@ def test_distances_condensed():
 
     I3Dc.compute_id_binomial_lk(lk=4, ln=2, method="mle")
     assert I3Dc.intrinsic_dim == pytest.approx(4.575392144773673)
+
+    ks, pv = I3Dc.model_validation_full(cdf=False)
+    assert pv == pytest.approx(0.999999999)
 
     a, b = I3Dc.return_id_scaling(range(2, 10), method="mle", plot=False)
     d = np.array(

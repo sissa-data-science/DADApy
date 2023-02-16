@@ -199,17 +199,17 @@ class Base:
     # -------------------------------------------------------------------------------
 
     # better to use this formulation which can be applied to _mus_scaling_reduce_func
-    def remove_zero_dists(self):
+    def remove_zero_dists(self, distances):
         """Find zero neighbour distances and substitute the numerical zeros with a very small number.
 
         This method is mostly useful to regularize the computation of certain id estimators.
         """
         # find all distances which are 0
-        indices = np.nonzero(self.distances[:, 1:] < np.finfo(self.dtype).eps)
+        indices = np.nonzero(distances[:, 1:] < np.finfo(self.dtype).eps)
         # set distance to epsilon
-        self.distances[indices] = np.finfo(self.dtype).eps
+        distances[indices] = np.finfo(self.dtype).eps
 
-        pass
+        return distances
 
     def remove_identical_points(self):
         """Find points that are numerically identical and remove them.

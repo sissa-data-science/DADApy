@@ -53,6 +53,7 @@ class IdDiscrete(Base):
         self,
         coordinates=None,
         distances=None,
+        is_network=False,
         maxk=None,
         condensed=None,
         weights=None,
@@ -67,6 +68,7 @@ class IdDiscrete(Base):
             njobs=njobs,
         )
 
+        self.central_point = 0 if is_network else 1
         if weights is None:
             self._is_w = False
             self._weights = None
@@ -284,8 +286,8 @@ class IdDiscrete(Base):
             ), "set lk and ln through set_lk_ln or insert proper values for the lk and ln parameters"
 
         mask = self._my_mask(subset)
-        n_eff = self.n[mask]  # - 1
-        k_eff = self.k[mask]  # - 1
+        n_eff = self.n[mask] - self.central_point
+        k_eff = self.k[mask] - self.central_point
 
         if self._is_w:
             w_eff = self._weights[mask]
@@ -375,6 +377,7 @@ class IdDiscrete(Base):
             method (string, default='mle'): method to compute the id
             subset (np.ndarray(int) or int, default=None): indices of points to be used for the estimate
             plot (bool, default=True): whether to plot the id scaling
+            cont (bool, default=False): whether to use the discrete volumes
 
         Returns:
             ids (np.ndarray): intrinsic dimension at different scales
@@ -409,6 +412,10 @@ class IdDiscrete(Base):
 
                 ids_scaling_err:
                 array([0.09, 0.08, 0.07, 0.06, 0.05, 0.05, 0.04, 0.04, 0.03, 0.03, 0.03, 0.02, 0.02, 0.02, 0.02])
+
+        References:
+            Iuri Macocco, Aldo Glielmo, Jacopo Grilli, and Alessandro Laio, Intrinsic Dimension Estimation for Discrete
+            Metrics, Phys. Rev. Lett. 130, 067401 – Published 8 February 2023
         """
         ids = np.zeros_like(Lks, dtype=float)
         ids_e = np.zeros_like(Lks, dtype=float)
@@ -711,8 +718,8 @@ class IdDiscrete(Base):
 
         mask = self._my_mask(subset)
 
-        n_eff = self.n[mask] - 1
-        k_eff = self.k[mask] - 1
+        n_eff = self.n[mask] - self.central_point
+        k_eff = self.k[mask] - self.central_point
         ln_eff = self.ln[mask]
         lk_eff = self.lk[mask]
         if self._is_w:
@@ -1015,6 +1022,9 @@ class IdDiscrete(Base):
             pdf (bool, default=False): plot histogram of n_emp and n_i
             cdf (bool, default=False): plot cdf of n_emp and n_i
             path (str, default=None): directory where to save plots
+        Returns:
+            s (float): KS statistics, max distance between empirical and theoretical cdfs
+            pv (float): p-value associated to the KS statistics
         """
         if self.intrinsic_dim is None:
             print("compute the id before validating the model!")
@@ -1025,8 +1035,8 @@ class IdDiscrete(Base):
             os.system("mkdir -p " + path)
 
         mask = self._my_mask(subset)
-        n_eff = self.n[mask] - 1
-        k_eff = self.k[mask] - 1
+        n_eff = self.n[mask] - self.central_point
+        k_eff = self.k[mask] - self.central_point
 
         if isinstance(self.ln, np.ndarray):  # id estimated at fixed K
 
@@ -1093,7 +1103,7 @@ class IdDiscrete(Base):
                 fileout = None
             df.plot_cdf(cdf_nn, cdf_nmod, title, fileout)
 
-        return pv
+        return s, pv
 
     # ----------------------------------------------------------------------------------------------
 
@@ -1119,8 +1129,8 @@ class IdDiscrete(Base):
             os.system("mkdir -p " + path)
         obs = []
         mask = self._my_mask(subset)
-        n_eff = self.n[mask] - 1
-        k_eff = self.k[mask] - 1
+        n_eff = self.n[mask] - self.central_point
+        k_eff = self.k[mask] - self.central_point
 
         for i in range(len(k_win) - 1):
 
@@ -1284,8 +1294,8 @@ class IdDiscrete(Base):
         obs = []
 
         mask = self._my_mask(subset)
-        n_eff = self.n[mask] - 1
-        k_eff = self.k[mask] - 1
+        n_eff = self.n[mask] - self.central_point
+        k_eff = self.k[mask] - self.central_point
         ln_eff = self.ln[mask]
         lk_eff = self.lk[mask]
 
@@ -1560,30 +1570,3 @@ class IdDiscrete(Base):
 #     ide.compute_id_2NN(decimation=1)
 #
 #     print(ide.id_estimated_2NN,ide.intrinsic_dim)
-
-"""
-Quick Start:
-        ===========
-
-        .. code-block:: python
-
-                from dadapy import IdEstimation
-                from sklearn.datasets import make_swiss_roll
-
-                #two dimensional curved manifold embedded in 3d with noise
-
-                n_samples = 5000
-                X, _ = make_swiss_roll(n_samples, noise=0.3)
-
-                ie = IdEstimation(coordinates=X)
-                ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(N_min = 20)
-
-                ids_scaling:
-                array([2.88 2.77 2.65 2.42 2.22 2.2  2.1  2.23])
-
-                ids_scaling_err:
-                array([0.   0.02 0.05 0.04 0.04 0.03 0.04 0.04])
-
-                rs_scaling:
-                array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
-"""
