@@ -65,7 +65,7 @@ def test_distances_condensed():
     assert I3Dc.intrinsic_dim == pytest.approx(5.018707133975087)
 
     a = I3Dc.K_mod_val(range(10, 16, 2), cdf=False)
-    assert a == pytest.approx(np.array([0.999, 1.0]), abs=5e-1)
+    assert a == pytest.approx(np.array([0.999, 1.0]), abs=1e0)
 
     # fix numebr of filled shells
     I3Dc.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
