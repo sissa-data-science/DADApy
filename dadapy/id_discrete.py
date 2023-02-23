@@ -1270,6 +1270,8 @@ class IdDiscrete(Base):
             for ob in obs:
                 print(ob)
 
+        return [ob[-1] for ob in obs]
+
     # ----------------------------------------------------------------------------------------------
     def K_mod_val(  # noqa: C901
         self, R_win, subset=None, path=None, pdf=False, cdf=True, recap=False
@@ -1440,6 +1442,8 @@ class IdDiscrete(Base):
             )
             for ob in obs:
                 print(ob)
+
+        return [ob[-1] for ob in obs]
 
     # ----------------------------------------------------------------------------------------------
 
