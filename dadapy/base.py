@@ -192,6 +192,17 @@ class Base:
             self.X, self.maxk, self.metric, self.period
         )
 
+        if np.any(self.distances < np.finfo(self.dtype).eps):
+            print(
+                "NB some points happen to be at 0 distance. This might cause troubles \
+                in various routines for computing the ID in continuous space. \
+                We suggest running one of the following function: \
+                    -'remove_zero_dists', in order to operate a smal smearing of the null distances \
+                    -'remove_identical_points', in order to create a new ensemble of points \
+                    without repetitions, and recompute distances. \
+                "
+            )
+
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds for computing distances".format(sec2 - sec))

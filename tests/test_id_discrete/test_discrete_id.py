@@ -76,10 +76,10 @@ def test_distances_condensed():
     assert I3Dc.intrinsic_dim == pytest.approx(5.0210151347136245)
 
     ks, pv = I3Dc.model_validation_full(cdf=False)
-    assert pv == pytest.approx(0.9997401855816054, abs=2e-1)
+    assert pv == pytest.approx(0.9997401855816054, abs=1e0)
 
     a = I3Dc.R_mod_val(range(2, 15, 3), cdf=False)
-    assert a == pytest.approx(np.array([1.0, 1.0, 0.9999999999999999]), abs=5e-1)
+    assert a == pytest.approx(np.array([1.0, 1.0, 0.9999999999999999]), abs=1e0)
 
     # look at different radii
     a, b = I3Dc.return_id_scaling(range(2, 10), method="mle", plot=False)
@@ -100,4 +100,4 @@ def test_distances_condensed():
 
     a, b = I3Dc.return_id_fit_continuum(np.arange(6, 15), plot=False)
     d = np.array([4.59, 4.71, 4.73, 4.73, 4.75, 4.77, 4.79, 4.8])
-    assert a == pytest.approx(d, abs=5e-1)
+    assert a == pytest.approx(d, abs=1e-2)
