@@ -191,4 +191,4 @@ def correlation_integral(dists, scales, cond=False, plot=True):
         plt.figure()
         plt.plot(scales[1:], ids)
 
-    return ids, scales[1:]
+    return ids, scales[1:], CI
