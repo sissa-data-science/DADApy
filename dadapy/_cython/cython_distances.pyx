@@ -9,7 +9,7 @@ from libc.math cimport (  # absolute values for floats, needed when using PBC
 )
 from libc.stdlib cimport abs  # absolute value for integers
 
-#DTYPE = np.int
+#DTYPE = int
 #floatTYPE = np.float
 #boolTYPE = np.bool
 
@@ -27,7 +27,7 @@ def _return_hamming_condensed(np.ndarray[DTYPE_t, ndim = 2] points,
     cdef int N = len(points)
     cdef int L = len(points[0])
     cdef int i, j, k, appo
-    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=np.int)
+    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)
 
     for i in range(N):
         distances[i,0] += 1
@@ -57,7 +57,7 @@ def _return_hamming_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,
     cdef long N = len(points)
     cdef long L = len(points[0])
     cdef int i, j, k, ind
-    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=np.int)
+    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)
     cdef long [:,:] dv = distances
     cdef long [:,:] pv = points
 
@@ -138,7 +138,7 @@ def _return_manhattan_condensed_parallel(np.ndarray[DTYPE_t, ndim = 2] points,
     cdef int ind
     cdef double appo, d
 
-    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=np.int)
+    cdef np.ndarray[DTYPE_t, ndim = 2] distances = np.zeros((N, d_max + 1), dtype=int)
     cdef long [:,:] dv = distances
     cdef long [:,:] pv = points
     cdef double [:] period_v = period
