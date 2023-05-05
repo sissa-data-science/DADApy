@@ -64,7 +64,7 @@ setup(
     long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
     packages=["dadapy", "dadapy._utils"],
     install_requires=["numpy", "scipy", "scikit-learn", "matplotlib"],
-    extras_require={"dev": ["tox", "black", "isort", "pytest"]},
+    extras_require={"dev": ["tox", "black", "isort", "pytest", "mistletoe"]},
     cmdclass=cmdclass,
     ext_modules=ext_modules,
 )
