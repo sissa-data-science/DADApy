@@ -163,7 +163,20 @@ def cast_to64(myarray):
 # Helper functions
 
 
-def _loglik(d, mus, n1, n2, N, eps):
+def _neg_loglik(dtype, d, mus, n1, n2):
+    mus, n1, n2 = _filter_mus(dtype, mus, n1, n2)
+
+    N = len(mus)
+    term1 = (N - 1) * np.log(d)
+    term2 = np.sum((n2 - n1 - 1) * np.log(mus**d - 1))
+    term3 = -np.sum(np.log(sp.beta(n2 - n1, n1)))
+    term4 = -np.sum((((n2 - 1) * d) + 1) * np.log(mus))
+
+    return -(term1 + term2 + term3 + term4)
+
+
+def _neg_dloglik_did(d, mus, n1, n2, N, eps):
+    """Compute the negative derivative of the log likelihood with respect to the id."""
     one_m_mus_d = 1.0 - mus ** (-d)
     "regularize small numbers"
     one_m_mus_d[one_m_mus_d < 2 * eps] = 2 * eps
@@ -171,26 +184,36 @@ def _loglik(d, mus, n1, n2, N, eps):
     return sum - (N - 1) / d
 
 
-def _argmax_loglik(dtype, d0, d1, mus, n1, n2, N, eps=1.0e-7):
-    # mu can't be == 1 add some noise
+def _filter_mus(dtype, mus, n1, n2):
     indx = np.nonzero(mus == 1)
     mus[indx] += 10 * np.finfo(dtype).eps
-    # mus[indx] += 1e-10  # np.finfo(dtype).eps
-    mus = np.sort(mus)
 
     q3, q2 = np.percentile(mus, [95, 50])
     mu_max = (
         20 * (q3 - q2) + q2
     )  # very generous threshold: to accomodate fat tailed distributions
-    mus = mus[
+    select = (
         mus < mu_max
-    ]  # remove high mu values related very likely to overlapping datapoints
-    N = len(mus)
+    )  # remove high mu values related very likely to overlapping datapoints
+    mus = mus[select]
 
-    l1 = _loglik(d1, mus, n1, n2, N, eps)
+    if isinstance(n1, np.ndarray):
+        n1 = n1[select]
+
+    if isinstance(n2, np.ndarray):
+        n1 = n1[select]
+
+    return mus, n1, n2
+
+
+def _argmax_loglik(dtype, d0, d1, mus, n1, n2, eps=1.0e-7):
+    mus, n1, n2 = _filter_mus(dtype, mus, n1, n2)
+
+    N = len(mus)
+    l1 = _neg_dloglik_did(d1, mus, n1, n2, N, eps)
     while abs(d0 - d1) > eps:
         d2 = (d0 + d1) / 2.0
-        l2 = _loglik(d2, mus, n1, n2, N, eps)
+        l2 = _neg_dloglik_did(d2, mus, n1, n2, N, eps)
         if l2 * l1 > 0:
             d1 = d2
         else:
@@ -212,8 +235,7 @@ def _fisher_info_scaling(id_ml, mus, n1, n2, eps):
     factor1 = np.divide(log_mu, one_m_mus_d)
     factor2 = mus ** (-id_ml)
     tmp = np.multiply(factor1**2, factor2)
-    j1 = (n2 - n1 - 1) * np.sum(tmp)
-
+    j1 = np.sum((n2 - n1 - 1) * tmp)
     return j0 + j1
 
 
