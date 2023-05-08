@@ -515,7 +515,8 @@ class IdEstimation(Base):
         if zero_dists > 0:
             warnings.warn(
                 """there may be data with zero distance from each other;
-                this may compromise the correct behavior of some routines"""
+                this may compromise the correct behavior of some routines""",
+                stacklevel=2,
             )
 
         return (
