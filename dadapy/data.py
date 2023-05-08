@@ -70,6 +70,19 @@ class Data(Clustering, MetricComparisons):
     def return_ids_kstar_gride(
         self, initial_id=None, n_iter=5, Dthr=23.92812698, d0=0.001, d1=1000, eps=1e-7
     ):
+        """Return the id estimates of the Gride algorithm coupled with the kstar estimation of the scale.
+
+        Args:
+            initial_id: initial estimate of the id default uses 2NN
+            n_iter: number of iteration
+            Dthr: threshold value for the kstar test
+            d0: minimum id value
+            d1: maxumum id value
+            eps: threshold for the convergence of the Gride algorithm
+
+        Returns:
+            ids, ids_err, kstars, log_likelihoods
+        """
         # start with an initial estimate of the ID
         if initial_id is None:
             self.compute_id_2NN()

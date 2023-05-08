@@ -23,7 +23,6 @@ from dadapy import Data
 
 def test_compute_id_kstar_gride():
     """Test that the id estimations with Gride and kstar work correctly."""
-
     np.random.seed(0)
 
     X = np.random.normal(0, 1, size=(1000, 2))
