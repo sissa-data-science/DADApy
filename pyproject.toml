@@ -1,0 +1,22 @@
+[project]
+name = "dadapy"
+version = "0.1.1"
+description = "Distance-based Analysis of DAta-manifolds in python"
+authors = [{ name = "DADApy author"}]
+license = {file = "LICENSE"}
+readme = "README.md"
+requires-python = ">=3.7"
+
+dependencies = ["numpy", "scipy", "scikit-learn", "matplotlib"]
+
+[project.urls]
+homepage = "https://github.com/sissa-data-science/DADApy"
+documentation = "https://dadapy.readthedocs.io/"
+repository = "https://github.com/sissa-data-science/DADApy"
+
+[project.optional-dependencies]
+dev = ["tox", "black", "isort", "pytest"]
+
+[build-system]
+requires = ["setuptools>=61", "numpy"]
+build-backend = "setuptools.build_meta"

@@ -1,6 +1,5 @@
 from setuptools import setup, Extension
 
-cmdclass = {}
 
 class get_numpy_include(object):
     """Defer numpy.get_include() until after numpy is installed.
@@ -57,14 +56,6 @@ ext_modules += [
 
 
 setup(
-    name="dadapy",
-    version="0.1.1",
-    url="https://dadapy.readthedocs.io/",
-    description="A Python package for Distance-based Analysis of DAta-manifolds.",
-    long_description="A Python package for Distance-based Analysis of DAta-manifolds.",
     packages=["dadapy", "dadapy._utils"],
-    install_requires=["numpy", "scipy", "scikit-learn", "matplotlib"],
-    extras_require={"dev": ["tox", "black", "isort", "pytest"]},
-    cmdclass=cmdclass,
     ext_modules=ext_modules,
 )
