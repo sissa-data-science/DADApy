@@ -72,7 +72,8 @@ class Base:
                 self.X = self.X.astype(np.float64, casting="safe")
             else:
                 warnings.warn(
-                    f"data type is {self.X.dtype}: most methods work only with float-type inputs"
+                    f"data type is {self.X.dtype}: most methods work only with float-type inputs",
+                    stacklevel=2,
                 )
 
             self.N = self.X.shape[0]
@@ -109,7 +110,8 @@ class Base:
             elif maxk > (distances[0].shape[1] - 1):
                 maxk = distances[0].shape[1] - 1
                 warnings.warn(
-                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}"
+                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}",
+                    stacklevel=2,
                 )
 
             N = distances[0].shape[0]
@@ -132,7 +134,8 @@ class Base:
             elif maxk > (distances.shape[1] - 1):
                 maxk = distances.shape[1] - 1
                 warnings.warn(
-                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}"
+                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}",
+                    stacklevel=2,
                 )
 
             dist, dist_indices = from_all_distances_to_nndistances(distances, maxk)

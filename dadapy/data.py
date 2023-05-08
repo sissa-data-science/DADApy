@@ -34,12 +34,7 @@ os.getcwd()
 
 
 class Data(Clustering, MetricComparisons):
-    """This class is a container of all the method of DADApy. It is initialised with a set of coordinates or a set of
-    distances, and all methods can be called on the generated class instance.
-
-    Attributes:
-
-    """
+    """Data class."""
 
     def __init__(
         self,
@@ -50,6 +45,19 @@ class Data(Clustering, MetricComparisons):
         njobs=cores,
         working_memory=1024,
     ):
+        """Initialise a Data object, container of all DADApy methods.
+
+        It is initialised with a set of coordinates or a set of
+        distances, and all methods can be called on the generated class instance.
+
+        Args:
+            coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+            maxk (int): maximum number of neighbours to be considered for the calculation of distances
+            verbose (bool): whether you want the code to speak or shut up
+            njobs (int): number of cores to be used
+            working_memory (int): working memory (TODO: currently unused)
+        """
         super().__init__(
             coordinates=coordinates,
             distances=distances,

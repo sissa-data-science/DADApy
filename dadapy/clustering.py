@@ -105,7 +105,8 @@ class Clustering(DensityEstimation):
         if v2 is True:
             warnings.warn(
                 """using adp implementation v2: this requires less memory but can
-                be two times slower than the original implementation"""
+                be two times slower than the original implementation""",
+                stacklevel=2,
             )
 
         # Make all values of log_den positives (this is important to help convergence)
@@ -259,7 +260,8 @@ class Clustering(DensityEstimation):
         if v2 is True:
             warnings.warn(
                 """using adp implementation v2: this requires less memory but
-                can be two times slower than the original implementation"""
+                can be two times slower than the original implementation""",
+                stacklevel=2,
             )
 
         # Make all values of log_den positives (this is important to help convergence)
@@ -537,7 +539,8 @@ class Clustering(DensityEstimation):
             warnings.warn(
                 """There are > 10k initial putative clusters:
             the matrices of the saddle points may cause out of memory error (3x Nclus x Nclus --> > 2.4 GB required).
-            If this is the case, call compute_clustering_ADP_pure_python(v2 = True). Ignore the warning otherwise."""
+            If this is the case, call compute_clustering_ADP_pure_python(v2 = True). Ignore the warning otherwise.""",
+                stacklevel=2,
             )
 
         try:
