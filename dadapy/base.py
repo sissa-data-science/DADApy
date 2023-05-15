@@ -110,7 +110,7 @@ class Base:
             elif maxk > (distances[0].shape[1] - 1):
                 maxk = distances[0].shape[1] - 1
                 warnings.warn(
-                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}",
+                    f"maxk requested bigger than number of features: setting maxk to {maxk}",
                     stacklevel=2,
                 )
 
@@ -134,7 +134,7 @@ class Base:
             elif maxk > (distances.shape[1] - 1):
                 maxk = distances.shape[1] - 1
                 warnings.warn(
-                    f"maxk requested bigger than number of feautres: setting maxk to {maxk}",
+                    f"maxk requested bigger than number of features: setting maxk to {maxk}",
                     stacklevel=2,
                 )
 
