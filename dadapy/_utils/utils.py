@@ -168,7 +168,7 @@ def _neg_loglik(dtype, d, mus, n1, n2):
 
     N = len(mus)
     term1 = (N - 1) * np.log(d)
-    term2 = np.sum((n2 - n1 - 1) * np.log(mus ** d - 1))
+    term2 = np.sum((n2 - n1 - 1) * np.log(mus**d - 1))
     term3 = -np.sum(np.log(sp.beta(n2 - n1, n1)))
     term4 = -np.sum((((n2 - 1) * d) + 1) * np.log(mus))
 
@@ -230,11 +230,11 @@ def _fisher_info_scaling(id_ml, mus, n1, n2, eps):
     one_m_mus_d[one_m_mus_d < eps] = eps
     log_mu = np.log(mus)
 
-    j0 = N / id_ml ** 2
+    j0 = N / id_ml**2
 
     factor1 = np.divide(log_mu, one_m_mus_d)
     factor2 = mus ** (-id_ml)
-    tmp = np.multiply(factor1 ** 2, factor2)
+    tmp = np.multiply(factor1**2, factor2)
     j1 = np.sum((n2 - n1 - 1) * tmp)
     return j0 + j1
 
@@ -361,7 +361,7 @@ def _beta_prior(k, n, r, a0=1, b0=1, posterior_profile=False):
         import matplotlib.pyplot as plt
 
         def p_d(d):
-            return abs(posterior.pdf(r ** d) * (r ** d) * np.log(r))
+            return abs(posterior.pdf(r**d) * (r**d) * np.log(r))
 
         dx = 0.1
         d_left = D_MIN
