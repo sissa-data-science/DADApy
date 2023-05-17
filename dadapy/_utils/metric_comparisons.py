@@ -18,7 +18,7 @@ from sklearn.neighbors import NearestNeighbors
 
 
 def _return_ranks(dist_indices_1, dist_indices_2, k=1):
-    """Finds all the ranks according to distance 2 of the neighbours according to distance 1. 
+    """Finds all the ranks according to distance 2 of the neighbours according to distance 1.
        Neighbours in distance 1 are considered up to order k.
 
     Args:
@@ -35,20 +35,23 @@ def _return_ranks(dist_indices_1, dist_indices_2, k=1):
     N = dist_indices_1.shape[0]
     maxk_2 = dist_indices_2.shape[1]
 
-    conditional_ranks = np.zeros((N,k))
+    conditional_ranks = np.zeros((N, k))
 
     for i in range(N):
-        idx_k_d1 = dist_indices_1[i, 1:k+1]
+        idx_k_d1 = dist_indices_1[i, 1 : k + 1]
 
-        wr = [np.where(idx_k_d1[k_neighbor] == dist_indices_2[i])[0] for k_neighbor in range(k)]
+        wr = [
+            np.where(idx_k_d1[k_neighbor] == dist_indices_2[i])[0]
+            for k_neighbor in range(k)
+        ]
 
         for k_neighbor in range(k):
             if len(wr[k_neighbor]) == 0:
                 print("sampling")
-                conditional_ranks[i,k_neighbor] = np.random.randint(maxk_2, N)
+                conditional_ranks[i, k_neighbor] = np.random.randint(maxk_2, N)
             else:
-                conditional_ranks[i,k_neighbor] = wr[k_neighbor][0]
-    
+                conditional_ranks[i, k_neighbor] = wr[k_neighbor][0]
+
     return conditional_ranks
 
 
@@ -70,6 +73,6 @@ def _return_imbalance(dist_indices_1, dist_indices_2, k=1):
 
     ranks = _return_ranks(dist_indices_1, dist_indices_2, k=k)
 
-    imb = np.mean(ranks) / (N  / 2.0)
+    imb = np.mean(ranks) / (N / 2.0)
 
     return imb
