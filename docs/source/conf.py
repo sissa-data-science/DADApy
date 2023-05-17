@@ -24,14 +24,16 @@ sys.path.insert(0, os.path.abspath("../../dadapy/_cython"))
 sys.path.insert(0, os.path.abspath("../examples"))
 sys.path.insert(0, os.path.abspath("../../examples"))
 
-#sys.path.insert(0, os.path.abspath("../../dadapy/_utils"))
+# sys.path.insert(0, os.path.abspath("../../dadapy/_utils"))
 
 # -- Project information -----------------------------------------------------
 
 project = "dadapy"
 copyright = "2021-2023, The DADApy Authors"
-author = "Aldo Glielmo, Iuri Macocco, Diego Doimo, Matteo Carli, Caludio Zeni, Romina Wild, Maria D'Errico, " \
-         "Alex Rodriguez, Alessandro Laio "
+author = (
+    "Aldo Glielmo, Iuri Macocco, Diego Doimo, Matteo Carli, Caludio Zeni, Romina Wild, Maria D'Errico, "
+    "Alex Rodriguez, Alessandro Laio "
+)
 
 # The full version, including alpha/beta/rc tags
 release = "0.1.1"
@@ -41,13 +43,15 @@ release = "0.1.1"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.todo",
-              "sphinx.ext.viewcode",
-              "sphinx.ext.autodoc",
-              "nbsphinx",
-              "nbsphinx_link",
-              "sphinx.ext.napoleon",
-              "IPython.sphinxext.ipython_console_highlighting"]
+extensions = [
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autodoc",
+    "nbsphinx",
+    "nbsphinx_link",
+    "sphinx.ext.napoleon",
+    "IPython.sphinxext.ipython_console_highlighting",
+]
 
 napoleon_custom_sections = [("Returns", "params_style")]
 
@@ -76,8 +80,8 @@ html_static_path = ["_static"]
 html_logo = "_static/logo_1_vertical_transparent_v2.png"
 
 html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
+    "logo_only": True,
+    "display_version": True,
 }
 
 autodoc_mock_imports = [

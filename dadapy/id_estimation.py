@@ -164,6 +164,9 @@ class IdEstimation(Base):
             E. Facco, M. d’Errico, A. Rodriguez, A. Laio, Estimating the intrinsic dimension of datasets by a minimal
             neighborhood information, Scientific reports 7 (1) (2017) 1–8
         """
+        assert (self.X is not None) or (
+            self.distances is not None
+        ), "2NN algorithm requires that either self.X or self.distances is not None. Please initialize a coordinate or distance matrix."
         assert (
             0.0 < decimation and decimation <= 1.0
         ), "'decimation' must be between 0 and 1"
@@ -172,42 +175,23 @@ class IdEstimation(Base):
             algorithm = "ml"
             print("fraction = 1: algorithm set to ml")
 
-        nrep = int(np.rint(1.0 / decimation))
-        ids = np.zeros(nrep)
-        rs = np.zeros(nrep)
+        if decimation == 1:
+            distances = self.distances()
+            if distances is None:
+                distances, _ = self.compute_distances()
 
-        N_subset = int(np.rint(self.N * decimation))
-        mus = np.zeros((N_subset, nrep))
+            mus = distances[:, 2] / distances[:, 1]
+            intrinsic_dim = self._compute_id_2NN(mus, fraction, algorithm)
+            intrinsic_dim_err = None
+            intrinsic_dim_scale = np.mean(distances[:, np.array([1, 2])])
 
-        for j in range(nrep):
-            if decimation == 1 and self.distances is not None:
-                # with decimation == 1 use saved distances if present
-                distances, dist_indices = self.distances, self.dist_indices
-
-            elif decimation == 1 and self.distances is None and set_attr is True:
-                # with decimation ==1 and set_attr==True compute distances and save them
-                self.compute_distances()
-                distances, dist_indices = self.distances, self.dist_indices
-
-            else:
-                # if set_attr==False or for decimation < 1 random sample points don't save distances
-                idx = np.random.choice(self.N, size=N_subset, replace=False)
-                X_decimated = self.X[idx]
-
-                distances, dist_indices = compute_nn_distances(
-                    X_decimated,
-                    maxk=3,  # only compute first 2 nn
-                    metric=self.metric,
-                    period=self.period,
-                )
-
-            mus[:, j] = distances[:, 2] / distances[:, 1]
-            ids[j] = self._compute_id_2NN(mus[:, j], fraction, algorithm)
-            rs[j] = np.mean(distances[:, np.array([1, 2])])
-
-        intrinsic_dim = np.mean(ids)
-        intrinsic_dim_err = np.std(ids) / len(ids) ** 0.5
-        intrinsic_dim_scale = np.mean(rs)
+        else:
+            mus, id_list, r_list = self._compute_id_iterated(
+                decimation, fraction, algorithm
+            )
+            intrinsic_dim = np.mean(id_list)
+            intrinsic_dim_err = np.std(id_list) / len(id_list) ** 0.5
+            intrinsic_dim_scale = np.mean(r_list)
 
         if self.verb:
             print(f"ID estimation finished: selecting ID of {intrinsic_dim}")
@@ -221,6 +205,39 @@ class IdEstimation(Base):
         return intrinsic_dim, intrinsic_dim_err, intrinsic_dim_scale
 
     # ----------------------------------------------------------------------------------------------
+
+    def _compute_id_iterated(self, decimation, fraction, algorithm):
+        nrep = int(np.rint(1.0 / decimation))
+        ids = np.zeros(nrep)
+        rs = np.zeros(nrep)
+        N_subset = int(np.rint(self.N * decimation))
+        mus = np.zeros((N_subset, nrep))
+
+        for j in range(nrep):
+            if self.X is None and self.distances is not None:
+                indices = np.random.choice(self.N, N_subset, replace=False)
+                surviving_neighbor_ind = np.isin(self.dist_indices, indices)
+                surviving_data_ind = np.sum(surviving_neighbor_ind, axis=1) > 2
+                distances = self.distances[
+                    surviving_data_ind, surviving_neighbor_ind[surviving_data_ind]
+                ]
+
+            else:
+                # if set_attr==False or for decimation < 1 random sample points don't save distances
+                idx = np.random.choice(self.N, size=N_subset, replace=False)
+                X_decimated = self.X[idx]
+                distances, _ = compute_nn_distances(
+                    X_decimated,
+                    maxk=3,  # only compute first 2 nn
+                    metric=self.metric,
+                    period=self.period,
+                )
+
+            mus[:, j] = distances[:, 2] / distances[:, 1]
+            ids[j] = self._compute_id_2NN(mus[:, j], fraction, algorithm)
+            rs[j] = np.mean(distances[:, np.array([1, 2])])
+
+        return mus, ids, rs
 
     def return_id_scaling_2NN(
         self,
@@ -411,17 +428,17 @@ class IdEstimation(Base):
         ids_scaling_err = np.zeros(mus.shape[1])
         for i in range(mus.shape[1]):
             n1 = 2**i
-            id, id_err = self._compute_id_gride_single(
+            intrinsic_dim, id_err_ = self._compute_id_gride_single(
                 d0, d1, mus[:, i], n1, 2 * n1, eps
             )
 
-            ids_scaling[i] = id
-            ids_scaling_err[i] = id_err
+            ids_scaling[i] = intrinsic_dim
+            ids_scaling_err[i] = id_err_
 
         return ids_scaling, ids_scaling_err
 
     def _compute_id_gride_single(self, d0, d1, mus, n1, n2, eps):
-        id = ut._argmax_loglik(
+        intrinsic_dim = ut._argmax_loglik(
             self.dtype, d0, d1, mus, n1, n2, eps=eps
         )  # eps=precision id calculation
         id_err = (
@@ -431,7 +448,7 @@ class IdEstimation(Base):
             )  # eps=regularization small numbers
         ) ** 0.5
 
-        return id, id_err
+        return intrinsic_dim, id_err
 
     def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
