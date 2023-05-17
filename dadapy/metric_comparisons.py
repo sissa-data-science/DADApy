@@ -236,7 +236,7 @@ class MetricComparisons(Base):
             X: coordinate matrix
             coords: subset of coordinates to be used when building the alternative distance
             dist_indices (int[:,:]): nearest neighbours according to full distance
-            k (int): order of nearest neighbour considered, default is 1
+            k (int): number of neighbours considered in the computation of the imbalances, default is 1
 
         Returns:
             (float, float): the information imbalance from 'full' to 'alternative' and vice versa
@@ -611,3 +611,56 @@ class MetricComparisons(Base):
             overlaps.append(overlap)
 
         return overlaps
+
+    def return_inf_imb_causality(self, cause_present, effect_present, effect_future, weights=[1], k=1):
+        """Return the imbalances (weight * cause_present, effect_present) -> effect_future 
+
+        Args:
+            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time t
+            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time t
+            effect_future (np.ndarray(float)): N x D2 matrix, putative driven system data set at time t + tau
+            weights (list(float), np.ndarray(float)): scaling parameters for the driver system at time t
+            k (int): order of nearest neighbour considered for the calculation of the imbalance
+
+        Returns:
+            imbalances (np.ndarray(float)): the information imbalances for the different weights
+        """
+
+        _, ranks_effect_future = compute_nn_distances(
+            effect_future, self.maxk, self.metric, self.period
+        )
+
+        imbalances = Parallel(n_jobs=self.njobs)(
+            delayed(self.return_inf_imb_causality_target_rank)
+            (cause_present, effect_present, ranks_effect_future, weight, k)
+            for weight in weights
+        )
+
+        return imbalances
+
+    def return_inf_imb_causality_target_rank(self, cause_present, effect_present, ranks_effect_future, weight=1, k=1):
+        """Return the imbalance (weight * cause_present, effect_present) -> effect_future
+
+        Args:
+            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time t
+            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time t
+            ranks_effect_future (np.ndarray(float)): N x maxk matrix, putative driven system ranks at time t + tau
+            weight (float): scaling parameter for the driver system at time t
+            k (int): order of nearest neighbour considered for the calculation of the imbalance
+
+        Returns:
+            imb (float): the information imbalance
+        """
+        if (cause_present.shape[0] != effect_present.shape[0] or 
+            cause_present.shape[0] != ranks_effect_future.shape[0]):
+            raise ValueError(
+                "Number of points must be the same in 'cause_present','effect_present' and 'effect_future'!")
+
+        space_present = np.column_stack((weight * cause_present, effect_present))
+        _, ranks_present = compute_nn_distances(
+            space_present, self.maxk, self.metric, self.period
+        )
+
+        imb = _return_imbalance(ranks_present, ranks_effect_future, k=k)
+
+        return imb
