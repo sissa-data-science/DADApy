@@ -23,7 +23,9 @@ import pytest
 from dadapy import MetricComparisons
 
 filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
-filename_traj = os.path.join(os.path.split(__file__)[0], "../rosslers_xtoy_trajectory.npy")
+filename_traj = os.path.join(
+    os.path.split(__file__)[0], "../rosslers_xtoy_trajectory.npy"
+)
 
 
 def test_information_imbalance_basics():
@@ -118,10 +120,8 @@ def test_return_inf_imb_causality():
 
     mc = MetricComparisons(maxk=X0.shape[0] - 1)
 
-    imbalances = mc.return_inf_imb_causality(cause_present = X0, 
-                                             effect_present = Y0,
-                                             effect_future = Ytau,
-                                             weights = weights,
-                                             k = k)
+    imbalances = mc.return_inf_imb_causality(
+        cause_present=X0, effect_present=Y0, effect_future=Ytau, weights=weights, k=k
+    )
 
     assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)

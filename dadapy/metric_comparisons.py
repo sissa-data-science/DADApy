@@ -612,8 +612,10 @@ class MetricComparisons(Base):
 
         return overlaps
 
-    def return_inf_imb_causality(self, cause_present, effect_present, effect_future, weights=[1], k=1):
-        """Return the imbalances (weight * cause_present, effect_present) -> effect_future 
+    def return_inf_imb_causality(
+        self, cause_present, effect_present, effect_future, weights=[1], k=1
+    ):
+        """Return the imbalances (weight * cause_present, effect_present) -> effect_future
 
         Args:
             cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time t
@@ -631,14 +633,17 @@ class MetricComparisons(Base):
         )
 
         imbalances = Parallel(n_jobs=self.njobs)(
-            delayed(self.return_inf_imb_causality_target_rank)
-            (cause_present, effect_present, ranks_effect_future, weight, k)
+            delayed(self.return_inf_imb_causality_target_rank)(
+                cause_present, effect_present, ranks_effect_future, weight, k
+            )
             for weight in weights
         )
 
         return imbalances
 
-    def return_inf_imb_causality_target_rank(self, cause_present, effect_present, ranks_effect_future, weight=1, k=1):
+    def return_inf_imb_causality_target_rank(
+        self, cause_present, effect_present, ranks_effect_future, weight=1, k=1
+    ):
         """Return the imbalance (weight * cause_present, effect_present) -> effect_future
 
         Args:
@@ -651,10 +656,13 @@ class MetricComparisons(Base):
         Returns:
             imb (float): the information imbalance
         """
-        if (cause_present.shape[0] != effect_present.shape[0] or 
-            cause_present.shape[0] != ranks_effect_future.shape[0]):
+        if (
+            cause_present.shape[0] != effect_present.shape[0]
+            or cause_present.shape[0] != ranks_effect_future.shape[0]
+        ):
             raise ValueError(
-                "Number of points must be the same in 'cause_present','effect_present' and 'effect_future'!")
+                "Number of points must be the same in 'cause_present','effect_present' and 'effect_future'!"
+            )
 
         space_present = np.column_stack((weight * cause_present, effect_present))
         _, ranks_present = compute_nn_distances(
