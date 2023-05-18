@@ -465,7 +465,7 @@ class IdEstimation(Base):
         id_err = (
             1
             / ut._fisher_info_scaling(
-                id, mus, n1, 2 * n1, eps=5 * self.eps
+                intrinsic_dim, mus, n1, 2 * n1, eps=5 * self.eps
             )  # eps=regularization small numbers
         ) ** 0.5
 
