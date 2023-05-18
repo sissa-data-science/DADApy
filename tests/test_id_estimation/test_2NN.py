@@ -20,7 +20,8 @@ import os
 import numpy as np
 import pytest
 
-from dadapy import DensityEstimation
+from dadapy import IdEstimation
+from dadapy._utils.utils import compute_nn_distances
 
 filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 
@@ -31,13 +32,23 @@ def test_compute_id_2NN():
     """Test that the id estimations with 2NN work correctly."""
     np.random.seed(0)
 
-    de = DensityEstimation(coordinates=X)
+    ie = IdEstimation(coordinates=X)
 
-    de.compute_id_2NN()
-    assert pytest.approx(de.intrinsic_dim, abs=0.01) == 1.85
+    ie.compute_id_2NN()
+    assert pytest.approx(ie.intrinsic_dim, abs=0.01) == 1.85
 
     # testing 2NN scaling
-    ids, ids_err, rs = de.return_id_scaling_2NN()
+    ids, ids_err, rs = ie.return_id_scaling_2NN()
+
+    assert ids == pytest.approx([1.85, 1.77, 1.78, 2.31], abs=0.01)
+    assert ids_err == pytest.approx([0.0, 0.11, 0.15, 0.19], abs=0.01)
+    assert rs == pytest.approx([0.39, 0.58, 0.78, 1.13], abs=0.01)
+
+    np.random.seed(0)
+    distances, dist_indices = compute_nn_distances(X, maxk = X.shape[0]-1)
+    ie_dist = IdEstimation(distances=(distances, dist_indices))
+    ids, ids_err, rs = ie_dist.return_id_scaling_2NN()
+    print(ids)
 
     assert ids == pytest.approx([1.85, 1.77, 1.78, 2.31], abs=0.01)
     assert ids_err == pytest.approx([0.0, 0.11, 0.15, 0.19], abs=0.01)
@@ -46,8 +57,8 @@ def test_compute_id_2NN():
 
 def test_compute_id_2NN_wprior():
     """Test that the id estimation with a Bayesian 2NN works correctly."""
-    de = DensityEstimation(coordinates=X)
+    ie = IdEstimation(coordinates=X)
 
-    de.compute_id_2NN_wprior()
+    ie.compute_id_2NN_wprior()
 
-    assert pytest.approx(de.intrinsic_dim, abs=0.0001) == 1.8722
+    assert pytest.approx(ie.intrinsic_dim, abs=0.0001) == 1.8722

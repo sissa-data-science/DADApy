@@ -117,7 +117,7 @@ class IdEstimation(Base):
         algorithm="base",
         fraction=0.9,
         decimation=1,
-        n_iter = None,
+        n_iter=None,
         set_attr=True,
     ):
         """Compute intrinsic dimension using the 2NN algorithm.
@@ -177,20 +177,20 @@ class IdEstimation(Base):
             print("fraction = 1: algorithm set to ml")
 
         if decimation == 1:
-            distances = self.distances()
+            distances = self.distances
             if distances is None:
-                distances, _ = self.compute_distances()
+                self.compute_distances()
 
-            mus = distances[:, 2] / distances[:, 1]
+            mus = self.distances[:, 2] / self.distances[:, 1]
             intrinsic_dim = self._compute_id_2NN(mus, fraction, algorithm)
-            intrinsic_dim_err = 0.
-            intrinsic_dim_scale = np.mean(distances[:, np.array([1, 2])])
+            intrinsic_dim_err = 0.0
+            intrinsic_dim_scale = np.mean(self.distances[:, np.array([1, 2])])
 
         else:
             n_subset = int(np.rint(self.N * decimation))
             if n_iter is None:
                 n_iter = int(np.rint(1.0 / decimation))
-            
+
             mus, id_list, r_list = self._compute_id_iterated(
                 n_iter, n_subset, fraction, algorithm
             )
@@ -213,7 +213,6 @@ class IdEstimation(Base):
     # ----------------------------------------------------------------------------------------------
 
     def _compute_id_iterated(self, n_iter, n_subset, fraction, algorithm):
-        
         ids = np.zeros(n_iter)
         rs = np.zeros(n_iter)
         n_survived = np.zeros(n_iter)
@@ -221,22 +220,22 @@ class IdEstimation(Base):
         decimation_from_distances = self.X is None and self.distances is not None
 
         for j in range(n_iter):
-            #do decimation from pure distance matrix
+            # do decimation from pure distance matrix
             if decimation_from_distances:
-
-                #random subsample a subset of indices
+                # random subsample a subset of indices
                 indices = np.random.choice(self.N, n_subset, replace=False)
-                #Is self.dist_indices[i, j] selected?
+                # Is self.dist_indices[i, j] selected?
                 mask = np.isin(self.dist_indices, indices)
 
-                #distance matrix where the selected indices also have two nearest neighbors within self.maxk
+                # distance matrix where the selected indices also have two nearest neighbors within self.maxk
                 distances = []
                 for index in indices:
-                    if np.sum(mask[index])>2:
+                    if np.sum(mask[index]) > 2:
                         distances.append(self.distances[index, mask[index]][:3])
                 distances = np.array(distances)
+                print(len(distances))
                 n_survived[j] = distances.shape[0]
-        
+
             else:
                 idx = np.random.choice(self.N, size=n_subset, replace=False)
                 x_decimated = self.X[idx]
@@ -246,12 +245,13 @@ class IdEstimation(Base):
                     metric=self.metric,
                     period=self.period,
                 )
+                print(len(distances))
 
             mus[j] = distances[:, 2] / distances[:, 1]
             ids[j] = self._compute_id_2NN(mus[j], fraction, algorithm)
             rs[j] = np.mean(distances[:, np.array([1, 2])])
-        
-        if decimation_from_distances and (np.mean(n_survived) < 0.8*n_subset):
+
+        if decimation_from_distances and (np.mean(n_survived) < 0.8 * n_subset):
             warnings.warn(
                 f"""Decimation from a sparse distance matrix uses
                 on average {int(np.mean(n_survived))} out of the {n_subset} data points. """,
