@@ -613,9 +613,9 @@ class MetricComparisons(Base):
         return overlaps
 
     def return_inf_imb_causality(
-        self, cause_present, effect_present, effect_future, weights=[1], k=1
+        self, cause_present, effect_present, effect_future, weights, k=1
     ):
-        """Return the imbalances (weight * cause_present, effect_present) -> effect_future
+        """Return the imbalances (weight * cause_present, effect_present) -> effect_future.
 
         Args:
             cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time t
@@ -627,7 +627,6 @@ class MetricComparisons(Base):
         Returns:
             imbalances (np.ndarray(float)): the information imbalances for the different weights
         """
-
         _, ranks_effect_future = compute_nn_distances(
             effect_future, self.maxk, self.metric, self.period
         )
@@ -644,7 +643,7 @@ class MetricComparisons(Base):
     def return_inf_imb_causality_target_rank(
         self, cause_present, effect_present, ranks_effect_future, weight=1, k=1
     ):
-        """Return the imbalance (weight * cause_present, effect_present) -> effect_future
+        """Return the imbalance (weight * cause_present, effect_present) -> effect_future.
 
         Args:
             cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time t
