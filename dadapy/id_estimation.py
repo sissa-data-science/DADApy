@@ -179,8 +179,7 @@ class IdEstimation(Base):
             print("fraction = 1: algorithm set to ml")
 
         if decimation == 1:
-            distances = self.distances
-            if distances is None:
+            if self.distances is None:
                 self.compute_distances()
 
             mus = self.distances[:, 2] / self.distances[:, 1]
@@ -329,7 +328,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
     def return_id_scaling_gride(
-        self, range_max=64, d0=0.001, d1=1000, eps=1e-7, save_mus=False
+        self, range_max=64, d0=0.001, d1=1000, eps=1e-7, set_attr=False
     ):
         """Compute the id at different scales using the Gride algorithm.
 
@@ -340,6 +339,7 @@ class IdEstimation(Base):
             d0 (float): minimum intrinsic dimension considered in the search;
             d1 (float): maximum intrinsic dimension considered in the search;
             eps (float): precision of the approximate id calculation.
+            set_attr (bool): whether to change the class attributes as a result of the computation
 
         Returns:
             ids_scaling (np.ndarray(float)): array of intrinsic dimensions of length log2(range_max);
@@ -376,33 +376,32 @@ class IdEstimation(Base):
             F. Denti, D. Doimo, A. Laio, A. Mira, Distributional results for model-based intrinsic dimension
             estimators, arXiv preprint arXiv:2104.13832 (2021).
         """
+        assert (self.X is not None) or (
+            self.distances is not None
+        ), """2NN algorithm requires that either self.X or self.distances is not None.\
+            Please initialize a coordinate or distance matrix."""
+
         max_rank = min(self.N, range_max)
+        if self.X is None and max_rank > self.maxk:
+            max_rank = self.maxk
+            warnings.warn(
+                f"""{range_max} set to {range_max} but data class initialized with\
+                    a sparse distance matrix with only {self.maxk} nearest neighbors.\
+                    {range_max} is set to {self.maxk}""",
+                stacklevel=2,
+            )
         max_step = int(math.log(max_rank, 2))
         nn_ranks = np.array([2**i for i in range(max_step)])
 
-        if self.distances is not None and range_max < self.maxk + 1:
-            max_rank = min(max_rank, self.maxk + 1)
-            if self.verb:
-                print(
-                    f"distance already computed up to {max_rank}. max rank set to {max_rank}"
-                )
-
+        if self.distances is not None and max_rank < self.maxk + 1:
             mus = self.distances[:, nn_ranks[1:]] / self.distances[:, nn_ranks[:-1]]
             rs = self.distances[:, np.array([nn_ranks[:-1], nn_ranks[1:]])]
 
         elif self.X is not None:
-            if self.verb:
-                print(
-                    f"distance not computed up to {max_rank}. distance computation started"
-                )
-
             distances, dist_indices, mus, rs = self._return_mus_scaling(
                 range_scaling=max_rank
             )
-            # returns:
-            # distances, dist_indices (self.N, self.maxk+1): sorted distances and dist indices up to maxk+1
-            # mus (self.N, len(nn_ranks)): ratio between 2*kth and kth neighbor distances of every data point
-            # rs (self.N, 2, len(nn_ranks)): kth, 2*kth neighbor of every data, for every nn_ranks
+
             if self.verb:
                 print("distance computation finished")
 
@@ -413,16 +412,17 @@ class IdEstimation(Base):
                 self.N = distances.shape[0]
 
         # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
-        if self.verb:
-            print("id inference started")
         ids_scaling, ids_scaling_err = self._compute_id_gride(mus, d0, d1, eps)
         if self.verb:
-            print("id inference finished")
+            print("id computation finished")
 
         "average of the kth and 2*kth neighbor distances taken over all datapoints for each id estimate"
         rs_scaling = np.mean(rs, axis=(0, 1))
 
-        if save_mus:
+        if set_attr:
+            self.intrinsic_dim_gride = ids_scaling
+            self.intrinsic_dim_err_gride = ids_scaling_err
+            self.intrinsic_dim_scale_gride = rs_scaling
             self.intrinsic_dim_mus_gride = mus
 
         return ids_scaling, ids_scaling_err, rs_scaling
