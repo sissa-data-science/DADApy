@@ -225,7 +225,7 @@ def _argmax_loglik(dtype, d0, d1, mus, n1, n2, eps=1.0e-7):
 
 def _fisher_info_scaling(id_ml, mus, n1, n2, eps):
     N = len(mus)
-    one_m_mus_d = 1.0 - mus ** (-1.*id_ml)
+    one_m_mus_d = 1.0 - mus ** (-1.0 * id_ml)
     "regularize small numbers"
     one_m_mus_d[one_m_mus_d < eps] = eps
     log_mu = np.log(mus)
