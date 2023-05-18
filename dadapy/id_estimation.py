@@ -167,7 +167,8 @@ class IdEstimation(Base):
         """
         assert (self.X is not None) or (
             self.distances is not None
-        ), "2NN algorithm requires that either self.X or self.distances is not None. Please initialize a coordinate or distance matrix."
+        ), """2NN algorithm requires that either self.X or self.distances is not None.\
+            Please initialize a coordinate or distance matrix."""
         assert (
             0.0 < decimation and decimation <= 1.0
         ), "'decimation' must be between 0 and 1"

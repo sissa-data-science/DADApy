@@ -45,7 +45,7 @@ def test_compute_id_2NN():
     assert rs == pytest.approx([0.39, 0.58, 0.78, 1.13], abs=0.01)
 
     np.random.seed(0)
-    distances, dist_indices = compute_nn_distances(X, maxk = X.shape[0]-1)
+    distances, dist_indices = compute_nn_distances(X, maxk=X.shape[0] - 1)
     ie_dist = IdEstimation(distances=(distances, dist_indices))
     ids, ids_err, rs = ie_dist.return_id_scaling_2NN()
     print(ids)
