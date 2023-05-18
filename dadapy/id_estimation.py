@@ -126,6 +126,7 @@ class IdEstimation(Base):
             algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
             fraction (float): fraction of mus that will be considered for the estimate (discard highest mus)
             decimation (float): fraction of randomly sampled points used to compute the id
+            n_iter (int): number of times the ID is computed on data subsets (useful when decimation < 1)
             set_attr (bool): whether to change the class attributes as a result of the computation
 
         Returns:
@@ -234,7 +235,6 @@ class IdEstimation(Base):
                     if np.sum(mask[index]) > 2:
                         distances.append(self.distances[index, mask[index]][:3])
                 distances = np.array(distances)
-                print(len(distances))
                 n_survived[j] = distances.shape[0]
 
             else:
@@ -246,7 +246,6 @@ class IdEstimation(Base):
                     metric=self.metric,
                     period=self.period,
                 )
-                print(len(distances))
 
             mus[j] = distances[:, 2] / distances[:, 1]
             ids[j] = self._compute_id_2NN(mus[j], fraction, algorithm)
