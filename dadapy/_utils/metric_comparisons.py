@@ -47,7 +47,6 @@ def _return_ranks(dist_indices_1, dist_indices_2, k=1):
 
         for k_neighbor in range(k):
             if len(wr[k_neighbor]) == 0:
-                print("sampling")
                 conditional_ranks[i, k_neighbor] = np.random.randint(maxk_2, N)
             else:
                 conditional_ranks[i, k_neighbor] = wr[k_neighbor][0]
