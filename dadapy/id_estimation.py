@@ -450,15 +450,15 @@ class IdEstimation(Base):
 
         for i in range(mus.shape[1]):
             n1 = 2**i
-            
+
             intrinsic_dim = ut._argmax_loglik(
-                        self.dtype, d0, d1, mus[:, i], n1, 2*n1, eps=eps
-                    )  # eps
-            
+                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, eps=eps
+            )  # eps
+
             id_error = (
                 1
                 / ut._fisher_info_scaling(
-                    intrinsic_dim, mus[:,  i], n1, 2 * n1, eps=5 * self.eps
+                    intrinsic_dim, mus[:, i], n1, 2 * n1, eps=5 * self.eps
                 )  # eps=regularization small numbers
             ) ** 0.5
 
@@ -466,7 +466,6 @@ class IdEstimation(Base):
             ids_scaling_err[i] = id_error
 
         return ids_scaling, ids_scaling_err
-    
 
     def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
