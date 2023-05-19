@@ -447,29 +447,26 @@ class IdEstimation(Base):
         ids_scaling = np.zeros(mus.shape[1])
         # array of error estimates (via fisher information)
         ids_scaling_err = np.zeros(mus.shape[1])
+
         for i in range(mus.shape[1]):
             n1 = 2**i
-            intrinsic_dim, id_err_ = self._compute_id_gride_single(
-                d0, d1, mus[:, i], n1, 2 * n1, eps
-            )
+            
+            intrinsic_dim = ut._argmax_loglik(
+                        self.dtype, d0, d1, mus[:, i], n1, 2*n1, eps=eps
+                    )  # eps
+            
+            id_error = (
+                1
+                / ut._fisher_info_scaling(
+                    intrinsic_dim, mus[:,  i], n1, 2 * n1, eps=5 * self.eps
+                )  # eps=regularization small numbers
+            ) ** 0.5
 
             ids_scaling[i] = intrinsic_dim
-            ids_scaling_err[i] = id_err_
+            ids_scaling_err[i] = id_error
 
         return ids_scaling, ids_scaling_err
-
-    def _compute_id_gride_single(self, d0, d1, mus, n1, n2, eps):
-        intrinsic_dim = ut._argmax_loglik(
-            self.dtype, d0, d1, mus, n1, n2, eps=eps
-        )  # eps=precision id calculation
-        id_err = (
-            1
-            / ut._fisher_info_scaling(
-                intrinsic_dim, mus, n1, 2 * n1, eps=5 * self.eps
-            )  # eps=regularization small numbers
-        ) ** 0.5
-
-        return intrinsic_dim, id_err
+    
 
     def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
