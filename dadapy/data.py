@@ -116,7 +116,7 @@ class Data(Clustering, MetricComparisons):
                 ]
             )
             # compute the id using Gride
-            id, id_err = self._compute_id_gride_single(d0, d1, mus, n1s, n2s, eps)
+            id, id_err = self._compute_id_gride_single_scale(d0, d1, mus, n1s, n2s, eps)
             self.set_id(id)
             log_lik = -ut._neg_loglik(self.dtype, id, mus, n1s, n2s)
 

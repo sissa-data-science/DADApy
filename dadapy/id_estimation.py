@@ -412,7 +412,9 @@ class IdEstimation(Base):
                 self.N = distances.shape[0]
 
         # compute IDs (and their error) via maximum likelihood for all the scales up to max_rank
-        ids_scaling, ids_scaling_err = self._compute_id_gride(mus, d0, d1, eps)
+        ids_scaling, ids_scaling_err = self._compute_id_gride_multiscale(
+            mus, d0, d1, eps
+        )
         if self.verb:
             print("id computation finished")
 
@@ -428,7 +430,7 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err, rs_scaling
 
     # ----------------------------------------------------------------------------------------------
-    def _compute_id_gride(self, mus, d0, d1, eps):
+    def _compute_id_gride_multiscale(self, mus, d0, d1, eps):
         """Compute the id using the gride algorithm.
 
         Helper of return return_id_gride.
@@ -451,21 +453,27 @@ class IdEstimation(Base):
         for i in range(mus.shape[1]):
             n1 = 2**i
 
-            intrinsic_dim = ut._argmax_loglik(
-                self.dtype, d0, d1, mus[:, i], n1, 2 * n1, eps=eps
-            )  # eps
-
-            id_error = (
-                1
-                / ut._fisher_info_scaling(
-                    intrinsic_dim, mus[:, i], n1, 2 * n1, eps=5 * self.eps
-                )  # eps=regularization small numbers
-            ) ** 0.5
+            intrinsic_dim, id_error = self._compute_id_gride_single_scale(
+                d0, d1, mus[:, i], n1, 2 * n1, eps
+            )
 
             ids_scaling[i] = intrinsic_dim
             ids_scaling_err[i] = id_error
 
         return ids_scaling, ids_scaling_err
+
+    def _compute_id_gride_single_scale(self, d0, d1, mus, n1, n2, eps):
+        id = ut._argmax_loglik(
+            self.dtype, d0, d1, mus, n1, n2, eps=eps
+        )  # eps=precision id calculation
+        id_err = (
+            1
+            / ut._fisher_info_scaling(
+                id, mus, n1, 2 * n1, eps=5 * self.eps
+            )  # eps=regularization small numbers
+        ) ** 0.5
+
+        return id, id_err
 
     def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
