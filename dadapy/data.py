@@ -142,9 +142,8 @@ class Data(Clustering, MetricComparisons):
 
         return ids, ids_err, kstars, log_likelihoods
 
-
     def return_ids_kstar_binomial(
-        self, initial_id=None, n_iter=5, Dthr=23.92812698, r=0.5#, d1=1000, eps=1e-7
+        self, initial_id=None, n_iter=5, Dthr=23.92812698, r=0.5
     ):
         """Return the id estimates of the binomial algorithm coupled with the kstar estimation of the scale.
 
@@ -159,9 +158,11 @@ class Data(Clustering, MetricComparisons):
         # start with an initial estimate of the ID
         if initial_id is None:
             self.compute_id_binomial_k(k=10, r=r)
+            id = self.intrinsic_dim
         else:
             self.compute_distances()
             self.set_id(initial_id)
+            id = initial_id
 
         ids = []
         ids_err = []
@@ -172,26 +173,14 @@ class Data(Clustering, MetricComparisons):
             # compute kstar
             self.compute_kstar(Dthr)
             print("iteration ", i)
-            print("id ", self.intrinsic_dim)
+            print("id ", id)
 
-            # compute n2 and n1 via kstar. If not even, make it even by adding one
-            n2s = self.kstar
-            not_even = n2s % 2 != 0
-            n2s[not_even] = n2s[not_even] + 1
-            assert sum(n2s % 2 != 0) == 0
-            n1s = (n2s / 2).astype(int)
-
-            # compute the mus
-            mus = np.array(
-                [
-                    self.distances[i, n2] / self.distances[i, n1]
-                    for i, (n1, n2) in enumerate(zip(n1s, n2s))
-                ]
-            )
-            # compute the id using Gride
-            id, id_err = self._compute_id_gride_single(d0, d1, mus, n1s, n2s, eps)
-            self.set_id(id)
-            log_lik = -ut._neg_loglik(self.dtype, id, mus, n1s, n2s)
+            rk = np.array([dd[self.kstar[j]] for j, dd in enumerate(self.distances)])
+            rn = rk * r
+            n = np.sum([dd < rn[j] for j, dd in enumerate(self.distances)], axis=1)
+            id = np.log((n.mean() - 1) / (self.kstar.mean() - 1)) / np.log(r)
+            id_err = ut._compute_binomial_cramerrao(id, self.kstar, r, self.N)
+            log_lik = ut.binomial_loglik(id, self.kstar - 1, n - 1, r)
 
             ids.append(id)
             ids_err.append(id_err)
@@ -203,14 +192,8 @@ class Data(Clustering, MetricComparisons):
         kstars = np.array(kstars)
         log_likelihoods = np.array(log_likelihoods)
 
-        id_scale = 0.0
-        for i, (n1, n2) in enumerate(zip(n1s, n2s)):
-            id_scale += self.distances[i, n1]
-            id_scale += self.distances[i, n2]
-        id_scale /= 2 * self.N
-
         self.intrinsic_dim = id
         self.intrinsic_dim_err = id_err
-        self.intrinsic_dim_scale = id_scale
+        self.intrinsic_dim_scale = 0.5 * (rn.mean() + rk.mean())
 
         return ids, ids_err, kstars, log_likelihoods

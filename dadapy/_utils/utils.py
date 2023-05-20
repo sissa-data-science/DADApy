@@ -18,8 +18,8 @@ import warnings
 
 import numpy as np
 import scipy.special as sp
-from scipy.special import binom
 from scipy.spatial import cKDTree
+from scipy.special import binom
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
@@ -241,21 +241,31 @@ def _fisher_info_scaling(id_ml, mus, n1, n2, eps):
 
 
 def log_binom_stirling(k, n):
-    return (k+0.5)*np.log(k)-(n+0.5)*np.log(n)-(k-n+0.5)*np.log(k-n)-0.5*np.log(2*np.pi)
+    return (
+        (k + 0.5) * np.log(k)
+        - (n + 0.5) * np.log(n)
+        - (k - n + 0.5) * np.log(k - n)
+        - 0.5 * np.log(2 * np.pi)
+    )
 
 
 def binomial_loglik(d, k, n, r):
     if isinstance(k, np.ndarray):
-        pk = np.histogram(k, bins=np.arange(-0.5, k.max()+1.5))[0]
-        pk = pk/pk.sum()
+        pk = np.histogram(k, bins=np.arange(-0.5, k.max() + 1.5))[0]
+        pk = pk / pk.sum()
     else:
-        pk = np.ones(k+1)
+        pk = np.ones(k + 1)
         k = [k]
     log_binom = np.log(binom(k, n))
     if np.any(log_binom == np.inf):
         mask = np.where(log_binom == np.inf)[0]
         log_binom[mask] = log_binom_stirling(k[mask], n[mask])
-    return -np.sum(n*d*np.log(r) + (k - n)*np.log(1.0 - r**d) + log_binom + np.log([pk[ki] for ki in k]))
+    return -np.sum(
+        n * d * np.log(r)
+        + (k - n) * np.log(1.0 - r**d)
+        + log_binom
+        + np.log([pk[ki] for ki in k])
+    )
 
 
 def _compute_binomial_cramerrao(d, k, r, n):
