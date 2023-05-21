@@ -46,7 +46,7 @@ data.compute_clustering_ADP()
 - Two-NN estimator 
   > Facco et al., *Scientific Reports* (2017)
 - Gride estimator
-  > Denti et al., *arXiv* (2021)
+  > Denti et al., *Scientific Reports* (2022)
 - Density estimators
     - 
 - kNN estimator
