@@ -54,7 +54,7 @@ data.compute_clustering_ADP()
 - PAk estimator
   > Rodriguez et al., *JCTC* (2018)
 
-- Density peaks estimators
+- Density peaks clustering methods
     - 
 - Density peaks clustering 
   > Rodriguez and Laio, *Science* (2014)
