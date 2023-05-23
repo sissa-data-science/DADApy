@@ -26,8 +26,6 @@ from dadapy._cython.cython_distances import _return_manhattan_condensed as mc
 from dadapy._cython.cython_distances import _return_manhattan_condensed_parallel as mcp
 from dadapy._utils import get_data
 
-cmap = cm.get_cmap("tab20b", 20)
-
 # --------------------------------------------------------------------------------------
 # bounds for numerical estimation, change if needed
 D_MAX = 70.0
@@ -194,7 +192,7 @@ def _compute_jacobian(lk, ln, d):
 # --------------------------------------------------------------------------------------
 
 
-def _compute_binomial_logl(d, Rk, k, Rn, n, discrete=True, truncated=False, w=1):
+def _compute_binomial_logl(d, Rk, k, Rn, n, w=1):
     """Compute the binomial log likelihood given Rk,Rn,k,n
 
     Args:
@@ -203,7 +201,6 @@ def _compute_binomial_logl(d, Rk, k, Rn, n, discrete=True, truncated=False, w=1)
         k (np.ndarray(int) or int): number of points within the external radii
         Rn (np.ndarray(float) or float): external radii
         n (np.ndarray(int)): number of points within the internal radii
-        discrete (bool, default=False): choose discrete or continuous volumes formulation
         w (np.ndarray(int or float), default=1): weights or multiplicity for each point
 
     Returns:
@@ -211,16 +208,7 @@ def _compute_binomial_logl(d, Rk, k, Rn, n, discrete=True, truncated=False, w=1)
 
     """
 
-    if discrete:
-        p = compute_discrete_volume(Rn, d) / compute_discrete_volume(Rk, d)
-
-        if truncated:
-            correction = 1 - (1 - p) ** k
-        else:
-            correction = 1
-
-    else:
-        p = (Rn / Rk) ** d
+    p = compute_discrete_volume(Rn, d) / compute_discrete_volume(Rk, d)
 
     if np.any(p == 0):
         print("something went wrong in the calculation of p: check radii and d used")
@@ -238,7 +226,7 @@ def _compute_binomial_logl(d, Rk, k, Rn, n, discrete=True, truncated=False, w=1)
     #     mask = np.where(log_binom == np.inf)[0]
     #     log_binom[mask] = ut.log_binom_stirling(k[mask], n[mask])
 
-    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p) - np.log(correction)  # + log_binom
+    LogL = n * np.log(p) + (k - n) * np.log(1.0 - p)  # + log_binom
     # add weights contribution
     LogL = LogL * w
     # returns -LogL in order to be able to minimise it through scipy
@@ -326,7 +314,7 @@ def find_d_likelihood(ln, lk, n, k, ww):
 
     return SMin(
         _compute_binomial_logl,
-        args=(lk, k, ln, n, True, False, ww),
+        args=(lk, k, ln, n, ww),
         bounds=(D_MIN + np.finfo(np.float16).eps, D_MAX),
         method="bounded",
     ).x
@@ -353,9 +341,7 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
     """
 
     def p_d(d):
-        return _compute_binomial_logl(
-            d, lk, k, ln, n, discrete=True, truncated=False, w=ww
-        )
+        return _compute_binomial_logl(d, lk, k, ln, n, w=ww)
 
     # in principle, we don't know where the distribution is peaked, so
     # we perform a blind search over the domain
@@ -398,7 +384,6 @@ def profile_likelihood(ln, lk, n, k, ww, plot=False):
         plt.xlabel("d")
         plt.ylabel("P(d)")
         plt.title("Posterior of d")
-        plt.show()
 
     E_d_emp = np.dot(d_range, P)
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
@@ -478,7 +463,6 @@ def beta_prior_d(k, n, lk, ln, a0=1, b0=1, plot=True):
         plt.xlabel("d")
         plt.ylabel("P(d)")
         plt.title("posterior of d")
-        plt.show()
 
     E_d_emp = np.dot(d_range, P)
     S_d_emp = np.sqrt((d_range * d_range * P).sum() - E_d_emp * E_d_emp)
@@ -642,7 +626,7 @@ def hamming_distances_idx(points, d_max=100, maxk_ind=None):
 
     def hamming_distance_couple(a, b):
         assert len(a) == len(b)
-        return sum([a[i] == b[i] for i in range(len(a))])
+        return sum([a[i] != b[i] for i in range(len(a))])
 
     for i, pt in enumerate(points):
         appo = np.array([hamming_distance_couple(pt, pt_i) for pt_i in points])
@@ -662,83 +646,3 @@ def hamming_distances_idx(points, d_max=100, maxk_ind=None):
         return dist_count, None
     else:
         return dist_count, indexes
-
-
-# --------------------------------------------------------------------------------------
-# ------------------------------PLOT ROUTINES-------------------------------------------
-
-
-def plot_pdf(n_emp, n_mod, title, fileout=None):
-    plt.figure()
-    plt.title(title)
-    plt.plot(n_emp, "-", label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
-    plt.plot(n_mod, "--", label="n model", linewidth=4, alpha=0.9, c=cmap(0))
-    plt.xlabel("n", fontsize=15)
-    plt.ylabel("P(n)", fontsize=15)
-    plt.legend(fontsize=14, frameon=False)
-    plt.xticks(size=14)
-    plt.yticks(size=14)
-    plt.tight_layout()
-    if fileout is not None:
-        plt.savefig(fileout)
-    else:
-        plt.show()
-
-
-# --------------------------------------------------------------------------------------
-
-
-def plot_cdf(n_emp, n_mod, title, fileout=None):
-    plt.figure()
-    plt.title(title)
-    plt.plot(n_emp, "-", label="n empirical", linewidth=4, alpha=0.9, c=cmap(9))
-    plt.plot(n_mod, "--", label="n model", linewidth=4, alpha=0.9, c=cmap(0))
-    plt.xlabel("n", fontsize=15)
-    plt.ylabel("F(n)", fontsize=15)
-    plt.legend(fontsize=14, frameon=False)
-    plt.xticks(size=14)
-    plt.yticks(size=14)
-    plt.tight_layout()
-    if fileout is not None:
-        plt.savefig(fileout)
-    else:
-        plt.show()
-
-
-# --------------------------------------------------------------------------------------
-
-
-def plot_id_pv(x, idd, pv, title, xlabel, fileout):
-    fig, ax1 = plt.subplots()
-
-    c_left = "firebrick"
-    c_right = "navy"
-
-    plt.yticks(fontsize=13)
-    plt.xticks(fontsize=13)
-
-    ax1.set_title(title)
-    ax1.set_xlabel(xlabel, size=15)
-    ax1.set_ylabel("estimated id", size=15, c=c_left)
-    ax1.tick_params(axis="y", colors=c_left)
-
-    ax1.scatter(x, idd, alpha=0.85, c=c_left, s=75)
-
-    ax2 = ax1.twinx()
-    ax2.set_ylabel("p-value", size=15, c=c_right)
-    ax2.tick_params(axis="y", colors=c_right)
-    ax2.set_yscale("log")
-
-    ax2.scatter(x, pv, marker="^", color=c_right, s=75)
-    # ax2.plot(data[:,0],np.ones_like(data[:,-1])*0.05,'k--',alpha=0.5,label=r'$\alpha=0.05$')
-
-    # plt.legend()
-    plt.tight_layout()
-
-    if fileout is not None:
-        plt.savefig(fileout)
-    else:
-        plt.show()
-
-
-# --------------------------------------------------------------------------------------

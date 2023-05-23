@@ -21,7 +21,7 @@ import numpy as np
 from scipy.stats import ks_2samp as KS
 
 import dadapy._utils.discrete_functions as df
-from dadapy._utils import utils as ut
+from dadapy import plot as ddp
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
@@ -244,7 +244,6 @@ class IdDiscrete(Base):
         subset=None,
         plot=True,
         set_attr=True,
-        cont=False,
     ):
         """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
 
@@ -259,7 +258,6 @@ class IdDiscrete(Base):
                     gives the distribution of the id, while mle only the max of the likelihood
             plot (bool): if bayes method is used, one can decide whether to plot the posterior
             set_attr (bool): changes class attributes after computation
-            cont (bool): use continuous definition of volume instead of discrete one
 
         Returns:
             intrinsic_dim (float): the id esteem
@@ -315,27 +313,17 @@ class IdDiscrete(Base):
                 k_eff = k_eff.mean()
                 n_eff = n_eff.mean()
 
-            if cont:
-                intrinsic_dim = np.log(n_eff / k_eff) / np.log(float(self.ln) / self.lk)
-                intrinsic_dim_err = np.sqrt(
-                    ut._compute_binomial_cramerrao(
-                        intrinsic_dim, k_eff, float(self.ln) / self.lk, N
-                    )
-                )
-            else:
-                # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
-                # more stable than root searching
-                intrinsic_dim = df.find_d_likelihood(
-                    self.ln, self.lk, n_eff, k_eff, w_eff
-                )
-                # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
+            # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
+            # more stable than root searching
+            intrinsic_dim = df.find_d_likelihood(self.ln, self.lk, n_eff, k_eff, w_eff)
+            # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
 
-                intrinsic_dim_err = (
-                    df.binomial_cramer_rao(
-                        d=intrinsic_dim, ln=self.ln, lk=self.lk, N=N, k=k_eff
-                    )
-                    ** 0.5
+            intrinsic_dim_err = (
+                df.binomial_cramer_rao(
+                    d=intrinsic_dim, ln=self.ln, lk=self.lk, N=N, k=k_eff
                 )
+                ** 0.5
+            )
         elif method == "bayes":
             if self._is_w:
                 k_tot = w_eff * k_eff
@@ -366,9 +354,7 @@ class IdDiscrete(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_id_scaling(
-        self, Lks, r=0.5, method="mle", subset=None, plot=True, cont=False
-    ):
+    def return_id_scaling(self, Lks, r=0.5, method="mle", subset=None, plot=True):
         """Compute the ID by varying the radii
 
         Args:
@@ -377,7 +363,6 @@ class IdDiscrete(Base):
             method (string, default='mle'): method to compute the id
             subset (np.ndarray(int) or int, default=None): indices of points to be used for the estimate
             plot (bool, default=True): whether to plot the id scaling
-            cont (bool, default=False): whether to use the discrete volumes
 
         Returns:
             ids (np.ndarray): intrinsic dimension at different scales
@@ -422,7 +407,7 @@ class IdDiscrete(Base):
 
         for i, lk in enumerate(Lks):
             id_i, id_er, scale = self.compute_id_binomial_lk(
-                lk, int(lk * r), method=method, subset=subset, set_attr=False, cont=cont
+                lk, int(lk * r), method=method, subset=subset, set_attr=False
             )
             ids[i] = id_i
             ids_e[i] = id_er
@@ -433,7 +418,6 @@ class IdDiscrete(Base):
             plt.errorbar(Lks, ids, ids_e, fmt="None")
             plt.xlabel("scale")
             plt.ylabel("ID estimate")
-            plt.show()
 
         return ids, ids_e
 
@@ -789,7 +773,6 @@ class IdDiscrete(Base):
             plt.errorbar(Ks, ids, ids_e, fmt="None")
             plt.xlabel("scale")
             plt.ylabel("ID estimate")
-            plt.show()
 
         return ids, ids_e, scale
 
@@ -945,7 +928,7 @@ class IdDiscrete(Base):
     # -------------------------------MODEL VALIDATION-----------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
-    def compute_local_density(self, plot=True, path=None):
+    def compute_local_density(self, plot=True):
         """Compute and compare the rescaled local density of points
 
         Compute and compare the local density of points inside inner and outer shells
@@ -955,7 +938,6 @@ class IdDiscrete(Base):
 
         Args:
             plot (bool, default=True): decide whether to plot the local density
-            path (string, default=None): filename to save the plot
         Returns:
             n (np.ndarray(float)): n/<n>
             m (np.ndarray(float)): (k-n)/<k-n>
@@ -991,11 +973,6 @@ class IdDiscrete(Base):
             )
             plt.xlabel(r"$n/\langle n \rangle$")
             plt.ylabel(r"$(k-n)/\langle k-n \rangle$")
-
-        if path is not None:
-            path = path.rstrip("/") + "/"
-            os.system("mkdir -p " + path)
-            plt.savefig(path + "local_density.pdf")
 
         return n, m
 
@@ -1075,33 +1052,14 @@ class IdDiscrete(Base):
                     "We have to reject the null hypothesis: the two distributions are not\
                     equivalent and thus the model as it is cannot be used to infer the id"
                 )
-        if pdf or cdf:
-            sup = max(n_eff.max(), n_model.max())
-            inf = min(n_eff.min(), n_model.min())
-            a = np.histogram(
-                n_eff, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
-            )
-            b = np.histogram(
-                n_model, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
-            )
 
         if pdf:
-            if path is not None:
-                fileout = path + "mv_pdf.pdf"
-            else:
-                fileout = None
-            df.plot_pdf(a[0], b[0], title, fileout)
+            fileout = path + "mv_pdf.pdf" if (path is not None) else None
+            ddp.plot_pdf(n_eff, n_model, title, fileout)
 
         if cdf:
-            cdf_nn = np.cumsum(a[0])
-            cdf_nn = cdf_nn / cdf_nn[-1]
-            cdf_nmod = np.cumsum(b[0])
-            cdf_nmod = cdf_nmod / cdf_nmod[-1]
-            if path is not None:
-                fileout = path + "mv_cdf.pdf"
-            else:
-                fileout = None
-            df.plot_cdf(cdf_nn, cdf_nmod, title, fileout)
+            fileout = path + "mv_cdf.pdf" if (path is not None) else None
+            ddp.plot_cdf(n_eff, n_model, title, fileout)
 
         return s, pv
 
@@ -1145,11 +1103,6 @@ class IdDiscrete(Base):
                 continue
 
             # find id and error within window
-            # if ni.mean() < k_ave:
-            #     ki_ = k_ave
-            # else:
-            #     ki_ = ki.mean()
-            # id_i = df.find_d(self.ln, self.lk, ni.mean(), ki_)
             id_i = df.find_d_root(self.ln, self.lk, ni.mean(), ki.mean())
             cr = (
                 df.binomial_cramer_rao(id_i, self.ln, self.lk, len(ni), ki.mean())
@@ -1163,17 +1116,7 @@ class IdDiscrete(Base):
             )
 
             # extract the artificial n
-            # n_mod = rng.binomial(k_ave, p, size=mask_i.sum())
-            n_mod = rng.binomial(ki, p)  # size=mask_i.sum()
-            # produce histograms
-            sup = max(ni.max(), n_mod.max())
-            inf = min(ni.min(), n_mod.min())
-            a = np.histogram(
-                ni, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
-            )
-            b = np.histogram(
-                n_mod, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
-            )
+            n_mod = rng.binomial(ki, p)
 
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
@@ -1203,50 +1146,24 @@ class IdDiscrete(Base):
             title = (
                 r"R=" + str(self.lk) + "\t$\overline{k}=$" + str(k_ave)  # noqa: W605
             )
-            # DATA------------------------------------------------------
-            # plt.figure()
-            # plt.title('values')
-            # plt.plot(kk,alpha=0.5,label='k emp')
-            # plt.plot(nn,alpha=0.5,label='n emp')
-            # plt.plot(n_mod,alpha=0.5,label='n mod')
-            # plt.plot(n_mod1,alpha=0.5,label='n mod1')
-            # plt.xlabel('window index')
-            # plt.legend()
-            # plt.show()
             # PDF--------------------------------------------------------
             if pdf:
-                if path is not None:
-                    fileout = path + "R" + str(k_ave) + "_pdf.pdf"
-                else:
-                    fileout = None
-                df.plot_pdf(a[0], b[0], title, fileout)
+                fileout = (
+                    path + "k" + str(k_ave) + "_pdf.pdf" if (path is not None) else None
+                )
+                ddp.plot_pdf(ni, n_mod, title, fileout)
 
             # CDF-------------------------------------------------------
             if cdf:
-                cdf_nn = np.cumsum(a[0])
-                cdf_nn = cdf_nn / cdf_nn[-1]
-                cdf_nmod = np.cumsum(b[0])
-                cdf_nmod = cdf_nmod / cdf_nmod[-1]
-                if path is not None:
-                    fileout = path + "k" + str(k_ave) + "_cdf.pdf"
-                else:
-                    fileout = None
-                df.plot_cdf(cdf_nn, cdf_nmod, title, fileout)
-
-            # plt.figure()
-            # plt.scatter(self.X[:, 0], self.X[:, 1], alpha=0.2)
-            # plt.scatter(self.X[mask_i, 0], self.X[mask_i, 1], alpha=0.2, color="red")
-            # name = path + "k" + str(k_ave) + "_proj.png"
-            # plt.savefig(name, dpi=300)
-            # #plt.show()
+                fileout = (
+                    path + "k" + str(k_ave) + "_cdf.pdf" if (path is not None) else None
+                )
+                ddp.plot_cdf(ni, n_mod, title, fileout)
 
         obs = np.array(obs)
         if recap:
-            if path is not None:
-                fileout = path + "id_pv.pdf"
-            else:
-                fileout = None
-            df.plot_id_pv(
+            fileout = path + "id_pv.pdf" if (path is not None) else None
+            ddp.plot_id_pv(
                 obs[:, 0],
                 obs[:, 1],
                 obs[:, -1],
@@ -1320,7 +1237,6 @@ class IdDiscrete(Base):
                 continue
 
             # find id and error within window
-            # id_i = df.find_d_root(np.rint(R_ave * self.ratio), np.rint(R_ave), ni.mean(), k_ave)
             id_i = df.find_d_likelihood(lni, lki, ni, ki, 1)
             cr = (
                 df.binomial_cramer_rao(
@@ -1331,23 +1247,11 @@ class IdDiscrete(Base):
 
             # model validation
             # compute the p of the binomial distribution
-            # p = df.compute_discrete_volume(np.rint(R_ave * self.ratio), id_i) /\
-            #    df.compute_discrete_volume(np.rint(R_ave), id_i)
             p = df.compute_discrete_volume(lni, id_i) / df.compute_discrete_volume(
                 lki, id_i
             )
             # extract the artificial n
-            # n_mod = rng.binomial(k_ave, p, size=mask_i.sum())
             n_mod = rng.binomial(ki, p)  # size=mask_i.sum())
-            # produce histograms
-            sup = max(ni.max(), n_mod.max())
-            inf = min(ni.min(), n_mod.min())
-            a = np.histogram(
-                ni, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
-            )
-            b = np.histogram(
-                n_mod, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
-            )
 
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
@@ -1377,49 +1281,24 @@ class IdDiscrete(Base):
             title = (
                 r"K=" + str(self._k) + "\t$\overline{R}=$" + str(R_ave)  # noqa: W605
             )
-            # DATA------------------------------------------------------
-            # plt.figure()
-            # plt.title('values')
-            # plt.plot(kk,alpha=0.5,label='k emp')
-            # plt.plot(nn,alpha=0.5,label='n emp')
-            # plt.plot(n_mod,alpha=0.5,label='n mod')
-            # plt.plot(n_mod1,alpha=0.5,label='n mod1')
-            # plt.xlabel('window index')
-            # plt.legend()
-            # plt.show()
+
             # PDF--------------------------------------------------------
             if pdf:
-                if path is not None:
-                    fileout = path + "R" + str(R_ave) + "_pdf.pdf"
-                else:
-                    fileout = None
-                df.plot_pdf(a[0], b[0], title, fileout)
+                fileout = (
+                    path + "R" + str(R_ave) + "_pdf.pdf" if (path is not None) else None
+                )
+                ddp.plot_pdf(ni, n_mod, title, fileout)
             # CDF-------------------------------------------------------
             if cdf:
-                cdf_nn = np.cumsum(a[0])
-                cdf_nn = cdf_nn / cdf_nn[-1]
-                cdf_nmod = np.cumsum(b[0])
-                cdf_nmod = cdf_nmod / cdf_nmod[-1]
-                if path is not None:
-                    fileout = path + "R" + str(R_ave) + "_cdf.pdf"
-                else:
-                    fileout = None
-                df.plot_cdf(cdf_nn, cdf_nmod, title, fileout)
-
-            # plt.figure()
-            # plt.scatter(self.X[:, 0], self.X[:, 1], alpha=0.2)
-            # plt.scatter(self.X[mask_i, 0], self.X[mask_i, 1], alpha=0.2, color='red')
-            # # plt.show()
-            # name = path + "R" + str(R_ave) + "_proj.png"
-            # plt.savefig(name, dpi=300)
+                fileout = (
+                    path + "R" + str(R_ave) + "_cdf.pdf" if (path is not None) else None
+                )
+                ddp.plot_cdf(ni, n_mod, title, fileout)
 
         obs = np.array(obs)
         if recap:
-            if path is not None:
-                fileout = path + "id_pv.pdf"
-            else:
-                fileout = None
-            df.plot_id_pv(
+            fileout = path + "id_pv.pdf" if (path is not None) else None
+            ddp.plot_id_pv(
                 obs[:, 0],
                 obs[:, 1],
                 obs[:, -1],
