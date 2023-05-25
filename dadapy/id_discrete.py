@@ -13,6 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 
+"""
+The *id_discrete* module contains the *IdDiscrete* class.
+
+The different algorithms of intrinsic dimension estimation for discrete spaces
+  are implemented as methods of this class.
+"""
+
 import multiprocessing
 import os
 
