@@ -1,5 +1,5 @@
+import os
 from setuptools import setup, Extension
-
 
 class get_numpy_include(object):
     """Defer numpy.get_include() until after numpy is installed.
@@ -55,16 +55,27 @@ ext_modules += [
     )
 ]
 
-ext_modules += [
-    Extension(
+ext_parallel = Extension(
         "dadapy._cython.cython_distances",
         sources=["dadapy/_cython/cython_distances.c"],
-        extra_compile_args=['-fopenmp'],
-        extra_link_args=['-fopenmp'],
-        include_dirs=[get_numpy_include()],
-    )
-]
+        include_dirs=[get_numpy_include()],)
 
+
+extra_compile_args = ['-fopenmp'],
+extra_link_args = ['-fopenmp'],
+
+# Check if the '-fopenmp' flag is supported
+command = 'gcc -fopenmp -E - < /dev/null > /dev/null 2>&1 && echo "OpenMP supported" || echo "OpenMP not supported"'
+
+if os.system(command) == "OpenMP supported":
+    # If '-fopenmp' is supported, add the extra compile and link arguments
+    # Installing cython_distances using OpenMP
+    ext_parallel.extra_compile_args.append('-fopenmp')
+    ext_parallel.extra_link_args.append('-fopenmp')
+
+# If OpenMP is not available, the C extension to compute distances in discrete spaces will not run in parallel.
+
+ext_modules += [ext_parallel]
 
 setup(
     packages=["dadapy", "dadapy._utils"],
