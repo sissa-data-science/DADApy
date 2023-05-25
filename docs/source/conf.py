@@ -31,8 +31,8 @@ sys.path.insert(0, os.path.abspath("../../examples"))
 project = "dadapy"
 copyright = "2021-2023, The DADApy Authors"
 author = (
-    "Aldo Glielmo, Iuri Macocco, Diego Doimo, Matteo Carli, Caludio Zeni, Romina Wild, Maria D'Errico, "
-    "Alex Rodriguez, Alessandro Laio "
+    "Aldo Glielmo, Iuri Macocco, Diego Doimo, Matteo Carli, Caludio Zeni, Romina Wild, Vittorio Del Tatto, "
+    "Maria D'Errico, Alex Rodriguez, Alessandro Laio "
 )
 
 # The full version, including alpha/beta/rc tags

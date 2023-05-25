@@ -10,6 +10,7 @@
 - [Maria d'Errico](https://github.com/mariaderrico)
 - [Matteo Carli](https://github.com/charliematteo)
 - [Romina Wild](https://github.com/wildromi)
+- [Vittorio Del Tatto](https://github.com/vdeltatto)
 
 ## Other contributors
 
