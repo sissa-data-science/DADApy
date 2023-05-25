@@ -879,7 +879,6 @@ class IdDiscrete(Base):
                 b = np.log(np.mean(self.distances[mask, 1])) - el
             else:
                 b = np.log(np.mean(self.distances[mask] <= 1)) - el
-            print(b)
 
             def fit_func(x, a):
                 return a * x + b
