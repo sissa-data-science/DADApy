@@ -383,7 +383,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
 
 
 def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
-    """Plot the information imbalance plane corresponding to the computed ibalances.
+    """Plot the information imbalance plane corresponding to the computed imbalances.
 
     Args:
         imbalances (np.ndarray): Imbalances from the full space to specific sets of coordinates and vice-versa
@@ -416,6 +416,144 @@ def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
 
     plt.show()
 
+
+# --------------------------------------------------------------------------------------
+
+
+def plot_pdf(n_emp, n_mod, title=None, fileout=None):
+    """Compare two pdfs.
+
+    Args:
+        n_emp (np.ndarray): sample of empirical points
+        n_mod (np.ndarray): sample of model-simulated points
+        title (string, optional): title
+        fileout (string, optional): path to save the plot
+
+    Returns:
+
+    """
+
+    sup = max(n_emp.max(), n_mod.max())
+    inf = min(n_emp.min(), n_mod.min())
+    a = np.histogram(
+        n_emp, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
+    )
+    b = np.histogram(
+        n_mod, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
+    )
+
+    plt.figure()
+    if title is not None:
+        plt.title(title)
+    plt.plot(a[0], "-", label="n empirical", linewidth=4, alpha=0.9)
+    plt.plot(b[0], "--", label="n model", linewidth=4, alpha=0.9)
+    plt.xlabel("n", fontsize=15)
+    plt.ylabel("P(n)", fontsize=15)
+    plt.legend(fontsize=14, frameon=False)
+    plt.xticks(size=14)
+    plt.yticks(size=14)
+    plt.tight_layout()
+    if fileout is not None:
+        plt.savefig(fileout)
+    else:
+        plt.show()
+
+
+# --------------------------------------------------------------------------------------
+
+
+def plot_cdf(n_emp, n_mod, title, fileout=None):
+    """Compare two cdfs.
+
+    Args:
+        n_emp (np.ndarray): sample of empirical points
+        n_mod (np.ndarray): sample of model-simulated points
+        title (string, optional): title
+        fileout (string, optional): path to save the plot
+
+    Returns:
+
+    """
+    sup = max(n_emp.max(), n_mod.max())
+    inf = min(n_emp.min(), n_mod.min())
+    a = np.histogram(
+        n_emp, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
+    )
+    b = np.histogram(
+        n_mod, range=(inf - 0.5, sup + 0.5), bins=sup - inf + 1, density=True
+    )
+
+    cdf_nn = np.cumsum(a[0])
+    cdf_nn = cdf_nn / cdf_nn[-1]
+    cdf_nmod = np.cumsum(b[0])
+    cdf_nmod = cdf_nmod / cdf_nmod[-1]
+
+    plt.figure()
+    plt.title(title)
+    plt.plot(cdf_nn, "-", label="n empirical", linewidth=4, alpha=0.9)
+    plt.plot(cdf_nmod, "--", label="n model", linewidth=4, alpha=0.9)
+    plt.xlabel("n", fontsize=15)
+    plt.ylabel("F(n)", fontsize=15)
+    plt.legend(fontsize=14, frameon=False)
+    plt.xticks(size=14)
+    plt.yticks(size=14)
+    plt.tight_layout()
+    if fileout is not None:
+        plt.savefig(fileout)
+    else:
+        plt.show()
+
+
+# --------------------------------------------------------------------------------------
+
+
+def plot_id_pv(x, idd, pv, title, xlabel, fileout):
+    """Plot IDs and p-values from windowing.
+
+    Args:
+        x (np.ndarray): scales
+        idd (np.ndarray): intrinsic dimensions
+        pv (np.ndarray): p-values
+        title (string, optional): title
+        xlabel (string, optional): label of x axis
+        fileout (string, optional): path to save the plot
+
+    Returns:
+
+    """
+    fig, ax1 = plt.subplots()
+
+    c_left = "firebrick"
+    c_right = "navy"
+
+    plt.yticks(fontsize=13)
+    plt.xticks(fontsize=13)
+
+    ax1.set_title(title)
+    ax1.set_xlabel(xlabel, size=15)
+    ax1.set_ylabel("estimated id", size=15, c=c_left)
+    ax1.tick_params(axis="y", colors=c_left)
+
+    ax1.scatter(x, idd, alpha=0.85, c=c_left, s=75)
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("p-value", size=15, c=c_right)
+    ax2.tick_params(axis="y", colors=c_right)
+    ax2.set_yscale("log")
+
+    ax2.scatter(x, pv, marker="^", color=c_right, s=75)
+    # ax2.plot(data[:,0],np.ones_like(data[:,-1])*0.05,'k--',alpha=0.5,label=r'$\alpha=0.05$')
+
+    plt.legend()
+    plt.tight_layout()
+
+    if fileout is not None:
+        plt.savefig(fileout)
+    else:
+        plt.show()
+
+
+# --------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     # basic tests for plotting functions

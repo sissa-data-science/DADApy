@@ -145,10 +145,14 @@ def compute_nn_distances(X, maxk, metric="euclidean", period=None):
         X, X, maxk + 1, metric=metric, period=period
     )
 
-    zero_dists = np.sum(distances[:, 1] <= 1.1 * np.finfo(distances.dtype).eps)
+    zero_dists = np.sum(distances[:, 1:] <= 1.1 * np.finfo(distances.dtype).eps)
     if zero_dists > 0:
         warnings.warn(
-            f"there may be data with zero distance from each other; this may compromise the correct behavior of some routines"
+            f"There are points with neighbours at 0 distance, meaning the dataset probably has identical points.\n"
+            f"This can cause problems in various routines.\nWe suggest to either perform smearing of distances using\n"
+            f"remove_zero_dists()\n"
+            f"or remove identical points using\n"
+            f"remove_identical_points())."
         )
 
     return distances, dist_indices

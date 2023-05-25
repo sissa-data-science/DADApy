@@ -12,6 +12,7 @@ data, data_sets.
    id_estimation
    density_estimation
    clustering
+   id_discrete
    metric_comparisons
    data
    utils

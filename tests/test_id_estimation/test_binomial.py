@@ -28,7 +28,7 @@ filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 X = np.load(filename)
 
 
-def test_compute_id_2NN():
+def test_compute_id_binomial():
     """Test that the id estimations with the binomial estimator works correctly."""
     np.random.seed(0)
 

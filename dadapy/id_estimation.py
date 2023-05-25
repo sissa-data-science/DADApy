@@ -512,7 +512,7 @@ class IdEstimation(Base):
         neigh_ind = neigh_ind[sample_range, np.argsort(dist[sample_range, neigh_ind])]
 
         dist = np.sqrt(dist[sample_range, neigh_ind])
-        dist = self._remove_zero_dists(dist)
+        dist = self.remove_zero_dists(dist)
         mus = dist[:, steps[1:]] / dist[:, steps[:-1]]
         rs = dist[:, np.array([steps[:-1], steps[1:]])]
 
