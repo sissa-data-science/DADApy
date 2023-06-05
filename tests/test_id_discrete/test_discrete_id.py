@@ -33,10 +33,10 @@ def test_distances():
     I3D = IdDiscrete(X, maxk=X.shape[0])
     I3D.compute_distances(metric="manhattan", period=box, condensed=False)
 
-    I3D.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
+    I3D.compute_id_binomial_k_discrete(k=25, ratio=0.5, shell=False)
     assert I3D.intrinsic_dim == pytest.approx(5.018707133975087)
 
-    I3D.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
+    I3D.compute_id_binomial_k_discrete(k=4, ratio=0.5, shell=True)
     assert I3D.intrinsic_dim == pytest.approx(5.602713972478171)
 
     I3D.compute_id_binomial_lk(
@@ -65,7 +65,7 @@ def test_distances_condensed():
     I3Dc.compute_distances(metric="manhattan", period=box, d_max=d * box)
 
     # fix number of neighbours
-    I3Dc.compute_id_binomial_k(k=25, shell=False, ratio=0.5)
+    I3Dc.compute_id_binomial_k_discrete(k=25, ratio=0.5, shell=False)
     assert I3Dc.intrinsic_dim == pytest.approx(5.018707133975087)
 
     n, m = I3Dc.compute_local_density()
@@ -76,7 +76,7 @@ def test_distances_condensed():
     assert a == pytest.approx(np.array([0.999, 1.0]), abs=1e0)
 
     # fix number of filled shells
-    I3Dc.compute_id_binomial_k(k=4, shell=True, ratio=0.5)
+    I3Dc.compute_id_binomial_k_discrete(k=4, ratio=0.5, shell=True)
     assert I3Dc.intrinsic_dim == pytest.approx(5.602713972478171)
 
     # fix radius

@@ -91,7 +91,10 @@ class IdDiscrete(Base):
 
         self._k = None
         self._mask = None
-        self._condensed = condensed
+        if distances is not None:
+            self._condensed = False
+        else:
+            self._condensed = condensed
 
         self.intrinsic_dim = None
         self.intrinsic_dim_err = None
@@ -563,7 +566,7 @@ class IdDiscrete(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def fix_k_shell(self, k_shell, ratio):  # noqa: C901
+    def fix_k_shell(self, k_shell, ratio=0.5):  # noqa: C901
         """Computes the lk, ln, n given k_shell
 
         This routine computes the external radius lk, the associated points k,
@@ -671,8 +674,8 @@ class IdDiscrete(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(
-        self, k, shell=False, ratio=None, subset=None, approx_err=False, set_attr=True
+    def compute_id_binomial_k_discrete(
+        self, k, ratio=0.5, shell=False, subset=None, approx_err=True, set_attr=True
     ):
         """Calculate Id using the binomial estimator by fixing the number of neighbours or shells
 
@@ -684,15 +687,15 @@ class IdDiscrete(Base):
 
         Args:
             k (int): order of neighbour that set the external shell
-            shell (bool): k stands for number of neighbours or number of occupied shells
             ratio (float): ratio between internal and external shell
+            shell (bool): k stands for number of neighbours or number of occupied shells
             subset (int): choose a random subset of the dataset to make the Id estimate
-            approx_err (bool, default=False): if True, computes the error on the estimate using the CR.\
-                Otherwise it profiles the likelihood and compute its std
+            approx_err (bool, default=True): if True, computes the error on the estimate using the CR.\
+                Otherwise it profiles the likelihood and compute its std (takes longer)
             set_attr (bool, default=True): assign id, id error and scale to the class
 
         Returns:
-            intrinsic_dim (float): the id esteem
+            intrinsic_dim (float): the id estimation
             intrinsic_dim_err (float): the error estimate on the id
             intrinsic_dim_scale (float): the scale at which the id was computed: <lk>
         """
@@ -721,7 +724,8 @@ class IdDiscrete(Base):
         e_n = n_eff.mean()
         if e_n == 0.0:
             print(
-                "no points in the inner shell, returning 0. Consider increasing lk and/or the ratio"
+                "no points in the inner shell, returning 0. Consider increasing k and/or the ratio,"
+                "especially if your embedding space is very high dimensional."
             )
             self.intrinsic_dim = 0
             self.intrinsic_dim_err = 0
@@ -771,8 +775,8 @@ class IdDiscrete(Base):
         scale = np.zeros_like(Ks, dtype=float)
 
         for i, k in enumerate(Ks):
-            ids[i], ids_e[i], scale[i] = self.compute_id_binomial_k(
-                k, False, r, subset=subset, set_attr=False
+            ids[i], ids_e[i], scale[i] = self.compute_id_binomial_k_discrete(
+                k, r, False, subset=subset, set_attr=False
             )
 
         if plot:
