@@ -47,6 +47,8 @@ data.compute_clustering_ADP()
   > Facco et al., *Scientific Reports* (2017)
 - Gride estimator
   > Denti et al., *Scientific Reports* (2022)
+- I3D estimator (for both continuous and discrete spaces)
+  > Macocco et al., *Physical Review Letters* (2023)
 - Density estimators
     - 
 - kNN estimator
