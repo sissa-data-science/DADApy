@@ -206,7 +206,7 @@ def _filter_mus(dtype, mus, n1, n2):
         n1 = n1[select]
 
     if isinstance(n2, np.ndarray):
-        n1 = n1[select]
+        n2 = n2[select]
 
     return mus, n1, n2
 
