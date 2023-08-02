@@ -28,9 +28,13 @@ import numpy as np
 from scipy.optimize import curve_fit
 from sklearn.metrics import pairwise_distances_chunked
 
-from dadapy._utils import utils as ut
-from dadapy._utils.utils import compute_nn_distances
-from dadapy.base import Base
+# from dadapy._utils import utils as ut
+# from dadapy._utils.utils import compute_nn_distances
+# from dadapy.base import Base
+
+from ._utils import utils as ut
+from ._utils.utils import compute_nn_distances
+from .base import Base
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -260,10 +264,7 @@ class IdEstimation(Base):
         return mus, ids, rs
 
     def return_id_scaling_2NN(
-        self,
-        N_min=10,
-        algorithm="base",
-        fraction=0.9,
+        self, N_min=10, algorithm="base", fraction=0.9, set_attr=False
     ):
         """Compute the id with the 2NN algorithm at different scales.
 
@@ -316,13 +317,21 @@ class IdEstimation(Base):
         ids_scaling_err = np.zeros(Nsubsets.shape[0])
         rs_scaling = np.zeros((Nsubsets.shape[0]))
 
+        mus = []
         for i, N_subset in enumerate(Nsubsets):
             ids_scaling[i], ids_scaling_err[i], rs_scaling[i] = self.compute_id_2NN(
                 algorithm=algorithm,
                 fraction=fraction,
                 decimation=N_subset / self.N,
-                set_attr=False,
+                set_attr=True,
             )
+            mus.append(self.intrinsic_dim_mus)
+
+        if set_attr:
+            self.intrinsic_dim_decimation = ids_scaling
+            self.intrinsic_dim_err_decimation = ids_scaling_err
+            self.intrinsic_dim_scale_decimation = rs_scaling
+            self.intrinsic_dim_mus_decimation = mus
 
         return ids_scaling, ids_scaling_err, rs_scaling
 
@@ -463,17 +472,17 @@ class IdEstimation(Base):
         return ids_scaling, ids_scaling_err
 
     def _compute_id_gride_single_scale(self, d0, d1, mus, n1, n2, eps):
-        id = ut._argmax_loglik(
+        id_ = ut._argmax_loglik(
             self.dtype, d0, d1, mus, n1, n2, eps=eps
         )  # eps=precision id calculation
         id_err = (
             1
             / ut._fisher_info_scaling(
-                id, mus, n1, 2 * n1, eps=5 * self.eps
+                id_, mus, n1, 2 * n1, eps=5 * self.eps
             )  # eps=regularization small numbers
         ) ** 0.5
 
-        return id, id_err
+        return id_, id_err
 
     def _mus_scaling_reduce_func(self, dist, start, range_scaling):
         """Help to compute the "mus" needed to compute the id.
@@ -646,8 +655,8 @@ class IdEstimation(Base):
         if self.distances is None:
             self.compute_distances()
 
-        assert rk > 0, "use a positive radius"
-        assert 0 < r < 1, "select a proper ratio, 0<r<1"
+        assert rk > 0, "Use a positive radius"
+        assert 0 < r < 1, "Select a proper ratio, 0<r<1"
 
         # routine
         rn = rk * r
@@ -698,10 +707,6 @@ class IdEstimation(Base):
             rs (float): the average nearest neighbor distance (rs)
 
         """
-        # checks-in and initialisations
-        assert rk > 0, "Use a positive radius"
-        assert 0 < r < 1, "Select a proper ratio, 0<r<1"
-
         # routine
         k, n, mask = self._fix_rk(rk, r)
 
@@ -777,7 +782,65 @@ class IdEstimation(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(self, k, r, bayes=True):
+    # def compute_id_binomial_k(self, k, r, bayes=True):
+    #     """Calculate id using the binomial estimator by fixing the number of neighbours.
+
+    #     As in the case in which one fixes rk, also in this version of the estimation
+    #     one removes the central point from n and k. Furthermore, one has to remove also
+    #     the k-th NN, as it plays the role of the distance at which rk is taken.
+    #     So if k=5 it means the 5th NN from the central point will be considered,
+    #     taking into account 6 points though (the central one too). This means that
+    #     in principle k_eff = 6, to which I'm supposed to subtract 2. For this reason
+    #     in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
+
+    #     Args:
+    #         k (int): number of neighbours to take into account
+    #         r (float): ratio between internal and external shells
+    #         bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
+    #             gives the mean value and std of d, while mle returns the max of the likelihood and the std
+    #             according to Cramer-Rao lower bound
+
+    #     Returns:
+    #         id (float): the estimated intrinsic dimension
+    #         id_err (float): the standard error on the id estimation
+    #         rs (float): the average nearest neighbor distance (rs)
+    #     """
+    #     # checks-in and initialisations
+    #     assert (
+    #         0 < k < self.maxk
+    #     ), "Select a proper number of neighbours. Increase maxk if necessary"
+
+    #     # routine
+    #     n = self._fix_k(k, r)
+    #     e_n = n.mean()
+    #     if e_n == 1.0:
+    #         print(
+    #             "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
+    #         )
+    #         self.intrinsic_dim = 0
+    #         self.intrinsic_dim_err = 0
+    #         return 0
+
+    #     if bayes is False:
+    #         self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
+    #         self.intrinsic_dim_err = np.sqrt(
+    #             ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
+    #         )
+
+    #     elif bayes is True:
+    #         (
+    #             self.intrinsic_dim,
+    #             self.intrinsic_dim_err,
+    #             posterior_domain,
+    #             posterior_values,
+    #         ) = ut._beta_prior(k - 1, n - 1, r, posterior_profile=False)
+    #     else:
+    #         print("select a proper method for id computation")
+    #         return 0
+
+    #     return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
+
+    def compute_id_binomial_k(self, k):
         """Calculate id using the binomial estimator by fixing the number of neighbours.
 
         As in the case in which one fixes rk, also in this version of the estimation
@@ -789,11 +852,7 @@ class IdEstimation(Base):
         in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
 
         Args:
-            k (int): number of neighbours to take into account
-            r (float): ratio between internal and external shells
-            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
-                gives the mean value and std of d, while mle returns the max of the likelihood and the std
-                according to Cramer-Rao lower bound
+            k2 (int): number of neighbours within the outter shell
 
         Returns:
             id (float): the estimated intrinsic dimension
@@ -802,37 +861,27 @@ class IdEstimation(Base):
         """
         # checks-in and initialisations
         assert (
-            0 < k < self.maxk
+            0 < k1 < self.maxk
         ), "Select a proper number of neighbours. Increase maxk if necessary"
-        assert 0 < r < 1, "Select a proper ratio, 0<r<1"
 
         # routine
+
+        r = self.select(k)
+
+
+
+
+
+
+
         n = self._fix_k(k, r)
         e_n = n.mean()
-        if e_n == 1.0:
-            print(
-                "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
-            )
-            self.intrinsic_dim = 0
-            self.intrinsic_dim_err = 0
-            return 0
 
-        if bayes is False:
-            self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
-            self.intrinsic_dim_err = np.sqrt(
-                ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
-            )
+        self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
 
-        elif bayes is True:
-            (
-                self.intrinsic_dim,
-                self.intrinsic_dim_err,
-                posterior_domain,
-                posterior_values,
-            ) = ut._beta_prior(k - 1, n - 1, r, posterior_profile=False)
-        else:
-            print("select a proper method for id computation")
-            return 0
+        self.intrinsic_dim_err = np.sqrt(
+            ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
+        )
 
         return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
 

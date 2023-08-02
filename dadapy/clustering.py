@@ -99,6 +99,11 @@ class Clustering(DensityEstimation):
         if self.log_den is None:
             self.compute_density_PAk()
 
+        assert not np.isnan(np.sum(self.log_den)), "log density contains nan values"
+        assert not np.isnan(
+            np.sum(self.log_den_err)
+        ), "log error density contains nan values"
+
         if self.verb:
             print("Clustering started")
 
@@ -253,6 +258,11 @@ class Clustering(DensityEstimation):
         """Compute ADP clustering, but without the cython optimization."""
         if self.log_den is None:
             self.compute_density_PAk()
+
+        assert not np.isnan(np.sum(self.log_den)), "log density contains nan values"
+        assert not np.isnan(
+            np.sum(self.log_den_err)
+        ), "log error density contains nan values"
 
         if self.verb:
             print("Clustering started")

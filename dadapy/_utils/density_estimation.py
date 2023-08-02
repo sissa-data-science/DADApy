@@ -46,7 +46,7 @@ def return_not_normalised_density_kstarNN(
         log_den_err = 1.0 / np.sqrt(kstar - 1, dtype=float)
     if bias:
         warnings.warn(
-            f"bias contribution to the density error is an experimental feature and might change in the future"
+            "bias contribution to the density error is an experimental feature and might change in the future"
         )
         log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
