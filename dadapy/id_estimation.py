@@ -28,13 +28,9 @@ import numpy as np
 from scipy.optimize import curve_fit
 from sklearn.metrics import pairwise_distances_chunked
 
-from ._utils import utils as ut
-from ._utils.utils import compute_nn_distances
-from .base import Base
-
-# from dadapy._utils import utils as ut
-# from dadapy._utils.utils import compute_nn_distances
-# from dadapy.base import Base
+from dadapy._utils import utils as ut
+from dadapy._utils.utils import compute_nn_distances
+from dadapy.base import Base
 
 
 cores = multiprocessing.cpu_count()
