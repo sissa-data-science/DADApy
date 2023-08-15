@@ -32,7 +32,6 @@ from dadapy._utils import utils as ut
 from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
 
-
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
 
