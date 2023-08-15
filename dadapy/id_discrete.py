@@ -198,7 +198,6 @@ class IdDiscrete(Base):
             self._mask = np.ones(self.N, dtype=bool)
 
         else:
-
             if self._is_w is False:
                 self.k = (self.distances <= self.lk).sum(axis=1)
                 self.n = (self.distances <= self.ln).sum(axis=1)
@@ -461,7 +460,6 @@ class IdDiscrete(Base):
         self._k = k_eff  # mark that the id is computed at fixed k
 
         if self._condensed:
-
             self.lk = np.ones(self.N, dtype=int)
             for i, ddi in enumerate(self.distances):
                 lk = 0
@@ -510,7 +508,6 @@ class IdDiscrete(Base):
 
             # cut distances at the k-th NN and cycle over each point
             for i, dist_i in enumerate(self.distances[:, : k_eff + 1]):
-
                 # case 1: all possible neighbours have been considered, no extra possible unseen points
                 if k_eff == self.N:
                     lk_temp = dist_i[-1]
@@ -1026,7 +1023,6 @@ class IdDiscrete(Base):
         k_eff = self.k[mask] - self.central_point
 
         if isinstance(self.ln, np.ndarray):  # id estimated at fixed K
-
             ln_eff = self.ln[mask]
             lk_eff = self.lk[mask]
 
@@ -1037,7 +1033,6 @@ class IdDiscrete(Base):
             ) / df.compute_discrete_volume(lk_eff, self.intrinsic_dim)
 
         else:  # id estimated at fixed lK
-
             title = "R=" + str(self.lk)
 
             p = df.compute_discrete_volume(
@@ -1101,7 +1096,6 @@ class IdDiscrete(Base):
         k_eff = self.k[mask] - self.central_point
 
         for i in range(len(k_win) - 1):
-
             # find points within window
             k_ave = (k_win[i + 1] + k_win[i]) / 2.0
             mask_i = np.logical_and(k_win[i] < k_eff, k_eff <= k_win[i + 1])
@@ -1229,7 +1223,6 @@ class IdDiscrete(Base):
         lk_eff = self.lk[mask]
 
         for i in range(len(R_win) - 1):
-
             # find points within window
             R_ave = (R_win[i + 1] + R_win[i]) / 2.0
             mask_i = np.logical_and(R_win[i] < lk_eff, lk_eff <= R_win[i + 1])
@@ -1411,7 +1404,6 @@ class IdDiscrete(Base):
             return np.copy(self._mask)
 
         if isinstance(subset, (np.ndarray, list)):
-
             assert isinstance(
                 subset[0], (int, np.integer)
             ), "elements of list/array must be integers, in order to be used as indexes"
@@ -1424,7 +1416,6 @@ class IdDiscrete(Base):
             my_mask *= self._mask  # remove points with bad statistics
 
         elif isinstance(subset, (int, np.integer)):
-
             if subset > self._mask.sum():
                 my_mask = np.copy(self._mask)
 

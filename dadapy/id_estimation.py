@@ -28,13 +28,14 @@ import numpy as np
 from scipy.optimize import curve_fit
 from sklearn.metrics import pairwise_distances_chunked
 
+from ._utils import utils as ut
+from ._utils.utils import compute_nn_distances
+from .base import Base
+
 # from dadapy._utils import utils as ut
 # from dadapy._utils.utils import compute_nn_distances
 # from dadapy.base import Base
 
-from ._utils import utils as ut
-from ._utils.utils import compute_nn_distances
-from .base import Base
 
 cores = multiprocessing.cpu_count()
 rng = np.random.default_rng()
@@ -861,18 +862,12 @@ class IdEstimation(Base):
         """
         # checks-in and initialisations
         assert (
-            0 < k1 < self.maxk
+            0 < k < self.maxk
         ), "Select a proper number of neighbours. Increase maxk if necessary"
 
         # routine
 
         r = self.select(k)
-
-
-
-
-
-
 
         n = self._fix_k(k, r)
         e_n = n.mean()

@@ -143,7 +143,6 @@ def _compute_derivative_discrete_vol(l, d):
 
     # approximate definition for large L
     else:
-
         return (
             np.e ** (((0.5 + 0.5 * d) * d) / l)
             * (1 + np.e ** (-d / l)) ** d
@@ -556,7 +555,6 @@ def manhattan_distances_idx(points, d_max=100, maxk_ind=None, period=None):
         indexes = np.zeros((points.shape[0], maxk_ind), dtype=int)
 
     for i, pt in enumerate(points):
-
         if period is None:
             appo = np.sum(abs(pt - points), axis=1, dtype=int)
         else:

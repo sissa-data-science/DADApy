@@ -24,12 +24,10 @@ import multiprocessing
 import numpy as np
 from joblib import Parallel, delayed
 
+from dadapy._cython import cython_overlap as c_ov
 from dadapy._utils.metric_comparisons import _return_imbalance
 from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
-
-
-from dadapy._cython import cython_overlap as c_ov
 
 cores = multiprocessing.cpu_count()
 
@@ -517,6 +515,7 @@ class MetricComparisons(Base):
         dist_indices2=None,
         k=30,
         avg=True,
+        use_cython=True,
     ):
         """Return the neighbour overlap between the full space and another dataset.
 
