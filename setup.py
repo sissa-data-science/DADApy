@@ -1,5 +1,6 @@
 import os
-from setuptools import setup, Extension
+
+from setuptools import Extension, setup
 
 
 class get_numpy_include(object):
