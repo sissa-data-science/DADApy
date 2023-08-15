@@ -783,65 +783,7 @@ class IdEstimation(Base):
 
     # --------------------------------------------------------------------------------------
 
-    # def compute_id_binomial_k(self, k, r, bayes=True):
-    #     """Calculate id using the binomial estimator by fixing the number of neighbours.
-
-    #     As in the case in which one fixes rk, also in this version of the estimation
-    #     one removes the central point from n and k. Furthermore, one has to remove also
-    #     the k-th NN, as it plays the role of the distance at which rk is taken.
-    #     So if k=5 it means the 5th NN from the central point will be considered,
-    #     taking into account 6 points though (the central one too). This means that
-    #     in principle k_eff = 6, to which I'm supposed to subtract 2. For this reason
-    #     in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
-
-    #     Args:
-    #         k (int): number of neighbours to take into account
-    #         r (float): ratio between internal and external shells
-    #         bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
-    #             gives the mean value and std of d, while mle returns the max of the likelihood and the std
-    #             according to Cramer-Rao lower bound
-
-    #     Returns:
-    #         id (float): the estimated intrinsic dimension
-    #         id_err (float): the standard error on the id estimation
-    #         rs (float): the average nearest neighbor distance (rs)
-    #     """
-    #     # checks-in and initialisations
-    #     assert (
-    #         0 < k < self.maxk
-    #     ), "Select a proper number of neighbours. Increase maxk if necessary"
-
-    #     # routine
-    #     n = self._fix_k(k, r)
-    #     e_n = n.mean()
-    #     if e_n == 1.0:
-    #         print(
-    #             "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
-    #         )
-    #         self.intrinsic_dim = 0
-    #         self.intrinsic_dim_err = 0
-    #         return 0
-
-    #     if bayes is False:
-    #         self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
-    #         self.intrinsic_dim_err = np.sqrt(
-    #             ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
-    #         )
-
-    #     elif bayes is True:
-    #         (
-    #             self.intrinsic_dim,
-    #             self.intrinsic_dim_err,
-    #             posterior_domain,
-    #             posterior_values,
-    #         ) = ut._beta_prior(k - 1, n - 1, r, posterior_profile=False)
-    #     else:
-    #         print("select a proper method for id computation")
-    #         return 0
-
-    #     return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
-
-    def compute_id_binomial_k(self, k):
+    def compute_id_binomial_k(self, k, r, bayes=True):
         """Calculate id using the binomial estimator by fixing the number of neighbours.
 
         As in the case in which one fixes rk, also in this version of the estimation
@@ -853,7 +795,11 @@ class IdEstimation(Base):
         in the computation of the MLE we have directly k-1, which explicitly would be k_eff-2
 
         Args:
-            k2 (int): number of neighbours within the outter shell
+            k (int): number of neighbours to take into account
+            r (float): ratio between internal and external shells
+            bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
+                gives the mean value and std of d, while mle returns the max of the likelihood and the std
+                according to Cramer-Rao lower bound
 
         Returns:
             id (float): the estimated intrinsic dimension
@@ -866,17 +812,32 @@ class IdEstimation(Base):
         ), "Select a proper number of neighbours. Increase maxk if necessary"
 
         # routine
-
-        r = self.select(k)
-
         n = self._fix_k(k, r)
         e_n = n.mean()
+        if e_n == 1.0:
+            print(
+                "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
+            )
+            self.intrinsic_dim = 0
+            self.intrinsic_dim_err = 0
+            return 0
 
-        self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
+        if bayes is False:
+            self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
+            self.intrinsic_dim_err = np.sqrt(
+                ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
+            )
 
-        self.intrinsic_dim_err = np.sqrt(
-            ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
-        )
+        elif bayes is True:
+            (
+                self.intrinsic_dim,
+                self.intrinsic_dim_err,
+                posterior_domain,
+                posterior_values,
+            ) = ut._beta_prior(k - 1, n - 1, r, posterior_profile=False)
+        else:
+            print("select a proper method for id computation")
+            return 0
 
         return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
 
