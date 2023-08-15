@@ -28,6 +28,9 @@ from dadapy._utils.metric_comparisons import _return_imbalance
 from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
 
+
+from dadapy._cython import cython_overlap as c_ov
+
 cores = multiprocessing.cpu_count()
 
 
@@ -457,7 +460,7 @@ class MetricComparisons(Base):
 
         return np.array(coord_list), np.array(imbalances)
 
-    def return_label_overlap(self, labels, k=30, avg=True):
+    def return_label_overlap(self, labels, k=30, avg=True, point_adaptive=False):
         """Return the neighbour overlap between the full space and a set of labels.
 
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
@@ -474,6 +477,12 @@ class MetricComparisons(Base):
             self.compute_distances()
 
         assert len(labels) == self.dist_indices.shape[0]
+        if self.maxk < k:
+            k = self.maxk
+
+        if point_adaptive:
+            self.compute_kstar()
+
         neighbor_index = self.dist_indices[:, 1 : k + 1]
         ground_truth_labels = np.repeat(np.array([labels]).T, repeats=k, axis=1)
         overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
@@ -484,7 +493,31 @@ class MetricComparisons(Base):
 
         return overlaps
 
-    def return_data_overlap(self, coordinates=None, distances=None, k=30, avg=True):
+    def _get_nn_indices(self, coordinates, distances, dist_indices):
+        if dist_indices is not None:
+            return dist_indices
+
+        elif distances is not None:
+            _, dist_indices, _, _ = self._init_distances(distances, self.maxk)
+
+        else:
+            _, dist_indices = compute_nn_distances(
+                coordinates, self.maxk, self.metric, self.period
+            )
+
+        return dist_indices
+
+    def return_data_overlap(
+        self,
+        coordinates=None,
+        distances=None,
+        dist_indices=None,
+        coordinates2=None,
+        distances2=None,
+        dist_indices2=None,
+        k=30,
+        avg=True,
+    ):
         """Return the neighbour overlap between the full space and another dataset.
 
         An overlap of 1 means that all neighbours of a point are the same in the two spaces.
@@ -498,36 +531,40 @@ class MetricComparisons(Base):
         Returns:
             (float): the neighbour overlap of the points
         """
-        if self.distances is None:
-            assert self.X is not None
-            self.compute_distances()
+        assert any(
+            var is not None for var in [coordinates, distances, dist_indices]
+        ), "provide at least one of coordinates, distances, dist_indices"
 
-        if distances is None:
-            assert coordinates is not None
-            _, dist_indices = compute_nn_distances(
-                coordinates, self.maxk, self.metric, self.period
+        dist_indices1 = self._get_nn_indices(coordinates, distances, dist_indices)
+
+        if any(var is not None for var in [coordinates2, distances2, dist_indices2]):
+            dist_indices2 = self._get_nn_indices(
+                coordinates2, distances2, dist_indices2
+            )
+
+        else:
+            dist_indices2 = self._get_nn_indices(self.X, None, self.dist_indices)
+
+        assert dist_indices1.shape[0] == dist_indices2.shape[0]
+
+        ndata = dist_indices1.shape[0]
+        k = min(k, dist_indices.shape[1] - 1)
+
+        if use_cython:
+            overlaps = c_ov._compute_data_overlap(
+                ndata, k, dist_indices1.astype(int), dist_indices2.astype(int)
             )
         else:
-            distances, dist_indices, N, maxk = self._init_distances(
-                distances, self.maxk
-            )
-
-        if self.maxk < k:
-            k = self.maxk
-
-        assert self.N == dist_indices.shape[0]
-
-        overlaps = -np.ones((self.N))
-
-        for i in range(self.N):
-            overlaps[i] = (
-                len(
-                    np.intersect1d(
-                        self.dist_indices[i, 1 : k + 1], dist_indices[i, 1 : k + 1]
+            overlaps = -np.ones(ndata)
+            for i in range(ndata):
+                overlaps[i] = (
+                    len(
+                        np.intersect1d(
+                            dist_indices1[i, 1 : k + 1], dist_indices2[i, 1 : k + 1]
+                        )
                     )
+                    / k
                 )
-                / k
-            )
 
         if avg:
             overlaps = np.mean(overlaps)
