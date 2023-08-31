@@ -27,7 +27,7 @@ from scipy import sparse
 from scipy import linalg as slin
 
 from dadapy._cython import cython_density as cd
-from dadapy.cython_ import cython_grads as cgr
+from dadapy._cython import cython_grads as cgr
 from dadapy._utils.density_estimation import (
     return_not_normalised_density_kstarNN,
     return_not_normalised_density_PAk,
@@ -53,7 +53,10 @@ class DensityEstimation(IdEstimation):
         nspar (int): total number of edges in the directed graph defined by kstar (sum over all points of kstar minus N)
         nind_list (np.ndarray(int), optional): size nspar x 2. Each row is a couple of indices of the connected graph stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
         nind_iptr (np.array(int), optional): size N+1. For each elemen i stores the 0-th index in nind_list at which the edges starting from point i start. The last entry is set to nind_list.shape[0]
-        common_neighs (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa
+        common_neighs_array
+        common_neighs_mat
+        AAAAA (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa
+        pearson
         neigh_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k*-1 nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
         neigh_dists (np.array(float), optional): stores distances from each point to its k*-1 nearest neighbors in the order defined by nind_list
         log_den (np.array(float), optional): array containing the N log-densities
@@ -63,6 +66,7 @@ class DensityEstimation(IdEstimation):
         check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance matrices of the gradients
         Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j
         Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared errors on the values in Fij_array
+        inv_deltaFs_cov
 
     """
 
@@ -82,7 +86,10 @@ class DensityEstimation(IdEstimation):
         self.nspar = None
         self.nind_list = None
         self.nind_iptr = None
-        self.common_neighs = None
+        self.common_neighs_array = None
+        self.common_neighs_mat = None
+        self.pearson_array = None
+        self.pearson_mat = None
         self.neigh_vector_diffs = None
         self.neigh_dists = None
         self.dc = None
@@ -112,7 +119,10 @@ class DensityEstimation(IdEstimation):
         self.nspar = None
         self.nind_list = None
         self.nind_iptr = None
-        self.common_neighs = None
+        self.common_neighs_array = None
+        self.common_neighs_mat = None
+        self.pearson_array = None
+        self.pearson_mat = None
         self.neigh_vector_diffs = None
         self.neigh_dists = None
         self.dc = None
@@ -333,12 +343,64 @@ class DensityEstimation(IdEstimation):
             print("Computation of the numbers of common neighbours started")
 
         sec = time.time()
-        self.common_neighs = cgr.return_common_neighs(
+        self.common_neighs_array, self.common_neighs_mat = cgr.return_common_neighs(
             self.kstar, self.dist_indices, self.nind_list
         )
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds to carry out the computation.".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_pearson(self,comp_p_mat=False,method='jaccard'):
+        """Compute the empiric 
+        common number of neighbours between couple of points (i,j) such that j is\
+        in the neighbourhod of i. The numbers are stored in a scipy sparse csr_matrix format.
+
+        Args:
+            chi_matrix (bool)
+            method (): jaccard, geometric, squared_geometric
+
+
+        Returns:
+
+        """
+
+        if self.pearson_array is None:
+            # check or compute common_neighs
+            if self.common_neighs_array is None:
+                self.compute_common_neighs()
+            if self.verb:
+                print("Estimation of the pearson correlation coefficient started")
+            sec = time.time()
+            k1 = self.kstar[self.nind_list[:, 0]]
+            k2 = self.kstar[self.nind_list[:, 1]]
+            # method to estimate pearson
+            if method=="jaccard":
+                self.pearson_array = self.common_neighs_array*1. / (k1 + k2 - self.common_neighs_array)
+            if method=="geometric":
+                self.pearson_array = self.common_neighs_array*1. / np.sqrt(k1 * k2)
+            if method=="squared_geometric":
+                self.pearson_array = self.common_neighs_array*self.common_neighs_array*1. / (k1 * k2)
+            sec2 = time.time()
+            if self.verb:
+                print("{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec))
+
+        # save in matrix form
+        if comp_p_mat is True:
+            if self.pearson_mat is None:
+                p_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+                for nspar, indices in enumerate(self.nind_list):
+                    i = indices[0]
+                    j = indices[1]
+                    p_mat[i, j] = self.pearson_array[nspar]
+                    if p_mat[j,i] == 0:
+                        p_mat[j,i] = p_mat[i,j]
+                self.pearson_mat = p_mat.todense()
+                np.fill_diagonal(self.pearson_mat, 1.)
+
+        # AAAAAAAAAAAAA OPTIM: TESTARE SE FUNZIONA MEGLIO COL CICLO FOR O CON NUMPY NOTATION   
+            
 
     # ----------------------------------------------------------------------------------------------
 
@@ -398,9 +460,9 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("Density estimation for k-peaks clustering started")
 
-        dc = np.zeros(self.N, dtype=float)
-        log_den = np.zeros(self.N, dtype=float)
-        log_den_err = np.zeros(self.N, dtype=float)
+        dc = np.zeros(self.N, dtype=np.float_) 
+        log_den = np.zeros(self.N, dtype=np.float_)
+        log_den_err = np.zeros(self.N, dtype=np.float_)
         log_den_min = 9.9e300
 
         for i in range(self.N):
@@ -492,7 +554,192 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_gCorr(self, use_variance=True, comp_err=True):
+    def compute_density_BMTI(self, use_variance=True, comp_err=True):
+        # DENSITY_DEVELOP VERSION
+
+        # compute changes in free energy
+        if self.Fij_array is None:
+            self.compute_deltaFs_grads_semisum()
+
+        if self.verb:
+            print("gCorr density estimation started")
+            sec = time.time()
+
+        # define the likelihood covarince matrix
+        if use_variance:
+            self.compute_deltaFs_inv_cross_covariance()
+
+        sec2 = time.time()
+
+        # compute adjacency matrix and cumulative changes
+        A = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+
+        supp_deltaF = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+
+
+        if use_variance:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = self.inv_deltaFs_cov[nspar]
+                A[i, j] = -tmp
+                supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
+        else:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                # A[i, j] = -1.0
+                A[i, j] = -1.0
+                supp_deltaF[i, j] = self.Fij_array[nspar]
+
+        A = sparse.lil_matrix(A + A.transpose())
+
+        diag = np.array(-A.sum(axis=1)).reshape((self.N,))
+        # AAAAAAAAAAAAAAAA valutare se mettere 0.01*kstar
+
+        A.setdiag(diag)
+
+        # print("Diag = {}".format(diag))
+
+        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(
+            supp_deltaF.sum(axis=1)
+        ).reshape((self.N,))
+
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec2))
+        sec2 = time.time()
+
+        log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+        if self.verb:
+            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        sec2 = time.time()
+
+        self.log_den = log_den
+        # self.log_den_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
+
+        if comp_err is True:
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            # self.B = slin.inv(self.A)
+            self.log_den_err = np.sqrt(np.diag(self.B))
+
+            if self.verb:
+                print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+            sec2 = time.time()
+
+        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
+        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_BMTI_wrong(self, use_variance=True, comp_err=True):
+        # DENSITY_DEVELOP VERSION
+
+        # compute changes in free energy
+        if self.Fij_array is None:
+            self.compute_deltaFs_grads_semisum()
+
+        if self.verb:
+            print("gCorr density estimation started")
+            sec = time.time()
+
+        if self.kstar is None:
+            self.compute_kstar(Dthr=Dthr)
+
+        # define the likelihood covarince matrix
+        if use_variance:
+            self.L_cov = np.zeros((self.N, self.N), dtype=np.float_)
+
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                self.L_cov[i, j] = self.Fij_var_array[nspar]
+
+            for i in range(self.N):
+                self.L_cov[i,i] = 1./self.kstar[i]  #CONTROLLARE SE HA SENSO
+
+            #invert it
+            self.inv_L_cov = slin.pinvh(self.L_cov)
+
+        if self.verb:
+            print("{0:0.2f} seconds compute inverse covariance matrix for the likelihood".format(time.time()-sec))
+        sec2 = time.time()
+
+
+        # compute adjacency matrix and cumulative changes
+        A = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+
+        supp_deltaF = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+
+
+        if use_variance:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                # tmp = 1.0 / self.Fij_var_array[nspar]
+                tmp = self.inv_L_cov[i,j]
+                A[i, j] = -tmp
+                supp_deltaF[i, j] = self.Fij_array[nspar] * tmp
+        else:
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                # A[i, j] = -1.0
+                A[i, j] = -1.0
+                supp_deltaF[i, j] = self.Fij_array[nspar]
+
+        A = sparse.lil_matrix(A + A.transpose())
+
+        diag = np.array(-A.sum(axis=1)).reshape((self.N,))
+
+        A.setdiag(diag)
+
+        # print("Diag = {}".format(diag))
+
+        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(
+            supp_deltaF.sum(axis=1)
+        ).reshape((self.N,))
+
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec2))
+        sec2 = time.time()
+
+        log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+        if self.verb:
+            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        sec2 = time.time()
+
+        self.log_den = log_den
+        # self.log_den_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
+
+        if comp_err is True:
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            # self.B = slin.inv(self.A)
+            self.log_den_err = np.sqrt(np.diag(self.B))
+
+        if self.verb:
+            print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+        sec2 = time.time()
+
+        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
+        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_density_gCorr_OLD(self, use_variance=True, comp_err=True):
         # TODO: matrix A should be in sparse format!
 
         # compute changes in free energy
@@ -512,7 +759,8 @@ class DensityEstimation(IdEstimation):
         k1 = self.kstar[self.nind_list[:, 0]]
         k2 = self.kstar[self.nind_list[:, 1]]
 
-        redundancy = np.sqrt(k1 * k2)
+        #redundancy = np.sqrt(k1 * k2)
+        redundancy = np.ones_like(k1,dtype=np.float_)
         # redundancy = k1
         # la cosa giusta e' forse sqrt(k1_inout * k2_inout) con ki_inout che conta tutte le volte che il punto i compare nella sommatoria
         #   cioe' ki + {numero di volte che k_i}
@@ -637,14 +885,14 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_grads_semisum(self, chi="auto"):
+    def compute_deltaFs_grads_semisum(self, pearson_method="jaccard",comp_p_mat=False):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using\
             a linear expansion with as slope the semisum of the average gradient of the log-density over the neighbourhood of points i and j. \
             The parameter chi is used in the estimation of the squared error of the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), \
             where E_i is the error on the estimate of grad_i*DeltaX_ij.
 
         Args:
-            chi: the Pearson correlation coefficient between the estimates of the gradient in i and j. Can take a numerical value between 0 and 1.\
+            pearson_method: the Pearson correlation coefficient between the estimates of the gradient in i and j. Can take a numerical value between 0 and 1.\
                 The option 'auto' takes a geometrical estimate of chi based on AAAAAAAAA
 
         Returns:
@@ -669,27 +917,18 @@ class DensityEstimation(IdEstimation):
         sec = time.time()
 
         Fij_array = np.zeros(self.nspar)
-        Fij_var_array = np.zeros(self.nspar)
+        self.Fij_var_array = np.zeros(self.nspar)
 
-        k1 = self.kstar[self.nind_list[:, 0]]
-        k2 = self.kstar[self.nind_list[:, 1]]
         g1 = self.grads[self.nind_list[:, 0]]
         g2 = self.grads[self.nind_list[:, 1]]
         g_var1 = self.grads_var[self.nind_list[:, 0]]
         g_var2 = self.grads_var[self.nind_list[:, 1]]
 
-        if chi == "auto":
-            # check or compute common_neighs
-            if self.common_neighs is None:
-                self.compute_common_neighs()
+        # check or compute common_neighs
+        if self.pearson_mat is None:
+            self.compute_pearson(method=pearson_method,comp_p_mat=comp_p_mat)
 
-            # chi = self.common_neighs / (k1 + k2 - self.common_neighs)
-            # chi = self.common_neighs**2 / (k1 * k2)
-            chi = self.common_neighs / np.sqrt(k1 * k2)
-
-        else:
-            assert chi >= 0.0 and chi <= 1.0, "Invalid value for argument 'chi'"
-
+  
         Fij_array = 0.5 * np.einsum("ij, ij -> i", g1 + g2, self.neigh_vector_diffs)
         vari = np.einsum(
             "ij, ij -> i",
@@ -701,15 +940,55 @@ class DensityEstimation(IdEstimation):
             self.neigh_vector_diffs,
             np.einsum("ijk, ik -> ij", g_var2, self.neigh_vector_diffs),
         )
-        Fij_var_array = 0.25 * (vari + varj + 2 * chi * np.sqrt(vari * varj))
+        self.Fij_var_array = 0.25 * (vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj))
 
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
 
         self.Fij_array = Fij_array
-        self.Fij_var_array = Fij_var_array
-        # self.Fij_var_array = Fij_var_array*k1/(k1-1) #Bessel's correction for the unbiased sample variance estimator
+        self.Fij_var_array = self.Fij_var_array
+        # self.Fij_var_array = self.Fij_var_array*k1/(k1-1) #Bessel's correction for the unbiased sample variance estimator
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_deltaFs_inv_cross_covariance(self,pearson_method="jaccard"):
+        """Compute the cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using cython.
+
+        Args: AAAAAAAAAAAAAAAAA
+
+        Returns: AAAAAAAAAAAAAAAAA
+
+        """
+
+        # check for deltaFs
+        if self.pearson_mat is None:
+            self.compute_pearson(method=pearson_method,comp_p_mat=True)
+
+        # check or compute deltaFs_grads_semisum
+        if self.Fij_var_array is None:
+            self.compute_deltaFs_grads_semisum()
+        # AAAAAAAAAAAAAAA controllare se serve
+        #smallnumber = 1.e-10
+        #data.grads_var += smallnumber*np.tile(np.eye(data.dims),(data.N,1,1))
+        # AAAAAAAAAAAAAAA fine controllare se serve
+
+        if self.verb:
+            print(
+                "Estimation of the deltaFs cross-covatiance started"
+            )
+        sec = time.time()
+        self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
+                        self.grads_var,
+                        self.neigh_vector_diffs,
+                        self.nind_list,
+                        self.pearson_mat,
+                        self.Fij_var_array,
+        )
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds computing the deltaFs cross-covatiance".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 
