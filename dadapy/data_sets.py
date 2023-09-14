@@ -22,14 +22,12 @@ between datasets, such as the information imbalance.
 
 import multiprocessing
 import os
-from typing import List, Optional, Union
 
 import numpy as np
 
 from dadapy._utils.metric_comparisons import _return_imbalance
 from dadapy._utils.utils import compute_nn_distances
 from dadapy.data import Data
-from dadapy.metric_comparisons import MetricComparisons
 
 cores = multiprocessing.cpu_count()
 np.set_printoptions(precision=2)

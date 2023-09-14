@@ -17,11 +17,11 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-python@master
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Install dependencies
         run: |
           pip install -e ."[dev]"
 
       - name: Notebook tests
         run: |
-          tox -e py3.7-nb
+          tox -e py3.8-nb
