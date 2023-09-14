@@ -91,4 +91,5 @@ autodoc_mock_imports = [
     "dadapy._cython.cython_maximum_likelihood_opt_full",
     "dadapy._cython.cython_density",
     "dadapy._cython.cython_overlap",
+    "dadapy._cython.cython_distances",
 ]
