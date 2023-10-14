@@ -360,6 +360,129 @@ def return_deltaFs_inv_cross_covariance(double[:,:,:] grads_covmat,
 
 
 
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_deltaFs_cross_covariance_and_inv(double[:,:,:] grads_covmat,
+                                            double[:,:] neigh_vector_diffs,
+                                            long[:,:] nind_list,          # nspar x 2
+                                            double[:,:] p,                  # pearson_correlation matrix (NxN)
+                                            double[:] Fij_var_array):
+    cdef int dims = neigh_vector_diffs.shape[1]
+    cdef int nspar = nind_list.shape[0]
+
+    Gamma_nonview       = np.zeros((nspar,nspar), dtype=np.float_)   # corss covariance matrix
+    inv_Gamma_nonview   = np.zeros(nspar, dtype=np.float_)       # inverse of diagonal of Gamma matrix
+    
+    cdef double[:,::1] Gamma = Gamma_nonview
+    cdef double[::1] inv_Gamma = inv_Gamma_nonview
+    
+    # support
+    denom_nonview  = np.zeros(nspar, dtype=np.float_)
+    cdef double[::1] denom = denom_nonview
+
+    cdef double gamma, ptot, tmpi, tmpj, tmpl, tmpm, temp
+    cdef int i,j,l,m,a,b,dim1,dim2    
+
+    for a in range(nspar):
+        i = nind_list[a, 0]
+        j = nind_list[a, 1]
+        inv_Gamma[a] = Fij_var_array[a]
+        Gamma[a, a] = Fij_var_array[a]
+        denom[a] += Fij_var_array[a]*Fij_var_array[a]
+        for b in range(a+1, nspar):
+            l = nind_list[b, 0]
+            m = nind_list[b, 1]
+            gamma = 0
+            ptot = 0
+            tmpi = 0
+            tmpj = 0
+            tmpl = 0
+            tmpm = 0
+            if p[i,l] > 0:
+                ptot += p[i,l]
+                for dim1 in range(dims):
+                    for dim2 in range(dims):
+                        tmpi += neigh_vector_diffs[a,dim1]*grads_covmat[i,dim1,dim2]*neigh_vector_diffs[b,dim2]        
+                for dim1 in range(dims):
+                    for dim2 in range(dims):
+                        tmpl += neigh_vector_diffs[a,dim1]*grads_covmat[l,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                gamma += p[i,l]*sqrt(fabs(tmpi*tmpl))
+                if p[i,m] > 0:
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[i,m]*sqrt(fabs(tmpi*tmpm))
+            else:
+                if p[i,m] > 0:
+                    ptot += p[i,m]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            tmpi += neigh_vector_diffs[a,dim1]*grads_covmat[i,dim1,dim2]*neigh_vector_diffs[b,dim2]        
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]        
+                    gamma += p[i,m]*sqrt(fabs(tmpi*tmpm))
+
+            if p[j,l] > 0:
+                if ptot == 0:
+                    ptot += p[j,l]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            tmpj += neigh_vector_diffs[a,dim1]*grads_covmat[j,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            tmpl += neigh_vector_diffs[a,dim1]*grads_covmat[l,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[j,l]*sqrt(fabs(tmpj*tmpl))
+                    if p[j,m] > 0:
+                        for dim1 in range(dims):
+                            for dim2 in range(dims):
+                                tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                        gamma += p[j,m]*sqrt(fabs(tmpj*tmpm))
+                else:
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            tmpj += neigh_vector_diffs[a,dim1]*grads_covmat[j,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    if tmpl == 0:
+                        for dim1 in range(dims):
+                            for dim2 in range(dims):
+                                tmpl += neigh_vector_diffs[a,dim1]*grads_covmat[l,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[j,l]*sqrt(fabs(tmpj*tmpl))
+                    if p[j,m] > 0:
+                        if tmpm == 0:
+                            for dim1 in range(dims):
+                                for dim2 in range(dims):
+                                    tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                        gamma += p[j,m]*sqrt(fabs(tmpj*tmpm))
+            else:
+                if p[j,m] > 0:
+                    if ptot == 0:
+                        ptot += p[j,m]
+                    if tmpm == 0:
+                        for dim1 in range(dims):
+                            for dim2 in range(dims):
+                                tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            tmpj += neigh_vector_diffs[a,dim1]*grads_covmat[j,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[j,m]*sqrt(fabs(tmpj*tmpm))
+
+            if ptot != 0:
+                Gamma[a, b] = gamma / 4.
+                Gamma[b, a] = gamma / 4.
+
+                denom[a] += gamma * gamma / 16.
+                denom[b] += gamma * gamma / 16.
+        
+    for a in range(nspar):
+        inv_Gamma[a] /= denom[a]
+
+    return np.asarray(Gamma), np.asarray(inv_Gamma)
+    #return np.asarray(inv_Gamma)
+
+
+# ----------------------------------------------------------------------------------------------
+
+
 
 
 

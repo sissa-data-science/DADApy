@@ -554,7 +554,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_BMTI(self, use_variance=True, comp_err=True):
+    def compute_density_BMTI(self, use_variance=True, comp_err=True, inverse_method="approximate"):
         # DENSITY_DEVELOP VERSION
 
         # compute changes in free energy
@@ -567,7 +567,7 @@ class DensityEstimation(IdEstimation):
 
         # define the likelihood covarince matrix
         if use_variance:
-            self.compute_deltaFs_inv_cross_covariance()
+            self.compute_deltaFs_inv_cross_covariance(inverse_method=inverse_method)
 
         sec2 = time.time()
 
@@ -952,7 +952,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_inv_cross_covariance(self,pearson_method="jaccard"):
+    def compute_deltaFs_inv_cross_covariance(self, pearson_method="jaccard", inverse_method="approximate"):
         """Compute the cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using cython.
 
         Args: AAAAAAAAAAAAAAAAA
@@ -978,17 +978,36 @@ class DensityEstimation(IdEstimation):
                 "Estimation of the deltaFs cross-covatiance started"
             )
         sec = time.time()
-        self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
-                        self.grads_var,
-                        self.neigh_vector_diffs,
-                        self.nind_list,
-                        self.pearson_mat,
-                        self.Fij_var_array,
-        )
+        if inverse_method=="approximate":
+            self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
+
+                            self.grads_var,
+                            self.neigh_vector_diffs,
+                            self.nind_list,
+                            self.pearson_mat,
+                            self.Fij_var_array,
+            )
+            self.deltaFs_cov = None
+
+        elif inverse_method=="exact":
+            print("WARNING: computiting the inverse of the covariance matrix is very computationally demanding.")
+            self.deltaFs_cov, self.inv_deltaFs_cov_approx = cgr.return_deltaFs_cross_covariance_and_inv(
+                            self.grads_var,
+                            self.neigh_vector_diffs,
+                            self.nind_list,
+                            self.pearson_mat,
+                            self.Fij_var_array,
+            )
+            print("C computed, starting exact inversion. C dimensions are: ", self.deltaFs_cov.shape)
+            self.inv_deltaFs_cov_all = slin.pinvh(self.deltaFs_cov) #+ 1e-7 * np.identity(self.deltaFs_cov.shape[0]))
+            self.inv_deltaFs_cov = np.diag(self.inv_deltaFs_cov_all)
 
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds computing the deltaFs cross-covatiance".format(sec2 - sec))
+
+        return self.deltaFs_cov, self.inv_deltaFs_cov
+
 
     # ----------------------------------------------------------------------------------------------
 
