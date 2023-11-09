@@ -168,7 +168,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
 
         ids = np.zeros(n_iter)
         ids_err = np.zeros(n_iter)
-        kstars = np.zeros((n_iter,self.N))
+        kstars = np.zeros((n_iter, self.N), dtype=int)
         log_likelihoods = np.zeros(n_iter)
         ks_stats = np.zeros(n_iter)
         p_values = np.zeros(n_iter)
@@ -180,7 +180,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             print("id ", self.intrinsic_dim)
 
             # set new ratio
-            r_eff = 0.2032**(1./self.intrinsic_dim) if r=='opt' else r
+            r_eff = 0.2032**(1./self.intrinsic_dim) if r == 'opt' else r
             # compute neighbourhoods shells from k_star
             rk = np.array([dd[self.kstar[j]] for j, dd in enumerate(self.distances)])
             rn = rk * r_eff
@@ -209,3 +209,48 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         self.intrinsic_dim_scale = 0.5 * (rn.mean() + rk.mean())
 
         return ids, ids_err, kstars, log_likelihoods, ks_stats, p_values
+
+    def return_ids_kstar_binomial_func(
+        self, initial_id=None, n_iter=5, Dthr=23.92812698, r='opt'
+    ):
+        """Return the id estimates of the binomial algorithm coupled with the kstar estimation of the scale.
+
+        Args:
+            initial_id (float): initial estimate of the id default uses 2NN
+            n_iter (int): number of iteration
+            Dthr (float): threshold value for the kstar test
+            r (float): parameter of binomial estimator, 0 < r < 1
+        Returns:
+            ids, ids_err, kstars, log_likelihoods
+        """
+        # start with an initial estimate of the ID
+        if initial_id is None:
+            self.compute_id_2NN(algorithm='ml')
+        else:
+            self.compute_distances()
+            self.set_id(initial_id)
+
+        ids = np.zeros(n_iter)
+        ids_err = np.zeros(n_iter)
+        kstars = np.zeros((n_iter, self.N), dtype=int)
+        ks_stats = np.zeros(n_iter)
+        p_values = np.zeros(n_iter)
+
+        for i in range(n_iter):
+            # compute kstar
+            self.compute_kstar(Dthr)
+            print("iteration ", i)
+            print("id ", self.intrinsic_dim)
+
+            # set new ratio
+            r_eff = 0.2032**(1./self.intrinsic_dim) if r == 'opt' else r
+            # compute id using the k*
+            ide, id_err, scale, ks, pv = self.compute_id_binomial_k(self.kstar, r_eff, bayes=False)
+
+            ids[i] = ide
+            ids_err[i] = id_err
+            kstars[i] = self.kstar
+            ks_stats[i] = ks
+            p_values[i] = pv
+
+        return ids, ids_err, kstars, None, ks_stats, p_values
