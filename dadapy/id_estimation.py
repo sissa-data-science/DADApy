@@ -30,6 +30,7 @@ from sklearn.metrics import pairwise_distances_chunked
 
 from dadapy._utils import utils as ut
 from dadapy._utils.utils import compute_nn_distances
+from dadapy._utils.id_estimation import _binomial_model_validation as bmv
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
@@ -649,7 +650,7 @@ class IdEstimation(Base):
         because maxk was too low. If self.maxk is equal to the number of points of the dataset no mask will be applied
 
         Args:
-            rk (float): external shell radius
+            rk (float or np.ndarray(float)): external shell radius
             r (float): ratio between internal and external shell radii of the shells
 
         Returns:
@@ -661,13 +662,19 @@ class IdEstimation(Base):
         if self.distances is None:
             self.compute_distances()
 
-        assert rk > 0, "Use a positive radius"
         assert 0 < r < 1, "Select a proper ratio, 0<r<1"
 
-        # routine
-        rn = rk * r
-        k = (self.distances <= rk).sum(axis=1)
-        n = (self.distances <= rn).sum(axis=1)
+        if isinstance(rk, np.ndarray):
+            assert np.all(rk > 0), "Not all radii are positive"
+            assert rk.shape[0] == self.N, "array of radii must have the same length of datapoints"
+            rn = rk * r
+            k = np.sum([d < ri for d, ri in zip(self.distances, rk)], axis=1)
+            n = np.sum([d < ri for d, ri in zip(self.distances, rn)], axis=1)
+        else:
+            assert rk > 0, "Use a positive radius"
+            rn = rk * r
+            k = (self.distances <= rk).sum(axis=1)
+            n = (self.distances <= rn).sum(axis=1)
 
         # checks-out
         if self.maxk == self.N - 1:
@@ -701,7 +708,7 @@ class IdEstimation(Base):
         as it is not effectively part of the poisson process generating its neighbourhood.
 
         Args:
-            rk (float): radius of the external shell
+            rk (float or np.ndarray(float)): radius of the external shell
             r (float): ratio between internal and external shell
             bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
                 gives the mean value and std of d, while mle returns the max of the likelihood and the std
@@ -710,13 +717,14 @@ class IdEstimation(Base):
         Returns:
             id (float): the estimated intrinsic dimension
             id_err (float): the standard error on the id estimation
-            rs (float): the average nearest neighbor distance (rs)
+            scale (float): scale at which the id is performed
+            ts (float): test statistics
+            pv (float): p-value of the test statistics
 
         """
-        # routine
         k, n, mask = self._fix_rk(rk, r)
 
-        self.intrinsic_dim_scale = 0.5 * (rk + rk * r)
+        self.intrinsic_dim_scale = 0.5 * (rk.mean() + (rk * r).mean()) if isinstance(rk, np.ndarray) else 0.5 * (rk + rk * r)
 
         n_eff = n[mask]
         k_eff = k[mask]
@@ -731,7 +739,7 @@ class IdEstimation(Base):
             self.intrinsic_dim_err = 0
             return 0
 
-        if bayes is False:
+        if not bayes:
             self.intrinsic_dim = np.log((e_n - 1.0) / (e_k - 1.0)) / np.log(r)
             self.intrinsic_dim_err = np.sqrt(
                 ut._compute_binomial_cramerrao(
@@ -750,7 +758,9 @@ class IdEstimation(Base):
             print("Select a proper method for id computation")
             return 0
 
-        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
+        ts, pv = bmv(k_eff, n_eff, r**self.intrinsic_dim)
+
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ts, pv
 
     # ----------------------------------------------------------------------------------------------
 
@@ -768,19 +778,26 @@ class IdEstimation(Base):
             n (np.ndarray(int)): number of points within the internal shell of radius rk*r
         """
         # checks-in and initialisations
-        # checks-in and initialisations
         if self.distances is None:
             self.compute_distances()
 
-        assert (
-            0 < k < self.maxk
-        ), "Select a proper number of neighbours. Increase maxk and recompute distances if necessary"
         assert 0 < r < 1, "Select a proper ratio, 0<r<1"
 
-        # routine
-        rk = self.distances[:, k]
-        rn = rk * r
-        n = (self.distances <= rn.reshape(self.N, 1)).sum(axis=1)
+        if isinstance(k, np.ndarray):
+            assert np.all(k > 0), "Not all ks are positive"
+            assert np.all(k <= self.maxk), "Some ks are larger than maxk"
+            assert k.shape[0] == self.N, "array of ks must have the same length of datapoints"
+            rk = np.array([di[ki] for di, ki in zip(self.distances, k)])
+            rn = rk * r
+            n = np.sum([di < ri for di, ri in zip(self.distances, rn)], axis=1)
+
+        else:
+            assert (
+                0 < k < self.maxk
+            ), "Select a proper number of neighbours. Increase maxk and recompute distances if necessary"
+            rk = self.distances[:, k]
+            rn = rk * r
+            n = (self.distances <= rn.reshape(self.N, 1)).sum(axis=1)
 
         self.intrinsic_dim_scale = 0.5 * (rk.mean() + rn.mean())
 
@@ -809,14 +826,10 @@ class IdEstimation(Base):
         Returns:
             id (float): the estimated intrinsic dimension
             id_err (float): the standard error on the id estimation
-            rs (float): the average nearest neighbor distance (rs)
+            scale (float): the average nearest neighbor distance (rs)
+            ts (float): test statistics
+            pv (float): p-value of the test statistics
         """
-        # checks-in and initialisations
-        assert (
-            0 < k < self.maxk
-        ), "Select a proper number of neighbours. Increase maxk if necessary"
-
-        # routine
         n = self._fix_k(k, r)
         e_n = n.mean()
         if math.isclose(e_n, 1.0):
@@ -827,10 +840,12 @@ class IdEstimation(Base):
             self.intrinsic_dim_err = 0
             return 0
 
+        k_eff = k.mean() if isinstance(k, np.ndarray) else k
+
         if bayes is False:
-            self.intrinsic_dim = np.log((e_n - 1) / (k - 1)) / np.log(r)
+            self.intrinsic_dim = np.log((e_n - 1) / (k_eff - 1)) / np.log(r)
             self.intrinsic_dim_err = np.sqrt(
-                ut._compute_binomial_cramerrao(self.intrinsic_dim, k - 1, r, n.shape[0])
+                ut._compute_binomial_cramerrao(self.intrinsic_dim, k_eff - 1, r, n.shape[0])
             )
 
         elif bayes is True:
@@ -839,14 +854,18 @@ class IdEstimation(Base):
                 self.intrinsic_dim_err,
                 posterior_domain,
                 posterior_values,
-            ) = ut._beta_prior(k - 1, n - 1, r, posterior_profile=False)
+            ) = ut._beta_prior(k_eff - 1, n - 1, r, posterior_profile=False)
         else:
             print("select a proper method for id computation")
             return 0
 
-        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale
+        print( r, self.intrinsic_dim)
+        ts, pv = bmv(k, n, r ** self.intrinsic_dim)
+
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ts, pv
 
     # ----------------------------------------------------------------------------------------------
+
     def set_id(self, d):
         """Set the intrinsic dimension."""
         assert d > 0, "intrinsic dimension can't be negative (yet)"

@@ -15,7 +15,11 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+rng = np.random.default_rng()
 
+from scipy.stats import epps_singleton_2samp as es2s
+from scipy.stats import ks_2samp as ks2s
+from scipy.stats import chisquare as x2
 
 def box_counting(
     data,
@@ -192,3 +196,48 @@ def correlation_integral(dists, scales, cond=False, plot=True):
         plt.plot(scales[1:], ids)
 
     return ids, scales[1:], CI
+
+# --------------------------------------------------------------------------------------
+
+
+def _binomial_model_validation(k, n, p, artificial_samples=1000000):
+    """Perform the model validation for the binomial estimator. To this aim, an artificial set of binomially distributed
+    points is extracted and compared to the observed ones. The quantitative test is performed by means of the .... test.
+    The associated statistics and p-value is returned
+
+    Args:
+        k (int or np.ndarray(int)): Observed points in outer shells.
+        n (np.ndarray(int)): Observed points in the inner shells.
+        p (float): Tested Binomial parameter
+        artificial_samples (int, default=1000000): number of theoretical samples to be compared with the observed ones.
+
+    Returns:
+        statistics (float): test statistics
+        p_value (float): p-value obtained from the test
+    """
+    assert 0 < p < 1, "The binomial parameter must be in the interval (0,1)"
+    if n.shape[0] < artificial_samples:
+        if isinstance(k, np.ndarray):
+            replicas = int(artificial_samples / n.shape[0])
+            n_theo = np.array([rng.binomial(ki, p, size=replicas) for ki in (k-1)]).reshape(-1)
+        else:
+            n_theo = rng.binomial(k-1, p, size=artificial_samples)
+    else:
+        if isinstance(k, np.ndarray):
+            n_theo = rng.binomial(k-1, p)
+        else:
+            n_theo = rng.binomial(k-1, p, size=n.shape[0])
+
+    # mx = max(max(n-1), max(n_theo))
+    # emp = np.array([sum(n - 1 == i) for i in range(0, mx+1)]) / len(n)
+    # theo = np.array([sum(n_theo == i) for i in range(0, mx+1)]) / len(n_theo)
+
+    ks_d, ks_pv = ks2s(n_theo, n-1)
+    # x2_d, x2_pv = x2(emp, theo, ddof=1)
+    # es_d, es_pv = es2s(n_theo, n-1, t=(0.45, 0.55))
+
+    # print("KS:\t", ks_d, ks_pv)
+    # print("X2:\t", x2_d, x2_pv)
+    # print("ES:\t", es_d, es_pv)
+
+    return ks_d, ks_pv
