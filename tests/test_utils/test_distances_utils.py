@@ -28,21 +28,23 @@ def test_zero_dist():
     with pytest.warns(UserWarning):
         utils.compute_nn_distances(X, maxk=2, metric="euclidean", period=None)
 
+
 def test_cross_nn_distances():
     """Test for computation of cross nearest neighbour distances."""
     X = np.array([0, 0.1, 0.3, 0.55]).reshape(-1, 1)
     X_new = np.array([0.1, 0.9]).reshape(-1, 1)
     maxk = 3
 
-    expected_indices = [[1, 0, 2],
-                        [3, 2, 1]]
-    expected_distances = [[0, 0.1, 0.2],
-                          [0.35, 0.6, 0.8]]
+    expected_indices = [[1, 0, 2], [3, 2, 1]]
+    expected_distances = [[0, 0.1, 0.2], [0.35, 0.6, 0.8]]
 
-    distances, indices = utils.compute_cross_nn_distances(X_new, X, maxk, metric="euclidean")
+    distances, indices = utils.compute_cross_nn_distances(
+        X_new, X, maxk, metric="euclidean"
+    )
 
     assert pytest.approx(indices) == expected_indices
     assert pytest.approx(distances) == expected_distances
+
 
 def test_cross_nn_distances_periodic():
     """Test for computation of cross nearest neighbour distances for periodic boundaries."""
@@ -50,13 +52,12 @@ def test_cross_nn_distances_periodic():
     X_new = np.array([0.1, 0.9]).reshape(-1, 1)
     maxk = 3
 
-    expected_indices = [[1, 0, 2],
-                        [0, 1, 3]]
-    expected_distances = [[0, 0.1, 0.2],
-                          [0.1, 0.2, 0.35]]
+    expected_indices = [[1, 0, 2], [0, 1, 3]]
+    expected_distances = [[0, 0.1, 0.2], [0.1, 0.2, 0.35]]
 
-    distances, indices = utils.compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=1)
+    distances, indices = utils.compute_cross_nn_distances(
+        X_new, X, maxk, metric="euclidean", period=1
+    )
 
     assert pytest.approx(indices) == expected_indices
     assert pytest.approx(distances) == expected_distances
-
