@@ -121,7 +121,8 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None):
                 "periodic distance computation is supported only for euclidean and manhattan metrics"
             )
 
-        distances, dist_indices = compute_NN_PBC(X, maxk, box_size=period, p=p)
+        tree = cKDTree(X, boxsize=period)
+        distances, dist_indices = tree.query(X_new, k=maxk, p=p)
 
     return distances, dist_indices
 
