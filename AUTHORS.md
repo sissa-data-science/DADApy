@@ -17,6 +17,6 @@
 - [Alessandro Laio](https://people.sissa.it/~laio/)
 - [Marco Favorito](https://github.com/marcofavorito)
 - [Martin Uhrin](https://github.com/muhrin)
-
+- [Olivier Languin-Cattoën](https://github.com/ollyfutur)
 
 You [are welcome](./CONTRIBUTING.md) to contribute too!  
