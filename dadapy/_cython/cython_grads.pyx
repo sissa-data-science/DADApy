@@ -166,6 +166,31 @@ def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
     cdef DTYPE_t i, j, ind_spar
 
     cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        common_neighs_array[ind_spar] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
+                                          assume_unique=True).sum()
+
+    return common_neighs_array
+
+# ----------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
+                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                         np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t nspar = nind_list.shape[0]
+
+    cdef DTYPE_t i, j, ind_spar
+
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
     cdef np.ndarray[DTYPE_t, ndim=2] common_neighs_mat = np.zeros((N,N), dtype=np.int_)
 
     #for i in range(N):

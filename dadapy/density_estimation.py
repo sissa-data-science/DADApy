@@ -325,7 +325,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_common_neighs(self):
+    def compute_common_neighs(self,comp_common_neighs_mat=False):
         """Compute the common number of neighbours between couple of points (i,j) such that j is\
         in the neighbourhod of i. The numbers are stored in a scipy sparse csr_matrix format.
 
@@ -343,9 +343,14 @@ class DensityEstimation(IdEstimation):
             print("Computation of the numbers of common neighbours started")
 
         sec = time.time()
-        self.common_neighs_array, self.common_neighs_mat = cgr.return_common_neighs(
-            self.kstar, self.dist_indices, self.nind_list
-        )
+        if comp_common_neighs_mat is True:
+            self.common_neighs_array, self.common_neighs_mat = cgr.return_common_neighs_comp_mat(
+                self.kstar, self.dist_indices, self.nind_list
+            )
+        else:
+            self.common_neighs_array = cgr.return_common_neighs(
+                self.kstar, self.dist_indices, self.nind_list
+            )
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds to carry out the computation.".format(sec2 - sec))
@@ -554,14 +559,12 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_BMTI(self, use_variance=True, comp_err=True):
+    def compute_density_BMTI(self, use_variance=True, comp_err=False):
         # DENSITY_DEVELOP VERSION
 
         # compute changes in free energy
         if self.Fij_array is None:
             self.compute_deltaFs_grads_semisum()
-
-        self.Nspar = len(self.Fij_array)
 
         if self.verb:
             print("BMTI density estimation started")
@@ -741,7 +744,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_gCorr_OLD(self, use_variance=True, comp_err=True):
+    def compute_density_gCorr_OLD(self, use_variance=True, comp_err=False):
         # TODO: matrix A should be in sparse format!
 
         # compute changes in free energy
