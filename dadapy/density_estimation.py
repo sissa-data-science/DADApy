@@ -561,8 +561,10 @@ class DensityEstimation(IdEstimation):
         if self.Fij_array is None:
             self.compute_deltaFs_grads_semisum()
 
+        self.Nspar = len(self.Fij_array)
+
         if self.verb:
-            print("gCorr density estimation started")
+            print("BMTI density estimation started")
             sec = time.time()
 
         # define the likelihood covarince matrix
@@ -634,7 +636,7 @@ class DensityEstimation(IdEstimation):
 
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+            print("{0:0.2f} seconds for BMTI density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 
@@ -646,7 +648,7 @@ class DensityEstimation(IdEstimation):
             self.compute_deltaFs_grads_semisum()
 
         if self.verb:
-            print("gCorr density estimation started")
+            print("BMTI density estimation started")
             sec = time.time()
 
         if self.kstar is None:
@@ -735,7 +737,7 @@ class DensityEstimation(IdEstimation):
 
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+            print("{0:0.2f} seconds for BMTI density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 
@@ -975,7 +977,7 @@ class DensityEstimation(IdEstimation):
 
         if self.verb:
             print(
-                "Estimation of the deltaFs cross-covatiance started"
+                "Estimation of the deltaFs cross-covariance started"
             )
         sec = time.time()
         self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
@@ -988,7 +990,7 @@ class DensityEstimation(IdEstimation):
 
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds computing the deltaFs cross-covatiance".format(sec2 - sec))
+            print("{0:0.2f} seconds computing the deltaFs cross-covariance".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 
