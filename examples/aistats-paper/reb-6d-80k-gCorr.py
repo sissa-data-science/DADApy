@@ -5,12 +5,21 @@ plt.rcParams.update({                  #use lateX fonts
   "font.family": "Helvetica"
 })
 
+from os import environ
+environ["OMP_NUM_THREADS"] = "1" # export OMP_NUM_THREADS=1
+environ["OPENBLAS_NUM_THREADS"] = "1" # export OPENBLAS_NUM_THREADS=1
+environ["MKL_NUM_THREADS"] = "1" # export MKL_NUM_THREADS=1
+environ["VECLIB_MAXIMUM_THREADS"] = "1" # export VECLIB_MAXIMUM_THREADS=1
+environ["NUMEXPR_NUM_THREADS"] = "1" # export NUMEXPR_NUM_THREADS=1
+
+import numpy as np
+
+
 from dadapy import *
 from dadapy._utils.utils import _align_arrays
 from scipy import stats
 from scipy.ndimage.filters import gaussian_filter1d
 import time
-import numpy as np
 
 from awkde import GaussianKDE
 #%matplotlib notebook
@@ -71,23 +80,27 @@ h_Sil = np.zeros(nexp)
 MAE_kNN_Abr = np.zeros(nexp)
 MAE_kNN_Zhao = np.zeros(nexp)
 MAE_kstarNN = np.zeros(nexp)
+MAE_GKDE_Sil = np.zeros(nexp)
 MAE_PAk = np.zeros(nexp)
 MAE_BMTI = np.zeros(nexp)
-MAE_GKDE_Sil = np.zeros(nexp)
+
 
 MSE_kNN_Abr = np.zeros(nexp)
 MSE_kNN_Zhao = np.zeros(nexp)
 MSE_kstarNN = np.zeros(nexp)
+MSE_GKDE_Sil = np.zeros(nexp)
 MSE_PAk = np.zeros(nexp)
 MSE_BMTI = np.zeros(nexp)
-MSE_GKDE_Sil = np.zeros(nexp)
+
 
 time_kNN_Abr = np.zeros(nexp)
 time_kNN_Zhao = np.zeros(nexp)
 time_kstarNN = np.zeros(nexp)
+time_GKDE_Sil = np.zeros(nexp)
 time_PAk = np.zeros(nexp)
 time_BMTI = np.zeros(nexp)
-time_GKDE_Sil = np.zeros(nexp)
+time_compute_deltaFs = np.zeros(nexp)
+
 
 
 ## Per il production
@@ -145,22 +158,6 @@ for i in reversed(range(0,nexp)):
     MAE_kstarNN[i] = np.mean(np.abs(F_k-F_anal_k))
     MSE_kstarNN[i] = np.mean((F_k-F_anal_k)**2)
 
-    #PAk
-    sec = time.perf_counter()
-    data.compute_density_PAk()
-    time_PAk[i] = time.perf_counter() - sec
-    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
-    MAE_PAk[i] = np.mean(np.abs(F_k-F_anal_k))
-    MSE_PAk[i] = np.mean((F_k-F_anal_k)**2)
-
-    #BMTI
-    sec = time.perf_counter()
-    data.compute_density_gCorr_OLD()
-    time_BMTI[i] = time.perf_counter() - sec
-    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
-    MAE_BMTI[i] = np.mean(np.abs(F_k-F_anal_k))
-    MSE_BMTI[i] = np.mean((F_k-F_anal_k)**2)
-
     #GKDE Silverman
     sec = time.perf_counter()
     kdesil = GaussianKDE(glob_bw="silverman", alpha=0.0, diag_cov=True)
@@ -171,15 +168,49 @@ for i in reversed(range(0,nexp)):
     off_gksil, F_gksil = _align_arrays(F_gksil,np.ones_like(F_anal_k),F_anal_k)
     MAE_GKDE_Sil[i] = np.mean(np.abs(F_gksil-F_anal_k))
     MSE_GKDE_Sil[i] = np.mean((F_gksil-F_anal_k)**2)
+
+    #PAk
+    sec = time.perf_counter()
+    data.compute_density_PAk()
+    time_PAk[i] = time.perf_counter() - sec
+    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    MAE_PAk[i] = np.mean(np.abs(F_k-F_anal_k))
+    MSE_PAk[i] = np.mean((F_k-F_anal_k)**2)
+
+    #BMTI
+    sec = time.perf_counter()
+    data.compute_deltaFs_grads_semisum()
+    time_compute_deltaFs[i] = time.perf_counter() - sec
+    sec = time.perf_counter()
+    data.compute_density_gCorr(mem_efficient=False)
+    time_BMTI[i] = time.perf_counter() - sec
+    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    MAE_BMTI[i] = np.mean(np.abs(F_k-F_anal_k))
+    MSE_BMTI[i] = np.mean((F_k-F_anal_k)**2)
+
+
     
-
-
-    print("kNN_Abr",ksel_Abr[i],": ",MAE_kNN_Abr[i])
-    print("kNN_Zhao",ksel_Zhao[i],": ",MAE_kNN_Zhao[i])
-    print("kstarNN: ",MAE_kstarNN[i])
-    print("PAk: ",MAE_PAk[i])
-    print("BMTI: ",MAE_BMTI[i])
-    print("GKDE Silverman: ",MAE_GKDE_Sil[i])
+    print("MAE kNN_Abr",ksel_Abr[i],": ",MAE_kNN_Abr[i])
+    print("MAE kNN_Zhao",ksel_Zhao[i],": ",MAE_kNN_Zhao[i])
+    print("MAE kstarNN: ",MAE_kstarNN[i])
+    print("MAE GKDE Silverman: ",MAE_GKDE_Sil[i])
+    print("MAE PAk: ",MAE_PAk[i])
+    print("MAE BMTI: ",MAE_BMTI[i])
+    print()
+    print("MSE kNN_Abr",ksel_Abr[i],": ",MSE_kNN_Abr[i])
+    print("MSE kNN_Zhao",ksel_Zhao[i],": ",MSE_kNN_Zhao[i])
+    print("MSE kstarNN: ",MSE_kstarNN[i])
+    print("MSE GKDE Silverman: ",MSE_GKDE_Sil[i])
+    print("MSE PAk: ",MSE_PAk[i])
+    print("MSE BMTI: ",MSE_BMTI[i])
+    print()
+    print("time kNN_Abr",ksel_Abr[i],": ",time_kNN_Abr[i])
+    print("time kNN_Zhao",ksel_Zhao[i],": ",time_kNN_Zhao[i])
+    print("time kstarNN: ",time_kstarNN[i])
+    print("time GKDE Silverman: ",time_GKDE_Sil[i])
+    print("time PAk: ",time_PAk[i])
+    print("time BMTI: ",time_BMTI[i])
+    
     
 
     np.savetxt("reb-MAE-6d-80k.txt",np.column_stack((
