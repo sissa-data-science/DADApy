@@ -49,7 +49,7 @@ def free(v):
 import os
 
 # import 6d_double_well-100k.txt in the current path
-X80k = np.genfromtxt('6d_double_well-100k.txt')[40000:, 1:]
+X80k = np.genfromtxt('datasets/6d_double_well-100k.txt')[40000:, 1:]
 
 
 print(len(X80k))
@@ -155,7 +155,7 @@ for i in reversed(range(0,nexp)):
 
     #BMTI
     sec = time.perf_counter()
-    data.compute_density_BMTI(comp_err=False)
+    data.compute_density_gCorr_OLD()
     time_BMTI[i] = time.perf_counter() - sec
     off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_BMTI[i] = np.mean(np.abs(F_k-F_anal_k))

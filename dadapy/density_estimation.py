@@ -744,7 +744,7 @@ class DensityEstimation(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_gCorr_OLD(self, use_variance=True, comp_err=False):
+    def compute_density_gCorr_OLD(self, use_variance=True, comp_err=False, mem_efficient=True):
         # TODO: matrix A should be in sparse format!
 
         # compute changes in free energy
@@ -805,7 +805,11 @@ class DensityEstimation(IdEstimation):
         if self.verb:
             print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
 
-        log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+        if mem_efficient==False:
+            log_den = np.linalg.solve(A.todense(), deltaFcum)    
+
+        else:
+            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
         if self.verb:
             print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
@@ -832,6 +836,95 @@ class DensityEstimation(IdEstimation):
             print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
+
+    def compute_density_gCorr(self, use_variance=True, redundancy_factor=None, comp_err=False, mem_efficient=True):
+
+        # compute changes in free energy
+        if self.Fij_array is None:
+            self.compute_deltaFs_grads_semisum()
+
+        if self.verb:
+            print("gCorr density estimation started")
+            sec = time.time()
+
+
+        if redundancy_factor is None:
+            redundancy = np.ones(self.nspar,dtype=np.float_)
+
+        elif redundancy_factor is 'geometric_mean':
+            # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+            k1 = self.kstar[self.nind_list[:, 0]]
+            k2 = self.kstar[self.nind_list[:, 1]]
+            redundancy = np.sqrt(k1 * k2)
+
+        elif np.size(redundancy_factor) == self.nspar:
+            # redundancy vector
+            redundancy = redundancy_factor    
+        
+        # redundancy = k1
+        # la cosa giusta e' forse sqrt(k1_inout * k2_inout) con ki_inout che conta tutte le volte che il punto i compare nella sommatoria
+        #   cioe' ki + {numero di volte che k_i}
+        # oppure (k1-1)/np.sqrt(k1*k2) che da' media ~1
+        # redundancy = np.full_like(k1,fill_value=1.,dtype=np.float_)
+        # print(redundancy)
+
+        if use_variance:
+            tmpvec = np.ones(self.nspar, dtype=np.float_)/ self.Fij_var_array / redundancy
+        else:
+            tmpvec = np.ones(self.nspar, dtype=np.float_)/ redundancy
+        # initialise sparse adjacency matrix
+        A = sparse.csr_matrix((-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])), shape=(self.N,self.N), dtype=np.float_)
+        # initialise coefficients vector
+        supp_deltaF = sparse.csr_matrix(( self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])), shape=(self.N,self.N), dtype=np.float_)
+
+
+        A = sparse.lil_matrix(A + A.transpose())
+
+        diag = np.array(-A.sum(axis=1)).reshape((self.N,))
+
+        A.setdiag(diag)
+
+        # print("Diag = {}".format(diag))
+
+        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(
+            supp_deltaF.sum(axis=1)
+        ).reshape((self.N,))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
+
+        if mem_efficient==False:
+            log_den = np.linalg.solve(A.todense(), deltaFcum)    
+
+        else:
+            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+
+        if self.verb:
+            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        sec2 = time.time()
+
+        self.log_den = log_den
+        # self.log_den_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
+
+        if comp_err is True:
+            self.A = A.todense()
+            self.B = slin.pinvh(self.A)
+            # self.B = slin.inv(self.A)
+            self.log_den_err = np.sqrt(np.diag(self.B))
+
+        if self.verb:
+            print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+        sec2 = time.time()
+
+        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
+        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for gCorr density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------    
 
     def compute_grads(self, comp_covmat=False):
         """Compute the gradient of the log density each point using k* nearest neighbors.
