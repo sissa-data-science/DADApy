@@ -4,7 +4,7 @@ import numpy as np
 import time
 from awkde import GaussianKDE
 
-def  run_all_methods(Xk, F_anal_k, d=None, kstar=None):
+def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
     # init dataset
     data = Data(Xk,verbose=False)
     data.compute_distances(maxk = min(Xk.shape[0] - 1, 100))
@@ -22,7 +22,10 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None):
     ksel_Abr = Nsample**(4./(4.+d))
     data.compute_density_kNN(ksel_Abr)
     time_kNN_Abr = time.perf_counter() - sec
-    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    if simple_align is True:
+        off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+    else:    
+        off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_kNN_Abr = np.mean(np.abs(F_k-F_anal_k))
     MSE_kNN_Abr = np.mean((F_k-F_anal_k)**2)
     
@@ -31,7 +34,10 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None):
     ksel_Zhao = Nsample**(2./(2.+d))
     data.compute_density_kNN(ksel_Zhao)
     time_kNN_Zhao = time.perf_counter() - sec
-    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    if simple_align is True:
+        off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+    else:    
+        off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_kNN_Zhao = np.mean(np.abs(F_k-F_anal_k))
     MSE_kNN_Zhao = np.mean((F_k-F_anal_k)**2)
     
@@ -39,7 +45,10 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None):
     sec = time.perf_counter()
     data.compute_density_kstarNN()
     time_kstarNN = time.perf_counter() - sec
-    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    if simple_align is True:
+        off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+    else:    
+        off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_kstarNN = np.mean(np.abs(F_k-F_anal_k))
     MSE_kstarNN = np.mean((F_k-F_anal_k)**2)
 
@@ -58,23 +67,27 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None):
     sec = time.perf_counter()
     data.compute_density_PAk()
     time_PAk = time.perf_counter() - sec
-    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    if simple_align is True:
+        off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+    else:    
+        off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_PAk = np.mean(np.abs(F_k-F_anal_k))
     MSE_PAk = np.mean((F_k-F_anal_k)**2)
 
     #BMTI
-    
     if kstar is not None:
         data.set_kstar(kstar)
         data.compute_density_kNN(kstar)
-
     sec = time.perf_counter()
     data.compute_deltaFs_grads_semisum()
     time_compute_deltaFs = time.perf_counter() - sec
     sec = time.perf_counter()
     data.compute_density_gCorr(mem_efficient=False)
     time_BMTI = time.perf_counter() - sec
-    off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    if simple_align is True:
+        off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+    else:    
+        off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_BMTI = np.mean(np.abs(F_k-F_anal_k))
     MSE_BMTI = np.mean((F_k-F_anal_k)**2)
     

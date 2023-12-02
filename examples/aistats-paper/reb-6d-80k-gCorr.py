@@ -58,7 +58,7 @@ print("Dataset size: ",X_full.shape[0])
 # F_full = np.array([free_gauss(x) for x in X_full])
 # d = 20
 
-nreps = 5 # number of repetitions
+nreps = 3 # number of repetitions
 print("Number of repetitions: ",nreps)
 nexp = 10 # number of dataset sizes
 
@@ -121,7 +121,7 @@ for i in reversed(range(0, nexp)):
         print("Batch size: ", X_k.shape[0])
         print("Repetition: ",r)
  
-        results = run_all_methods(X_k, F_anal_k, d=d, kstar=10)
+        results = run_all_methods(X_k, F_anal_k, d=d)
 
         # assign results to arrays
         Nsample[i] = results['Nsample']

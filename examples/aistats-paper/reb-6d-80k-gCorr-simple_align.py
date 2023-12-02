@@ -58,9 +58,9 @@ print("Dataset size: ",X_full.shape[0])
 # F_full = np.array([free_gauss(x) for x in X_full])
 # d = 20
 
-nreps = 5 # number of repetitions
+nreps = 3 # number of repetitions
 print("Number of repetitions: ",nreps)
-nexp = 3 # number of dataset sizes
+nexp = 10 # number of dataset sizes
 
 # create nreps random subsets of the 
 nsample = 80000
