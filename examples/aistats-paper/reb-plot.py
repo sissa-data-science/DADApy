@@ -82,6 +82,45 @@ def plot_MAEs(results):
     plt.show()
 
 
+def plot_MSEs(results):
+    plt.figure()
+    xs = results['Nsample']
+    r = results['MAE_kNN_Abr'].shape[0]
+
+    m = np.mean(results['MSE_kNN_Abr'],axis=0)
+    s = np.std(results['MSE_kNN_Abr'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kNN-Abr")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['MSE_kNN_Zhao'],axis=0)
+    s = np.std(results['MSE_kNN_Zhao'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kNN-Zhao")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['MSE_kstarNN'],axis=0)
+    s = np.std(results['MSE_kstarNN'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kstarNN")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['MSE_GKDE_Sil'],axis=0)
+    s = np.std(results['MSE_GKDE_Sil'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="GKDE-Sil")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['MSE_PAk'],axis=0)
+    s = np.std(results['MSE_PAk'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="PAk")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['MSE_BMTI'],axis=0)
+    s = np.std(results['MSE_BMTI'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="BMTI")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    plt.xscale("log")
+    plt.legend()
+    plt.xlabel("Nsample")
+    plt.ylabel("MSE")
+    plt.title("6d-80k-gCorr")
+    plt.savefig("plots/reb-MSE-6d-80k-gCorr.png")
+    plt.show()
+
 plot_times(results)
 
 plot_MAEs(results)
+
+plot_MSEs(results)
