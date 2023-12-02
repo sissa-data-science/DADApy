@@ -143,3 +143,29 @@ def print_results(results):
     print("time_PAk: ", results['time_PAk'])
     print("time_BMTI: ", results['time_BMTI'])
     print("time_compute_deltaFs: ", results['time_compute_deltaFs'])
+
+
+
+# define some density functions
+def gaussian(x, mu, sig):
+   return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))/np.sqrt(2*np.pi)
+
+def gaussian_std(x):
+   return np.exp(- np.sum(x**2) / 2)/np.sqrt((2*np.pi)**20)
+
+def den_6d(v):
+    #harmonic potential = 6*(x_i)**2
+    
+    value = 1.    
+    for i in range(2,6):
+        value *= np.exp(-6*v[i]*v[i])
+    
+    r = value*pow( 2.*np.exp(-(-1.5 + v[0])*(-1.5 + v[0]) - (-2.5 + v[1])*(-2.5 + v[1])) + 3*np.exp(-2*v[0]*v[0] - 0.25*v[1]*v[1]) , 3 )
+    #r = value*pow( 2.*np.exp(-(-1.5 + v[1])*(-1.5 + v[1]) - (-2.5 + v[0])*(-2.5 + v[0])) + 3*np.exp(-2*v[1]*v[1] - 0.25*v[0]*v[0]) , 3 )
+    return r
+
+def free(v):
+    return - np.log(den(v))
+
+def free_gauss(v):
+    return - np.log(gaussian_std(v))
