@@ -31,7 +31,7 @@ def den(v):
 def free(v):
     return - np.log(den(v))
 
-def free(v):
+def free_gauss(v):
     return - np.log(gaussian_std(v))
 
 #X80k = np.genfromtxt('datasets/6d_double_well-100k.txt')[40000:, 1:]
@@ -42,8 +42,9 @@ F_full = np.array([free(x) for x in X_full])
 d = 6
 
 # or generate dataset
-X_full = np.random.normal(0, 1, size=(500000, 20))
-d = 20
+# X_full = np.random.normal(0, 1, size=(500000, 20))
+# F_full = np.array([free_gauss(x) for x in X_full])
+# d = 20
 
 nreps = 3 # number of repetitions
 nexp = 8 # number of dataset sizes
@@ -88,13 +89,13 @@ time_compute_deltaFs = np.zeros((nreps, nexp))
 for r in range(nreps):
     print("rep: ",r)
     Xr = X_full[rep_indices[r]]
-
+    Fr = F_full[rep_indices[r]]
     # loop over dataset sizes
     for i in reversed(range(0, nexp)):
 
         X_k=Xr[::2**i]
 
-        F_anal_k = np.array([free(x) for x in X_k])
+        F_anal_k = Fr[::2**i]
  
         results = run_all_methods(X_k, F_anal_k, d=d, kstar=10)
 
