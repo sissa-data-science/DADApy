@@ -8,13 +8,13 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None):
     # init dataset
     data = Data(Xk,verbose=False)
     data.compute_distances(maxk = min(Xk.shape[0] - 1, 100))
-    if d is not None: 
-        data.set_id(d)
-    else:   
-        data.compute_id_2NN()
-    print()
-    print("Nsample:")
-    print(data.N)
+    
+    assert d is not None, "Dimension not specified"
+    data.set_id(d)
+    #else:
+        #data.compute_id_2NN()
+    #print()
+    #print("Nsample: ", data.N)
     Nsample = data.N
 
     #kNN_Abr
@@ -115,12 +115,14 @@ def print_results(results):
     print("MAE_GKDE_Sil: ", results['MAE_GKDE_Sil'])
     print("MAE_PAk: ", results['MAE_PAk'])
     print("MAE_BMTI: ", results['MAE_BMTI'])
+    print()
     print("MSE_kNN_Abr: ", results['MSE_kNN_Abr'])
     print("MSE_kNN_Zhao: ", results['MSE_kNN_Zhao'])
     print("MSE_kstarNN: ", results['MSE_kstarNN'])
     print("MSE_GKDE_Sil: ", results['MSE_GKDE_Sil'])
     print("MSE_PAk: ", results['MSE_PAk'])
     print("MSE_BMTI: ", results['MSE_BMTI'])
+    print()
     print("time_kNN_Abr: ", results['time_kNN_Abr'])
     print("time_kNN_Zhao: ", results['time_kNN_Zhao'])
     print("time_kstarNN: ", results['time_kstarNN'])

@@ -5,6 +5,15 @@ plt.rcParams.update({                  #use lateX fonts
   "font.family": "Helvetica"
 })
 
+nthreads = 1
+
+from os import environ
+environ["OMP_NUM_THREADS"] = str(nthreads) # export OMP_NUM_THREADS=1
+environ["OPENBLAS_NUM_THREADS"] = str(nthreads) # export OPENBLAS_NUM_THREADS=1
+environ["MKL_NUM_THREADS"] = str(nthreads) # export MKL_NUM_THREADS=1
+environ["VECLIB_MAXIMUM_THREADS"] = str(nthreads) # export VECLIB_MAXIMUM_THREADS=1
+environ["NUMEXPR_NUM_THREADS"] = str(nthreads) # export NUMEXPR_NUM_THREADS=1
+
 import numpy as np
 
 from dadapy import *
@@ -37,21 +46,27 @@ def free_gauss(v):
 #X80k = np.genfromtxt('datasets/6d_double_well-100k.txt')[40000:, 1:]
 
 # import dataset
-X_full = np.genfromtxt('datasets/6d_double_well-100k.txt')[40000:, 1:]
+#X_full = np.genfromtxt('datasets/6d_double_well-1.2M.dat')[800000:, 1:] #keep 
+X_full = np.genfromtxt('datasets/6d_double_well-1.2M-last_400k.txt') #keep
+#print(X_full.shape) 
 F_full = np.array([free(x) for x in X_full])
 d = 6
 
+print("Dataset size: ",X_full.shape[0])
 # or generate dataset
 # X_full = np.random.normal(0, 1, size=(500000, 20))
 # F_full = np.array([free_gauss(x) for x in X_full])
 # d = 20
 
-nreps = 3 # number of repetitions
-nexp = 8 # number of dataset sizes
+nreps = 5 # number of repetitions
+print("Number of repetitions: ",nreps)
+nexp = 10 # number of dataset sizes
 
 # create nreps random subsets of the 
-N = nreps*5000#X_full.shape[0]
-print(N)
+nsample = 80000
+print("Max batch size: ",nsample)
+N = nreps*nsample #X_full.shape[0]
+#print("N: ",N)
 rep_indices = np.arange(N)
 np.random.shuffle(rep_indices)
 rep_indices = np.array_split(rep_indices, nreps)
@@ -85,17 +100,26 @@ time_PAk = np.zeros((nreps, nexp))
 time_BMTI = np.zeros((nreps, nexp))
 time_compute_deltaFs = np.zeros((nreps, nexp))
 
-# loop over repetitions
-for r in range(nreps):
-    print("rep: ",r)
-    Xr = X_full[rep_indices[r]]
-    Fr = F_full[rep_indices[r]]
-    # loop over dataset sizes
-    for i in reversed(range(0, nexp)):
 
+# loop over dataset sizes
+for i in reversed(range(0, nexp)):
+
+    print()
+    print()
+    print("# -----------------------------------------------------------------")
+
+    # loop over repetitions
+    for r in range(nreps):
+        Xr = X_full[rep_indices[r]]
+        Fr = F_full[rep_indices[r]]
+        
         X_k=Xr[::2**i]
-
         F_anal_k = Fr[::2**i]
+
+        print()
+        print()
+        print("Batch size: ", X_k.shape[0])
+        print("Repetition: ",r)
  
         results = run_all_methods(X_k, F_anal_k, d=d, kstar=10)
 
@@ -127,7 +151,7 @@ for r in range(nreps):
         print_results(results)    
 
         # save all the above arrays to a npyz file
-        np.savez("reb-6d-80k-gCorr.npz",
+        np.savez("results/reb-6d-80k-gCorr.npz",
             Nsample=Nsample,
             ksel_Abr=ksel_Abr,
             ksel_Zhao=ksel_Zhao,
