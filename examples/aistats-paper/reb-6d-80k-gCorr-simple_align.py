@@ -48,6 +48,7 @@ def free_gauss(v):
 # import dataset
 #X_full = np.genfromtxt('datasets/6d_double_well-1.2M.dat')[800000:, 1:] #keep 
 X_full = np.genfromtxt('datasets/6d_double_well-1.2M-last_400k.txt') #keep
+
 #print(X_full.shape) 
 F_full = np.array([free(x) for x in X_full])
 d = 6
@@ -63,7 +64,7 @@ print("Number of repetitions: ",nreps)
 nexp = 10 # number of dataset sizes
 
 # create nreps random subsets of the 
-nsample = 80000
+nsample = 5000
 print("Max batch size: ",nsample)
 N = nreps*nsample #X_full.shape[0]
 #print("N: ",N)
@@ -90,6 +91,8 @@ MSE_kstarNN = np.zeros((nreps, nexp))
 MSE_GKDE_Sil = np.zeros((nreps, nexp))
 MSE_PAk = np.zeros((nreps, nexp))
 MSE_BMTI = np.zeros((nreps, nexp))
+MAE_GMM = np.zeros((nreps, nexp))
+MSE_GMM = np.zeros((nreps, nexp))
 
 # init time arrays
 time_kNN_Abr = np.zeros((nreps, nexp))
@@ -99,7 +102,7 @@ time_GKDE_Sil = np.zeros((nreps, nexp))
 time_PAk = np.zeros((nreps, nexp))
 time_BMTI = np.zeros((nreps, nexp))
 time_compute_deltaFs = np.zeros((nreps, nexp))
-
+time_GMM = np.zeros((nreps, nexp))
 
 # loop over dataset sizes
 for i in reversed(range(0, nexp)):
@@ -134,12 +137,14 @@ for i in reversed(range(0, nexp)):
         MAE_GKDE_Sil[r,i] = results['MAE_GKDE_Sil']
         MAE_PAk[r,i] = results['MAE_PAk']
         MAE_BMTI[r,i] = results['MAE_BMTI']
+        MAE_GMM[r,i] = results['MAE_GMM']
         MSE_kNN_Abr[r,i] = results['MSE_kNN_Abr']
         MSE_kNN_Zhao[r,i] = results['MSE_kNN_Zhao']
         MSE_kstarNN[r,i] = results['MSE_kstarNN']
         MSE_GKDE_Sil[r,i] = results['MSE_GKDE_Sil']
         MSE_PAk[r,i] = results['MSE_PAk']
         MSE_BMTI[r,i] = results['MSE_BMTI']
+        MSE_GMM[r,i] = results['MSE_GMM']
         time_kNN_Abr[r,i] = results['time_kNN_Abr']
         time_kNN_Zhao[r,i] = results['time_kNN_Zhao']
         time_kstarNN[r,i] = results['time_kstarNN']
@@ -147,6 +152,7 @@ for i in reversed(range(0, nexp)):
         time_PAk[r,i] = results['time_PAk']
         time_BMTI[r,i] = results['time_BMTI']
         time_compute_deltaFs[r,i] = results['time_compute_deltaFs']
+        time_GMM[r,i] = results['time_GMM']
 
         print_results(results)    
 
@@ -165,17 +171,20 @@ for i in reversed(range(0, nexp)):
             MAE_GKDE_Sil=MAE_GKDE_Sil,
             MAE_PAk=MAE_PAk,
             MAE_BMTI=MAE_BMTI,
+            MAE_GMM=MAE_GMM,
             MSE_kNN_Abr=MSE_kNN_Abr,
             MSE_kNN_Zhao=MSE_kNN_Zhao,
             MSE_kstarNN=MSE_kstarNN,
             MSE_GKDE_Sil=MSE_GKDE_Sil,
             MSE_PAk=MSE_PAk,
             MSE_BMTI=MSE_BMTI,
+            MSE_GMM=MSE_GMM,
             time_kNN_Abr=time_kNN_Abr,
             time_kNN_Zhao=time_kNN_Zhao,
             time_kstarNN=time_kstarNN,
             time_GKDE_Sil=time_GKDE_Sil,
             time_PAk=time_PAk,
             time_BMTI=time_BMTI,
-            time_compute_deltaFs=time_compute_deltaFs
+            time_compute_deltaFs=time_compute_deltaFs,
+            time_GMM=time_GMM
         )

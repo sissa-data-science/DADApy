@@ -94,7 +94,8 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
 
     # GMM
     sec = time.perf_counter()
-    gmms = np.array([GaussianMixture(n_components=n_components).fit(data.X).bic(data.X) for n_components in range(1, 30)])
+    maxn_components = min(int(Nsample/2)+1, 20)
+    gmms = np.array([GaussianMixture(n_components=n_components).fit(data.X).bic(data.X) for n_components in range(1, maxn_components)])
     best_n_components = np.argmin(gmms) + 1
     gmm = GaussianMixture(n_components=best_n_components)
     gmm.fit(data.X)
@@ -145,6 +146,7 @@ def print_results(results):
     print("MAE_GKDE_Sil: ", results['MAE_GKDE_Sil'])
     print("MAE_PAk: ", results['MAE_PAk'])
     print("MAE_BMTI: ", results['MAE_BMTI'])
+    print("MAE_GMM: ", results['MAE_GMM'])
     print()
     print("MSE_kNN_Abr: ", results['MSE_kNN_Abr'])
     print("MSE_kNN_Zhao: ", results['MSE_kNN_Zhao'])
@@ -152,6 +154,7 @@ def print_results(results):
     print("MSE_GKDE_Sil: ", results['MSE_GKDE_Sil'])
     print("MSE_PAk: ", results['MSE_PAk'])
     print("MSE_BMTI: ", results['MSE_BMTI'])
+    print("MSE_GMM: ", results['MSE_GMM'])
     print()
     print("time_kNN_Abr: ", results['time_kNN_Abr'])
     print("time_kNN_Zhao: ", results['time_kNN_Zhao'])
@@ -160,6 +163,7 @@ def print_results(results):
     print("time_PAk: ", results['time_PAk'])
     print("time_BMTI: ", results['time_BMTI'])
     print("time_compute_deltaFs: ", results['time_compute_deltaFs'])
+    print("time_GMM: ", results['time_GMM'])
 
 
 

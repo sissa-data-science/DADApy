@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # import npz results
-results = np.load("reb-6d-80k-gCorr.npz")
+results = np.load("results/reb-6d-80k-gCorr-kstar-simple_align.npz")
 
 def plot_times(results):
     plt.figure()
@@ -33,6 +33,11 @@ def plot_times(results):
     s = np.std(results['time_BMTI'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="BMTI")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['time_GMM'],axis=0)
+    s = np.std(results['time_GMM'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="GMM")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+
     plt.xscale("log")
     plt.yscale("log")
     plt.legend()
@@ -73,6 +78,11 @@ def plot_MAEs(results):
     s = np.std(results['MAE_BMTI'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="BMTI")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['MAE_GMM'],axis=0)
+    s = np.std(results['MAE_GMM'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="GMM")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+
     plt.xscale("log")
     plt.legend()
     plt.xlabel("Nsample")
