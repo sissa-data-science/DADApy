@@ -4,6 +4,7 @@ import numpy as np
 import time
 from awkde import GaussianKDE
 from sklearn.mixture import GaussianMixture
+from sklearn.neighbors import KernelDensity
 
 def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
     # init dataset
@@ -94,7 +95,7 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
 
     # GMM
     sec = time.perf_counter()
-    maxn_components = min(int(Nsample/2)+1, 20)
+    maxn_components = min(int(Nsample/2)+1, 10)
     gmms = np.array([GaussianMixture(n_components=n_components).fit(data.X).bic(data.X) for n_components in range(1, maxn_components)])
     best_n_components = np.argmin(gmms) + 1
     gmm = GaussianMixture(n_components=best_n_components)
@@ -106,6 +107,15 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
     MAE_GMM = np.mean(np.abs(F_predicted - F_anal_k))
     MSE_GMM = np.mean((F_predicted - F_anal_k) ** 2)
 
+    # KDE with Sklearn
+    sec = time.perf_counter()
+    kde = KernelDensity(kernel='gaussian', bandwidth="scott").fit(data.X)
+    log_dens = kde.score_samples(data.X)
+    F_predicted = -log_dens
+    time_kde = time.perf_counter() - sec
+    _, F_predicted = _align_arrays(F_predicted, np.ones_like(F_anal_k), F_anal_k)
+    MAE_kde = np.mean(np.abs(F_predicted - F_anal_k))
+    MSE_kde = np.mean((F_predicted - F_anal_k) ** 2)
     
     # define a dictionary with all the results and return it
     results = {}
@@ -135,7 +145,10 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
     results['MAE_GMM'] = MAE_GMM
     results['MSE_GMM'] = MSE_GMM
     results['time_GMM'] = time_GMM
-    
+    results['MAE_kde'] = MAE_kde
+    results['MSE_kde'] = MSE_kde
+    results['time_kde'] = time_kde
+
     return results
 
 

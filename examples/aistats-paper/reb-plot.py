@@ -37,6 +37,10 @@ def plot_times(results):
     s = np.std(results['time_GMM'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="GMM")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['time_kde'],axis=0)
+    s = np.std(results['time_kde'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kde")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
 
     plt.xscale("log")
     plt.yscale("log")
@@ -46,7 +50,6 @@ def plot_times(results):
     plt.title("6d-80k-gCorr")
     plt.savefig("plots/reb-times-6d-80k-gCorr.png")
     plt.show()
-
 
 
 def plot_MAEs(results):
@@ -81,6 +84,10 @@ def plot_MAEs(results):
     m = np.mean(results['MAE_GMM'],axis=0)
     s = np.std(results['MAE_GMM'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="GMM")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['MAE_kde'],axis=0)
+    s = np.std(results['MAE_kde'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kde")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
 
     plt.xscale("log")

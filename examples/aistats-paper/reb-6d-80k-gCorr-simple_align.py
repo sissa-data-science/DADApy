@@ -61,7 +61,7 @@ print("Dataset size: ",X_full.shape[0])
 
 nreps = 3 # number of repetitions
 print("Number of repetitions: ",nreps)
-nexp = 10 # number of dataset sizes
+nexp = 8 # number of dataset sizes
 
 # create nreps random subsets of the 
 nsample = 5000
@@ -93,6 +93,8 @@ MSE_PAk = np.zeros((nreps, nexp))
 MSE_BMTI = np.zeros((nreps, nexp))
 MAE_GMM = np.zeros((nreps, nexp))
 MSE_GMM = np.zeros((nreps, nexp))
+MSE_kde = np.zeros((nreps, nexp))
+MAE_kde = np.zeros((nreps, nexp))
 
 # init time arrays
 time_kNN_Abr = np.zeros((nreps, nexp))
@@ -103,6 +105,7 @@ time_PAk = np.zeros((nreps, nexp))
 time_BMTI = np.zeros((nreps, nexp))
 time_compute_deltaFs = np.zeros((nreps, nexp))
 time_GMM = np.zeros((nreps, nexp))
+time_kde = np.zeros((nreps, nexp))
 
 # loop over dataset sizes
 for i in reversed(range(0, nexp)):
@@ -138,6 +141,7 @@ for i in reversed(range(0, nexp)):
         MAE_PAk[r,i] = results['MAE_PAk']
         MAE_BMTI[r,i] = results['MAE_BMTI']
         MAE_GMM[r,i] = results['MAE_GMM']
+        MAE_kde[r,i] = results['MAE_kde']
         MSE_kNN_Abr[r,i] = results['MSE_kNN_Abr']
         MSE_kNN_Zhao[r,i] = results['MSE_kNN_Zhao']
         MSE_kstarNN[r,i] = results['MSE_kstarNN']
@@ -145,6 +149,7 @@ for i in reversed(range(0, nexp)):
         MSE_PAk[r,i] = results['MSE_PAk']
         MSE_BMTI[r,i] = results['MSE_BMTI']
         MSE_GMM[r,i] = results['MSE_GMM']
+        MSE_kde[r,i] = results['MSE_kde']
         time_kNN_Abr[r,i] = results['time_kNN_Abr']
         time_kNN_Zhao[r,i] = results['time_kNN_Zhao']
         time_kstarNN[r,i] = results['time_kstarNN']
@@ -153,6 +158,7 @@ for i in reversed(range(0, nexp)):
         time_BMTI[r,i] = results['time_BMTI']
         time_compute_deltaFs[r,i] = results['time_compute_deltaFs']
         time_GMM[r,i] = results['time_GMM']
+        time_kde[r,i] = results['time_kde']
 
         print_results(results)    
 
@@ -172,6 +178,7 @@ for i in reversed(range(0, nexp)):
             MAE_PAk=MAE_PAk,
             MAE_BMTI=MAE_BMTI,
             MAE_GMM=MAE_GMM,
+            MAE_kde=MAE_kde,
             MSE_kNN_Abr=MSE_kNN_Abr,
             MSE_kNN_Zhao=MSE_kNN_Zhao,
             MSE_kstarNN=MSE_kstarNN,
@@ -179,6 +186,7 @@ for i in reversed(range(0, nexp)):
             MSE_PAk=MSE_PAk,
             MSE_BMTI=MSE_BMTI,
             MSE_GMM=MSE_GMM,
+            MSE_kde=MSE_kde,
             time_kNN_Abr=time_kNN_Abr,
             time_kNN_Zhao=time_kNN_Zhao,
             time_kstarNN=time_kstarNN,
@@ -186,5 +194,6 @@ for i in reversed(range(0, nexp)):
             time_PAk=time_PAk,
             time_BMTI=time_BMTI,
             time_compute_deltaFs=time_compute_deltaFs,
-            time_GMM=time_GMM
+            time_GMM=time_GMM,
+            time_kde=time_kde
         )
