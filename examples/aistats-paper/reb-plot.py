@@ -3,6 +3,7 @@ import numpy as np
 
 # import npz results
 results = np.load("results/reb-6d-80k-gCorr-kstar-simple_align.npz")
+results_nf = np.load("results/reb-norm_flows.npz")
 
 def plot_times(results):
     plt.figure()
@@ -41,6 +42,11 @@ def plot_times(results):
     s = np.std(results['time_kde'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="kde")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    xs_nf = results_nf['Nsample']
+    m = np.mean(results_nf['time_NF'],axis=0)
+    s = np.std(results_nf['time_NF'],axis=0)/np.sqrt(r)
+    plt.plot(xs_nf, m, label="NF")
+    plt.fill_between(xs_nf, m-s, m+s, alpha=0.5)
 
     plt.xscale("log")
     plt.yscale("log")
@@ -89,6 +95,12 @@ def plot_MAEs(results):
     s = np.std(results['MAE_kde'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="kde")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    xs_nf = results_nf['Nsample']
+    m = np.mean(results_nf['MAE_NF'],axis=0)
+    s = np.std(results_nf['MAE_NF'],axis=0)/np.sqrt(r)
+    plt.plot(xs_nf, m, label="NF")
+    plt.fill_between(xs_nf, m-s, m+s, alpha=0.5)
+
 
     plt.xscale("log")
     plt.legend()
@@ -128,6 +140,13 @@ def plot_MSEs(results):
     s = np.std(results['MSE_BMTI'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="BMTI")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    xs_nf = results_nf['Nsample']
+    m = np.mean(results_nf['MSE_NF'],axis=0)
+    s = np.std(results_nf['MSE_NF'],axis=0)/np.sqrt(r)
+    plt.plot(xs_nf, m, label="NF")
+    plt.fill_between(xs_nf, m-s, m+s, alpha=0.5)
+
+
     plt.xscale("log")
     plt.legend()
     plt.xlabel("Nsample")
@@ -136,8 +155,33 @@ def plot_MSEs(results):
     plt.savefig("plots/reb-MSE-6d-80k-gCorr.png")
     plt.show()
 
+def plot_nf_MAE(results_nf):
+    plt.figure()
+    xs_nf = results_nf['Nsample']
+    r = results_nf['MAE_NF'].shape[0]
+    m = np.mean(results_nf['MAE_NF'],axis=0)
+    s = np.std(results_nf['MAE_NF'],axis=0)/np.sqrt(r)
+    plt.plot(xs_nf, m, label="NF")
+    plt.fill_between(xs_nf, m-s, m+s, alpha=0.5)
+    m = np.mean(results_nf['MAE_NF_noreg'],axis=0)
+    s = np.std(results_nf['MAE_NF_noreg'],axis=0)/np.sqrt(r)
+    plt.plot(xs_nf, m, label="NF_noreg")
+    plt.fill_between(xs_nf, m-s, m+s, alpha=0.5)
+
+    plt.xscale("log")
+    plt.legend()
+    plt.xlabel("Nsample")
+    plt.ylabel("MAE")
+    plt.title("6d-80k-gCorr")
+    plt.savefig("plots/reb-nf-MAE-6d-80k-gCorr.png")
+    plt.show()
+
+
+plot_nf_MAE(results_nf)
+
 plot_times(results)
 
 plot_MAEs(results)
 
 plot_MSEs(results)
+
