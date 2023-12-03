@@ -3,6 +3,7 @@ from dadapy._utils.utils import _align_arrays
 import numpy as np
 import time
 from awkde import GaussianKDE
+from sklearn.mixture import GaussianMixture
 
 def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
     # init dataset
@@ -90,6 +91,20 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
         off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_BMTI = np.mean(np.abs(F_k-F_anal_k))
     MSE_BMTI = np.mean((F_k-F_anal_k)**2)
+
+    # GMM
+    sec = time.perf_counter()
+    gmms = np.array([GaussianMixture(n_components=n_components).fit(data.X).bic(data.X) for n_components in range(1, 30)])
+    best_n_components = np.argmin(gmms) + 1
+    gmm = GaussianMixture(n_components=best_n_components)
+    gmm.fit(data.X)
+    log_dens = gmm.score_samples(data.X)
+    F_predicted = -log_dens
+    time_GMM = time.perf_counter() - sec
+    _, F_predicted = _align_arrays(F_predicted, np.ones_like(F_anal_k), F_anal_k)
+    MAE_GMM = np.mean(np.abs(F_predicted - F_anal_k))
+    MSE_GMM = np.mean((F_predicted - F_anal_k) ** 2)
+
     
     # define a dictionary with all the results and return it
     results = {}
@@ -116,8 +131,10 @@ def  run_all_methods(Xk, F_anal_k, d=None, kstar=None, simple_align=False):
     results['ksel_Abr'] = ksel_Abr
     results['ksel_Zhao'] = ksel_Zhao
     results['h_Sil'] = h_Sil
-
-
+    results['MAE_GMM'] = MAE_GMM
+    results['MSE_GMM'] = MSE_GMM
+    results['time_GMM'] = time_GMM
+    
     return results
 
 
