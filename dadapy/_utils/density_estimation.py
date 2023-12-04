@@ -37,13 +37,17 @@ def return_not_normalised_density_kstarNN(
     )
     log_den_min = 9.9e300
 
+    # log_den = np.log(kstar-1, dtype=float)              # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    # log_den_err = 1.0 / np.sqrt(kstar-1, dtype=float)   # This is the right factor for unbiased kNN estimator
+
     if not interpolation:
-        log_den = np.log(kstar, dtype=float)
-        log_den_err = 1.0 / np.sqrt(kstar, dtype=float)
+       log_den = np.log(kstar, dtype=float)
+       log_den_err = 1.0 / np.sqrt(kstar, dtype=float)
 
     else:
-        log_den = np.log(kstar - 1, dtype=float)
-        log_den_err = 1.0 / np.sqrt(kstar - 1, dtype=float)
+       log_den = np.log(kstar - 1, dtype=float)
+       log_den_err = 1.0 / np.sqrt(kstar - 1, dtype=float)
+
     if bias:
         warnings.warn(
             "bias contribution to the density error is an experimental feature and might change in the future"
@@ -74,14 +78,19 @@ def return_not_normalised_density_PAk(
     )
     log_den_min = 9.9e300
 
+    # logkstars = 1.0 / np.log(kstar - 1, dtype=float)    # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    # log_den_err = np.sqrt(                              # This is the right factor for unbiased kNN estimator
+    #     (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
+    # )
+
     if not interpolation:
-        logkstars = np.log(kstar, dtype=float)
-        log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
+       logkstars = np.log(kstar, dtype=float) 
+       log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
     else:
-        logkstars = 1.0 / np.log(kstar - 1, dtype=float)
-        log_den_err = np.sqrt(
-            (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
-        )
+       logkstars = 1.0 / np.log(kstar - 1, dtype=float)
+       log_den_err = np.sqrt(
+           (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
+       )
 
     if bias:
         warnings.warn(

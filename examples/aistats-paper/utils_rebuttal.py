@@ -29,7 +29,7 @@ def  run_all_methods(   Xk, F_anal_k,
 
     #kNN_Abr
     sec = time.perf_counter()
-    ksel_Abr = Nsample**(4./(4.+d))
+    ksel_Abr = int(Nsample**(4./(4.+d)))
     data.compute_density_kNN(ksel_Abr)
     time_kNN_Abr = time.perf_counter() - sec
     F_k = -data.log_den
@@ -45,7 +45,7 @@ def  run_all_methods(   Xk, F_anal_k,
     
     #kNN_Zhao
     sec = time.perf_counter()
-    ksel_Zhao = Nsample**(2./(2.+d))
+    ksel_Zhao = int(Nsample**(2./(2.+d)))
     data.compute_density_kNN(ksel_Zhao)
     time_kNN_Zhao = time.perf_counter() - sec
     F_k = -data.log_den
@@ -63,13 +63,13 @@ def  run_all_methods(   Xk, F_anal_k,
     sec = time.perf_counter()
     data.compute_density_kstarNN()
     time_kstarNN = time.perf_counter() - sec
+    F_k =-data.log_den
     if noalign is True:
         KLD_kstarNN = np.mean(F_k-F_anal_k)
-    
     if simple_align is True:
-        off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
     else:    
-        off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+        off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
     MAE_kstarNN = np.mean(np.abs(F_k-F_anal_k))
     MSE_kstarNN = np.mean((F_k-F_anal_k)**2)
 

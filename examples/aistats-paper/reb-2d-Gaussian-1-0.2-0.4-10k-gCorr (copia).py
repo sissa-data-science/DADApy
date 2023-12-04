@@ -5,15 +5,14 @@ plt.rcParams.update({                  #use lateX fonts
   "font.family": "Helvetica"
 })
 
+nthreads = 1
 
-# nthreads = 1
-
-# from os import environ
-# environ["OMP_NUM_THREADS"] = str(nthreads) # export OMP_NUM_THREADS=1
-# environ["OPENBLAS_NUM_THREADS"] = str(nthreads) # export OPENBLAS_NUM_THREADS=1
-# environ["MKL_NUM_THREADS"] = str(nthreads) # export MKL_NUM_THREADS=1
-# environ["VECLIB_MAXIMUM_THREADS"] = str(nthreads) # export VECLIB_MAXIMUM_THREADS=1
-# environ["NUMEXPR_NUM_THREADS"] = str(nthreads) # export NUMEXPR_NUM_THREADS=1
+from os import environ
+environ["OMP_NUM_THREADS"] = str(nthreads) # export OMP_NUM_THREADS=1
+environ["OPENBLAS_NUM_THREADS"] = str(nthreads) # export OPENBLAS_NUM_THREADS=1
+environ["MKL_NUM_THREADS"] = str(nthreads) # export MKL_NUM_THREADS=1
+environ["VECLIB_MAXIMUM_THREADS"] = str(nthreads) # export VECLIB_MAXIMUM_THREADS=1
+environ["NUMEXPR_NUM_THREADS"] = str(nthreads) # export NUMEXPR_NUM_THREADS=1
 
 import numpy as np
 
@@ -160,13 +159,14 @@ for i in reversed(range(0, nexp)):
         time_GMM[r,i] = results['time_GMM']
 
         if r==0:
-            results_avg = results.copy()
-            results_avg2 = results.copy()
+            results_avg = results
+            results_avg2 = results
             for val in results.keys():
                 results_avg2[val] = results[val]**2
         else:
             for val in results.keys():
                 results_avg[val] += results[val]
+            for val in results.keys():
                 results_avg2[val] += results[val]**2
 
         print_results(results,print_KLD=True)    
@@ -216,23 +216,5 @@ for i in reversed(range(0, nexp)):
             time_GMM=time_GMM,
         )
 
-    mean_results = results_avg.copy()
-    std_results = results.copy()       #just to get the shape
-    for val in results.keys():
-        mean_results[val] /= nreps
-        std_results[val] = (results_avg2[val]/nreps - mean_results[val]**2)/np.sqrt(nreps)
-
-    print()
-    print()
-    print("AVERAGES over {} repetitions".format(nreps))
-    print()
-    print_results(mean_results,print_KLD=True)    
-    print()
-    print()
-    print("STDEVS over {} repetitions".format(nreps))
-    print()
-    print_results(std_results,print_KLD=True)    
-
-
-
+    #print_results_averages
 
