@@ -5,6 +5,8 @@ import normflows as nf
 import copy 
 from dadapy._utils.utils import _align_arrays
 import time 
+from utils_rebuttal import gauss_centered_0, cov_1_02_04, mean_0_2d
+
 
 def set_up_model(X):
     # Move model on GPU if available
@@ -87,8 +89,8 @@ def run_nf(X, EPOCHS):
     model, device = set_up_model(X)
 
     # split X into train and test
-    X_train = X[:int(X.shape[0] * 0.5), :]
-    X_val = X[-int(X.shape[0] * 0.5):, :]
+    X_train = X[:int(X.shape[0] * 0.7), :]
+    X_val = X[-int(X.shape[0] * 0.3):, :]
 
     X_train = torch.tensor(X_train).to(device)
     X_val = torch.tensor(X_val).to(device)
@@ -130,6 +132,7 @@ def run_nf(X, EPOCHS):
     return best_log_prob, last_log_prob
 
 
+
 if __name__=="__main__":
     from matplotlib import pyplot as plt
     from utils_rebuttal import den_6d
@@ -141,6 +144,11 @@ if __name__=="__main__":
     log_den = np.array([np.log(den_6d(x)) for x in X_full])
     F_full = -log_den
     
+    # X_full = np.random.multivariate_normal(mean_0_2d, cov_1_02_04, 50000)
+    # X_full = X_full.astype(np.float32)
+    # d = 2
+    # F_full = - np.log([gauss_centered_0(x,cov_1_02_04,d) for x in X_full])
+
     ### TOY TEST ###
 
     # indices = np.arange(data.shape[0])
@@ -164,7 +172,7 @@ if __name__=="__main__":
 
 
     #### PROD RUN ####
-    EPOCHS = 1000
+    EPOCHS = 100
     nreps = 3 # number of repetitions
     print("Number of repetitions: ",nreps)
     nexp = 8 # number of dataset sizes
@@ -183,7 +191,8 @@ if __name__=="__main__":
     MSE_NF = np.zeros((nreps, nexp))
     MAE_NF_noreg = np.zeros((nreps, nexp))
     MSE_NF_noreg = np.zeros((nreps, nexp))
-    
+    KLD_NF = np.zeros((nreps, nexp))
+    KLD_NF_noreg = np.zeros((nreps, nexp))
     time_NF = np.zeros((nreps, nexp))
 
     # loop over dataset sizes
@@ -206,16 +215,18 @@ if __name__=="__main__":
             log_den, log_den_noreg = run_nf(X_k, EPOCHS)
             F_k = -log_den
             F_k_noreg = -log_den_noreg
-            _, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
-            _, F_k_noreg = _align_arrays(F_k_noreg,np.ones_like(F_anal_k),F_anal_k)
+            #_, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+            #_, F_k_noreg = _align_arrays(F_k_noreg,np.ones_like(F_anal_k),F_anal_k)
             time_NF[r,i] = time.perf_counter() - sec
             MAE_NF[r,i] = np.mean(np.abs(F_k-F_anal_k))
             MSE_NF[r,i] = np.mean((F_k-F_anal_k)**2)
             MAE_NF_noreg[r,i] = np.mean(np.abs(F_k_noreg-F_anal_k))
             MSE_NF_noreg[r,i] = np.mean((F_k_noreg-F_anal_k)**2)
-
+            KLD_NF[r,i] = np.mean((F_k-F_anal_k))
+            KLD_NF_noreg[r,i] = np.mean((F_k_noreg-F_anal_k))
+            print("KLD is: ", KLD_NF[r,i])
             print("MAE is: ", MAE_NF[r,i])
             print("MSE is: ", MSE_NF[r,i])
 
             # save arrays to npz file
-            np.savez("results/reb-norm_flows.npz", Nsample=Nsample, MAE_NF=MAE_NF, MSE_NF=MSE_NF, MAE_NF_noreg=MAE_NF_noreg, MSE_NF_noreg=MSE_NF_noreg, time_NF=time_NF)
+            np.savez("results/reb-norm_flows_kld_2d.npz", Nsample=Nsample, MAE_NF=MAE_NF, MSE_NF=MSE_NF, MAE_NF_noreg=MAE_NF_noreg, MSE_NF_noreg=MSE_NF_noreg, time_NF=time_NF)

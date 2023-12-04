@@ -63,14 +63,13 @@ def  run_all_methods(   Xk, F_anal_k,
     sec = time.perf_counter()
     data.compute_density_kstarNN()
     time_kstarNN = time.perf_counter() - sec
-    F_k = -data.log_den
     if noalign is True:
         KLD_kstarNN = np.mean(F_k-F_anal_k)
-    else:
-        if simple_align is True:
-            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
-        else:    
-            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+    
+    if simple_align is True:
+        off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+    else:    
+        off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
     MAE_kstarNN = np.mean(np.abs(F_k-F_anal_k))
     MSE_kstarNN = np.mean((F_k-F_anal_k)**2)
 
@@ -292,7 +291,7 @@ def den_6d(v):
     
     r = value*pow( 2.*np.exp(-(-1.5 + v[0])*(-1.5 + v[0]) - (-2.5 + v[1])*(-2.5 + v[1])) + 3*np.exp(-2*v[0]*v[0] - 0.25*v[1]*v[1]) , 3 )
     #r = value*pow( 2.*np.exp(-(-1.5 + v[1])*(-1.5 + v[1]) - (-2.5 + v[0])*(-2.5 + v[0])) + 3*np.exp(-2*v[1]*v[1] - 0.25*v[0]*v[0]) , 3 )
-    return r
+    return r/13.5735572705
 
 def free_6d(v):
     return - np.log(den_6d(v))

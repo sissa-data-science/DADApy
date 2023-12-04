@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-# import npz results
-results = np.load("results/reb-6d-80k-gCorr-kstar-simple_align.npz")
-results_nf = np.load("results/reb-norm_flows.npz")
+# import npz results# reb-6d-80k-gCorr-kstar-simple_align.npz
+results = np.load("results/data.npz")
+results_nf = np.load("results/reb-norm_flows_1.npz")
 
 def plot_times(results):
     plt.figure()
@@ -38,8 +38,8 @@ def plot_times(results):
     s = np.std(results['time_GMM'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="GMM")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
-    m = np.mean(results['time_kde'],axis=0)
-    s = np.std(results['time_kde'],axis=0)/np.sqrt(r)
+    m = np.mean(results['time_GKDE_Scott'],axis=0)
+    s = np.std(results['time_GKDE_Scott'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="kde")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
     xs_nf = results_nf['Nsample']
@@ -91,8 +91,8 @@ def plot_MAEs(results):
     s = np.std(results['MAE_GMM'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="GMM")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
-    m = np.mean(results['MAE_kde'],axis=0)
-    s = np.std(results['MAE_kde'],axis=0)/np.sqrt(r)
+    m = np.mean(results['MAE_GKDE_Scott'],axis=0)
+    s = np.std(results['MAE_GKDE_Scott'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="kde")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
     xs_nf = results_nf['Nsample']
@@ -177,9 +177,54 @@ def plot_nf_MAE(results_nf):
     plt.show()
 
 
-plot_nf_MAE(results_nf)
+def plot_KL(results):
+    plt.figure()
+    xs = results['Nsample']
+    r = results['MAE_kNN_Abr'].shape[0]
+
+    m = np.mean(results['KLD_kNN_Abr'],axis=0)
+    s = np.std(results['KLD_kNN_Abr'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kNN-Abr")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['KLD_kNN_Zhao'],axis=0)
+    s = np.std(results['KLD_kNN_Zhao'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kNN-Zhao")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['KLD_kstarNN'],axis=0)
+    s = np.std(results['KLD_kstarNN'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="kstarNN")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['KLD_GKDE_Sil'],axis=0)
+    s = np.std(results['KLD_GKDE_Sil'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="GKDE-Sil")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['KLD_PAk'],axis=0)
+    s = np.std(results['KLD_PAk'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="PAk")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['KLD_BMTI'],axis=0)
+    s = np.std(results['KLD_BMTI'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="BMTI")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['KLD_GMM'],axis=0)
+    s = np.std(results['KLD_GMM'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="GMM")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+    m = np.mean(results['KLD_GKDE_Scott'],axis=0)
+    s = np.std(results['KLD_GKDE_Scott'],axis=0)/np.sqrt(r)
+    plt.xscale("log")
+    plt.legend()
+    plt.xlabel("Nsample")
+    plt.ylabel("KL")
+    
+    plt.show()
+
+
+#plot_nf_MAE(results_nf)
 
 plot_times(results)
+
+plot_KL(results)
 
 plot_MAEs(results)
 
