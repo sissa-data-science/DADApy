@@ -5,6 +5,7 @@ import time
 from awkde import GaussianKDE
 from sklearn.mixture import GaussianMixture
 from sklearn.neighbors import KernelDensity
+from scipy import stats
 
 def  run_all_methods(   Xk,
                         F_anal_k,
@@ -47,7 +48,7 @@ def  run_all_methods(   Xk,
             off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
     MAE_kNN_Abr = np.mean(np.abs(F_k-F_anal_k))
     MSE_kNN_Abr = np.mean((F_k-F_anal_k)**2)
-    
+
     #kNN_Zhao
     sec = time.perf_counter()
     ksel_Zhao = int(Nsample**(2./(2.+data.dims)))
@@ -71,10 +72,11 @@ def  run_all_methods(   Xk,
     F_k =-data.log_den
     if noalign is True:
         KLD_kstarNN = np.mean(F_k-F_anal_k)
-    if simple_align is True:
-        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
-    else:    
-        off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+    else:
+        if simple_align is True:
+            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+        else:    
+            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
     MAE_kstarNN = np.mean(np.abs(F_k-F_anal_k))
     MSE_kstarNN = np.mean((F_k-F_anal_k)**2)
 
@@ -114,10 +116,7 @@ def  run_all_methods(   Xk,
     if noalign is True:
         KLD_GKDE_Scott = np.mean(F_k-F_anal_k)
     else:
-        if simple_align is True:
-            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
-        else:    
-            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
     MAE_GKDE_Scott = np.mean(np.abs(F_k - F_anal_k))
     MSE_GKDE_Scott = np.mean((F_k - F_anal_k) ** 2)
 
@@ -172,10 +171,7 @@ def  run_all_methods(   Xk,
     if noalign is True:
         KLD_GMM = np.mean(F_k-F_anal_k)
     else:
-        if simple_align is True:
-            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
-        else:    
-            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
     MAE_GMM = np.mean(np.abs(F_k - F_anal_k))
     MSE_GMM = np.mean((F_k - F_anal_k) ** 2)
 
@@ -289,7 +285,187 @@ def print_results(results,print_KLD=False):
 
 
 
+def  compute_roughness( Xk,
+                        F_anal_k,
+                        period=None,
+                        d=None,
+                        kstar=None,
+                        noalign=False,
+                        simple_align=True,
+                        maxk=None
+):
+    # init dataset
+    data = Data(Xk,verbose=False)
+    if maxk is None:
+        maxk = Xk.shape[0]-1
+    if period is None:
+        data.compute_distances(maxk = maxk)
+    else:
+        data.compute_distances(maxk = maxk, period=period)
+    
+    assert d is not None, "Dimension not specified"
+    data.set_id(d)
+    #else:
+        #data.compute_id_2NN()
+    #print()
+    #print("Nsample: ", data.N)
+    Nsample = data.N
 
+    rijk1 = data.distances[:,1]     #1st NN distances
+    nns1 = data.dist_indices[:,1]   #1st NN indices
+    Fnn_anal_k = F_anal_k[nns1]
+    dFnn_anal_k = Fnn_anal_k - F_anal_k
+
+    #kNN_Abr
+    ksel_Abr = int(Nsample**(4./(4.+data.dims)))
+    data.compute_density_kNN(ksel_Abr)
+    F_k = -data.log_den
+    if noalign is False:
+        if simple_align is True:
+            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+        else:    
+            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+    F_kNN_Abr = F_k
+    
+    #kNN_Zhao
+    ksel_Zhao = int(Nsample**(2./(2.+data.dims)))
+    data.compute_density_kNN(ksel_Zhao)
+    F_k = -data.log_den
+    if noalign is False:
+        if simple_align is True:
+            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+        else:    
+            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+    F_kNN_Zhao = F_k
+    
+    #kstarNN
+    data.compute_density_kstarNN()
+    F_k =-data.log_den
+    if noalign is False:
+        if simple_align is True:
+            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+        else:    
+            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+    F_kstarNN = F_k
+
+    #GKDE Silverman
+    kdesil = GaussianKDE(glob_bw="silverman", alpha=0.0, diag_cov=True)
+    kdesil.fit(data.X)
+    h_Sil=kdesil.glob_bw
+    F_k = - np.log(kdesil.predict(data.X))
+    if noalign is False:
+        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+    F_GKDE_Sil = F_k
+    
+    #awkde
+    awkde = GaussianKDE(glob_bw="silverman", alpha=0.5, diag_cov=True)
+    awkde.fit(data.X)
+    F_k = - np.log(awkde.predict(data.X))
+    if noalign is False:
+        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+    F_awkde = F_k
+
+    # GKDE Scott with scikitlearn
+    h_Scott = data.N ** (-1. / (data.dims + 4.))
+    kde_scott = KernelDensity(kernel='gaussian', bandwidth=h_Scott).fit(data.X)
+    F_k = - kde_scott.score_samples(data.X)
+    if noalign is False:
+        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+    F_GKDE_Scott = F_k
+
+    #PAk
+    data.compute_density_PAk()
+    F_k = -data.log_den
+    if noalign is False:
+        if simple_align is True:
+            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+        else:    
+            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+    F_PAk = F_k
+
+    #BMTI
+    if kstar is not None:
+        data.set_kstar(kstar)
+        data.compute_density_kNN(kstar)
+    data.compute_deltaFs_grads_semisum()
+    if noalign is True:
+        data.compute_density_kstarNN_gCorr(mem_efficient=False,alpha=0.95)
+        F_k = -data.log_den
+    else:
+        data.compute_density_gCorr(mem_efficient=False)
+        if simple_align is True:
+            off_k, F_k = _align_arrays(-data.log_den,np.ones_like(F_anal_k),F_anal_k)
+        else:    
+            off_k, F_k = _align_arrays(-data.log_den,data.log_den_err,F_anal_k)
+    F_BMTI = F_k
+
+
+    # GMM
+    maxn_components = min(int(Nsample/2)+1, 10)
+    gmms = np.array([GaussianMixture(n_components=n_components).fit(data.X).bic(data.X) for n_components in range(1, maxn_components)])
+    best_n_components = np.argmin(gmms) + 1
+    gmm = GaussianMixture(n_components=best_n_components)
+    gmm.fit(data.X)
+    F_k = -gmm.score_samples(data.X)
+    if noalign is False:
+        if simple_align is True:
+            off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+        else:    
+            off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
+    F_GMM = F_k
+    
+    smtk1_kNN_Abr = stats.gaussian_kde(np.sort((F_kNN_Abr[nns1]-F_kNN_Abr-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_kNN_Zhao = stats.gaussian_kde(np.sort((F_kNN_Zhao[nns1]-F_kNN_Zhao-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_kstarNN = stats.gaussian_kde(np.sort((F_kstarNN[nns1]-F_kstarNN-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_GKDE_Sil = stats.gaussian_kde(np.sort((F_GKDE_Sil[nns1]-F_GKDE_Sil-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_awkde = stats.gaussian_kde(np.sort((F_awkde[nns1]-F_awkde-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_GKDE_Scott = stats.gaussian_kde(np.sort((F_GKDE_Scott[nns1]-F_GKDE_Scott-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_PAk = stats.gaussian_kde(np.sort((F_PAk[nns1]-F_PAk-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_BMTI = stats.gaussian_kde(np.sort((F_BMTI[nns1]-F_BMTI-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+    smtk1_GMM = stats.gaussian_kde(np.sort((F_GMM[nns1]-F_GMM-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
+
+    MAsmtk1_kNN_Abr = np.mean(np.abs((F_kNN_Abr[nns1]-F_kNN_Abr-dFnn_anal_k)/rijk1))
+    MAsmtk1_kNN_Zhao = np.mean(np.abs((F_kNN_Zhao[nns1]-F_kNN_Zhao-dFnn_anal_k)/rijk1))
+    MAsmtk1_kstarNN = np.mean(np.abs((F_kstarNN[nns1]-F_kstarNN-dFnn_anal_k)/rijk1))
+    MAsmtk1_GKDE_Sil = np.mean(np.abs((F_GKDE_Sil[nns1]-F_GKDE_Sil-dFnn_anal_k)/rijk1))
+    MAsmtk1_awkde = np.mean(np.abs((F_awkde[nns1]-F_awkde-dFnn_anal_k)/rijk1))
+    MAsmtk1_GKDE_Scott = np.mean((np.abs(F_GKDE_Scott[nns1]-F_GKDE_Scott-dFnn_anal_k)/rijk1))
+    MAsmtk1_PAk = np.mean(np.abs((F_PAk[nns1]-F_PAk-dFnn_anal_k)/rijk1))
+    MAsmtk1_BMTI = np.mean(np.abs((F_BMTI[nns1]-F_BMTI-dFnn_anal_k)/rijk1))
+    MAsmtk1_GMM = np.mean(np.abs((F_GMM[nns1]-F_GMM-dFnn_anal_k)/rijk1))
+
+    # define a dictionary with all the results and return it
+    results = {}
+    results['Nsample'] = Nsample
+    
+    results['smtk1_kNN_Abr'] = smtk1_kNN_Abr
+    results['MAsmtk1_kNN_Abr'] = MAsmtk1_kNN_Abr
+    
+    results['smtk1_kNN_Zhao'] = smtk1_kNN_Zhao
+    results['MAsmtk1_kNN_Zhao'] = MAsmtk1_kNN_Zhao
+    
+    results['smtk1_kstarNN'] = smtk1_kstarNN
+    results['MAsmtk1_kstarNN'] = MAsmtk1_kstarNN
+    
+    results['smtk1_GKDE_Sil'] = smtk1_GKDE_Sil
+    results['MAsmtk1_GKDE_Sil'] = MAsmtk1_GKDE_Sil
+
+    results['smtk1_awkde'] = smtk1_awkde
+    results['MAsmtk1_awkde'] = MAsmtk1_awkde
+    
+    results['smtk1_GKDE_Scott'] = smtk1_GKDE_Scott
+    results['MAsmtk1_GKDE_Scott'] = MAsmtk1_GKDE_Scott
+    
+    results['smtk1_PAk'] = smtk1_PAk
+    results['MAsmtk1_PAk'] = MAsmtk1_PAk
+    
+    results['smtk1_BMTI'] = smtk1_BMTI
+    results['MAsmtk1_BMTI'] = MAsmtk1_BMTI
+
+    results['smtk1_GMM'] = smtk1_GMM
+    results['MAsmtk1_GMM'] = MAsmtk1_GMM
+
+    return results
 
 
 
