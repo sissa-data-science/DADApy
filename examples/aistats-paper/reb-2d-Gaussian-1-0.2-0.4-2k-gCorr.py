@@ -24,7 +24,8 @@ savestring="2d-Gaussian-1-0.2-0.4-2k-simple_align"
 noalign=False
 
 # import dataset
-X_full = np.genfromtxt('datasets/2d-Gaussian-1-0.2-0.4-10k-X.dat')[::5]
+#X_full = np.genfromtxt('datasets/2d-Gaussian-1-0.2-0.4-10k-X.dat')[::5]
+X_full = np.genfromtxt('datasets/2d-Gaussian-1-0.2-0.4-10k-X.dat')
 np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-X.dat", X_full,fmt='%8f')
 
 # generate dataset
@@ -38,7 +39,7 @@ np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-X.dat", X_full,fmt='%8f')
 
 print("Dataset size: ",X_full.shape[0])
 
-nreps = 1 # number of repetitions
+nreps = 5 # number of repetitions
 print("Number of repetitions: ",nreps)
 nexp = 1 # number of dataset sizes
 
