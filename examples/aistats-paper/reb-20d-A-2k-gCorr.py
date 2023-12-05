@@ -20,7 +20,7 @@ import numpy as np
 from dadapy import *
 from utils_rebuttal import run_all_methods, print_results, gauss_centered_0, cov_1_02_04, mean_0_2d
 
-savestring="20d-A-2k-simple_align-5rep"
+savestring="20d-A-2k-simple_align-5reps"
 noalign=False
 
 # import dataset
