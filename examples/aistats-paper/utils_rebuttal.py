@@ -6,7 +6,9 @@ from awkde import GaussianKDE
 from sklearn.mixture import GaussianMixture
 from sklearn.neighbors import KernelDensity
 
-def  run_all_methods(   Xk, F_anal_k,
+def  run_all_methods(   Xk,
+                        F_anal_k,
+                        period=None,
                         d=None,
                         kstar=None,
                         noalign=False,
