@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # import npz results# reb-6d-80k-gCorr-kstar-simple_align.npz
-results = np.load("results/2d-Gaussian-1-0.2-0.4-10k-gCorr-kstar-simple_align.npz")
+results = np.load("results_backup/2d-Gaussian-1-0.2-0.4-10k-gCorr-kstar-simple_align.npz")
 #results_nf = np.load("results/reb-norm_flows_1.npz")
 
 #titlestring="6d-80k-gCorr"
@@ -165,6 +165,11 @@ def plot_MSEs(results,noNFs=False):
     m = np.mean(results['MSE_BMTI'],axis=0)
     s = np.std(results['MSE_BMTI'],axis=0)/np.sqrt(r)
     plt.plot(xs, m, label="BMTI")
+    plt.fill_between(xs, m-s, m+s, alpha=0.5)
+
+    m = np.mean(results['MSE_GMM'],axis=0)
+    s = np.std(results['MSE_GMM'],axis=0)/np.sqrt(r)
+    plt.plot(xs, m, label="GMM")
     plt.fill_between(xs, m-s, m+s, alpha=0.5)
     
     

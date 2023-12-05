@@ -87,6 +87,19 @@ def  run_all_methods(   Xk, F_anal_k,
     MAE_GKDE_Sil = np.mean(np.abs(F_k-F_anal_k))
     MSE_GKDE_Sil = np.mean((F_k-F_anal_k)**2)
 
+    #awkde
+    sec = time.perf_counter()
+    awkde = GaussianKDE(glob_bw="silverman", alpha=0.5, diag_cov=True)
+    awkde.fit(data.X)
+    F_k = - np.log(awkde.predict(data.X))
+    time_awkde = time.perf_counter() - sec
+    if noalign is True:
+        KLD_awkde = np.mean(F_k-F_anal_k)
+    else:
+        off_k, F_k = _align_arrays(F_k,np.ones_like(F_anal_k),F_anal_k)
+    MAE_awkde = np.mean(np.abs(F_k-F_anal_k))
+    MSE_awkde = np.mean((F_k-F_anal_k)**2)
+
     # GKDE Scott with scikitlearn
     sec = time.perf_counter()
     h_Scott = data.N ** (-1. / (data.dims + 4.))
@@ -181,6 +194,10 @@ def  run_all_methods(   Xk, F_anal_k,
     results['time_GKDE_Sil'] = time_GKDE_Sil
     results['MAE_GKDE_Sil'] = MAE_GKDE_Sil
     results['MSE_GKDE_Sil'] = MSE_GKDE_Sil
+
+    results['time_awkde'] = time_awkde
+    results['MAE_awkde'] = MAE_awkde
+    results['MSE_awkde'] = MSE_awkde
     
     results['time_GKDE_Scott'] = time_GKDE_Scott
     results['MAE_GKDE_Scott'] = MAE_GKDE_Scott
@@ -210,6 +227,7 @@ def  run_all_methods(   Xk, F_anal_k,
         results['KLD_kNN_Zhao'] = KLD_kNN_Zhao
         results['KLD_kstarNN'] = KLD_kstarNN
         results['KLD_GKDE_Sil'] = KLD_GKDE_Sil
+        results['KLD_awkde'] = KLD_awkde
         results['KLD_GKDE_Scott'] = KLD_GKDE_Scott
         results['KLD_PAk'] = KLD_PAk
         results['KLD_BMTI'] = KLD_BMTI
@@ -223,6 +241,7 @@ def print_results(results,print_KLD=False):
     print("MAE_kNN_Zhao: ", results['MAE_kNN_Zhao'])
     print("MAE_kstarNN: ", results['MAE_kstarNN'])
     print("MAE_GKDE_Sil: ", results['MAE_GKDE_Sil'])
+    print("MAE_awkde: ", results['MAE_awkde'])
     print("MAE_GKDE_Scott: ", results['MAE_GKDE_Scott'])
     print("MAE_PAk: ", results['MAE_PAk'])
     print("MAE_BMTI: ", results['MAE_BMTI'])
@@ -233,6 +252,7 @@ def print_results(results,print_KLD=False):
     print("MSE_kNN_Zhao: ", results['MSE_kNN_Zhao'])
     print("MSE_kstarNN: ", results['MSE_kstarNN'])
     print("MSE_GKDE_Sil: ", results['MSE_GKDE_Sil'])
+    print("MSE_awkde: ", results['MSE_awkde'])
     print("MSE_GKDE_Scott: ", results['MSE_GKDE_Scott'])
     print("MSE_PAk: ", results['MSE_PAk'])
     print("MSE_BMTI: ", results['MSE_BMTI'])
@@ -244,6 +264,7 @@ def print_results(results,print_KLD=False):
         print("KLD_kNN_Zhao: ", results['KLD_kNN_Zhao'])
         print("KLD_kstarNN: ", results['KLD_kstarNN'])
         print("KLD_GKDE_Sil: ", results['KLD_GKDE_Sil'])
+        print("KLD_awkde: ", results['KLD_awkde'])
         print("KLD_GKDE_Scott: ", results['KLD_GKDE_Scott'])
         print("KLD_PAk: ", results['KLD_PAk'])
         print("KLD_BMTI: ", results['KLD_BMTI'])
@@ -254,11 +275,17 @@ def print_results(results,print_KLD=False):
     print("time_kNN_Zhao: ", results['time_kNN_Zhao'])
     print("time_kstarNN: ", results['time_kstarNN'])
     print("time_GKDE_Sil: ", results['time_GKDE_Sil'])
+    print("time_awkde: ", results['time_awkde'])
     print("time_GKDE_Scott: ", results['time_GKDE_Scott'])
     print("time_PAk: ", results['time_PAk'])
     print("time_BMTI: ", results['time_BMTI'])
     print("time_compute_deltaFs: ", results['time_compute_deltaFs'])
     print("time_GMM: ", results['time_GMM'])
+
+
+
+
+
 
 
 
