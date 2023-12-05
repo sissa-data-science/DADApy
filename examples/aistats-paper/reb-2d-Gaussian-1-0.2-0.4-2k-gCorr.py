@@ -20,12 +20,12 @@ import numpy as np
 from dadapy import *
 from utils_rebuttal import run_all_methods, print_results, gauss_centered_0, cov_1_02_04, mean_0_2d
 
-savestring="2d-Gaussian-1-0.2-0.4-2k-simple_align"
+savestring="2d-Gaussian-1-0.2-0.4-2k-simple_align-1rep"
 noalign=False
 
 # import dataset
-#X_full = np.genfromtxt('datasets/2d-Gaussian-1-0.2-0.4-10k-X.dat')[::5]
-X_full = np.genfromtxt('datasets/2d-Gaussian-1-0.2-0.4-10k-X.dat')
+X_full = np.genfromtxt('datasets/2d-Gaussian-1-0.2-0.4-10k-X.dat')[::5]
+#X_full = np.genfromtxt('datasets/2d-Gaussian-1-0.2-0.4-10k-X.dat')
 np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-X.dat", X_full,fmt='%8f')
 
 # generate dataset
@@ -34,12 +34,12 @@ np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-X.dat", X_full,fmt='%8f')
 d = 2
 
 F_full = - np.log([gauss_centered_0(x,cov_1_02_04,d) for x in X_full])
-np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-X.dat", X_full,fmt='%8f')
+np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-F.dat", X_full,fmt='%8f')
 
 
 print("Dataset size: ",X_full.shape[0])
 
-nreps = 5 # number of repetitions
+nreps = 1 # number of repetitions
 print("Number of repetitions: ",nreps)
 nexp = 1 # number of dataset sizes
 
