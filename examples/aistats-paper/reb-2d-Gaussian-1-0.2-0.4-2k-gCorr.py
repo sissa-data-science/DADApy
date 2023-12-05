@@ -34,7 +34,7 @@ np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-X.dat", X_full,fmt='%8f')
 d = 2
 
 F_full = - np.log([gauss_centered_0(x,cov_1_02_04,d) for x in X_full])
-np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-F.dat", X_full,fmt='%8f')
+np.savetxt("datasets/2d-Gaussian-1-0.2-0.4-2k-F.dat", F_full,fmt='%8f')
 
 
 print("Dataset size: ",X_full.shape[0])
