@@ -29,7 +29,7 @@ def  run_all_methods(   Xk, F_anal_k,
 
     #kNN_Abr
     sec = time.perf_counter()
-    ksel_Abr = int(Nsample**(4./(4.+d)))
+    ksel_Abr = int(Nsample**(4./(4.+data.dims)))
     data.compute_density_kNN(ksel_Abr)
     time_kNN_Abr = time.perf_counter() - sec
     F_k = -data.log_den
@@ -45,7 +45,7 @@ def  run_all_methods(   Xk, F_anal_k,
     
     #kNN_Zhao
     sec = time.perf_counter()
-    ksel_Zhao = int(Nsample**(2./(2.+d)))
+    ksel_Zhao = int(Nsample**(2./(2.+data.dims)))
     data.compute_density_kNN(ksel_Zhao)
     time_kNN_Zhao = time.perf_counter() - sec
     F_k = -data.log_den
