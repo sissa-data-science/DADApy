@@ -20,7 +20,7 @@ import numpy as np
 from dadapy import *
 from utils_rebuttal import run_all_methods, print_results, den_6d, free_6d
 
-savestring="20d-C-10k-simple_align-3reps"
+savestring="20d-C-30k-simple_align-1rep"
 noalign=False
 
 # import dataset
@@ -38,12 +38,12 @@ F_full = np.genfromtxt('datasets/20D_and_gt_dataset_panel_C_Fig3.txt')[:, 20]
 
 print("Dataset size: ",X_full.shape[0])
 
-nreps = 3 # number of repetitions
+nreps = 1 # number of repetitions
 print("Number of repetitions: ",nreps)
 nexp = 1 # number of dataset sizes
 
 # create nreps random subsets of the 
-nsample = 10000
+nsample = 30000
 #nsample = 1000
 print("Max batch size: ",nsample)
 N = nreps*nsample #X_full.shape[0]
