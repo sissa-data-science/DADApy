@@ -20,13 +20,15 @@ import numpy as np
 from dadapy import *
 from utils_rebuttal import run_all_methods, print_results, den_6d, free_6d
 
-savestring="20d-C-30k-simple_align-1rep"
+savestring="9d-20k-simple_align-1rep"
 noalign=False
 
 # import dataset
 #X_full = np.genfromtxt('datasets/6d_double_well-1.2M-last_400k.txt')[::8] #keep 50k
 X_full = np.genfromtxt('datasets/9d-CLN025-X_resampled-20k')
 X_full+=np.pi
+#print(np.min(X_full+np.pi),np.max(X_full))
+print(np.min(X_full),np.max(X_full+np.pi))
 
 #print(X_full.shape) 
 

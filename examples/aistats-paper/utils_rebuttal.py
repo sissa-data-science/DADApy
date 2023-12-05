@@ -19,7 +19,10 @@ def  run_all_methods(   Xk,
     data = Data(Xk,verbose=False)
     if maxk is None:
         maxk = Xk.shape[0]-1
-    data.compute_distances(maxk = maxk)
+    if period is None:
+        data.compute_distances(maxk = maxk)
+    else:
+        data.compute_distances(maxk = maxk, period=period)
     
     assert d is not None, "Dimension not specified"
     data.set_id(d)
