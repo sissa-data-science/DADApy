@@ -35,7 +35,7 @@ def free_6d(v):
     return -np.log(den_6d(v))
 
 
-savestring="roughness-2d-MBx0.0325-5k-simple_align"
+savestring="6d-40k-simple_align-3rep-gCorr-CELLINA"
 noalign=False
 
 #X80k = np.genfromtxt('datasets/6d_double_well-100k.txt')[40000:, 1:]

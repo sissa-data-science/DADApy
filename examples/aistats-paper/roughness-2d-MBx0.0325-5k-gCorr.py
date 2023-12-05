@@ -52,25 +52,25 @@ rep_indices = np.array_split(rep_indices, nreps)
 Nsample = np.zeros(nexp, dtype=np.int32)
 
 # init error arrays
-MAsmtk1_kNN_Abr = np.zeros((nreps, nexp))
-MAsmtk1_kNN_Zhao = np.zeros((nreps, nexp))
-MAsmtk1_kstarNN = np.zeros((nreps, nexp))
-MAsmtk1_GKDE_Sil = np.zeros((nreps, nexp))
-MAsmtk1_awkde = np.zeros((nreps, nexp))
-MAsmtk1_GKDE_Scott = np.zeros((nreps, nexp))
-MAsmtk1_PAk = np.zeros((nreps, nexp))
-MAsmtk1_BMTI = np.zeros((nreps, nexp))
-MAsmtk1_GMM = np.zeros((nreps, nexp))
+MArelrk1_kNN_Abr = np.zeros((nreps, nexp))
+MArelrk1_kNN_Zhao = np.zeros((nreps, nexp))
+MArelrk1_kstarNN = np.zeros((nreps, nexp))
+MArelrk1_GKDE_Sil = np.zeros((nreps, nexp))
+MArelrk1_awkde = np.zeros((nreps, nexp))
+MArelrk1_GKDE_Scott = np.zeros((nreps, nexp))
+MArelrk1_PAk = np.zeros((nreps, nexp))
+MArelrk1_BMTI = np.zeros((nreps, nexp))
+MArelrk1_GMM = np.zeros((nreps, nexp))
 
-smtk1_kNN_Abr = np.zeros((nreps, nexp, 1000))
-smtk1_kNN_Zhao = np.zeros((nreps, nexp, 1000))
-smtk1_kstarNN = np.zeros((nreps, nexp, 1000))
-smtk1_GKDE_Sil = np.zeros((nreps, nexp, 1000))
-smtk1_awkde = np.zeros((nreps, nexp, 1000))
-smtk1_GKDE_Scott = np.zeros((nreps, nexp, 1000))
-smtk1_PAk = np.zeros((nreps, nexp, 1000))
-smtk1_BMTI = np.zeros((nreps, nexp, 1000))
-smtk1_GMM = np.zeros((nreps, nexp, 1000))
+relrk1_kNN_Abr = np.zeros((nreps, nexp, 1000))
+relrk1_kNN_Zhao = np.zeros((nreps, nexp, 1000))
+relrk1_kstarNN = np.zeros((nreps, nexp, 1000))
+relrk1_GKDE_Sil = np.zeros((nreps, nexp, 1000))
+relrk1_awkde = np.zeros((nreps, nexp, 1000))
+relrk1_GKDE_Scott = np.zeros((nreps, nexp, 1000))
+relrk1_PAk = np.zeros((nreps, nexp, 1000))
+relrk1_BMTI = np.zeros((nreps, nexp, 1000))
+relrk1_GMM = np.zeros((nreps, nexp, 1000))
 
 
 # loop over dataset sizes
@@ -98,49 +98,49 @@ for i in reversed(range(0, nexp)):
         # assign results to arrays
         Nsample[i] = results['Nsample']
 
-        MAsmtk1_kNN_Abr[r,i] = results['MAsmtk1_kNN_Abr']
-        MAsmtk1_kNN_Zhao[r,i] = results['MAsmtk1_kNN_Zhao']
-        MAsmtk1_kstarNN[r,i] = results['MAsmtk1_kstarNN']
-        MAsmtk1_GKDE_Sil[r,i] = results['MAsmtk1_GKDE_Sil']
-        MAsmtk1_awkde[r,i] = results['MAsmtk1_awkde']
-        MAsmtk1_GKDE_Scott[r,i] = results['MAsmtk1_GKDE_Scott']
-        MAsmtk1_PAk[r,i] = results['MAsmtk1_PAk']
-        MAsmtk1_BMTI[r,i] = results['MAsmtk1_BMTI']
-        MAsmtk1_GMM[r,i] = results['MAsmtk1_GMM']
+        MArelrk1_kNN_Abr[r,i] = results['MArelrk1_kNN_Abr']
+        MArelrk1_kNN_Zhao[r,i] = results['MArelrk1_kNN_Zhao']
+        MArelrk1_kstarNN[r,i] = results['MArelrk1_kstarNN']
+        MArelrk1_GKDE_Sil[r,i] = results['MArelrk1_GKDE_Sil']
+        MArelrk1_awkde[r,i] = results['MArelrk1_awkde']
+        MArelrk1_GKDE_Scott[r,i] = results['MArelrk1_GKDE_Scott']
+        MArelrk1_PAk[r,i] = results['MArelrk1_PAk']
+        MArelrk1_BMTI[r,i] = results['MArelrk1_BMTI']
+        MArelrk1_GMM[r,i] = results['MArelrk1_GMM']
 
-        smtk1_kNN_Abr[r,i] = results['smtk1_kNN_Abr']
-        smtk1_kNN_Zhao[r,i] = results['smtk1_kNN_Zhao']
-        smtk1_kstarNN[r,i] = results['smtk1_kstarNN']
-        smtk1_GKDE_Sil[r,i] = results['smtk1_GKDE_Sil']
-        smtk1_awkde[r,i] = results['smtk1_awkde']
-        smtk1_GKDE_Scott[r,i] = results['smtk1_GKDE_Scott']
-        smtk1_PAk[r,i] = results['smtk1_PAk']
-        smtk1_BMTI[r,i] = results['smtk1_BMTI']
-        smtk1_GMM[r,i] = results['smtk1_GMM']
+        relrk1_kNN_Abr[r,i] = results['relrk1_kNN_Abr']
+        relrk1_kNN_Zhao[r,i] = results['relrk1_kNN_Zhao']
+        relrk1_kstarNN[r,i] = results['relrk1_kstarNN']
+        relrk1_GKDE_Sil[r,i] = results['relrk1_GKDE_Sil']
+        relrk1_awkde[r,i] = results['relrk1_awkde']
+        relrk1_GKDE_Scott[r,i] = results['relrk1_GKDE_Scott']
+        relrk1_PAk[r,i] = results['relrk1_PAk']
+        relrk1_BMTI[r,i] = results['relrk1_BMTI']
+        relrk1_GMM[r,i] = results['relrk1_GMM']
 
 
         np.savez("results/{}.npz".format(savestring),
             Nsample=Nsample,
 
-            MAsmtk1_kNN_Abr=MAsmtk1_kNN_Abr,
-            MAsmtk1_kNN_Zhao=MAsmtk1_kNN_Zhao,
-            MAsmtk1_kstarNN=MAsmtk1_kstarNN,
-            MAsmtk1_GKDE_Sil=MAsmtk1_GKDE_Sil,
-            MAsmtk1_awkde=MAsmtk1_awkde,
-            MAsmtk1_GKDE_Scott=MAsmtk1_GKDE_Scott,
-            MAsmtk1_PAk=MAsmtk1_PAk,
-            MAsmtk1_BMTI=MAsmtk1_BMTI,
-            MAsmtk1_GMM=MAsmtk1_GMM,
+            MArelrk1_kNN_Abr=MArelrk1_kNN_Abr,
+            MArelrk1_kNN_Zhao=MArelrk1_kNN_Zhao,
+            MArelrk1_kstarNN=MArelrk1_kstarNN,
+            MArelrk1_GKDE_Sil=MArelrk1_GKDE_Sil,
+            MArelrk1_awkde=MArelrk1_awkde,
+            MArelrk1_GKDE_Scott=MArelrk1_GKDE_Scott,
+            MArelrk1_PAk=MArelrk1_PAk,
+            MArelrk1_BMTI=MArelrk1_BMTI,
+            MArelrk1_GMM=MArelrk1_GMM,
             
-            smtk1_kNN_Abr=smtk1_kNN_Abr,
-            smtk1_kNN_Zhao=smtk1_kNN_Zhao,
-            smtk1_kstarNN=smtk1_kstarNN,
-            smtk1_GKDE_Sil=smtk1_GKDE_Sil,
-            smtk1_awkde=smtk1_awkde,
-            smtk1_GKDE_Scott=smtk1_GKDE_Scott,
-            smtk1_PAk=smtk1_PAk,
-            smtk1_BMTI=smtk1_BMTI,
-            smtk1_GMM=smtk1_GMM
+            relrk1_kNN_Abr=relrk1_kNN_Abr,
+            relrk1_kNN_Zhao=relrk1_kNN_Zhao,
+            relrk1_kstarNN=relrk1_kstarNN,
+            relrk1_GKDE_Sil=relrk1_GKDE_Sil,
+            relrk1_awkde=relrk1_awkde,
+            relrk1_GKDE_Scott=relrk1_GKDE_Scott,
+            relrk1_PAk=relrk1_PAk,
+            relrk1_BMTI=relrk1_BMTI,
+            relrk1_GMM=relrk1_GMM
         )
 
 
