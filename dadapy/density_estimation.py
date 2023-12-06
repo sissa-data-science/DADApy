@@ -852,7 +852,7 @@ class DensityEstimation(IdEstimation):
         if redundancy_factor is None:
             redundancy = np.ones(self.nspar,dtype=np.float_)
 
-        elif redundancy_factor is 'geometric_mean':
+        elif redundancy_factor=='geometric_mean':
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
             k1 = self.kstar[self.nind_list[:, 0]]
             k2 = self.kstar[self.nind_list[:, 1]]
@@ -958,7 +958,7 @@ class DensityEstimation(IdEstimation):
         if redundancy_factor is None:
             redundancy = np.ones(self.nspar,dtype=np.float_)
 
-        elif redundancy_factor is 'geometric_mean':
+        elif redundancy_factor=='geometric_mean':
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
             k1 = self.kstar[self.nind_list[:, 0]]
             k2 = self.kstar[self.nind_list[:, 1]]

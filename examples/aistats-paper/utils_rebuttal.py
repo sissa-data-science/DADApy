@@ -426,7 +426,9 @@ def  compute_roughness( Xk,
     rk1_PAk = stats.gaussian_kde(np.sort((F_PAk[nns1]-F_PAk)/rijk1))(np.linspace(-20,20,10000))
     rk1_BMTI = stats.gaussian_kde(np.sort((F_BMTI[nns1]-F_BMTI)/rijk1))(np.linspace(-20,20,10000))
     rk1_GMM = stats.gaussian_kde(np.sort((F_GMM[nns1]-F_GMM)/rijk1))(np.linspace(-20,20,10000))
-    rk1_GKDE_Scott+=1e-20    
+    rk1_GKDE_Scott+=1e-20
+    rk1_GKDE_Sil+=1e-20
+
     
     # relative roughness
     relrk1_kNN_Abr = stats.gaussian_kde(np.sort((F_kNN_Abr[nns1]-F_kNN_Abr-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
