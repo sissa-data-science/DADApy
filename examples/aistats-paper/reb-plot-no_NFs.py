@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+plt.rc('text',usetex=True)
+plt.rc('font', family='serif')
+
 # import npz results# reb-6d-80k-gCorr-kstar-simple_align.npz
 results = np.load("results_backup/6d-40k-simple_align-3rep-gCorr-CELLINA.npz")
 results_nf = np.load("results_backup/reb-norm_flows.npz")
@@ -54,7 +57,8 @@ mycmap['NF'] = "0.65"
 
 
 #titlestring="6d-80k-gCorr"
-titlestring="Time scaling - 6d potential"
+titlestring="6d potential"
+savestring="time_scaling-6d-40k"
 
 def plot_times(results,noNFs=False):
     plt.figure()
@@ -65,52 +69,52 @@ def plot_times(results,noNFs=False):
 
     m = np.mean(results['time_BMTI'],axis=0)
     s = np.std(results['time_BMTI'],axis=0)/np.sqrt(r)
-    plt.plot(xs, m, "-o", label="BMTI", color=mycmap['BMTI'])
+    plt.plot(xs, m, "-o", lw=3, label=r"\textbf{BMTI}", color=mycmap['BMTI'])
     plt.fill_between(xs, m-s, m+s, alpha=0.5, color=mycmap['BMTI'])
 
     m = np.mean(results['time_PAk'],axis=0)
     s = np.std(results['time_PAk'],axis=0)/np.sqrt(r)
-    plt.plot(xs, m, "-o", label="PAk", color=mycmap['PAk'])
+    plt.plot(xs, m, "-o", lw=3, label=r"\textbf{PAk}", color=mycmap['PAk'])
     plt.fill_between(xs, m-s, m+s, alpha=0.5, color=mycmap['PAk'])
 
     m = np.mean(results['time_kNN_Abr'],axis=0)
     s = np.std(results['time_kNN_Abr'],axis=0)/np.sqrt(r)
-    plt.plot(xs, m, "-o", label="kNN (Abr.)", color=mycmap['kNN'])
+    plt.plot(xs, m, "-o", lw=3, label=r"\textbf{kNN}", color=mycmap['kNN'])
     plt.fill_between(xs, m-s, m+s, alpha=0.5, color=mycmap['kNN'])
 
     m = np.mean(results['time_GKDE_Scott'],axis=0)
     s = np.std(results['time_GKDE_Scott'],axis=0)/np.sqrt(r)
-    plt.plot(xs, m, "-o", label="GKDE", color=mycmap['GKDE'])
+    plt.plot(xs, m, "-o", lw=3, label=r"\textbf{GKDE}", color=mycmap['GKDE'])
     plt.fill_between(xs, m-s, m+s, alpha=0.5, color=mycmap['GKDE'])
 
     m = np.mean(results['time_awkde'],axis=0)
     s = np.std(results['time_awkde'],axis=0)/np.sqrt(r)
-    plt.plot(xs, m, "-o", label="aKDE", color=mycmap['aKDE'])
+    plt.plot(xs, m, "-o", lw=3, label=r"\textbf{aKDE}", color=mycmap['aKDE'])
     plt.fill_between(xs, m-s, m+s, alpha=0.5, color=mycmap['aKDE'])
 
     m = np.mean(results['time_GMM'],axis=0)
     s = np.std(results['time_GMM'],axis=0)/np.sqrt(r)
-    plt.plot(xs, m, "-o", label="GMM", color=mycmap['GMM'])
+    plt.plot(xs, m, "-o", lw=3, label=r"\textbf{GMM}", color=mycmap['GMM'])
     plt.fill_between(xs, m-s, m+s, alpha=0.5, color=mycmap['GMM'])
 
     if noNFs is False:
         m = np.mean(results_nf['time_NF'],axis=0)[:-1]
         s = np.std(results_nf['time_NF'],axis=0)[:-1]/np.sqrt(r)
-        plt.plot(results_nf['Nsample'][:-1], m, "-o", label="NF", color=mycmap['NF'])
+        plt.plot(results_nf['Nsample'][:-1], m, "-o", lw=3, label=r"\textbf{NF}", color=mycmap['NF'])
         plt.fill_between(results_nf['Nsample'][:-1], m-s, m+s, alpha=0.5, color=mycmap['NF'])
 
     plt.xscale("log")
     plt.yscale("log")
     #plt.ylim(0.1, 1.32);
     plt.xlim(120, 50000);
-    plt.legend(loc=(0.06,0.45),fontsize=13)
-    plt.xlabel("Nsample",fontsize = 13)
-    plt.ylabel("time (s)",fontsize = 13)
-    plt.yticks( fontsize = 13)
-    plt.xticks( fontsize = 13)
-    plt.title(titlestring, fontsize=16)
+    plt.legend(loc=(0.08,0.37),fontsize=16)
+    plt.xlabel(r"\textbf{Sample size  -  N}",fontsize = 16)
+    plt.ylabel(r"\textbf{Time (s)}",fontsize = 16)
+    plt.yticks( fontsize = 16)
+    plt.xticks( fontsize = 16)
+    plt.title(r"\textbf{Time scaling - 6d potential}", fontsize=18)
     plt.tight_layout()
-    plt.savefig("plots/reb-times-{}.png".format(titlestring))
+    plt.savefig("plots/reb-times-{}.png".format(savestring),dpi=300)
     plt.show()
 
 
@@ -171,7 +175,7 @@ def plot_MAEs(results,noNFs=False):
     plt.xlabel("Nsample")
     plt.ylabel("MAE")
     plt.title(titlestring)
-    plt.savefig("plots/reb-MAE-{}.png".format(titlestring))
+    plt.savefig("plots/reb-MAE-{}.png".format(savestring))
     plt.show()
 
 
@@ -228,7 +232,7 @@ def plot_MSEs(results,noNFs=False):
     plt.xlabel("Nsample")
     plt.ylabel("MSE")
     plt.title(titlestring)
-    plt.savefig("plots/reb-MSE-{}.png".format(titlestring))
+    plt.savefig("plots/reb-MSE-{}.png".format(savestring))
     plt.show()
 
 
@@ -250,7 +254,7 @@ def plot_nf_MAE(results_nf):
     plt.xlabel("Nsample")
     plt.ylabel("MAE")
     plt.title(titlestring)
-    plt.savefig("plots/reb-nf-MAE-{}.png".format(titlestring))
+    plt.savefig("plots/reb-nf-MAE-{}.png".format(savestring))
     plt.show()
 
 
@@ -306,7 +310,7 @@ def plot_KL(results):
     plt.xlabel("Nsample")
     plt.ylabel("KLD")
     plt.title(titlestring)
-    plt.savefig("plots/reb-KLD-{}.png".format(titlestring))
+    plt.savefig("plots/reb-KLD-{}.png".format(savestring))
     plt.show()
 
 
