@@ -35,7 +35,7 @@ def free_6d(v):
     return -np.log(den_6d(v))
 
 
-savestring="6d-80k-simple_align-3rep-gCorr-FUART"
+savestring="6d-40k-simple_align-3rep-gCorr-CELLINA"
 noalign=False
 
 #X80k = np.genfromtxt('datasets/6d_double_well-100k.txt')[40000:, 1:]
@@ -56,10 +56,10 @@ print("Dataset size: ",X_full.shape[0])
 
 nreps = 3 # number of repetitions
 print("Number of repetitions: ",nreps)
-nexp = 10 # number of dataset sizes
+nexp = 9 # number of dataset sizes
 
 # create nreps random subsets of the 
-nsample = 80000
+nsample = 40000
 print("Max batch size: ",nsample)
 N = nreps*nsample #X_full.shape[0]
 #print("N: ",N)

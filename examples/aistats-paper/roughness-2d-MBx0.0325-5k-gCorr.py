@@ -62,15 +62,36 @@ MArelrk1_PAk = np.zeros((nreps, nexp))
 MArelrk1_BMTI = np.zeros((nreps, nexp))
 MArelrk1_GMM = np.zeros((nreps, nexp))
 
-relrk1_kNN_Abr = np.zeros((nreps, nexp, 1000))
-relrk1_kNN_Zhao = np.zeros((nreps, nexp, 1000))
-relrk1_kstarNN = np.zeros((nreps, nexp, 1000))
-relrk1_GKDE_Sil = np.zeros((nreps, nexp, 1000))
-relrk1_awkde = np.zeros((nreps, nexp, 1000))
-relrk1_GKDE_Scott = np.zeros((nreps, nexp, 1000))
-relrk1_PAk = np.zeros((nreps, nexp, 1000))
-relrk1_BMTI = np.zeros((nreps, nexp, 1000))
-relrk1_GMM = np.zeros((nreps, nexp, 1000))
+KLDrk1_kNN_Abr = np.zeros((nreps, nexp))
+KLDrk1_kNN_Zhao = np.zeros((nreps, nexp))
+KLDrk1_kstarNN = np.zeros((nreps, nexp))
+KLDrk1_GKDE_Sil = np.zeros((nreps, nexp))
+KLDrk1_awkde = np.zeros((nreps, nexp))
+KLDrk1_GKDE_Scott = np.zeros((nreps, nexp))
+KLDrk1_PAk = np.zeros((nreps, nexp))
+KLDrk1_BMTI = np.zeros((nreps, nexp))
+KLDrk1_GMM = np.zeros((nreps, nexp))
+
+rk1_anal = np.zeros((nreps, nexp, 10000))
+rk1_kNN_Abr = np.zeros((nreps, nexp, 10000))
+rk1_kNN_Zhao = np.zeros((nreps, nexp, 10000))
+rk1_kstarNN = np.zeros((nreps, nexp, 10000))
+rk1_GKDE_Sil = np.zeros((nreps, nexp, 10000))
+rk1_awkde = np.zeros((nreps, nexp, 10000))
+rk1_GKDE_Scott = np.zeros((nreps, nexp, 10000))
+rk1_PAk = np.zeros((nreps, nexp, 10000))
+rk1_BMTI = np.zeros((nreps, nexp, 10000))
+rk1_GMM = np.zeros((nreps, nexp, 10000))
+
+relrk1_kNN_Abr = np.zeros((nreps, nexp, 10000))
+relrk1_kNN_Zhao = np.zeros((nreps, nexp, 10000))
+relrk1_kstarNN = np.zeros((nreps, nexp, 10000))
+relrk1_GKDE_Sil = np.zeros((nreps, nexp, 10000))
+relrk1_awkde = np.zeros((nreps, nexp, 10000))
+relrk1_GKDE_Scott = np.zeros((nreps, nexp, 10000))
+relrk1_PAk = np.zeros((nreps, nexp, 10000))
+relrk1_BMTI = np.zeros((nreps, nexp, 10000))
+relrk1_GMM = np.zeros((nreps, nexp, 10000))
 
 
 # loop over dataset sizes
@@ -108,6 +129,27 @@ for i in reversed(range(0, nexp)):
         MArelrk1_BMTI[r,i] = results['MArelrk1_BMTI']
         MArelrk1_GMM[r,i] = results['MArelrk1_GMM']
 
+        KLDrk1_kNN_Abr[r,i] = results['KLDrk1_kNN_Abr']
+        KLDrk1_kNN_Zhao[r,i] = results['KLDrk1_kNN_Zhao']
+        KLDrk1_kstarNN[r,i] = results['KLDrk1_kstarNN']
+        KLDrk1_GKDE_Sil[r,i] = results['KLDrk1_GKDE_Sil']
+        KLDrk1_awkde[r,i] = results['KLDrk1_awkde']
+        KLDrk1_GKDE_Scott[r,i] = results['KLDrk1_GKDE_Scott']
+        KLDrk1_PAk[r,i] = results['KLDrk1_PAk']
+        KLDrk1_BMTI[r,i] = results['KLDrk1_BMTI']
+        KLDrk1_GMM[r,i] = results['KLDrk1_GMM']
+
+        rk1_anal[r,i] = results['rk1_anal']
+        rk1_kNN_Abr[r,i] = results['rk1_kNN_Abr']
+        rk1_kNN_Zhao[r,i] = results['rk1_kNN_Zhao']
+        rk1_kstarNN[r,i] = results['rk1_kstarNN']
+        rk1_GKDE_Sil[r,i] = results['rk1_GKDE_Sil']
+        rk1_awkde[r,i] = results['rk1_awkde']
+        rk1_GKDE_Scott[r,i] = results['rk1_GKDE_Scott']
+        rk1_PAk[r,i] = results['rk1_PAk']
+        rk1_BMTI[r,i] = results['rk1_BMTI']
+        rk1_GMM[r,i] = results['rk1_GMM']
+
         relrk1_kNN_Abr[r,i] = results['relrk1_kNN_Abr']
         relrk1_kNN_Zhao[r,i] = results['relrk1_kNN_Zhao']
         relrk1_kstarNN[r,i] = results['relrk1_kstarNN']
@@ -131,6 +173,27 @@ for i in reversed(range(0, nexp)):
             MArelrk1_PAk=MArelrk1_PAk,
             MArelrk1_BMTI=MArelrk1_BMTI,
             MArelrk1_GMM=MArelrk1_GMM,
+
+            KLDrk1_kNN_Abr=KLDrk1_kNN_Abr,
+            KLDrk1_kNN_Zhao=KLDrk1_kNN_Zhao,
+            KLDrk1_kstarNN=KLDrk1_kstarNN,
+            KLDrk1_GKDE_Sil=KLDrk1_GKDE_Sil,
+            KLDrk1_awkde=KLDrk1_awkde,
+            KLDrk1_GKDE_Scott=KLDrk1_GKDE_Scott,
+            KLDrk1_PAk=KLDrk1_PAk,
+            KLDrk1_BMTI=KLDrk1_BMTI,
+            KLDrk1_GMM=KLDrk1_GMM,
+
+            rk1_anal=rk1_anal,
+            rk1_kNN_Abr=rk1_kNN_Abr,
+            rk1_kNN_Zhao=rk1_kNN_Zhao,
+            rk1_kstarNN=rk1_kstarNN,
+            rk1_GKDE_Sil=rk1_GKDE_Sil,
+            rk1_awkde=rk1_awkde,
+            rk1_GKDE_Scott=rk1_GKDE_Scott,
+            rk1_PAk=rk1_PAk,
+            rk1_BMTI=rk1_BMTI,
+            rk1_GMM=rk1_GMM,
             
             relrk1_kNN_Abr=relrk1_kNN_Abr,
             relrk1_kNN_Zhao=relrk1_kNN_Zhao,

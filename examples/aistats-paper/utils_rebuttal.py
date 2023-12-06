@@ -413,57 +413,107 @@ def  compute_roughness( Xk,
         else:    
             off_k, F_k = _align_arrays(F_k,data.log_den_err,F_anal_k)
     F_GMM = F_k
-    
-    smtk1_kNN_Abr = stats.gaussian_kde(np.sort((F_kNN_Abr[nns1]-F_kNN_Abr-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_kNN_Zhao = stats.gaussian_kde(np.sort((F_kNN_Zhao[nns1]-F_kNN_Zhao-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_kstarNN = stats.gaussian_kde(np.sort((F_kstarNN[nns1]-F_kstarNN-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_GKDE_Sil = stats.gaussian_kde(np.sort((F_GKDE_Sil[nns1]-F_GKDE_Sil-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_awkde = stats.gaussian_kde(np.sort((F_awkde[nns1]-F_awkde-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_GKDE_Scott = stats.gaussian_kde(np.sort((F_GKDE_Scott[nns1]-F_GKDE_Scott-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_PAk = stats.gaussian_kde(np.sort((F_PAk[nns1]-F_PAk-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_BMTI = stats.gaussian_kde(np.sort((F_BMTI[nns1]-F_BMTI-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
-    smtk1_GMM = stats.gaussian_kde(np.sort((F_GMM[nns1]-F_GMM-dFnn_anal_k)/rijk1))(np.linspace(-10,10,1000))
 
-    MAsmtk1_kNN_Abr = np.mean(np.abs((F_kNN_Abr[nns1]-F_kNN_Abr-dFnn_anal_k)/rijk1))
-    MAsmtk1_kNN_Zhao = np.mean(np.abs((F_kNN_Zhao[nns1]-F_kNN_Zhao-dFnn_anal_k)/rijk1))
-    MAsmtk1_kstarNN = np.mean(np.abs((F_kstarNN[nns1]-F_kstarNN-dFnn_anal_k)/rijk1))
-    MAsmtk1_GKDE_Sil = np.mean(np.abs((F_GKDE_Sil[nns1]-F_GKDE_Sil-dFnn_anal_k)/rijk1))
-    MAsmtk1_awkde = np.mean(np.abs((F_awkde[nns1]-F_awkde-dFnn_anal_k)/rijk1))
-    MAsmtk1_GKDE_Scott = np.mean((np.abs(F_GKDE_Scott[nns1]-F_GKDE_Scott-dFnn_anal_k)/rijk1))
-    MAsmtk1_PAk = np.mean(np.abs((F_PAk[nns1]-F_PAk-dFnn_anal_k)/rijk1))
-    MAsmtk1_BMTI = np.mean(np.abs((F_BMTI[nns1]-F_BMTI-dFnn_anal_k)/rijk1))
-    MAsmtk1_GMM = np.mean(np.abs((F_GMM[nns1]-F_GMM-dFnn_anal_k)/rijk1))
+
+    # absolute roughness
+    rk1_anal = stats.gaussian_kde(np.sort(dFnn_anal_k/rijk1))(np.linspace(-20,20,10000))
+    rk1_kNN_Abr = stats.gaussian_kde(np.sort((F_kNN_Abr[nns1]-F_kNN_Abr)/rijk1))(np.linspace(-20,20,10000))
+    rk1_kNN_Zhao = stats.gaussian_kde(np.sort((F_kNN_Zhao[nns1]-F_kNN_Zhao)/rijk1))(np.linspace(-20,20,10000))
+    rk1_kstarNN = stats.gaussian_kde(np.sort((F_kstarNN[nns1]-F_kstarNN)/rijk1))(np.linspace(-20,20,10000))
+    rk1_GKDE_Sil = stats.gaussian_kde(np.sort((F_GKDE_Sil[nns1]-F_GKDE_Sil)/rijk1))(np.linspace(-20,20,10000))
+    rk1_awkde = stats.gaussian_kde(np.sort((F_awkde[nns1]-F_awkde)/rijk1))(np.linspace(-20,20,10000))
+    rk1_GKDE_Scott = stats.gaussian_kde(np.sort((F_GKDE_Scott[nns1]-F_GKDE_Scott)/rijk1))(np.linspace(-20,20,10000))
+    rk1_PAk = stats.gaussian_kde(np.sort((F_PAk[nns1]-F_PAk)/rijk1))(np.linspace(-20,20,10000))
+    rk1_BMTI = stats.gaussian_kde(np.sort((F_BMTI[nns1]-F_BMTI)/rijk1))(np.linspace(-20,20,10000))
+    rk1_GMM = stats.gaussian_kde(np.sort((F_GMM[nns1]-F_GMM)/rijk1))(np.linspace(-20,20,10000))
+    rk1_GKDE_Scott+=1e-20    
+    
+    # relative roughness
+    relrk1_kNN_Abr = stats.gaussian_kde(np.sort((F_kNN_Abr[nns1]-F_kNN_Abr-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_kNN_Zhao = stats.gaussian_kde(np.sort((F_kNN_Zhao[nns1]-F_kNN_Zhao-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_kstarNN = stats.gaussian_kde(np.sort((F_kstarNN[nns1]-F_kstarNN-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_GKDE_Sil = stats.gaussian_kde(np.sort((F_GKDE_Sil[nns1]-F_GKDE_Sil-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_awkde = stats.gaussian_kde(np.sort((F_awkde[nns1]-F_awkde-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_GKDE_Scott = stats.gaussian_kde(np.sort((F_GKDE_Scott[nns1]-F_GKDE_Scott-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_PAk = stats.gaussian_kde(np.sort((F_PAk[nns1]-F_PAk-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_BMTI = stats.gaussian_kde(np.sort((F_BMTI[nns1]-F_BMTI-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+    relrk1_GMM = stats.gaussian_kde(np.sort((F_GMM[nns1]-F_GMM-dFnn_anal_k)/rijk1))(np.linspace(-20,20,10000))
+
+    # Mean Absolute relative roughness
+    KLDrk1_kNN_Abr = np.mean(rk1_anal * np.log( rk1_anal /  rk1_kNN_Abr ))
+    KLDrk1_kNN_Zhao = np.mean(rk1_anal * np.log( rk1_anal /  rk1_kNN_Zhao ))
+    KLDrk1_kstarNN = np.mean(rk1_anal * np.log( rk1_anal /  rk1_kstarNN ))
+    KLDrk1_GKDE_Sil = np.mean(rk1_anal * np.log( rk1_anal /  rk1_GKDE_Sil ))
+    KLDrk1_awkde = np.mean(rk1_anal * np.log( rk1_anal /  rk1_awkde ))
+    KLDrk1_GKDE_Scott = np.mean(rk1_anal * np.log( rk1_anal /  rk1_GKDE_Scott ))
+    KLDrk1_PAk = np.mean(rk1_anal * np.log( rk1_anal /  rk1_PAk ))
+    KLDrk1_BMTI = np.mean(rk1_anal * np.log( rk1_anal /  rk1_BMTI ))
+    KLDrk1_GMM = np.mean(rk1_anal * np.log( rk1_anal /  rk1_GMM ))
+
+    # KL distance between true roughness distribution and estimated
+    MArelrk1_kNN_Abr = np.mean(np.abs((F_kNN_Abr[nns1]-F_kNN_Abr-dFnn_anal_k)/rijk1))
+    MArelrk1_kNN_Zhao = np.mean(np.abs((F_kNN_Zhao[nns1]-F_kNN_Zhao-dFnn_anal_k)/rijk1))
+    MArelrk1_kstarNN = np.mean(np.abs((F_kstarNN[nns1]-F_kstarNN-dFnn_anal_k)/rijk1))
+    MArelrk1_GKDE_Sil = np.mean(np.abs((F_GKDE_Sil[nns1]-F_GKDE_Sil-dFnn_anal_k)/rijk1))
+    MArelrk1_awkde = np.mean(np.abs((F_awkde[nns1]-F_awkde-dFnn_anal_k)/rijk1))
+    MArelrk1_GKDE_Scott = np.mean((np.abs(F_GKDE_Scott[nns1]-F_GKDE_Scott-dFnn_anal_k)/rijk1))
+    MArelrk1_PAk = np.mean(np.abs((F_PAk[nns1]-F_PAk-dFnn_anal_k)/rijk1))
+    MArelrk1_BMTI = np.mean(np.abs((F_BMTI[nns1]-F_BMTI-dFnn_anal_k)/rijk1))
+    MArelrk1_GMM = np.mean(np.abs((F_GMM[nns1]-F_GMM-dFnn_anal_k)/rijk1))
+
+
 
     # define a dictionary with all the results and return it
     results = {}
     results['Nsample'] = Nsample
+    results['rk1_anal'] = rk1_anal
     
-    results['smtk1_kNN_Abr'] = smtk1_kNN_Abr
-    results['MAsmtk1_kNN_Abr'] = MAsmtk1_kNN_Abr
-    
-    results['smtk1_kNN_Zhao'] = smtk1_kNN_Zhao
-    results['MAsmtk1_kNN_Zhao'] = MAsmtk1_kNN_Zhao
-    
-    results['smtk1_kstarNN'] = smtk1_kstarNN
-    results['MAsmtk1_kstarNN'] = MAsmtk1_kstarNN
-    
-    results['smtk1_GKDE_Sil'] = smtk1_GKDE_Sil
-    results['MAsmtk1_GKDE_Sil'] = MAsmtk1_GKDE_Sil
+    results['rk1_kNN_Abr'] = rk1_kNN_Abr
+    results['relrk1_kNN_Abr'] = relrk1_kNN_Abr
+    results['MArelrk1_kNN_Abr'] = MArelrk1_kNN_Abr
 
-    results['smtk1_awkde'] = smtk1_awkde
-    results['MAsmtk1_awkde'] = MAsmtk1_awkde
-    
-    results['smtk1_GKDE_Scott'] = smtk1_GKDE_Scott
-    results['MAsmtk1_GKDE_Scott'] = MAsmtk1_GKDE_Scott
-    
-    results['smtk1_PAk'] = smtk1_PAk
-    results['MAsmtk1_PAk'] = MAsmtk1_PAk
-    
-    results['smtk1_BMTI'] = smtk1_BMTI
-    results['MAsmtk1_BMTI'] = MAsmtk1_BMTI
+    results['rk1_kNN_Zhao'] = rk1_kNN_Zhao
+    results['relrk1_kNN_Zhao'] = relrk1_kNN_Zhao
+    results['MArelrk1_kNN_Zhao'] = MArelrk1_kNN_Zhao
 
-    results['smtk1_GMM'] = smtk1_GMM
-    results['MAsmtk1_GMM'] = MAsmtk1_GMM
+    results['rk1_kstarNN'] = rk1_kstarNN
+    results['relrk1_kstarNN'] = relrk1_kstarNN
+    results['MArelrk1_kstarNN'] = MArelrk1_kstarNN
+
+    results['rk1_GKDE_Sil'] = rk1_GKDE_Sil
+    results['relrk1_GKDE_Sil'] = relrk1_GKDE_Sil
+    results['MArelrk1_GKDE_Sil'] = MArelrk1_GKDE_Sil
+    
+
+    results['rk1_awkde'] = rk1_awkde
+    results['relrk1_awkde'] = relrk1_awkde
+    results['MArelrk1_awkde'] = MArelrk1_awkde
+    
+    results['rk1_GKDE_Scott'] = rk1_GKDE_Scott
+    results['relrk1_GKDE_Scott'] = relrk1_GKDE_Scott
+    results['MArelrk1_GKDE_Scott'] = MArelrk1_GKDE_Scott
+
+    results['rk1_PAk'] = rk1_PAk
+    results['relrk1_PAk'] = relrk1_PAk
+    results['MArelrk1_PAk'] = MArelrk1_PAk
+    
+    results['rk1_BMTI'] = rk1_BMTI
+    results['relrk1_BMTI'] = relrk1_BMTI
+    results['MArelrk1_BMTI'] = MArelrk1_BMTI
+
+    results['rk1_GMM'] = rk1_GMM
+    results['relrk1_GMM'] = relrk1_GMM
+    results['MArelrk1_GMM'] = MArelrk1_GMM
+
+    results['KLDrk1_kNN_Abr'] = KLDrk1_kNN_Abr
+    results['KLDrk1_kNN_Zhao'] = KLDrk1_kNN_Zhao
+    results['KLDrk1_kstarNN'] = KLDrk1_kstarNN
+    results['KLDrk1_GKDE_Sil'] = KLDrk1_GKDE_Sil
+    results['KLDrk1_awkde'] = KLDrk1_awkde
+    results['KLDrk1_GKDE_Scott'] = KLDrk1_GKDE_Scott
+    results['KLDrk1_PAk'] = KLDrk1_PAk
+    results['KLDrk1_BMTI'] = KLDrk1_BMTI
+    results['KLDrk1_GMM'] = KLDrk1_GMM
 
     return results
 
