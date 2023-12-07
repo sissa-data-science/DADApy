@@ -672,7 +672,7 @@ class MetricComparisons(Base):
         Returns:
             imbalances (np.ndarray(float)): the information imbalances for the different weights
         """
-        if self.period != None:
+        if self.period is not None:
             print(
                 f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
                 + "ignored.\nSet the periodicity of the features using instead the keywords "
@@ -793,7 +793,7 @@ class MetricComparisons(Base):
             ranks_present (np.ndarray(float)): array of shape (N_weights, N, maxk+1), containing N_weights
                 matrices (N, maxk+1) corresponding to the values of the scaling parameters in 'weights'
         """
-        if self.period != None:
+        if self.period is not None:
             print(
                 f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
                 + "ignored.\nSet the periodicity of the features using instead the keyword "
@@ -871,7 +871,7 @@ class MetricComparisons(Base):
             imbalances (np.ndarray(float)): the information imbalances for the different weights included
                 in 'ranks_present'
         """
-        if self.period != None:
+        if self.period is not None:
             print(
                 f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
                 + "ignored.\nSet the periodicity of the features using instead the keyword "
