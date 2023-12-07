@@ -781,7 +781,7 @@ class MetricComparisons(Base):
         period_cause=None,
         period_effect=None,
     ):
-        """Return the nearest neighbors' indices in space (weight*cause_present, effect_present) for all weights
+        """Return the nearest neighbors' indices in space (weight*cause_present, effect_present) for all weights.
 
         Args:
             cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time 0

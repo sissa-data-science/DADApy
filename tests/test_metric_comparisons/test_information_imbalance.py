@@ -107,7 +107,7 @@ def test_return_inf_imb_two_selected_coords():
 
 
 def test_return_inf_imb_causality():
-    """Test information imbalance for causality test"""
+    """Test information imbalance for causality test."""
     traj = np.load(filename_traj)
     weights = [0, 0.2, 0.4, 0.8, 1]
     k = 5
@@ -128,7 +128,7 @@ def test_return_inf_imb_causality():
 
 
 def test_return_inf_imb_causality_input_rank():
-    """Test information imbalance for causality test, implementation with input ranks"""
+    """Test information imbalance for causality test, implementation with input ranks."""
     traj = np.load(filename_traj)
     weights = [0.2]
     k = 5
