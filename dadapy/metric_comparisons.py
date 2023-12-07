@@ -649,7 +649,14 @@ class MetricComparisons(Base):
         return overlaps
 
     def return_inf_imb_causality(
-        self, cause_present, effect_present, effect_future, weights, k=1, period_cause=None, period_effect=None
+        self,
+        cause_present,
+        effect_present,
+        effect_future,
+        weights,
+        k=1,
+        period_cause=None,
+        period_effect=None,
     ):
         """Return the imbalances (weight * cause_present, effect_present) -> effect_future.
 
@@ -666,9 +673,11 @@ class MetricComparisons(Base):
             imbalances (np.ndarray(float)): the information imbalances for the different weights
         """
         if self.period != None:
-            print(f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
-                    +"ignored.\nSet the periodicity of the features using instead the keywords "
-                    +"'period_cause' and 'period_effect'.")
+            print(
+                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                + "ignored.\nSet the periodicity of the features using instead the keywords "
+                + "'period_cause' and 'period_effect'."
+            )
         if (
             cause_present.shape[0] != effect_present.shape[0]
             or cause_present.shape[0] != effect_future.shape[0]
@@ -680,25 +689,35 @@ class MetricComparisons(Base):
             period_present = None
         elif period_cause is None and period_effect is not None:
             raise ValueError(
-                "'period_cause' is None while 'period_effect' is not None, but the current implementation does not " 
-                +"support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
-                +"putative driver system, set a period larger than the maximum variation of its features."
+                "'period_cause' is None while 'period_effect' is not None, but the current implementation does not "
+                + "support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
+                + "putative driver system, set a period larger than the maximum variation of its features."
             )
         elif period_cause is not None and period_effect is None:
             raise ValueError(
-                "'period_cause' is not None while 'period_effect' is None, but the current implementation does not " 
-                +"support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
-                +"putative driven system, set a period larger than the maximum variation of its features."
+                "'period_cause' is not None while 'period_effect' is None, but the current implementation does not "
+                + "support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
+                + "putative driven system, set a period larger than the maximum variation of its features."
             )
         else:
-            assert ((isinstance(period_cause, (int, float)) or isinstance(period_cause, (np.ndarray, list)))
-                    and (isinstance(period_effect, (int, float)) or isinstance(period_effect, (np.ndarray, list)))), \
-                    "'period_cause'and 'period_effect' must be either float scalars or numpy arrays of floats " \
-                    + f"of shapes ({cause_present.shape[1]},) and ({effect_present.shape[1]},)"
+            assert (
+                isinstance(period_cause, (int, float))
+                or isinstance(period_cause, (np.ndarray, list))
+            ) and (
+                isinstance(period_effect, (int, float))
+                or isinstance(period_effect, (np.ndarray, list))
+            ), (
+                "'period_cause'and 'period_effect' must be either float scalars or numpy arrays of floats "
+                + f"of shapes ({cause_present.shape[1]},) and ({effect_present.shape[1]},)"
+            )
             if isinstance(period_cause, (int, float)):
-                period_cause = np.full(cause_present.shape[1], fill_value=period_cause, dtype=float)
+                period_cause = np.full(
+                    cause_present.shape[1], fill_value=period_cause, dtype=float
+                )
             if isinstance(period_effect, (int, float)):
-                period_effect = np.full(effect_present.shape[1], fill_value=period_effect, dtype=float)
+                period_effect = np.full(
+                    effect_present.shape[1], fill_value=period_effect, dtype=float
+                )
             period_present = np.concatenate((period_cause, period_effect))
 
         _, ranks_effect_future = compute_nn_distances(
@@ -707,7 +726,12 @@ class MetricComparisons(Base):
 
         imbalances = Parallel(n_jobs=self.njobs)(
             delayed(self.return_inf_imb_causality_target_rank)(
-                cause_present, effect_present, ranks_effect_future, weight, k, period_present
+                cause_present,
+                effect_present,
+                ranks_effect_future,
+                weight,
+                k,
+                period_present,
             )
             for weight in weights
         )
@@ -715,7 +739,13 @@ class MetricComparisons(Base):
         return imbalances
 
     def return_inf_imb_causality_target_rank(
-        self, cause_present, effect_present, ranks_effect_future, weight=1, k=1, period_present=None
+        self,
+        cause_present,
+        effect_present,
+        ranks_effect_future,
+        weight=1,
+        k=1,
+        period_present=None,
     ):
         """Return the imbalance (weight * cause_present, effect_present) -> effect_future.
 
@@ -725,7 +755,7 @@ class MetricComparisons(Base):
             ranks_effect_future (np.ndarray(float)): N x maxk matrix, putative driven system ranks at time tau
             weight (float): scaling parameter for the driver system at time 0
             k (int): order of nearest neighbour considered for the calculation of the imbalance
-            period_present (list(float), np.ndarray(float)): periods of all features in space 
+            period_present (list(float), np.ndarray(float)): periods of all features in space
                 (weight*cause_present, effect_present), to compute distances with PBCs
 
         Returns:
@@ -733,7 +763,10 @@ class MetricComparisons(Base):
         """
         space_present = np.column_stack((weight * cause_present, effect_present))
         _, ranks_present = compute_nn_distances(
-            space_present, self.maxk, self.metric, period_present,
+            space_present,
+            self.maxk,
+            self.metric,
+            period_present,
         )
 
         imb = _return_imbalance(ranks_present, ranks_effect_future, k=k)
@@ -741,7 +774,12 @@ class MetricComparisons(Base):
         return imb
 
     def return_ranks_present_for_all_weights(
-            self, cause_present, effect_present, weights, period_cause=None, period_effect=None
+        self,
+        cause_present,
+        effect_present,
+        weights,
+        period_cause=None,
+        period_effect=None,
     ):
         """Return the nearest neighbors' indices in space (weight*cause_present, effect_present) for all weights
 
@@ -752,13 +790,15 @@ class MetricComparisons(Base):
             period_cause (int,float,np.ndarray(float)): periods of variables in 'cause_present'
             period_effect (int,float,np.ndarray(float)): periods of variables in 'effect_present'
         Returns:
-            ranks_present (np.ndarray(float)): array of shape (N_weights, N, maxk+1), containing N_weights 
+            ranks_present (np.ndarray(float)): array of shape (N_weights, N, maxk+1), containing N_weights
                 matrices (N, maxk+1) corresponding to the values of the scaling parameters in 'weights'
         """
         if self.period != None:
-            print(f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
-                    +"ignored.\nSet the periodicity of the features using instead the keyword "
-                    +"'period_present'.")
+            print(
+                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                + "ignored.\nSet the periodicity of the features using instead the keyword "
+                + "'period_present'."
+            )
         if cause_present.shape[0] != effect_present.shape[0]:
             raise ValueError(
                 "Number of points must be the same in 'cause_present','effect_present' and 'effect_future'!"
@@ -767,36 +807,51 @@ class MetricComparisons(Base):
             period_present = None
         elif period_cause is None and period_effect is not None:
             raise ValueError(
-                "'period_cause' is None while 'period_effect' is not None, but the current implementation does not " 
-                +"support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
-                +"putative driver system, set a period larger than the maximum variation of its features."
+                "'period_cause' is None while 'period_effect' is not None, but the current implementation does not "
+                + "support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
+                + "putative driver system, set a period larger than the maximum variation of its features."
             )
         elif period_cause is not None and period_effect is None:
             raise ValueError(
-                "'period_cause' is not None while 'period_effect' is None, but the current implementation does not " 
-                +"support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
-                +"putative driven system, set a period larger than the maximum variation of its features."
+                "'period_cause' is not None while 'period_effect' is None, but the current implementation does not "
+                + "support mixed boundary conditions.\nIf you do not want to compute periodic distances for the "
+                + "putative driven system, set a period larger than the maximum variation of its features."
             )
         else:
-            assert ((isinstance(period_cause, (int, float)) or isinstance(period_cause, (np.ndarray, list)))
-                    and (isinstance(period_effect, (int, float)) or isinstance(period_effect, (np.ndarray, list)))), \
-                    "'period_cause'and 'period_effect' must be either float scalars or numpy arrays of floats " \
-                    + f"of shapes ({cause_present.shape[1]},) and ({effect_present.shape[1]},)"
+            assert (
+                isinstance(period_cause, (int, float))
+                or isinstance(period_cause, (np.ndarray, list))
+            ) and (
+                isinstance(period_effect, (int, float))
+                or isinstance(period_effect, (np.ndarray, list))
+            ), (
+                "'period_cause'and 'period_effect' must be either float scalars or numpy arrays of floats "
+                + f"of shapes ({cause_present.shape[1]},) and ({effect_present.shape[1]},)"
+            )
             if isinstance(period_cause, (int, float)):
-                period_cause = np.full(cause_present.shape[1], fill_value=period_cause, dtype=float)
+                period_cause = np.full(
+                    cause_present.shape[1], fill_value=period_cause, dtype=float
+                )
             if isinstance(period_effect, (int, float)):
-                period_effect = np.full(effect_present.shape[1], fill_value=period_effect, dtype=float)
+                period_effect = np.full(
+                    effect_present.shape[1], fill_value=period_effect, dtype=float
+                )
             period_present = np.concatenate((period_cause, period_effect))
-            
+
         ranks_present = Parallel(n_jobs=self.njobs)(
             delayed(compute_nn_distances)(
-                 np.column_stack((weight * cause_present, effect_present)), self.maxk, self.metric, period_present,
+                np.column_stack((weight * cause_present, effect_present)),
+                self.maxk,
+                self.metric,
+                period_present,
             )
             for weight in weights
         )
 
         ranks_present = np.delete(np.array(ranks_present), [0], axis=1)
-        ranks_present = ranks_present.reshape((len(weights),cause_present.shape[0],self.maxk+1))
+        ranks_present = ranks_present.reshape(
+            (len(weights), cause_present.shape[0], self.maxk + 1)
+        )
 
         return ranks_present
 
@@ -806,7 +861,7 @@ class MetricComparisons(Base):
         """Return the imbalances (weight * cause_present, effect_present) -> effect_future.
 
         Args:
-            ranks_present (np.ndarray(float)): array of shape (N_weights, N, maxk+1), containing N_weights 
+            ranks_present (np.ndarray(float)): array of shape (N_weights, N, maxk+1), containing N_weights
                 matrices (N, maxk+1) corresponding to the scanned values of the scaling parameter
             effect_future (np.ndarray(float)): N x D2 matrix, putative driven system data set at time tau
             k (int): order of nearest neighbour considered for the calculation of the imbalance
@@ -817,9 +872,11 @@ class MetricComparisons(Base):
                 in 'ranks_present'
         """
         if self.period != None:
-            print(f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
-                    +"ignored.\nSet the periodicity of the features using instead the keyword "
-                    +"'period_effect'.")
+            print(
+                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                + "ignored.\nSet the periodicity of the features using instead the keyword "
+                + "'period_effect'."
+            )
 
         _, ranks_effect_future = compute_nn_distances(
             effect_future, self.maxk, self.metric, period_effect

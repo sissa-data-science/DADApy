@@ -139,10 +139,12 @@ def test_return_inf_imb_causality_input_rank():
 
     expected_imbalances = [0.05328]
 
-    mc = MetricComparisons(maxk=X0.shape[0]-1)
+    mc = MetricComparisons(maxk=X0.shape[0] - 1)
 
     ranks_present = mc.return_ranks_present_for_all_weights(
-        cause_present=X0, effect_present=Y0, weights=weights, 
+        cause_present=X0,
+        effect_present=Y0,
+        weights=weights,
     )
 
     imbalances = mc.return_inf_imb_causality_input_rank(
@@ -150,4 +152,3 @@ def test_return_inf_imb_causality_input_rank():
     )
 
     assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
-
