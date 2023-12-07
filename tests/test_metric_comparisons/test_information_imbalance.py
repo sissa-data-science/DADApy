@@ -107,7 +107,7 @@ def test_return_inf_imb_two_selected_coords():
 
 
 def test_return_inf_imb_causality():
-    """Test information imbalance between selected coordinates."""
+    """Test information imbalance for causality test"""
     traj = np.load(filename_traj)
     weights = [0, 0.2, 0.4, 0.8, 1]
     k = 5
@@ -116,7 +116,7 @@ def test_return_inf_imb_causality():
     Y0 = traj[:-tau, 3:]
     Ytau = traj[tau:, 3:]
 
-    expected_imbalances = [0.00493, 0.00479, 0.00606, 0.00855, 0.00957]
+    expected_imbalances = [0.06198, 0.053285, 0.04880, 0.04934, 0.05225]
 
     mc = MetricComparisons(maxk=X0.shape[0] - 1)
 
@@ -125,3 +125,29 @@ def test_return_inf_imb_causality():
     )
 
     assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
+
+
+def test_return_inf_imb_causality_input_rank():
+    """Test information imbalance for causality test, implementation with input ranks"""
+    traj = np.load(filename_traj)
+    weights = [0.2]
+    k = 5
+    tau = 5
+    X0 = traj[:-tau, :3]
+    Y0 = traj[:-tau, 3:]
+    Ytau = traj[tau:, 3:]
+
+    expected_imbalances = [0.05328]
+
+    mc = MetricComparisons(maxk=X0.shape[0]-1)
+
+    ranks_present = mc.return_ranks_present_for_all_weights(
+        cause_present=X0, effect_present=Y0, weights=weights, 
+    )
+
+    imbalances = mc.return_inf_imb_causality_input_rank(
+        ranks_present=ranks_present, effect_future=Ytau, k=k
+    )
+
+    assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
+
