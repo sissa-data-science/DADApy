@@ -666,6 +666,7 @@ class MetricComparisons(Base):
         period_conditioning=None,
     ):
         """Return the imbalances (weight * cause_present, effect_present) -> effect_future.
+
            When conditioning_present is not None, the first space is extended with an additional weight.
 
         Args:
@@ -747,6 +748,7 @@ class MetricComparisons(Base):
         period_present=None,
     ):
         """Return the imbalance (weight * cause_present, effect_present) -> effect_future.
+
            When conditioning_present is not None, the first space is extended with an additional weight.
 
         Args:
