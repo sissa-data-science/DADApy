@@ -26,10 +26,10 @@ from joblib import Parallel, delayed
 
 from dadapy._cython import cython_overlap as c_ov
 from dadapy._utils.metric_comparisons import (
-    _return_imbalance,
-    _return_period_present,
-    _return_period_mixed,
     _compute_2d_grid,
+    _return_imbalance,
+    _return_period_mixed,
+    _return_period_present,
 )
 from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
