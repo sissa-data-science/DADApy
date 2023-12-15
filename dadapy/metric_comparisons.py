@@ -815,7 +815,7 @@ class MetricComparisons(Base):
             imbs_no_cause (np.ndarray(float)): array of shape (weights_conditioning,) containing the imbalances
                 (weight*cause_present, effect_present) -> effect_future
             imbs_with_cause (np.ndarray(float)): array of shape (weights_cause * weights_conditioning,) containing the
-                imbalances (weight * cause_present, weight_conditioning * conditioning_present, effect_present) 
+                imbalances (weight * cause_present, weight_conditioning * conditioning_present, effect_present)
                 -> effect_future
         """
         weights_grid = _compute_2d_grid(weights_cause, weights_conditioning)
