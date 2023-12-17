@@ -707,7 +707,7 @@ class MetricComparisons(Base):
         dim_cause = cause_present.shape[1]
         dim_effect = effect_present.shape[1]
         dim_conditioning = (
-            None if period_conditioning is None else period_conditioning.shape[1]
+            None if period_conditioning is None else conditioning_present.shape[1]
         )
         period_present = _return_period_present(
             period_cause,

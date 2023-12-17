@@ -152,3 +152,36 @@ def test_return_inf_imb_causality_input_rank():
     )
 
     assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
+
+
+def test_return_inf_imb_causality_conditioning_and_pbcs():
+    """Test information imbalance for causality test, when conditioning is employed."""
+    traj = np.load(filename_traj)
+    weights = [[0.1, 0.0], [0.1, 0.3], [0.1, 0.6], [0.1, 0.9]]
+    k = 5
+    tau = 5
+    X0 = traj[:-tau, :3] - np.min(traj[:-tau, :3])
+    Y0 = traj[:-tau, 3:] - np.min(traj[:-tau, 3:])
+    Z0 = Y0 + 0.1
+    Ytau = traj[tau:, 3:] - np.min(traj[tau:, 3:])
+
+    period_cause = 100
+    period_effect = 200
+    period_conditioning = 300
+    expected_imbalances = [0.05806, 0.05836, 0.05910, 0.05952]
+
+    mc = MetricComparisons(maxk=X0.shape[0] - 1)
+
+    imbalances = mc.return_inf_imb_causality(
+        cause_present=X0,
+        effect_present=Y0,
+        conditioning_present=Z0,
+        effect_future=Ytau,
+        weights=weights,
+        k=k,
+        period_cause=period_cause,
+        period_effect=period_effect,
+        period_conditioning=period_conditioning,
+    )
+
+    assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
