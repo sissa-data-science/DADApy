@@ -25,7 +25,12 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from dadapy._cython import cython_overlap as c_ov
-from dadapy._utils.metric_comparisons import _return_imbalance
+from dadapy._utils.metric_comparisons import (
+    _compute_2d_grid,
+    _return_imbalance,
+    _return_period_mixed,
+    _return_period_present,
+)
 from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
 
@@ -649,61 +654,284 @@ class MetricComparisons(Base):
         return overlaps
 
     def return_inf_imb_causality(
-        self, cause_present, effect_present, effect_future, weights, k=1
+        self,
+        cause_present,
+        effect_present,
+        effect_future,
+        weights,
+        conditioning_present=None,
+        k=1,
+        period_cause=None,
+        period_effect=None,
+        period_conditioning=None,
     ):
         """Return the imbalances (weight * cause_present, effect_present) -> effect_future.
 
+           When conditioning_present is not None, the first space is extended with an additional weight.
+
         Args:
-            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time t
-            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time t
-            effect_future (np.ndarray(float)): N x D2 matrix, putative driven system data set at time t + tau
-            weights (list(float), np.ndarray(float)): scaling parameters for the driver system at time t
+            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time 0
+            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time 0
+            effect_future (np.ndarray(float)): N x D2 matrix, putative driven system data set at time tau
+            weights (list(float), np.ndarray(float)): scaling parameters for the variables at time 0
+                (1D array if conditioning_present is None, 2D array otherwise)
             k (int): order of nearest neighbour considered for the calculation of the imbalance
+            period_cause (int,float,np.ndarray(float)): periods of variables in 'cause_present'
+            period_effect (int,float,np.ndarray(float)): periods of variables in 'effect_present' and 'effect_future'
+            period_conditioning (int,float,np.ndarray(float)): periods of variables in 'conditioning_present'
 
         Returns:
             imbalances (np.ndarray(float)): the information imbalances for the different weights
         """
+        if self.period is not None:
+            print(
+                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                + "ignored.\nSet the periodicity of the features using instead the keywords "
+                + "'period_cause' and 'period_effect'."
+            )
+        if (
+            cause_present.shape[0] != effect_present.shape[0]
+            or cause_present.shape[0] != effect_future.shape[0]
+        ):
+            raise ValueError(
+                "Number of points must be the same in 'cause_present','effect_present' and 'effect_future'!"
+            )
+        if (
+            conditioning_present is not None
+            and conditioning_present.shape[0] != cause_present.shape[0]
+        ):
+            raise ValueError(
+                "Number of points in 'conditioning_present' and 'cause_present' do not match!"
+            )
+
+        dim_cause = cause_present.shape[1]
+        dim_effect = effect_present.shape[1]
+        dim_conditioning = (
+            None if conditioning_present is None else conditioning_present.shape[1]
+        )
+        period_present = _return_period_present(
+            period_cause,
+            period_effect,
+            period_conditioning,
+            dim_cause,
+            dim_effect,
+            dim_conditioning,
+        )
+
         _, ranks_effect_future = compute_nn_distances(
-            effect_future, self.maxk, self.metric, self.period
+            effect_future, self.maxk, self.metric, period_effect
         )
 
         imbalances = Parallel(n_jobs=self.njobs)(
-            delayed(self.return_inf_imb_causality_target_rank)(
-                cause_present, effect_present, ranks_effect_future, weight, k
+            delayed(self._return_inf_imb_causality_target_rank)(
+                cause_present,
+                effect_present,
+                ranks_effect_future,
+                conditioning_present,
+                weight,
+                k,
+                period_present,
             )
             for weight in weights
         )
 
         return imbalances
 
-    def return_inf_imb_causality_target_rank(
-        self, cause_present, effect_present, ranks_effect_future, weight=1, k=1
+    def _return_inf_imb_causality_target_rank(
+        self,
+        cause_present,
+        effect_present,
+        ranks_effect_future,
+        conditioning_present=None,
+        weight=1,
+        k=1,
+        period_present=None,
     ):
         """Return the imbalance (weight * cause_present, effect_present) -> effect_future.
 
+           When conditioning_present is not None, the first space is extended with an additional weight.
+
         Args:
-            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time t
-            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time t
-            ranks_effect_future (np.ndarray(float)): N x maxk matrix, putative driven system ranks at time t + tau
-            weight (float): scaling parameter for the driver system at time t
+            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time 0
+            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time 0
+            ranks_effect_future (np.ndarray(float)): N x maxk matrix, putative driven system ranks at time tau
+            weight (float or np.ndarray(float)): scaling parameter space at time 0; scalar number if
+                conditioning_present is None, np.ndarray of shape (2,) otherwise
             k (int): order of nearest neighbour considered for the calculation of the imbalance
+            period_present (np.ndarray(float)): periods of all features in space
+                (weight*cause_present, effect_present), to compute distances with PBCs
 
         Returns:
             imb (float): the information imbalance
         """
-        if (
-            cause_present.shape[0] != effect_present.shape[0]
-            or cause_present.shape[0] != ranks_effect_future.shape[0]
-        ):
-            raise ValueError(
-                "Number of points must be the same in 'cause_present','effect_present' and 'effect_future'!"
+        if conditioning_present is None:
+            space_present = np.column_stack((weight * cause_present, effect_present))
+        else:
+            space_present = np.column_stack(
+                (
+                    weight[0] * cause_present,
+                    weight[1] * conditioning_present,
+                    effect_present,
+                )
             )
 
-        space_present = np.column_stack((weight * cause_present, effect_present))
         _, ranks_present = compute_nn_distances(
-            space_present, self.maxk, self.metric, self.period
+            space_present,
+            self.maxk,
+            self.metric,
+            period_present,
         )
 
         imb = _return_imbalance(ranks_present, ranks_effect_future, k=k)
 
         return imb
+
+    def return_inf_imb_causality_conditioning(
+        self,
+        cause_present,
+        effect_present,
+        conditioning_present,
+        effect_future,
+        weights_cause,
+        weights_conditioning,
+        k=1,
+        period_cause=None,
+        period_effect=None,
+        period_conditioning=None,
+    ):
+        """Return the scanned imbalances in presence and in absence of the putative causal system.
+
+        Args:
+            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time 0
+            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time 0
+            conditioning_present (np.ndarray(float)): N x D3 matrix, conditioning driven system data set at time 0
+            effect_future (np.ndarray(float)): N x D2 matrix, putative driven system data set at time tau
+            weights_cause (list(float), np.ndarray(float)): scaling parameters for the causal variables
+            weights_conditioning (list(float), np.ndarray(float)): scaling parameters for the conditioning variables
+            k (int): order of nearest neighbour considered for the calculation of the imbalance
+            period_cause (int,float,np.ndarray(float)): periods of variables in 'cause_present'
+            period_effect (int,float,np.ndarray(float)): periods of variables in 'effect_present' and 'effect_future'
+            period_conditioning (int,float,np.ndarray(float)): periods of variables in 'conditioning_present'
+
+        Returns:
+            imbs_no_cause (np.ndarray(float)): array of shape (weights_conditioning,) containing the imbalances
+                (weight*cause_present, effect_present) -> effect_future
+            imbs_with_cause (np.ndarray(float)): array of shape (weights_cause * weights_conditioning,) containing the
+                imbalances (weight * cause_present, weight_conditioning * conditioning_present, effect_present)
+                -> effect_future
+        """
+        weights_grid = _compute_2d_grid(weights_cause, weights_conditioning)
+
+        d = MetricComparisons(maxk=cause_present.shape[0] - 1, njobs=self.njobs)
+
+        imbs_no_cause = d.return_inf_imb_causality(
+            cause_present=conditioning_present,
+            effect_present=effect_present,
+            effect_future=effect_future,
+            weights=weights_conditioning,
+            k=k,
+            period_cause=period_conditioning,
+            period_effect=period_effect,
+        )
+        imbs_with_cause = d.return_inf_imb_causality(
+            cause_present=cause_present,
+            effect_present=effect_present,
+            conditioning_present=conditioning_present,
+            effect_future=effect_future,
+            weights=weights_grid,
+            k=k,
+            period_cause=period_cause,
+            period_effect=period_effect,
+            period_conditioning=period_conditioning,
+        )
+
+        return imbs_no_cause, imbs_with_cause
+
+    def return_ranks_present_for_all_weights(
+        self,
+        cause_present,
+        effect_present,
+        weights,
+        period_cause=None,
+        period_effect=None,
+    ):
+        """Return the nearest neighbors' indices in space (weight*cause_present, effect_present) for all weights.
+
+        Args:
+            cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time 0
+            effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time 0
+            weights (list(float), np.ndarray(float)): scaling parameters for the driver system at time 0
+            period_cause (int,float,np.ndarray(float)): periods of variables in 'cause_present'
+            period_effect (int,float,np.ndarray(float)): periods of variables in 'effect_present'
+        Returns:
+            ranks_present (np.ndarray(float)): array of shape (N_weights, N, maxk+1), containing N_weights
+                matrices (N, maxk+1) corresponding to the values of the scaling parameters in 'weights'
+        """
+        if self.period is not None:
+            print(
+                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                + "ignored.\nSet the periodicity of the features using instead the keyword "
+                + "'period_present'."
+            )
+        if cause_present.shape[0] != effect_present.shape[0]:
+            raise ValueError(
+                "Number of points must be the same in 'cause_present','effect_present' and 'effect_future'!"
+            )
+        dim_cause = cause_present.shape[1]
+        dim_effect = effect_present.shape[1]
+        period_present = _return_period_mixed(
+            period_cause, period_effect, dim_cause, dim_effect
+        )
+
+        ranks_present = Parallel(n_jobs=self.njobs)(
+            delayed(compute_nn_distances)(
+                np.column_stack((weight * cause_present, effect_present)),
+                self.maxk,
+                self.metric,
+                period_present,
+            )
+            for weight in weights
+        )
+
+        ranks_present = np.delete(np.array(ranks_present), [0], axis=1)
+        ranks_present = ranks_present.reshape(
+            (len(weights), cause_present.shape[0], self.maxk + 1)
+        )
+
+        return ranks_present
+
+    def return_inf_imb_causality_input_rank(
+        self, ranks_present, effect_future, k=1, period_effect=None
+    ):
+        """Return the imbalances (weight * cause_present, effect_present) -> effect_future.
+
+        Args:
+            ranks_present (np.ndarray(float)): array of shape (N_weights, N, maxk+1), containing N_weights
+                matrices (N, maxk+1) corresponding to the scanned values of the scaling parameter
+            effect_future (np.ndarray(float)): N x D2 matrix, putative driven system data set at time tau
+            k (int): order of nearest neighbour considered for the calculation of the imbalance
+            period_effect (int,float,np.ndarray(float)): periods of the variables in 'effect_future'
+
+        Returns:
+            imbalances (np.ndarray(float)): the information imbalances for the different weights included
+                in 'ranks_present'
+        """
+        if self.period is not None:
+            print(
+                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                + "ignored.\nSet the periodicity of the features using instead the keyword "
+                + "'period_effect'."
+            )
+
+        _, ranks_effect_future = compute_nn_distances(
+            effect_future, self.maxk, self.metric, period_effect
+        )
+
+        imbalances = Parallel(n_jobs=self.njobs)(
+            delayed(_return_imbalance)(
+                ranks_present[i_weight], ranks_effect_future, k=k
+            )
+            for i_weight in range(ranks_present.shape[0])
+        )
+
+        return np.array(imbalances)
