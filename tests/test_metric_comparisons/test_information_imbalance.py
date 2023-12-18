@@ -21,7 +21,6 @@ import numpy as np
 import pytest
 
 from dadapy import MetricComparisons
-from dadapy._utils.metric_comparisons import _compute_2d_grid
 
 filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
 filename_traj = os.path.join(
