@@ -21,6 +21,7 @@ import numpy as np
 import pytest
 
 from dadapy import MetricComparisons
+from dadapy._utils.metric_comparisons import _compute_2d_grid
 
 filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
 filename_traj = os.path.join(
@@ -154,48 +155,74 @@ def test_return_inf_imb_causality_input_rank():
     assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
 
 
-def test_return_inf_imb_causality_conditioning_and_pbcs():
+def test_return_inf_imb_causality_conditioning():
     """Test information imbalance for causality test, when conditioning is employed."""
     traj = np.load(filename_traj)
-    weights = [[0.1, 0.0], [0.1, 0.5]]
+    weights_X0 = [0.1, 0.2]
+    weights_Z0 = [0.1, 0.2]
     k = 5
     tau = 5
-    X0 = traj[:-tau, :3] - np.min(traj[:-tau, :3])
-    Y0 = traj[:-tau, 3:] - np.min(traj[:-tau, 3:])
+    X0 = traj[:-tau, :3]
+    Y0 = traj[:-tau, 3:]
     Z0 = Y0 + 0.1
-    Ytau = traj[tau:, 3:] - np.min(traj[tau:, 3:])
+    Ytau = traj[tau:, 3:]
 
-    expected_imbalances = [0.05806, 0.05886]
+    expected_imbs_no_cause = [0.06198, 0.06198]
+    expected_imbs_with_cause = [0.05812, 0.05339, 0.05820, 0.053423]
 
     mc = MetricComparisons(maxk=X0.shape[0] - 1)
 
-    imbalances = mc.return_inf_imb_causality(
+    imbs_no_cause, imbs_with_cause = mc.return_inf_imb_causality_conditioning(
         cause_present=X0,
         effect_present=Y0,
         conditioning_present=Z0,
         effect_future=Ytau,
-        weights=weights,
+        weights_cause=weights_X0,
+        weights_conditioning=weights_Z0,
         k=k,
         period_cause=None,
         period_effect=None,
         period_conditioning=None,
     )
 
+    assert imbs_no_cause == pytest.approx(
+        expected_imbs_no_cause, abs=0.00001
+    ) and imbs_with_cause == pytest.approx(expected_imbs_with_cause, abs=0.00001)
+
+
+def test_return_inf_imb_causality_conditioning_pbcs():
+    """Test information imbalance for causality test, when conditioning is employed."""
+    traj = np.load(filename_traj)
+    weights_X0 = [0.1, 0.2]
+    weights_Z0 = [0.1, 0.2]
+    k = 5
+    tau = 5
+    X0 = traj[:-tau, :3] - np.min(traj[:-tau, :3])
+    Y0 = traj[:-tau, 3:] - np.min(traj[:-tau, 3:])
+    Z0 = Y0 + 0.1
+    Ytau = traj[tau:, 3:] - np.min(traj[tau:, 3:])
     period_cause = 100
     period_effect = 100
     period_conditioning = 100
-    imbalances_pbc = mc.return_inf_imb_causality(
+
+    expected_imbs_no_cause = [0.06198, 0.06198]
+    expected_imbs_with_cause = [0.05812, 0.05339, 0.05820, 0.053423]
+
+    mc = MetricComparisons(maxk=X0.shape[0] - 1)
+
+    imbs_no_cause, imbs_with_cause = mc.return_inf_imb_causality_conditioning(
         cause_present=X0,
         effect_present=Y0,
         conditioning_present=Z0,
         effect_future=Ytau,
-        weights=weights,
+        weights_cause=weights_X0,
+        weights_conditioning=weights_Z0,
         k=k,
         period_cause=period_cause,
         period_effect=period_effect,
         period_conditioning=period_conditioning,
     )
 
-    assert imbalances == pytest.approx(
-        expected_imbalances, abs=0.00001
-    ) and imbalances_pbc == pytest.approx(expected_imbalances, abs=0.00001)
+    assert imbs_no_cause == pytest.approx(
+        expected_imbs_no_cause, abs=0.00001
+    ) and imbs_with_cause == pytest.approx(expected_imbs_with_cause, abs=0.00001)

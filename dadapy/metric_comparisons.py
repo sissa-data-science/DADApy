@@ -707,7 +707,7 @@ class MetricComparisons(Base):
         dim_cause = cause_present.shape[1]
         dim_effect = effect_present.shape[1]
         dim_conditioning = (
-            None if period_conditioning is None else conditioning_present.shape[1]
+            None if conditioning_present is None else conditioning_present.shape[1]
         )
         period_present = _return_period_present(
             period_cause,
@@ -830,9 +830,8 @@ class MetricComparisons(Base):
             effect_future=effect_future,
             weights=weights_conditioning,
             k=k,
-            period_cause=period_cause,
+            period_cause=period_conditioning,
             period_effect=period_effect,
-            period_conditioning=period_conditioning,
         )
         imbs_with_cause = d.return_inf_imb_causality(
             cause_present=cause_present,
