@@ -36,15 +36,13 @@ from dadapy.id_estimation import IdEstimation
 cores = multiprocessing.cpu_count()
 
 
-class DensityEstimation(IdEstimation):
+class DensityEstimation(KStar):
     """Computes the log-density and its error at each point and other properties.
 
-    Inherits from class IdEstimation. Can estimate the optimal number k* of neighbors for each points.
+    Inherits from class KStar. 
     Can compute the log-density and its error at each point choosing among various kNN-based methods.
 
     Attributes:
-        kstar (np.array(float)): array containing the chosen number k* in the neighbourhood of each of the N points
-        dc (np.array(float), optional): array containing the distance of the k*th neighbor from each of the N points
         log_den (np.array(float), optional): array containing the N log-densities
         log_den_err (np.array(float), optional): array containing the N errors on the log_den
 
@@ -62,8 +60,6 @@ class DensityEstimation(IdEstimation):
             n_jobs=n_jobs,
         )
 
-        self.kstar = None
-        self.dc = None
         self.log_den = None
         self.log_den_err = None
 
