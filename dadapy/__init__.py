@@ -8,3 +8,6 @@ from .feature_weighting import FeatureWeighting
 from .id_discrete import *
 from .id_estimation import IdEstimation
 from .metric_comparisons import MetricComparisons
+from .kstar import KStar
+from .neighbourhood_graph import NeighGraph
+from .density_advanced import DensityAdvancedEstimation
