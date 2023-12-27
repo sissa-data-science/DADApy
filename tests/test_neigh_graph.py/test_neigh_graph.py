@@ -53,16 +53,36 @@ neigh_vector_diffs = [
 
 
 expected_common_neighs_array = [1, 2, 2, 2, 2, 1]
-expected_common_neighs_mat = [  [0, 1, 0, 0, 0, 0],
-                                [1, 0, 2, 0, 0, 0],
-                                [0, 2, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 2, 0],
-                                [0, 0, 0, 2, 0, 1],
-                                [0, 0, 0, 0, 1, 0],
-                            ]
+expected_common_neighs_mat = [
+    [0, 1, 0, 0, 0, 0],
+    [1, 0, 2, 0, 0, 0],
+    [0, 2, 0, 0, 0, 0],
+    [0, 0, 0, 0, 2, 0],
+    [0, 0, 0, 2, 0, 1],
+    [0, 0, 0, 0, 1, 0],
+]
 
 
-expected_pearson_array = np.array([1./3., 1.,   1. ,  1.,   1.,   1./3.])
+expected_pearson_array = np.array([1.0 / 3.0, 1.0, 1.0, 1.0, 1.0, 1.0 / 3.0])
+
+expected_pearson_mat = np.array(
+    [
+        [
+            1.0,
+            1.0 / 3.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ],
+        [1.0 / 3.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 1.0, 1.0 / 3.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0 / 3.0, 1.0],
+    ]
+)
+
 
 def test_compute_neigh_indices():
     """Test the compute_neigh_indices method."""
@@ -124,13 +144,13 @@ def test_compute_common_neighs():
     print(neigh_graph.common_neighs_mat)
     assert np.array_equal(neigh_graph.common_neighs_mat, expected_common_neighs_mat)
 
+
 def test_compute_pearson():
     """Test the compute_pearson method."""
     # create the NeighGraph object
     neigh_graph = NeighGraph(coordinates=data)
     neigh_graph.compute_distances()
     neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
-    neigh_graph.compute_pearson()
+    neigh_graph.compute_pearson(comp_p_mat=True)
     assert np.allclose(neigh_graph.pearson_array, expected_pearson_array)
-
-print(test_compute_pearson())
+    assert np.allclose(neigh_graph.pearson_mat, expected_pearson_mat)

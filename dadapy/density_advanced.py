@@ -30,12 +30,12 @@ from scipy import linalg as slin
 from dadapy._cython import cython_density as cd
 from dadapy._cython import cython_grads as cgr
 
-from dadapy.neighbourhood_graph import NeighGraph
+from dadapy.neigh_graph import NeighGraph
 
 cores = multiprocessing.cpu_count()
 
 
-class DensityEstimation(NeighGraph):
+class DensityAdvanced(NeighGraph):
     """Computes the log-density and (where implemented) its error at each point and other properties.
 
     Inherits from class NeighGraph.
@@ -43,7 +43,7 @@ class DensityEstimation(NeighGraph):
     Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component using an improved version of the mean-shift gradient algorithm [Fukunaga1975][Carli2023]
     Can return an estimate of log-density differences and their error each point based on the gradient estimates.
     Can compute the log-density and its error at each using BMTI.
-    
+
 
     Attributes:
         grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i
@@ -134,7 +134,7 @@ class DensityEstimation(NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_grads_semisum(self, pearson_method="jaccard",comp_p_mat=False):
+    def compute_deltaFs_grads_semisum(self, pearson_method="jaccard", comp_p_mat=False):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using\
             a linear expansion with as slope the semisum of the average gradient of the log-density over the neighbourhood of points i and j. \
             The parameter chi is used in the estimation of the squared error of the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), \
@@ -175,9 +175,8 @@ class DensityEstimation(NeighGraph):
 
         # check or compute common_neighs
         if self.pearson_mat is None:
-            self.compute_pearson(method=pearson_method,comp_p_mat=comp_p_mat)
+            self.compute_pearson(method=pearson_method, comp_p_mat=comp_p_mat)
 
-  
         Fij_array = 0.5 * np.einsum("ij, ij -> i", g1 + g2, self.neigh_vector_diffs)
         vari = np.einsum(
             "ij, ij -> i",
@@ -189,7 +188,9 @@ class DensityEstimation(NeighGraph):
             self.neigh_vector_diffs,
             np.einsum("ijk, ik -> ij", g_var2, self.neigh_vector_diffs),
         )
-        self.Fij_var_array = 0.25 * (vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj))
+        self.Fij_var_array = 0.25 * (
+            vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj)
+        )
 
         sec2 = time.time()
         if self.verb:
@@ -201,7 +202,7 @@ class DensityEstimation(NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_inv_cross_covariance(self,pearson_method="jaccard"):
+    def compute_deltaFs_inv_cross_covariance(self, pearson_method="jaccard"):
         """Compute the cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using cython.
 
             AAAAAAAAAAAAAAAA possibile spostarlo in utils al momento. Peraltro qui bisogna trovare un modo per farlo funzionare
@@ -214,38 +215,45 @@ class DensityEstimation(NeighGraph):
 
         # check for deltaFs
         if self.pearson_mat is None:
-            self.compute_pearson(method=pearson_method,comp_p_mat=True)
+            self.compute_pearson(method=pearson_method, comp_p_mat=True)
 
         # check or compute deltaFs_grads_semisum
         if self.Fij_var_array is None:
             self.compute_deltaFs_grads_semisum()
         # AAAAAAAAAAAAAAA controllare se serve
-        #smallnumber = 1.e-10
-        #data.grads_var += smallnumber*np.tile(np.eye(data.dims),(data.N,1,1))
+        # smallnumber = 1.e-10
+        # data.grads_var += smallnumber*np.tile(np.eye(data.dims),(data.N,1,1))
         # AAAAAAAAAAAAAAA fine controllare se serve
 
         if self.verb:
-            print(
-                "Estimation of the deltaFs cross-covariance started"
-            )
+            print("Estimation of the deltaFs cross-covariance started")
         sec = time.time()
         self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
-                        self.grads_var,
-                        self.neigh_vector_diffs,
-                        self.nind_list,
-                        self.pearson_mat,
-                        self.Fij_var_array,
+            self.grads_var,
+            self.neigh_vector_diffs,
+            self.nind_list,
+            self.pearson_mat,
+            self.Fij_var_array,
         )
 
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds computing the deltaFs cross-covariance".format(sec2 - sec))
+            print(
+                "{0:0.2f} seconds computing the deltaFs cross-covariance".format(
+                    sec2 - sec
+                )
+            )
 
     # ----------------------------------------------------------------------------------------------
 
-
-    def compute_density_BMTI(self, method=uncorr, use_variance=True, redundancy_factor=None, comp_err=False, mem_efficient=True):
-
+    def compute_density_BMTI(
+        self,
+        method="uncorr",
+        use_variance=True,
+        redundancy_factor=None,
+        comp_err=False,
+        mem_efficient=True,
+    ):
         # method    = uncorr assumes the cross-covariance matrix is diagonal with diagonal = Fij_var_array;
         #           = LSDI (Least Squares with respect to a Diagonal Inverse) inverts the cross-covariance C
         #             by finding the approximate diagonal inverse which multiplied by C gives the least-squared
@@ -257,7 +265,6 @@ class DensityEstimation(NeighGraph):
         # mem_efficient = True uses sparse matrices;
         #               = False uses dense NxN matrices
 
-
         # compute changes in free energy
         if self.Fij_array is None:
             self.compute_deltaFs_grads_semisum()
@@ -268,41 +275,55 @@ class DensityEstimation(NeighGraph):
 
         # define redundancy factor (equals 1 in all cases in which method != uncorr)
         if redundancy_factor is None:
-            redundancy = np.ones(self.nspar,dtype=np.float_)
+            redundancy = np.ones(self.nspar, dtype=np.float_)
 
-        elif redundancy_factor=='geometric_mean':
-            assert method is 'uncorr', "redundancy_factor can be defined only for 'uncorr' method"
+        elif redundancy_factor == "geometric_mean":
+            assert (
+                method == "uncorr"
+            ), "redundancy_factor can be defined only for 'uncorr' method"
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
             k1 = self.kstar[self.nind_list[:, 0]]
             k2 = self.kstar[self.nind_list[:, 1]]
             redundancy = np.sqrt(k1 * k2)
 
         elif np.size(redundancy_factor) == self.nspar:
-            assert method is uncorr, "redundancy_factor can be defined only for 'uncorr' method"
+            assert (
+                method == "uncorr"
+            ), "redundancy_factor can be defined only for 'uncorr' method"
             # redundancy vector
             redundancy = redundancy_factor
 
-        else
-            print("Invalid 'redundancy_factor' value")
-            break    
+        else:
+            raise ValueError("Invalid 'redundancy_factor' value")
 
         # define the likelihood covarince matrix
         if use_variance:
-            if method is 'uncorr':
-                tmpvec = np.ones(self.nspar, dtype=np.float_)/ self.Fij_var_array / redundancy
-            elif method is 'LSDI':
+            if method == "uncorr":
+                tmpvec = (
+                    np.ones(self.nspar, dtype=np.float_)
+                    / self.Fij_var_array
+                    / redundancy
+                )
+            elif method is "LSDI":
                 self.compute_deltaFs_inv_cross_covariance()
-                tmpvec = self.inv_deltaFs_cov    
+                tmpvec = self.inv_deltaFs_cov
         else:
-            tmpvec = np.ones(self.nspar, dtype=np.float_)/ redundancy
+            tmpvec = np.ones(self.nspar, dtype=np.float_) / redundancy
 
         sec2 = time.time()
 
-
         # compute adjacency matrix and coefficients vector
-        A = sparse.csr_matrix((-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])), shape=(self.N,self.N), dtype=np.float_)
+        A = sparse.csr_matrix(
+            (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
+            shape=(self.N, self.N),
+            dtype=np.float_,
+        )
 
-        supp_deltaF = sparse.csr_matrix(( self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])), shape=(self.N,self.N), dtype=np.float_)
+        supp_deltaF = sparse.csr_matrix(
+            (self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
+            shape=(self.N, self.N),
+            dtype=np.float_,
+        )
 
         A = sparse.lil_matrix(A + A.transpose())
         diag = np.array(-A.sum(axis=1)).reshape((self.N,))
@@ -315,11 +336,10 @@ class DensityEstimation(NeighGraph):
         if self.verb:
             print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec2))
 
-
         # solve linear system
         sec2 = time.time()
-        if mem_efficient==False:
-            log_den = np.linalg.solve(A.todense(), deltaFcum)    
+        if mem_efficient == False:
+            log_den = np.linalg.solve(A.todense(), deltaFcum)
 
         else:
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
@@ -328,9 +348,8 @@ class DensityEstimation(NeighGraph):
 
         if self.verb:
             print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
-        
-        sec2 = time.time()
 
+        sec2 = time.time()
 
         # compute error
         if comp_err is True:
@@ -351,19 +370,19 @@ class DensityEstimation(NeighGraph):
             print("{0:0.2f} seconds for BMTI density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def compute_density_kstarNN_gCorr(
         self,
         use_variance=True,
-        gauss_approx=True, #see Jan 2022 version compute_density_PAk_gCorr
+        gauss_approx=True,  # see Jan 2022 version compute_density_PAk_gCorr
         alpha=1.0,
         log_den_kstarNN=None,
         log_den_err_kstarNN=None,
         comp_err=False,
         redundancy_factor=None,
-        mem_efficient=True
+        mem_efficient=True,
     ):
-
         if log_den_kstarNN is not None and log_den_err_kstarNN is not None:
             self.log_den = log_den_kstarNN
             self.log_den_err = log_den_err_kstarNN
@@ -379,11 +398,10 @@ class DensityEstimation(NeighGraph):
             print("kastarNN+gCorr density estimation started")
             sec = time.time()
 
-
         if redundancy_factor is None:
-            redundancy = np.ones(self.nspar,dtype=np.float_)
+            redundancy = np.ones(self.nspar, dtype=np.float_)
 
-        elif redundancy_factor=='geometric_mean':
+        elif redundancy_factor == "geometric_mean":
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
             k1 = self.kstar[self.nind_list[:, 0]]
             k2 = self.kstar[self.nind_list[:, 1]]
@@ -391,20 +409,29 @@ class DensityEstimation(NeighGraph):
 
         elif np.size(redundancy_factor) == self.nspar:
             # redundancy vector
-            redundancy = redundancy_factor    
-        
+            redundancy = redundancy_factor
+
         # compute non-zero A-matrix elements
         if use_variance:
-            tmpvec = np.ones(self.nspar, dtype=np.float_)/ self.Fij_var_array / redundancy
+            tmpvec = (
+                np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
+            )
         else:
-            tmpvec = np.ones(self.nspar, dtype=np.float_)/ redundancy
+            tmpvec = np.ones(self.nspar, dtype=np.float_) / redundancy
 
         # initialise sparse adjacency matrix
-        A = sparse.csr_matrix((-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])), shape=(self.N,self.N), dtype=np.float_)
-        
-        # initialise coefficients vector
-        supp_deltaF = sparse.csr_matrix(( self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])), shape=(self.N,self.N), dtype=np.float_)
+        A = sparse.csr_matrix(
+            (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
+            shape=(self.N, self.N),
+            dtype=np.float_,
+        )
 
+        # initialise coefficients vector
+        supp_deltaF = sparse.csr_matrix(
+            (self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
+            shape=(self.N, self.N),
+            dtype=np.float_,
+        )
 
         A = alpha * sparse.lil_matrix(A + A.transpose())
 
@@ -412,26 +439,26 @@ class DensityEstimation(NeighGraph):
         # ALREADY MULTIPLIED A BY ALPHA
         diag = (
             np.array(-A.sum(axis=1)).reshape((self.N,))
-            + (1.0 - alpha) / self.log_den_err ** 2
+            + (1.0 - alpha) / self.log_den_err**2
         )
-            
+
         A.setdiag(diag)
 
         deltaFcum = (
-                alpha
-                * (
-                    np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
-                    - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
-                )
-                + (1.0 - alpha) * self.log_den / self.log_den_err ** 2
+            alpha
+            * (
+                np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
+                - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
             )
+            + (1.0 - alpha) * self.log_den / self.log_den_err**2
+        )
 
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
 
-        if mem_efficient==False:
-            log_den = np.linalg.solve(A.todense(), deltaFcum)    
+        if mem_efficient == False:
+            log_den = np.linalg.solve(A.todense(), deltaFcum)
 
         else:
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
@@ -458,8 +485,10 @@ class DensityEstimation(NeighGraph):
 
         sec2 = time.time()
         if self.verb:
-            print("{0:0.2f} seconds for kastarNN+gCorr density estimation".format(sec2 - sec))
+            print(
+                "{0:0.2f} seconds for kastarNN+gCorr density estimation".format(
+                    sec2 - sec
+                )
+            )
 
-    # ---------------------------------------------------------------------------------------------- 
-
-
+    # ----------------------------------------------------------------------------------------------
