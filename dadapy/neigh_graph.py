@@ -140,6 +140,9 @@ class NeighGraph(KStar):
         if self.neigh_dists is None:
             self.compute_neigh_dists()
 
+        if self.nind_list is None or self.nind_iptr is None:
+            self.compute_neigh_indices()
+
         dgraph = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
 
         for ind_spar, indices in enumerate(self.nind_list):
@@ -287,5 +290,3 @@ class NeighGraph(KStar):
                         p_mat[j, i] = p_mat[i, j]
                 self.pearson_mat = p_mat.todense()
                 np.fill_diagonal(self.pearson_mat, 1.0)
-
-        # AAAAAAAAAAAAA OPTIM: TESTARE SE FUNZIONA MEGLIO COL CICLO FOR O CON NUMPY NOTATION

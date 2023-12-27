@@ -42,7 +42,7 @@ def test_compute_kstar_high_Dthr():
     # create the KStar object
     kstar = KStar(coordinates=data)
     # compute kstar
-    kstar.compute_kstar(Dthr=10000000.0)
+    kstar.compute_kstar(Dthr=1e99)
     # check that the result is correct
     assert np.array_equal(kstar.kstar, expected_kstar_high_Dthr)
 
@@ -53,6 +53,6 @@ def test_set_kstar():
     kstar = KStar(coordinates=data)
     # set kstar
     set_kstar = [1, 2, 3, 4, 5, 6]
-    kstar.set_kstar(kstar=expected_kstar_low_Dthr)
+    kstar.set_kstar(k=set_kstar)
     # check that the result is correct
     assert np.array_equal(kstar.kstar, set_kstar)
