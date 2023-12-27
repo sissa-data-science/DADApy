@@ -31,7 +31,8 @@ from dadapy._utils.density_estimation import (
     return_not_normalised_density_PAk_optimized,
 )
 from dadapy._utils.utils import compute_cross_nn_distances
-from dadapy.id_estimation import IdEstimation
+from dadapy.kstar import KStar
+
 
 cores = multiprocessing.cpu_count()
 
@@ -65,6 +66,7 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
+    # define set kstar method by calling the one from the KStar class
     def set_kstar(self, k=0):
         """Set all elements of kstar to a fixed value k.
 
@@ -73,12 +75,8 @@ class DensityEstimation(KStar):
         Args:
             k: number of neighbours used to compute the density it can be an iteger or an array of integers
         """
-        if isinstance(k, np.ndarray):
-            self.kstar = k
-        else:
-            self.kstar = np.full(self.N, k, dtype=int)
+        super().set_kstar(k)
 
-        self.dc = None
         self.log_den = None
         self.log_den_err = None
 

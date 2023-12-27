@@ -65,6 +65,21 @@ class KStar(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
+    def set_kstar(self, k=0):
+        """Set all elements of kstar to a fixed value k.
+
+        Reset all other class attributes (all depending on kstar).
+
+        Args:
+            k: number of neighbours used to compute the density it can be an iteger or an array of integers
+        """
+        if isinstance(k, np.ndarray):
+            self.kstar = k
+        else:
+            self.kstar = np.full(self.N, k, dtype=int)
+
+        self.dc = None
+
 
     def compute_kstar(self, Dthr=23.92812698):
         """Compute an optimal choice of k for each point.
