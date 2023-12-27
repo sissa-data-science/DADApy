@@ -15,25 +15,18 @@
 
 """Module for testing the KStar class."""
 
-import os
-
 import numpy as np
-import pytest
-
 from dadapy import KStar
 
-# define a basic dataset with 3 points
-data = np.array([[0,   0], 
-                 [0.1,   0], 
-                 [0.2,   0], 
-                 [4,   0], 
-                 [4.1,   0],
-                 [4.2,   0]])
+# define a basic dataset with 6 points
+data = np.array([[0, 0], [0.1, 0], [0.2, 0], [4, 0], [4.1, 0], [4.2, 0]])
 
 
 # TODO: Matteo, are these correct?
-expected_kstar_low_Dthr = np.array([2, 2, 2, 2, 2, 2]) 
+expected_kstar_low_Dthr = np.array([2, 2, 2, 2, 2, 2])
 expected_kstar_high_Dthr = np.array([4, 4, 4, 4, 4, 4])
+
+
 def test_compute_kstar_low_Dthr():
     """Test the compute_kstar method with low Dthr."""
     # create the KStar object
@@ -42,6 +35,7 @@ def test_compute_kstar_low_Dthr():
     kstar.compute_kstar(Dthr=0.0)
     # check that the result is correct
     assert np.array_equal(kstar.kstar, expected_kstar_low_Dthr)
+
 
 def test_compute_kstar_high_Dthr():
     """Test the compute_kstar method with high Dthr."""

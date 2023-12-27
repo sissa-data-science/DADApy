@@ -62,7 +62,6 @@ class KStar(IdEstimation):
         self.kstar = None
         self.dc = None
 
-
     # ----------------------------------------------------------------------------------------------
 
     def set_kstar(self, k=0):
@@ -79,7 +78,6 @@ class KStar(IdEstimation):
             self.kstar = np.full(self.N, k, dtype=int)
 
         self.dc = None
-
 
     def compute_kstar(self, Dthr=23.92812698):
         """Compute an optimal choice of k for each point.
@@ -111,4 +109,3 @@ class KStar(IdEstimation):
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds computing kstar".format(sec2 - sec))
-

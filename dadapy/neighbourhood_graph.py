@@ -25,7 +25,6 @@ import time
 import numpy as np
 from scipy import sparse
 
-from dadapy._cython import cython_density as cd
 from dadapy._cython import cython_grads as cgr
 
 from dadapy.kstar import KStar
@@ -196,7 +195,7 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_common_neighs(self,comp_common_neighs_mat=False):
+    def compute_common_neighs(self, comp_common_neighs_mat=False):
         """Compute the common number of neighbours between couple of points (i,j) such that j is\
         in the neighbourhod of i. The numbers are stored in a scipy sparse csr_matrix format.
 
@@ -215,7 +214,10 @@ class NeighGraph(KStar):
 
         sec = time.time()
         if comp_common_neighs_mat is True:
-            self.common_neighs_array, self.common_neighs_mat = cgr.return_common_neighs_comp_mat(
+            (
+                self.common_neighs_array,
+                self.common_neighs_mat,
+            ) = cgr.return_common_neighs_comp_mat(
                 self.kstar, self.dist_indices, self.nind_list
             )
         else:
@@ -228,7 +230,7 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_pearson(self,comp_p_mat=False,method='jaccard'):
+    def compute_pearson(self, comp_p_mat=False, method="jaccard"):
         """Compute the empiric 
         common number of neighbours between couple of points (i,j) such that j is\
         in the neighbourhod of i. The numbers are stored in a scipy sparse csr_matrix format.
@@ -252,15 +254,26 @@ class NeighGraph(KStar):
             k1 = self.kstar[self.nind_list[:, 0]]
             k2 = self.kstar[self.nind_list[:, 1]]
             # method to estimate pearson
-            if method=="jaccard":
-                self.pearson_array = self.common_neighs_array*1. / (k1 + k2 - self.common_neighs_array)
-            if method=="geometric":
-                self.pearson_array = self.common_neighs_array*1. / np.sqrt(k1 * k2)
-            if method=="squared_geometric":
-                self.pearson_array = self.common_neighs_array*self.common_neighs_array*1. / (k1 * k2)
+            if method == "jaccard":
+                self.pearson_array = (
+                    self.common_neighs_array
+                    * 1.0
+                    / (k1 + k2 - self.common_neighs_array)
+                )
+            if method == "geometric":
+                self.pearson_array = self.common_neighs_array * 1.0 / np.sqrt(k1 * k2)
+            if method == "squared_geometric":
+                self.pearson_array = (
+                    self.common_neighs_array
+                    * self.common_neighs_array
+                    * 1.0
+                    / (k1 * k2)
+                )
             sec2 = time.time()
             if self.verb:
-                print("{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec))
+                print(
+                    "{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec)
+                )
 
         # save in matrix form
         if comp_p_mat is True:
@@ -270,9 +283,9 @@ class NeighGraph(KStar):
                     i = indices[0]
                     j = indices[1]
                     p_mat[i, j] = self.pearson_array[nspar]
-                    if p_mat[j,i] == 0:
-                        p_mat[j,i] = p_mat[i,j]
+                    if p_mat[j, i] == 0:
+                        p_mat[j, i] = p_mat[i, j]
                 self.pearson_mat = p_mat.todense()
-                np.fill_diagonal(self.pearson_mat, 1.)
+                np.fill_diagonal(self.pearson_mat, 1.0)
 
-        # AAAAAAAAAAAAA OPTIM: TESTARE SE FUNZIONA MEGLIO COL CICLO FOR O CON NUMPY NOTATION   
+        # AAAAAAAAAAAAA OPTIM: TESTARE SE FUNZIONA MEGLIO COL CICLO FOR O CON NUMPY NOTATION
