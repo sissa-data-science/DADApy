@@ -23,12 +23,7 @@ from dadapy import NeighGraph
 data = np.array([[0, 0], [0.15, 0], [0.2, 0], [4, 0], [4.1, 0], [4.2, 0]])
 
 # list of neighbor pairs
-expected_nint_list = [[0, 1],
- [1, 2],
- [2, 1],
- [3, 4],
- [4, 3],
- [5, 4]]
+expected_nint_list = [[0, 1], [1, 2], [2, 1], [3, 4], [4, 3], [5, 4]]
 
 # list of expected indices of the neighbor pairs TODO: Matteo, is this correct?
 expected_nind_iprt = [0, 1, 2, 3, 4, 5, 6]
@@ -36,7 +31,38 @@ expected_nind_iprt = [0, 1, 2, 3, 4, 5, 6]
 # number of neighbour pairs
 expected_nspar = 6
 
-expected_neigh_dists = np.array([0.15, 0.05, 0.05, 0.1, 0.1,  0.1])
+expected_neigh_dists = np.array([0.15, 0.05, 0.05, 0.1, 0.1, 0.1])
+
+expected_distance_graph = [
+    [0.0, 0.15, 0.0, 0.0, 0.0, 0.0],
+    [0.0, 0.0, 0.05, 0.0, 0.0, 0.0],
+    [0.0, 0.05, 0.0, 0.0, 0.0, 0.0],
+    [0.0, 0.0, 0.0, 0.0, 0.1, 0.0],
+    [0.0, 0.0, 0.0, 0.1, 0.0, 0.0],
+    [0.0, 0.0, 0.0, 0.0, 0.1, 0.0],
+]
+
+neigh_vector_diffs = [
+    [0.15, 0.0],
+    [0.05, 0.0],
+    [-0.05, 0.0],
+    [0.1, 0.0],
+    [-0.1, 0.0],
+    [-0.1, 0.0],
+]
+
+
+expected_common_neighs_array = [1, 2, 2, 2, 2, 1]
+expected_common_neighs_mat = [  [0, 1, 0, 0, 0, 0],
+                                [1, 0, 2, 0, 0, 0],
+                                [0, 2, 0, 0, 0, 0],
+                                [0, 0, 0, 0, 2, 0],
+                                [0, 0, 0, 2, 0, 1],
+                                [0, 0, 0, 0, 1, 0],
+                            ]
+
+
+expected_pearson_array = np.array([1./3., 1.,   1. ,  1.,   1.,   1./3.])
 
 def test_compute_neigh_indices():
     """Test the compute_neigh_indices method."""
@@ -69,10 +95,42 @@ def test_return_sparse_distance_graph():
     neigh_graph.compute_kstar(Dthr=0.0)
     graph = neigh_graph.return_sparse_distance_graph()
     # check that the result is correct
-    print(graph)
-    # assert np.array_equal(neigh_graph.nind_list, expected_nint_list)
-    # assert np.array_equal(neigh_graph.nind_iptr, expected_nind_iprt)
-    # assert neigh_graph.nspar == expected_nspar
-    # assert np.allclose(neigh_graph.neigh_dists, expected_neigh_dists)
+    assert np.allclose(graph.toarray(), expected_distance_graph)
 
-print(test_return_sparse_distance_graph())
+
+def test_compute_neigh_vector_diffs():
+    """Test the compute_neigh_vector_diffs method."""
+    # create the NeighGraph object
+    neigh_graph = NeighGraph(coordinates=data)
+    neigh_graph.compute_kstar(Dthr=0.0)
+    # compute the distances of the neighbors
+    neigh_graph.compute_neigh_vector_diffs()
+    # check that the result is correct
+    assert np.allclose(neigh_graph.neigh_vector_diffs, neigh_vector_diffs)
+
+
+def test_compute_common_neighs():
+    """Test the compute_common_neighs method."""
+    # create the NeighGraph object
+    neigh_graph = NeighGraph(coordinates=data)
+    neigh_graph.compute_distances()
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
+
+    neigh_graph.compute_common_neighs(comp_common_neighs_mat=False)
+    print(neigh_graph.common_neighs_array)
+    assert np.array_equal(neigh_graph.common_neighs_array, expected_common_neighs_array)
+
+    neigh_graph.compute_common_neighs(comp_common_neighs_mat=True)
+    print(neigh_graph.common_neighs_mat)
+    assert np.array_equal(neigh_graph.common_neighs_mat, expected_common_neighs_mat)
+
+def test_compute_pearson():
+    """Test the compute_pearson method."""
+    # create the NeighGraph object
+    neigh_graph = NeighGraph(coordinates=data)
+    neigh_graph.compute_distances()
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
+    neigh_graph.compute_pearson()
+    assert np.allclose(neigh_graph.pearson_array, expected_pearson_array)
+
+print(test_compute_pearson())
