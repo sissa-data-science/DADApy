@@ -40,7 +40,7 @@ cores = multiprocessing.cpu_count()
 class DensityEstimation(KStar):
     """Computes the log-density and its error at each point and other properties.
 
-    Inherits from class KStar. 
+    Inherits from class KStar.
     Can compute the log-density and its error at each point choosing among various kNN-based methods.
 
     Attributes:
