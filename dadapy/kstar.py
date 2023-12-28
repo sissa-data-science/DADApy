@@ -38,8 +38,10 @@ class KStar(IdEstimation):
     AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     Can estimate the optimal number k* of neighbors for each points.
     Can compute the log-density and its error at each point choosing among various kNN-based methods.
-    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component.
-    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component.
+    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each
+        component.
+    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on
+        each component.
 
 
     Attributes:
