@@ -40,19 +40,29 @@ class NeighGraph(KStar):
     AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     Can estimate the optimal number k* of neighbors for each points.
     Can compute the log-density and its error at each point choosing among various kNN-based methods.
-    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component.
-    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on each component.
+    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on
+        each component.
+    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on
+        each component.
 
     Attributes:
         nspar (int): total number of edges in the directed graph defined by kstar (sum over all points of kstar minus N)
-        nind_list (np.ndarray(int), optional): size nspar x 2. Each row is a couple of indices of the connected graph stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
-        nind_iptr (np.array(int), optional): size N+1. For each elemen i stores the 0-th index in nind_list at which the edges starting from point i start. The last entry is set to nind_list.shape[0]
+        nind_list (np.ndarray(int), optional): size nspar x 2. Each row is a couple of indices of the connected graph
+            stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j
+            is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of
+            the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
+            nind_iptr (np.array(int), optional): size N+1. For each elemen i stores the 0-th index in nind_list at which
+            the edges starting from point i start. The last entry is set to nind_list.shape[0]
         common_neighs_array
         common_neighs_mat
-        AAAAA (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j) gives the common number of neighbours between points i and j. Such value is reliable only if j is in the neighbourhood of i or vice versa
+        AAAAA (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j)
+            gives the common number of neighbours between points i and j. Such value is reliable only if j is in the
+            neighbourhood of i or vice versa
         pearson
-        neigh_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k*-1 nearest neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
-        neigh_dists (np.array(float), optional): stores distances from each point to its k*-1 nearest neighbors in the order defined by nind_list
+        neigh_vector_diffs (np.ndarray(float), optional): stores vector differences from each point to its k*-1 nearest
+            neighbors. Accessed by the method return_vector_diffs(i,j) for each j in the neighbourhood of i
+        neigh_dists (np.array(float), optional): stores distances from each point to its k*-1 nearest neighbors in the
+            order defined by nind_list
     """
 
     def __init__(
@@ -80,9 +90,11 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_neigh_indices(self):
-        """Computes the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest (excluded).
+        """Computes the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest
+            (excluded).
         The couples of indices are stored in a numpy ndarray of rank 2 and secondary dimension = 2.
-        The index of the corresponding AAAAAAAAAAAAA make indpointer which is a np.array of length N which indicates for each i the starting index of the corresponding [i,.] subarray.
+        The index of the corresponding AAAAAAAAAAAAA make indpointer which is a np.array of length N which indicates
+            for each i the starting index of the corresponding [i,.] subarray.
 
         """
 
@@ -135,7 +147,8 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def return_sparse_distance_graph(self):
-        """Returns the (directed) neighbour distances graph using kstar[i] neighbours for each point i in N x N sparse csr_matrix form."""
+        """Returns the (directed) neighbour distances graph using kstar[i] neighbours for each point i in N x N sparse
+            csr_matrix form."""
 
         if self.neigh_dists is None:
             self.compute_neigh_dists()
@@ -234,8 +247,8 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_pearson(self, comp_p_mat=False, method="jaccard"):
-        """Compute the empiric 
-        common number of neighbours between couple of points (i,j) such that j is\
+        """Compute the empiric
+        common number of neighbours between couple of points (i,j) such that j is
         in the neighbourhod of i. The numbers are stored in a scipy sparse csr_matrix format.
 
         Args:
@@ -247,46 +260,47 @@ class NeighGraph(KStar):
 
         """
 
-        if self.pearson_array is None:
-            # check or compute common_neighs
-            if self.common_neighs_array is None:
-                self.compute_common_neighs()
-            if self.verb:
-                print("Estimation of the pearson correlation coefficient started")
-            sec = time.time()
-            k1 = self.kstar[self.nind_list[:, 0]]
-            k2 = self.kstar[self.nind_list[:, 1]]
-            # method to estimate pearson
-            if method == "jaccard":
-                self.pearson_array = (
-                    self.common_neighs_array
-                    * 1.0
-                    / (k1 + k2 - self.common_neighs_array)
-                )
-            if method == "geometric":
-                self.pearson_array = self.common_neighs_array * 1.0 / np.sqrt(k1 * k2)
-            if method == "squared_geometric":
-                self.pearson_array = (
-                    self.common_neighs_array
-                    * self.common_neighs_array
-                    * 1.0
-                    / (k1 * k2)
-                )
-            sec2 = time.time()
-            if self.verb:
-                print(
-                    "{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec)
-                )
+        # check or compute common_neighs
+        if self.common_neighs_array is None:
+            self.compute_common_neighs()
+        if self.verb:
+            print("Estimation of the pearson correlation coefficient started")
+        sec = time.time()
+        k1 = self.kstar[self.nind_list[:, 0]]
+        k2 = self.kstar[self.nind_list[:, 1]]
+        # method to estimate pearson
+        if method == "jaccard":
+            self.pearson_array = (
+                self.common_neighs_array
+                * 1.0
+                / (k1 + k2 - self.common_neighs_array)
+            )
+        elif method == "geometric":
+            self.pearson_array = self.common_neighs_array * 1.0 / np.sqrt(k1 * k2)
+        elif method == "squared_geometric":
+            self.pearson_array = (
+                self.common_neighs_array
+                * self.common_neighs_array
+                * 1.0
+                / (k1 * k2)
+            )
+        else:
+            raise ValueError("method not recognised")
+
+        sec2 = time.time()
+        if self.verb:
+            print(
+                "{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec)
+            )
 
         # save in matrix form
         if comp_p_mat is True:
-            if self.pearson_mat is None:
-                p_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
-                for nspar, indices in enumerate(self.nind_list):
-                    i = indices[0]
-                    j = indices[1]
-                    p_mat[i, j] = self.pearson_array[nspar]
-                    if p_mat[j, i] == 0:
-                        p_mat[j, i] = p_mat[i, j]
-                self.pearson_mat = p_mat.todense()
-                np.fill_diagonal(self.pearson_mat, 1.0)
+            p_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                p_mat[i, j] = self.pearson_array[nspar]
+                if p_mat[j, i] == 0:
+                    p_mat[j, i] = p_mat[i, j]
+            self.pearson_mat = p_mat.todense()
+            np.fill_diagonal(self.pearson_mat, 1.0)
