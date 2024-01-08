@@ -141,9 +141,11 @@ def _return_period_mixed(period1, period2, dim1, dim2):
         )
     else:
         assert (
-            isinstance(period1, (int, float)) or isinstance(period1, (np.ndarray, list))
+            isinstance(period1, (int, float))
+            or (isinstance(period1, (np.ndarray, list)) and len(period1) == dim1)
         ) and (
-            isinstance(period2, (int, float)) or isinstance(period2, (np.ndarray, list))
+            isinstance(period2, (int, float))
+            or (isinstance(period2, (np.ndarray, list)) and len(period2) == dim2)
         ), (
             "'period1' and 'period2' must be either float scalars or numpy arrays of floats "
             + f"of shapes ({dim1},) and ({dim2},)"
