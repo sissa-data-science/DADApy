@@ -7,3 +7,4 @@ from .density_estimation import DensityEstimation
 from .id_discrete import *
 from .id_estimation import IdEstimation
 from .metric_comparisons import MetricComparisons
+from .feature_selection import FeatureSelection
