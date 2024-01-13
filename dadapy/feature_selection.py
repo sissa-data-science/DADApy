@@ -21,23 +21,45 @@ This class uses Differentiable Information Imbalance
 
 import multiprocessing
 import warnings
-from typing import Type
+from typing import Type, Union
+import time
+from functools import wraps
 
 import numpy as np
+from scipy.linalg import norm
 
 from dadapy.base import Base
 from dadapy.metric_comparisons import MetricComparisons
 from dadapy._utils.metric_comparisons import _return_ranks
 from dadapy._utils.utils import compute_nn_distances
 from dadapy._utils.differentiable_imbalance import (
+    _compute_optimal_lambda_from_distances,
     _compute_kernel_imbalance,
     _compute_kernel_imbalance_gradient,
     _compute_full_dist_matrix,
     _compute_full_rank_matrix,
-    _optimize_learning_rate,
+    _compute_optimal_learning_rate,
+    _optimize_kernel_imbalance,
+    _optimize_kernel_imbalance_static_zeros,
+    _refine_lasso_optimization
 )
 
 cores = multiprocessing.cpu_count()
+
+def check_maxk(func):
+    # TODO: remove if this works with different maxk
+    # TODO: check this is the correct values for maxk != N
+    @wraps(func)
+    def with_check(*args, **kwargs):
+        feature_selector: type[FeatureSelection] = args[0]
+        if feature_selector.maxk != feature_selector.N-1:
+            warnings.warn(
+                f"""maxk neighbors is not available for this functionality.\
+                It will be ignored and treated as the number of data-1, {feature_selector.N}""", 
+                stacklevel=2
+            )
+        return func(*args, **kwargs)
+    return with_check
 
 class FeatureSelection(MetricComparisons):
     def __init__(
@@ -62,30 +84,72 @@ class FeatureSelection(MetricComparisons):
         self.cythond = True
         # TODO: Stop returning history everywhere and instead save it here and implement self.get_history()
         self.history = None 
+        self._full_distance_matrix = None
 
-    @staticmethod
-    def _check_maxk(maxk, ndata):
-        # TODO: Remove once kernel imbalance works for maxk
-        if maxk != ndata-1:
-            warnings.warn(
-                f"""maxk neighbors is not available for this functionality.\
-                It will be ignored and treated as the number of data-1, {ndata}""", 
-                stacklevel=2
+    @property
+    def full_distance_matrix(self):
+        # TODO: should this be moved to Base?
+        # Because sometimes this is needed maybe elsewhere and using kdtree for high maxk
+        # Seems bad
+        if self._full_distance_matrix is None:
+            self._full_distance_matrix = _compute_full_dist_matrix(self.X, self.period, self.njobs, self.cythond)
+        return self._full_distance_matrix
+
+    @full_distance_matrix.setter
+    def full_distance_matrix(self, distance_matrix: np.ndarray):
+        if ((len(distance_matrix.shape) != 2) or (distance_matrix.shape[0] != self.N) or (distance_matrix.shape[1] != self.N)):
+            raise ValueError(
+                f"Input matrix for full distance matrix not properly shaped. \
+                Should be {self.N}x{self.N} but is {distance_matrix.shape[0]}x{distance_matrix.shape[1]}."
             )
+        self.full_distance_matrix = distance_matrix
     
-    def _check_own_maxk(self):
-        self._check_maxk(self.maxk, self.coordinates.shape[0])
-
     @staticmethod
-    def compute_optimal_lambda(distance_matrix, fraction=1.):
+    def _parse_period_for_dii(in_period, in_dims):
+        # TODO: this can probably be removed if it is part of the Base
+        if isinstance(in_period, np.ndarray) and in_period.shape == (in_dims,):
+            period = in_period
+        elif isinstance(in_period, (int, float)):
+            period = np.full((in_dims), fill_value=in_period, dtype=float)
+        else:
+            raise ValueError(
+                f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
+            )
+        return period
+    
+    def _parse_own_period(self):
+        return self._parse_period_for_dii(self.period, self.dims)
+
+    def _parse_initial_gammas(self, initial_gammas: Union[np.ndarray[float], int, float]):
+        if (initial_gammas is not None and initial_gammas.all() != None):
+            if isinstance(initial_gammas, np.ndarray) and initial_gammas.shape == (self.dims, ):
+                initial_gammas = initial_gammas
+            elif isinstance(initial_gammas, (int, float)):
+                initial_gammas = np.full((self.dims), fill_value=initial_gammas, dtype=float)
+            else:
+                raise ValueError(
+                    f"'initial_gammas' must be either None, float scalar or a numpy array of floats of shape ({self.dims},)"
+                )
+        else:
+            initial_gammas = 1/np.std(self.X, axis=0)
+        
+        return initial_gammas
+
+    @check_maxk
+    def compute_optimal_lambda(self, target_data: Type[Base]=None, fraction=1.):
         # TODO: consider most likely use case and stop having it accept a distance matrix
         # TODO: if kept like this move to _utils.differentiable_imbalance
-        # sets lambda to the average between the smallest and mean (2nd NN - 1st NN)-distance
-        # np.fill_diagonal(distance_matrix, np.nan) ###CHANGE: This I don't need because on the diagonal I have just big values
-        NNs = np.sort(distance_matrix, axis=1) #
-        min_distances_nn = NNs[:,1] - NNs[:,0]
-        return fraction * ((np.min(min_distances_nn) + np.nanmean(min_distances_nn)) / 2)
+        if target_data is None:
+            target_data = self
 
+        if isinstance(target_data, Type[FeatureSelection]):
+            distance_matrix = target_data.full_distance_matrix
+        else:
+            distance_matrix = _compute_full_dist_matrix(target_data.X, target_data.period, target_data.njobs)
+
+        return _compute_optimal_lambda_from_distances(distance_matrix, fraction)
+
+    @check_maxk
     def compute_kernel_imbalance(self, target_data: Type[Base], lambd=None):
         """Computes the kernel imbalance between two matrices based on distances of input data and rank information of groundtruth data.
 
@@ -109,37 +173,63 @@ class FeatureSelection(MetricComparisons):
         if lambd is None:
             lambd = self.compute_optimal_lambda(self.X)
 
-        distances_i = _compute_full_dist_matrix(self.X, period=self.period, n_jobs=self.njobs)
-        rank_matrix_j = _compute_full_rank_matrix(target_data.X, period=target_data.period, n_jobs=self.njobs)
+        distances_i = self.full_distance_matrix
+        rank_matrix_j = _compute_full_rank_matrix(target_data.X, period=target_data.period, njobs=self.njobs)
 
         return _compute_kernel_imbalance(dist_matrix_i=distances_i, rank_matrix_j=rank_matrix_j, lambd=lambd)
     
         # sets lambda to the average between the smallest and mean (2nd NN - 1st NN)-distance
-    
+
+    @check_maxk
     def compute_kernel_imbalance_gradient(self, target_data: Type[Base], gammas: np.ndarray, lambd: float=None):
         if lambd is None:
             lambd = self.compute_optimal_lambda(self.X)
         
-        rescaled_distances_i = _compute_full_dist_matrix(self.X*gammas, period=self.period, n_jobs=self.njobs)
-        rank_matrix_j = _compute_full_rank_matrix(target_data.X, period=target_data.period, n_jobs=self.njobs)
+        rescaled_distances_i = _compute_full_dist_matrix(self.X*gammas, period=self.period*gammas, njobs=self.njobs)
+        rank_matrix_j = _compute_full_rank_matrix(target_data.X, period=target_data.period, njobs=self.njobs)
 
-        return _compute_kernel_imbalance_gradient(rescaled_distances_i, self.X, rank_matrix_j, gammas=gammas, lambd=lambd, period=self.period, n_jobs=self.njobs)
+        return _compute_kernel_imbalance_gradient(rescaled_distances_i, self.X, rank_matrix_j, gammas=gammas, lambd=lambd, period=self.period, njobs=self.njobs, cythond=self.cythond)
 
+    @check_maxk
     def optimize_kernel_imbalance(
             self, target_data: Type[Base], n_epochs=100, constrain=False,
-            initial_gammas: np.ndarray[float]=None, lambd: float=None,
+            initial_gammas: Union[np.ndarray[float], int, float]=None, lambd: float=None,
             learning_rate: float=None, l1_penalty=0., decaying_lr=True
         ):
         # TODO: do typechecks here, maybe remove some functions above
-        raise NotImplementedError()
-        return _compute_kernel_imbalance_gradient()
-        
-    def eliminate_backward_greedy_kernel_imbalance(self, groundtruth_data, data, gammas_0, lambd=None, n_epochs=100, l_rate=0.1, constrain=False, decaying_lr=True, period=None, groundtruthperiod=None, n_jobs=None):
+        # TODO: is Union typing correct here?
+        # TODO: maybe there should be a .select features class here that requires less effort
+        # initiate the weights
+        period = self._parse_own_period()
+        initial_gammas = self._parse_initial_gammas(initial_gammas)
+
+        # find a suitable learning rate by chosing the best optimization
+        if learning_rate is None:
+            learning_rate, _ = _compute_optimal_learning_rate(
+                groundtruth_data=target_data.X, data=self.X, initial_gammas=initial_gammas, lambd=lambd, 
+                n_epochs=50, constrain=False, l1_penalty=0.0, decaying_lr=decaying_lr, 
+                period=period, groundtruthperiod=target_data.period, nsamples=300, lr_list=None
+            )
+
+        return _optimize_kernel_imbalance(
+            groundtruth_data=target_data.X, groundtruthperiod=target_data.period, 
+            data=self.X, period=period,
+            gammas_0=initial_gammas, constrain=constrain, l1_penalty=l1_penalty,
+            n_epochs=n_epochs, l_rate=learning_rate, decaying_lr=decaying_lr,
+            njobs=self.njobs, cythond=self.cythond
+        )
+
+    @check_maxk
+    def eliminate_backward_greedy_kernel_imbalance(
+        self, target_data: Type[Base], initial_gammas: Union[np.ndarray[float], int, float], 
+        lambd: float=None, n_epochs: int=100, l_rate: float=0.1, 
+        constrain: bool=False, decaying_lr: bool=True
+    ):
         """Do a stepwise backward eliminitaion of features and after each elimination GD otpmize the kernel imblance
         Args:
             groundtruth_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
             data (np.ndarray): N x D(input) array containing N datapoints in D input features whose weights are optimized to reproduce the groundtruth distances
-            gammas_0 (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
+            initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimial_lambda
             n_epochs (int): number of epochs in each optimization cycle
             l_rate (float): learning rate. Has to be tuned, especially if constrain=True (otherwise optmization could fail)
@@ -153,30 +243,41 @@ class FeatureSelection(MetricComparisons):
             kernel_imbalances_list (np.ndarray): D x n_epochs. Imbalance for each optimization step for each number of nonzero weights. For final imbalances: kernel_imbalances_list[:,-1] 
             """
         # find a suitable learning rate by chosing the best optimization
+        # TODO: @wildromi is it necessary to add gamma_0 by hand here? If so, why?
+        period = self._parse_own_period()
+        initial_gammas = self._parse_initial_gammas(initial_gammas)
+
         if l_rate == None:
-            l_rate, _ = optimize_learning_rate(groundtruth_data=groundtruth_data, data=data, gammas_0=gammas_0, lambd=lambd, 
-                            n_epochs=50, constrain=False, l1_penalty=0.0, decaying_lr=decaying_lr, 
-                            period=period, groundtruthperiod=groundtruthperiod, nsamples=300, lr_list=None)
+            l_rate, _ = _compute_optimal_learning_rate(
+                groundtruth_data=target_data.X, data=self.X, gammas_0=initial_gammas, lambd=lambd, 
+                n_epochs=50, constrain=False, l1_penalty=0.0, decaying_lr=decaying_lr, 
+                period=period, groundtruthperiod=target_data.period, nsamples=300, lr_list=None
+            )
 
         gammaslist=[]
         imbalancelist=[]
         #do this just for making a warm start even for the first optimization
-        gammass, imbalances, _ = optimize_kernel_imbalance(groundtruth_data=groundtruth_data, data=data, gammas_0=gammas_0,
-                                                        lambd=lambd, n_epochs=n_epochs, l_rate=l_rate, constrain=constrain,
-                                                        l1_penalty=0., decaying_lr=decaying_lr, period=period, groundtruthperiod=groundtruthperiod, 
-                                                        n_jobs=n_jobs, cythond=self.cythond)
+        gammass, imbalances, _ = _compute_optimal_learning_rate(
+            groundtruth_data=target_data.X, data=self.X, gammas_0=initial_gammas,
+            lambd=lambd, n_epochs=n_epochs, l_rate=l_rate, constrain=constrain,
+            l1_penalty=0., decaying_lr=decaying_lr, period=period, groundtruthperiod=target_data.X, 
+            njobs=self.njobs, cythond=self.cythond
+        )
+
         gammaslist.append(gammass)
         imbalancelist.append(imbalances)
 
         gammasss=gammass[-1]
-        nonzeros = linalg.norm(gammasss,0)
+        nonzeros = norm(gammasss,0)
         counter=len(gammasss)
 
         while nonzeros >= 1:
             start = time.time()
-            gs, imbs = optimize_kernel_imbalance_static_zeros(groundtruth_data=groundtruth_data, data=data, gammas_0=gammasss, lambd=lambd, 
-                                                            n_epochs=n_epochs, l_rate=l_rate, constrain=constrain, decaying_lr=decaying_lr, 
-                                                            period=period, groundtruthperiod=groundtruthperiod, n_jobs=n_jobs, cythond=self.cythond)
+            gs, imbs = _optimize_kernel_imbalance_static_zeros(
+                groundtruth_data=target_data.X, data=self.X, gammas_0=gammasss, lambd=lambd, 
+                n_epochs=n_epochs, l_rate=l_rate, constrain=constrain, decaying_lr=decaying_lr, 
+                period=period, groundtruthperiod=target_data.period, njobs=self.njobs, cythond=self.cythond
+            )
 
             end = time.time()
             timing = end - start
@@ -190,39 +291,50 @@ class FeatureSelection(MetricComparisons):
                 break
             mingamma = np.nanargmin(arr)
             gammasss[mingamma] = 0
-            nonzeros = linalg.norm(gammasss,0)
+            nonzeros = norm(gammasss,0)
             gammaslist.append(gs)
             imbalancelist.append(imbs)
 
-
         return np.array(gammaslist), np.array(imbalancelist)
     
-    def search_lasso_optimization_kernel_imbalance(self, groundtruth_data, data, gammas_0, lambd=None, n_epochs=100, 
-                                                l_rate=None, constrain=False, decaying_lr=True, period=None, 
-                                                groundtruthperiod=None, n_jobs=None):
+    @check_maxk
+    def search_lasso_optimization_kernel_imbalance(
+            self, target_data: Type[Base], initial_gammas: Union[np.ndarray[float], int, float],
+            lambd: float=None, n_epochs: int=100, 
+            l_rate: float=None, constrain: bool=False, decaying_lr: bool=True
+        ):
         # Initial l1 search 
-        
-        if l_rate == None:
-            l_rate, _ = optimize_learning_rate(groundtruth_data=groundtruth_data, data=data, gammas_0=gammas_0, lambd=lambd,
-                            n_epochs=39, constrain=constrain, l1_penalty=0.0, decaying_lr=decaying_lr,
-                            period=period, groundtruthperiod=groundtruthperiod, nsamples=300, lr_list=None)
+        period = self._parse_own_period()
+        initial_gammas = self._parse_initial_gammas(initial_gammas)
 
+        if l_rate == None:
+            l_rate, _ = _compute_optimal_learning_rate(
+                groundtruth_data=target_data.X, data=self.X, gammas_0=initial_gammas, lambd=lambd,
+                n_epochs=39, constrain=constrain, l1_penalty=0.0, decaying_lr=decaying_lr,
+                period=period, groundtruthperiod=target_data.period, nsamples=300, lr_list=None
+            )
+
+        # TODO: logspace here?
         l1_penalties = [0] + list(np.linspace((1/l_rate)/200, (1/l_rate)*2, 9)) # test l1's depending on the learning rate
         
-        gs = np.zeros((len(l1_penalties),n_epochs+1,data.shape[1]))
+        gs = np.zeros((len(l1_penalties),n_epochs+1, self.dims))
         ks = np.zeros((len(l1_penalties),n_epochs+1))
         ls = np.zeros((len(l1_penalties),n_epochs+1))
 
         for i in range(len(l1_penalties)):
-            gs[i], ks[i], ls[i] = optimize_kernel_imbalance(groundtruth_data=groundtruth_data, data=data, gammas_0=gammas_0, lambd=lambd,
-                                                            n_epochs=n_epochs, l_rate=l_rate, constrain=constrain, l1_penalty=l1_penalties[i], 
-                                                            decaying_lr=decaying_lr, period=period, groundtruthperiod=groundtruthperiod, n_jobs=n_jobs, cythond=self.cythond)
+            gs[i], ks[i], ls[i] = _optimize_kernel_imbalance(
+                groundtruth_data=target_data.X, data=self.X, gammas_0=initial_gammas, lambd=lambd,
+                n_epochs=n_epochs, l_rate=l_rate, constrain=constrain, l1_penalty=l1_penalties[i], 
+                decaying_lr=decaying_lr, period=period, groundtruthperiod=target_data.X, njobs=self.njobs, cythond=self.cythond
+            )
         
         # Refine l1 search
         
-        gammas_list, kernel_list, lassoterm_list, penalties = refine_lasso_optimization(gs, ks, ls, l1_penalties, groundtruth_data=groundtruth_data, 
-                                                                            data=data, gammas_0=gammas_0, lambd=lambd, n_epochs=n_epochs, l_rate=l_rate, 
-                                                                            constrain=constrain, decaying_lr=decaying_lr, 
-                                                                            period=period, groundtruthperiod=groundtruthperiod, n_jobs=n_jobs, cythond=self.cythond)
+        gammas_list, kernel_list, lassoterm_list, penalties = _refine_lasso_optimization(
+            gs, ks, ls, l1_penalties, groundtruth_data=target_data.X, 
+            data=self.X, gammas_0=initial_gammas, lambd=lambd, n_epochs=n_epochs, l_rate=l_rate, 
+            constrain=constrain, decaying_lr=decaying_lr, 
+            period=period, groundtruthperiod=target_data.period, njobs=self.njobs, cythond=self.cythond
+        )
         
         return gammas_list, kernel_list, lassoterm_list, penalties
