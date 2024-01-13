@@ -7,7 +7,7 @@ license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.7"
 
-dependencies = ["numpy", "scipy", "scikit-learn", "matplotlib","git+https://github.com/lykos98/dadaC"]
+dependencies = ["numpy", "scipy", "scikit-learn", "matplotlib"]
 
 
 [project.urls]
