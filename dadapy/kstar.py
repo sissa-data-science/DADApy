@@ -21,6 +21,7 @@ The computation of the optimal neighbourhood size (k*) is implemented in this cl
 
 import multiprocessing
 import time
+import warnings
 
 import numpy as np
 
@@ -74,6 +75,12 @@ class KStar(IdEstimation):
         Args:
             k: number of neighbours used to compute the density it can be an iteger or an array of integers
         """
+        # raise warning if self.intrinsic_dim is None using the warning module
+        if self.intrinsic_dim is None:
+            warnings.warn(
+                "Setting the k value but the intrinsic dimension is not defined!"
+            )
+
         if isinstance(k, np.ndarray):
             self.kstar = k
         else:

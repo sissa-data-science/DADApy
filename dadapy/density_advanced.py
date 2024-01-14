@@ -24,12 +24,11 @@ import multiprocessing
 import time
 
 import numpy as np
-from scipy import sparse
 from scipy import linalg as slin
+from scipy import sparse
 
 from dadapy._cython import cython_density as cd
 from dadapy._cython import cython_grads as cgr
-
 from dadapy.neigh_graph import NeighGraph
 
 cores = multiprocessing.cpu_count()
@@ -122,7 +121,9 @@ class DensityAdvanced(NeighGraph):
                 self.kstar,
                 self.intrinsic_dim,
             )
-            self.check_grads_covmat = True
+            self.check_grads_covmat = (
+                True  # TODO: Matteo, is this useful or should we remove it?
+            )
 
             self.grads_var = np.einsum(
                 "ijk, i -> ijk", self.grads_var, self.kstar / (self.kstar - 1)
@@ -134,7 +135,7 @@ class DensityAdvanced(NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_grads_semisum(self, pearson_method="jaccard", comp_p_mat=False):
+    def compute_deltaFs(self, pearson_method="jaccard", comp_p_mat=False):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using\
             a linear expansion with as slope the semisum of the average gradient of the log-density over the neighbourhood of points i and j. \
             The parameter chi is used in the estimation of the squared error of the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), \
@@ -148,15 +149,13 @@ class DensityAdvanced(NeighGraph):
 
         """
 
-        # check or compute vector_diffs
-        if self.neigh_vector_diffs is None:
-            self.compute_neigh_vector_diffs()
-
         # check or compute gradients and their covariance matrices
-        if self.grads is None:
-            self.compute_grads(comp_covmat=True)
+        # if self.grads is None:                 #TODO: Matteo, this seems a double computation. Is it?
+        #     self.compute_grads(comp_covmat=True)
 
-        elif self.check_grads_covmat is False:
+        if (
+            self.grads or self.check_grads_covmat is False
+        ):  # TODO: Matteo, this seems a double computation. Is it?
             self.compute_grads(comp_covmat=True)
 
         if self.verb:
@@ -219,7 +218,7 @@ class DensityAdvanced(NeighGraph):
 
         # check or compute deltaFs_grads_semisum
         if self.Fij_var_array is None:
-            self.compute_deltaFs_grads_semisum()
+            self.compute_deltaFs()
         # AAAAAAAAAAAAAAA controllare se serve
         # smallnumber = 1.e-10
         # data.grads_var += smallnumber*np.tile(np.eye(data.dims),(data.N,1,1))
@@ -267,7 +266,7 @@ class DensityAdvanced(NeighGraph):
 
         # compute changes in free energy
         if self.Fij_array is None:
-            self.compute_deltaFs_grads_semisum()
+            self.compute_deltaFs()
 
         if self.verb:
             print("BMTI density estimation started")
@@ -372,7 +371,7 @@ class DensityAdvanced(NeighGraph):
     # ----------------------------------------------------------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kstarNN_gCorr(
+    def compute_density_kstarNN_gCorr(  # TODO: Matteo, should we remove this method?
         self,
         use_variance=True,
         gauss_approx=True,  # see Jan 2022 version compute_density_PAk_gCorr
@@ -392,7 +391,7 @@ class DensityAdvanced(NeighGraph):
 
         # compute changes in free energy
         if self.Fij_array is None:
-            self.compute_deltaFs_grads_semisum()
+            self.compute_deltaFs()
 
         if self.verb:
             print("kastarNN+gCorr density estimation started")

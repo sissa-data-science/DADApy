@@ -16,8 +16,8 @@
 """Module for testing the NeighGraph class."""
 
 import numpy as np
-from dadapy import NeighGraph
 
+from dadapy import NeighGraph
 
 # define a basic dataset with 6 points
 data = np.array([[0, 0], [0.15, 0], [0.2, 0], [4, 0], [4.1, 0], [4.2, 0]])

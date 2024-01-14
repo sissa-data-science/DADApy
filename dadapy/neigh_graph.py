@@ -26,7 +26,6 @@ import numpy as np
 from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
-
 from dadapy.kstar import KStar
 
 cores = multiprocessing.cpu_count()
@@ -148,7 +147,7 @@ class NeighGraph(KStar):
 
     def return_sparse_distance_graph(self):
         """Returns the (directed) neighbour distances graph using kstar[i] neighbours for each point i in N x N sparse
-            csr_matrix form."""
+        csr_matrix form."""
 
         if self.neigh_dists is None:
             self.compute_neigh_dists()
@@ -271,27 +270,20 @@ class NeighGraph(KStar):
         # method to estimate pearson
         if method == "jaccard":
             self.pearson_array = (
-                self.common_neighs_array
-                * 1.0
-                / (k1 + k2 - self.common_neighs_array)
+                self.common_neighs_array * 1.0 / (k1 + k2 - self.common_neighs_array)
             )
         elif method == "geometric":
             self.pearson_array = self.common_neighs_array * 1.0 / np.sqrt(k1 * k2)
         elif method == "squared_geometric":
             self.pearson_array = (
-                self.common_neighs_array
-                * self.common_neighs_array
-                * 1.0
-                / (k1 * k2)
+                self.common_neighs_array * self.common_neighs_array * 1.0 / (k1 * k2)
             )
         else:
             raise ValueError("method not recognised")
 
         sec2 = time.time()
         if self.verb:
-            print(
-                "{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec)
-            )
+            print("{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec))
 
         # save in matrix form
         if comp_p_mat is True:
