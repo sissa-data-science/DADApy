@@ -16,6 +16,7 @@
 """Module for testing the KStar class."""
 
 import numpy as np
+
 from dadapy import KStar
 
 # define a basic dataset with 6 points
