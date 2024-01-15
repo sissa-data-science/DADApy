@@ -16,46 +16,70 @@
 """Module for testing differentiable information imbalance methods."""
 
 import itertools as it
-import pytest
+
 import numpy as np
+import pytest
 
 from dadapy import FeatureSelection
 from dadapy.data import Data
 
 rng = np.random.default_rng()
 
+
 def test_optimise_imbalance_typing():
     data = rng.random(10, 5)
 
-    for period in [[3], 'faz', np.array([2, 2], dtype=np.int8), np.array([2, 2], dtype=np.float32)]:
+    for period in [
+        [3],
+        "faz",
+        np.array([2, 2], dtype=np.int8),
+        np.array([2, 2], dtype=np.float32),
+    ]:
         feature_selection = FeatureSelection(data, period=period)
-        pytest.raises(ValueError, feature_selection.optimize_kernel_imbalance(Data(data), 1))
+        pytest.raises(
+            ValueError, feature_selection.optimize_kernel_imbalance(Data(data), 1)
+        )
 
-    for initial_gammas in [np.array([2, 2], np.float32), ['faz']]:
+    for initial_gammas in [np.array([2, 2], np.float32), ["faz"]]:
         feature_selection = FeatureSelection(data)
-        pytest.raises(ValueError, feature_selection.optimize_kernel_imbalance(Data(data), initial_gammas=initial_gammas))
+        pytest.raises(
+            ValueError,
+            feature_selection.optimize_kernel_imbalance(
+                Data(data), initial_gammas=initial_gammas
+            ),
+        )
+
 
 def test_dist_matrix():
     for n_data in np.logspace(1, 2, 10, dtype=np.int16):
         for n_dim in np.logspace(1, 2, 10, dtype=np.int16):
             data = rng.random((n_data, n_dim))
             selector = FeatureSelection(data)
-            for period, cythond in it.product([None, np.ones(n_dim)], [False, True]): # TODO: should int, float also be accepted for period?
-                dist_mat = selector.compute_dist_matrix(data, period=period, cythond=cythond)
+            for period, cythond in it.product(
+                [None, np.ones(n_dim)], [False, True]
+            ):  # TODO: should int, float also be accepted for period?
+                dist_mat = selector.compute_dist_matrix(
+                    data, period=period, cythond=cythond
+                )
                 assert dist_mat.shape[0] == n_data
                 assert dist_mat.shape[1] == n_data
+
 
 def test_rank_matrix():
     for n_data in np.logspace(1, 2, 10, dtype=np.int16):
         for n_dim in np.logspace(1, 2, 10, dtype=np.int16):
             # Construct data so that nearest point is always previous one
             data = np.zeros((n_data, n_dim), dtype=np.float16)
-            data[:, :] = np.arange(n_data)[:, np.newaxis]**2
+            data[:, :] = np.arange(n_data)[:, np.newaxis] ** 2
 
             for cythond in [False, True]:
                 selector = FeatureSelection(data)
-                ranks = selector.compute_rank_matrix(data, period=None, cythond=cythond, distances=False)
+                ranks = selector.compute_rank_matrix(
+                    data, period=None, cythond=cythond, distances=False
+                )
                 assert ranks.shape[0] == n_data
                 assert ranks.shape[1] == n_data
 
-                assert np.count_nonzero(np.diag(ranks, k=-1)==1)==n_data-1, "Nearest neighbours not properly calculated."
+                assert (
+                    np.count_nonzero(np.diag(ranks, k=-1) == 1) == n_data - 1
+                ), "Nearest neighbours not properly calculated."

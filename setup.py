@@ -66,12 +66,18 @@ ext_modules += [
 ]
 
 
-ext_parallel = Extension(
-    "dadapy._cython.cython_distances",
-    sources=["dadapy/_cython/cython_distances.c"],
-    include_dirs=[get_numpy_include()],
-)
-
+exts_parallel = [
+    Extension(
+        "dadapy._cython.cython_distances",
+        sources=["dadapy/_cython/cython_distances.c"],
+        include_dirs=[get_numpy_include()],
+    ),
+    Extension(
+        "dadapy._cython.cython_differentiable_imbalance.pyx",
+        sources=["dadapy/_cython/cython_differentiable_imbalance.c"],
+        include_dirs=[get_numpy_include()],
+    )
+]
 
 extra_compile_args = (["-fopenmp"],)
 extra_link_args = (["-fopenmp"],)
@@ -82,12 +88,13 @@ command = 'gcc -fopenmp -E - < /dev/null > /dev/null 2>&1 && echo "OpenMP suppor
 if os.system(command) == "OpenMP supported":
     # If '-fopenmp' is supported, add the extra compile and link arguments
     # Installing cython_distances using OpenMP
-    ext_parallel.extra_compile_args.append("-fopenmp")
-    ext_parallel.extra_link_args.append("-fopenmp")
+    for ext_parallel in exts_parallel:
+        ext_parallel.extra_compile_args.append("-fopenmp")
+        ext_parallel.extra_link_args.append("-fopenmp")
 
 # If OpenMP is not available, the C extension to compute distances in discrete spaces will not run in parallel.
 
-ext_modules += [ext_parallel]
+ext_modules += exts_parallel
 
 setup(
     packages=["dadapy", "dadapy._utils"],

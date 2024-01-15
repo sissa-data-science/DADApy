@@ -1,13 +1,18 @@
 import numpy as np
+
 cimport numpy as np
 from cython.parallel cimport parallel, prange
+
 import cython
+
 from libc.math cimport (  # absolute values for floats, needed when using PBC
+    exp,
     fabs,
     nearbyint,
-    exp,
-    sqrt
+    sqrt,
 )
+
+
 # TODO: clean up
 @cython.boundscheck(False)
 @cython.cdivision(True)
@@ -88,6 +93,7 @@ def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_j
                     distmatrix_view[i, j] = sqrt(dist)
 
     return distmatrix
+
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
@@ -300,7 +306,6 @@ cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double
         gradient_alphagamma = gradient_alphagamma + second_term[i]
 
     return gradient_alphagamma
-
 
 
 @cython.boundscheck(False)

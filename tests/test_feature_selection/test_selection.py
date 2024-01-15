@@ -15,7 +15,7 @@
 
 """Module for testing selection algorithms utilising differentiable information imbalance."""
 
-import numpy as np
-import pytest
+# import numpy as np
+# import pytest
 
-from dadapy import FeatureSelection
+# from dadapy import FeatureSelection

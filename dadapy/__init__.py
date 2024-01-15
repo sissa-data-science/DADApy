@@ -4,7 +4,7 @@ from .clustering import Clustering
 from .data import Data
 from .data_sets import DataSets
 from .density_estimation import DensityEstimation
+from .feature_selection import FeatureSelection
 from .id_discrete import *
 from .id_estimation import IdEstimation
 from .metric_comparisons import MetricComparisons
-from .feature_selection import FeatureSelection
