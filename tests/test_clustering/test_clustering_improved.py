@@ -21,93 +21,114 @@ import numpy as np
 from dadapy import data
 
 # ground_truths computed with 5000k datapoints of dataset ../../examples/datasets/Fig1.dat
-path = os.path.join(os.path.split(__file__)[0], "./ground_truths")
+def test_clustering_all_to_all_methods():
+    path = os.path.join(os.path.split(__file__)[0], "./ground_truths")
 
-nclusters_gt = np.load(f"{path}/nclusters5k.npy")
-assignment_gt = np.load(f"{path}/assignment5k.npy")
-centers_gt = np.load(f"{path}/centers5k.npy")
-bord_indices_gt = np.load(f"{path}/bord_indices5k.npy")
-saddle_density_gt = np.load(f"{path}/saddle_density5k.npy")
-saddle_err_gt = np.load(f"{path}/saddle_err5k.npy")
-
-
-path = os.path.join(os.path.split(__file__)[0], "../../examples/datasets")
-X = np.genfromtxt(f"{path}/Fig1.dat")
-X = X[:5000]
-cl = data.Data(coordinates=X)
-_ = cl.compute_clustering_ADP(v2=False)
-nclusters_adp = cl.N_clusters
-assignment_adp = cl.cluster_assignment
-centers_adp = np.array(cl.cluster_centers)
-saddle_density_adp = cl.log_den_bord
-saddle_err_adp = cl.log_den_bord_err
-bord_indices_adp = cl.bord_indices
-
-X = np.genfromtxt(f"{path}/Fig1.dat")
-X = X[:5000]
-cl = data.Data(coordinates=X)
-_ = cl.compute_clustering_ADP(v2=True)
-nclusters_adp_v2 = cl.N_clusters
-assignment_adp_v2 = cl.cluster_assignment
-centers_adp_v2 = np.array(cl.cluster_centers)
-saddle_density_adp_v2 = cl.log_den_bord
-saddle_err_adp_v2 = cl.log_den_bord_err
-bord_indices_adp_v2 = cl.bord_indices
+    nclusters_gt = np.load(f"{path}/nclusters5k.npy")
+    assignment_gt = np.load(f"{path}/assignment5k.npy")
+    centers_gt = np.load(f"{path}/centers5k.npy")
+    bord_indices_gt = np.load(f"{path}/bord_indices5k.npy")
+    saddle_density_gt = np.load(f"{path}/saddle_density5k.npy")
+    saddle_err_gt = np.load(f"{path}/saddle_err5k.npy")
 
 
-X = np.genfromtxt(f"{path}/Fig1.dat")
-X = X[:5000]
-cl = data.Data(coordinates=X)
-_ = cl.compute_clustering_ADP_pure_python(v2=False)
-nclusters_pp = cl.N_clusters
-assignment_pp = cl.cluster_assignment
-centers_pp = np.array(cl.cluster_centers)
-saddle_density_pp = cl.log_den_bord
-saddle_err_pp = cl.log_den_bord_err
-bord_indices_pp = cl.bord_indices
+    path = os.path.join(os.path.split(__file__)[0], "../../examples/datasets")
+    X = np.genfromtxt(f"{path}/Fig1.dat")
+    X = X[:5000]
+    cl = data.Data(coordinates=X)
+    _ = cl.compute_clustering_ADP(impl="py",v2=False)
+    nclusters_adp = cl.N_clusters
+    assignment_adp = cl.cluster_assignment
+    centers_adp = np.array(cl.cluster_centers)
+    saddle_density_adp = cl.log_den_bord
+    saddle_err_adp = cl.log_den_bord_err
+    bord_indices_adp = cl.bord_indices
+
+    X = np.genfromtxt(f"{path}/Fig1.dat")
+    X = X[:5000]
+    cl = data.Data(coordinates=X)
+    _ = cl.compute_clustering_ADP(impl="py",v2=True)
+    nclusters_adp_v2 = cl.N_clusters
+    assignment_adp_v2 = cl.cluster_assignment
+    centers_adp_v2 = np.array(cl.cluster_centers)
+    saddle_density_adp_v2 = cl.log_den_bord
+    saddle_err_adp_v2 = cl.log_den_bord_err
+    bord_indices_adp_v2 = cl.bord_indices
+
+    X = np.genfromtxt(f"{path}/Fig1.dat")
+    X = X[:5000]
+    cl = data.Data(coordinates=X)
+    _ = cl.compute_clustering_ADP(impl="c",v2=True)
+    nclusters_adp_c = cl.N_clusters
+    assignment_adp_c = cl.cluster_assignment
+    centers_adp_c = np.array(cl.cluster_centers)
+    saddle_density_adp_c = cl.log_den_bord
+    saddle_err_adp_c = cl.log_den_bord_err
+    bord_indices_adp_c = cl.bord_indices
 
 
-X = np.genfromtxt(f"{path}/Fig1.dat")
-X = X[:5000]
-cl = data.Data(coordinates=X)
-_ = cl.compute_clustering_ADP_pure_python(v2=True)
-nclusters_pp_v2 = cl.N_clusters
-assignment_pp_v2 = cl.cluster_assignment
-centers_pp_v2 = np.array(cl.cluster_centers)
-saddle_density_pp_v2 = cl.log_den_bord
-saddle_err_pp_v2 = cl.log_den_bord_err
-bord_indices_pp_v2 = cl.bord_indices
+    X = np.genfromtxt(f"{path}/Fig1.dat")
+    X = X[:5000]
+    cl = data.Data(coordinates=X)
+    _ = cl.compute_clustering_ADP_pure_python(v2=False)
+    nclusters_pp = cl.N_clusters
+    assignment_pp = cl.cluster_assignment
+    centers_pp = np.array(cl.cluster_centers)
+    saddle_density_pp = cl.log_den_bord
+    saddle_err_pp = cl.log_den_bord_err
+    bord_indices_pp = cl.bord_indices
 
-# CHECK CONSISTENCY CLUSTERING ATTRIBUTES
 
-# ADP consistent with ground truth
-assert nclusters_adp == nclusters_gt
-assert np.all(assignment_adp == assignment_gt)
-assert np.all(centers_adp == centers_gt)
-assert np.all(bord_indices_adp == bord_indices_gt)
-assert np.allclose(saddle_density_adp, saddle_density_gt)
-assert np.allclose(saddle_err_adp, saddle_err_gt)
+    X = np.genfromtxt(f"{path}/Fig1.dat")
+    X = X[:5000]
+    cl = data.Data(coordinates=X)
+    _ = cl.compute_clustering_ADP_pure_python(v2=True)
+    nclusters_pp_v2 = cl.N_clusters
+    assignment_pp_v2 = cl.cluster_assignment
+    centers_pp_v2 = np.array(cl.cluster_centers)
+    saddle_density_pp_v2 = cl.log_den_bord
+    saddle_err_pp_v2 = cl.log_den_bord_err
+    bord_indices_pp_v2 = cl.bord_indices
 
-# ADPv2 consisten with ADP
-assert nclusters_adp == nclusters_adp_v2
-assert np.all(assignment_adp == assignment_adp_v2)
-assert np.all(centers_adp == centers_adp_v2)
-assert np.all(bord_indices_adp == bord_indices_adp_v2)
-assert np.allclose(saddle_density_adp, saddle_density_adp_v2)
-assert np.allclose(saddle_err_adp, saddle_err_adp_v2)
+    # CHECK CONSISTENCY CLUSTERING ATTRIBUTES
 
-# pure python consisten with ADP
-assert nclusters_adp == nclusters_pp
-assert np.all(assignment_adp == assignment_pp)
-assert np.all(centers_adp == centers_pp)
-assert np.all(bord_indices_adp == bord_indices_pp)
-assert np.allclose(saddle_density_adp, saddle_density_pp)
-assert np.allclose(saddle_err_adp, saddle_err_pp)
+    # ADP consistent with ground truth
+    assert nclusters_adp == nclusters_gt
+    assert np.all(assignment_adp == assignment_gt)
+    assert np.all(centers_adp == centers_gt)
+    assert np.all(bord_indices_adp == bord_indices_gt)
+    assert np.allclose(saddle_density_adp, saddle_density_gt)
+    assert np.allclose(saddle_err_adp, saddle_err_gt)
 
-# pure python v2 consisten with ADP
-assert nclusters_adp == nclusters_pp_v2
-assert np.all(assignment_adp == assignment_pp_v2)
-assert np.all(centers_adp == centers_pp_v2)
-assert np.all(bord_indices_adp == bord_indices_pp_v2)
-assert np.allclose(saddle_density_adp, saddle_density_pp_v2)
-assert np.allclose(saddle_err_adp, saddle_err_pp_v2)
+    # ADPv2 consistent with ADP
+    assert nclusters_adp == nclusters_adp_v2
+    assert np.all(assignment_adp == assignment_adp_v2)
+    assert np.all(centers_adp == centers_adp_v2)
+    assert np.all(bord_indices_adp == bord_indices_adp_v2)
+    assert np.allclose(saddle_density_adp, saddle_density_adp_v2)
+    assert np.allclose(saddle_err_adp, saddle_err_adp_v2)
+
+    # ADP_c consistent with ADP
+    assert nclusters_adp == nclusters_adp_c
+    assert np.all(assignment_adp == assignment_adp_c)
+    assert np.all(centers_adp == centers_adp_c)
+    assert np.all(bord_indices_adp == bord_indices_adp_c)
+    assert np.allclose(saddle_density_adp, saddle_density_adp_c)
+    assert np.allclose(saddle_err_adp, saddle_err_adp_c)
+
+
+    # pure python consistent with ADP
+    assert nclusters_adp == nclusters_pp
+    assert np.all(assignment_adp == assignment_pp)
+    assert np.all(centers_adp == centers_pp)
+    assert np.all(bord_indices_adp == bord_indices_pp)
+    assert np.allclose(saddle_density_adp, saddle_density_pp)
+    assert np.allclose(saddle_err_adp, saddle_err_pp)
+
+    # pure python v2 consistent with ADP
+    assert nclusters_adp == nclusters_pp_v2
+    assert np.all(assignment_adp == assignment_pp_v2)
+    assert np.all(centers_adp == centers_pp_v2)
+    assert np.all(bord_indices_adp == bord_indices_pp_v2)
+    assert np.allclose(saddle_density_adp, saddle_density_pp_v2)
+    assert np.allclose(saddle_err_adp, saddle_err_pp_v2)
