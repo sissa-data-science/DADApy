@@ -161,6 +161,7 @@ class Clustering(DensityEstimation):
             self.N_clusters = out[1]
             self.cluster_assignment = out[2]
             self.cluster_centers = out[3]
+            print(self.cluster_centers)
             self.log_den_bord = out[4] + log_den_min - 1
             self.log_den_bord_err = out[5]
             self.bord_indices = out[6]
@@ -170,7 +171,7 @@ class Clustering(DensityEstimation):
                 print(f"total time is, {secf - seci}")
         else:
             #handle with dadaC
-            dadac_handler = c_data(self.X) 
+            dadac_handler = c_data(self.X, verbose=self.verb) 
             if self.log_den is None: 
                 self.compute_density_PAk()
             log_den_min = np.min(self.log_den - Z * self.log_den_err)
@@ -180,14 +181,16 @@ class Clustering(DensityEstimation):
 
             print("Exporting results to python")
 
-            self.N_clusters = dadac_handler.N_clusters 
-            self.cluster_assignment = dadac_handler.cluster_assignment
-            self.cluster_centers = dadac_handler.cluster_centers
-            self.bord_indices = dadac_handler.border_indices
+            from copy import deepcopy
+            self.N_clusters = deepcopy(dadac_handler.N_clusters) 
+            self.cluster_assignment = deepcopy(dadac_handler.cluster_assignment)
+            self.cluster_centers = deepcopy(dadac_handler.cluster_centers)
+            self.bord_indices = deepcopy(dadac_handler.border_indices)
+            print(self.cluster_centers[2])
             
             #subtract a one on the diagonal only for consistency with the original implementation and conventions 
-            self.log_den_bord     = dadac_handler.log_den_bord + log_den_min  -1.
-            self.log_den_bord_err = dadac_handler.log_den_bord_err
+            self.log_den_bord     = deepcopy(dadac_handler.log_den_bord + log_den_min  -1.)
+            self.log_den_bord_err = deepcopy(dadac_handler.log_den_bord_err)
             
             idxs = np.array([i for i in range(self.N)])
             self.cluster_indices = [idxs[np.where(self.cluster_assignment == c)]for c in range(self.N_clusters)] 
