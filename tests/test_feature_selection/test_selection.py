@@ -15,7 +15,34 @@
 
 """Module for testing selection algorithms utilising differentiable information imbalance."""
 
-# import numpy as np
-# import pytest
+import numpy as np
+import pytest
 
-# from dadapy import FeatureSelection
+from dadapy import Data, FeatureSelection
+
+rng = np.random.default_rng()
+
+def test_optimise_imbalance_typing():
+    data = rng.random((10, 5))
+
+    for period in [
+        [3],
+        "faz",
+        np.array([2, 2], dtype=np.int8),
+        np.array([2, 2], dtype=np.float32),
+    ]:
+        feature_selection = FeatureSelection(data, period=period)
+        with pytest.raises(ValueError):
+            feature_selection.optimize_kernel_imbalance(Data(data), 1)
+
+    for initial_gammas in [np.array([2, 2], np.float32), ["faz"]]:
+        feature_selection = FeatureSelection(data)
+        with pytest.raises(ValueError):
+            feature_selection.optimize_kernel_imbalance(
+                Data(data), initial_gammas=initial_gammas
+            )
+
+def test_dist_matrix():
+    data = rng.random((10, 5))
+    feature_selection = FeatureSelection(data)
+    assert feature_selection._full_distance_matrix is None

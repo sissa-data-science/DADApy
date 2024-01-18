@@ -12,12 +12,11 @@ from libc.math cimport (  # absolute values for floats, needed when using PBC
     sqrt,
 )
 
-
 # TODO: clean up
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_jobs, bint squared=False):
+def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int njobs, bint squared=False):
     """Compute pairwise euclidean distances between points in a periodic boundary condition (PBC) system using Cython with parallel processing.
 
     Args:
@@ -25,7 +24,7 @@ def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_j
             The input array of points in a PBC system, where N is the number of points and D is the number of dimensions.
         box_size (numpy.ndarray): shape (D,) of type 'float' (python) a.k.a. 'double' (C)
             The periodicity (size of the PBC box) in each dimension.
-        n_jobs (int): The number of threads to use for parallel processing.
+        njobs (int): The number of threads to use for parallel processing.
         squared (bool, optional): Whether to return squared distances or regular euclidean distances. Default is False.
 
     Returns:
@@ -56,7 +55,7 @@ def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_j
     X = np.mod(X, box_size, out=np.asarray(X), where=box_size_copy)
 
     if squared:
-        with nogil, parallel(num_threads=n_jobs):
+        with nogil, parallel(num_threads=njobs):
             for i in prange(N, schedule='static'):
                 for j in range(N):
                     dist = 0.0
@@ -74,7 +73,7 @@ def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_j
                     # Compute pairwise distances
                     distmatrix_view[i, j] = dist
     else:
-        with nogil, parallel(num_threads=n_jobs):
+        with nogil, parallel(num_threads=njobs):
             for i in prange(N, schedule='static'):
                 for j in range(N):
                     dist = 0.0
@@ -98,13 +97,13 @@ def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_j
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-def compute_dist_cython_parallel(double[:, :] X, int n_jobs, bint squared=False):
+def compute_dist_cython_parallel(double[:, :] X, int njobs, bint squared=False):
     """Compute pairwise euclidean distances between points using Cython with parallel processing.
 
     Args:
         X : (numpy.ndarray): shape (N, D) of type 'float' (python) a.k.a. 'double' (C).
             The input array of points, where N is the number of points and D is the number of dimensions.
-        n_jobs (int): The number of threads to use for parallel processing.
+        njobs (int): The number of threads to use for parallel processing.
         squared (bool, optional): Whether to return squared distances or regular euclidean distances. Default is False.
 
     Returns:
@@ -125,7 +124,7 @@ def compute_dist_cython_parallel(double[:, :] X, int n_jobs, bint squared=False)
     cdef double[:,::1] distmatrix_view = distmatrix
 
     if squared:
-        with nogil, parallel(num_threads=n_jobs):
+        with nogil, parallel(num_threads=njobs):
             for i in prange(N, schedule='static'):
                 for j in range(N):
                     dist = 0.0
@@ -135,7 +134,7 @@ def compute_dist_cython_parallel(double[:, :] X, int n_jobs, bint squared=False)
                     # Compute pairwise distances
                     distmatrix_view[i, j] = dist
     else:
-        with nogil, parallel(num_threads=n_jobs):
+        with nogil, parallel(num_threads=njobs):
             for i in prange(N, schedule='static'):
                 for j in range(N):
                     dist = 0.0
@@ -151,7 +150,7 @@ def compute_dist_cython_parallel(double[:, :] X, int n_jobs, bint squared=False)
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-def compute_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int n_jobs, bint periodic = False):
+def compute_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int njobs, bint periodic = False):
     """Compute the gradient of kernel imbalance between input data matrix A and groundtruth data matrix B; Cython implementation.
 
     Args:
@@ -207,7 +206,7 @@ def compute_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not No
 #         # take distance of first nearest neighbor for each point 
 #         #min_dists = np.nanmin(dists_rescaled_A, axis=1)[:,np.newaxis]
         #for i in range(N):
-        with nogil, parallel(num_threads=n_jobs):
+        with nogil, parallel(num_threads=njobs):
             for i in prange(N, schedule='static'):
                 min_dists[i] = cmin(dists_rescaled_A[i])
 
@@ -231,7 +230,7 @@ def compute_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not No
                     gradient_view[i] = 0.
                 else:
                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
-                    gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)   
+                    gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)   
                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
         else:
             for i in range(D):
@@ -239,7 +238,7 @@ def compute_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not No
                     gradient_view[i] = 0.
                 else:
                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
-                    gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)   
+                    gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)   
                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)    
 
     return gradient
@@ -263,7 +262,7 @@ cdef double cmin(double[:] arr) nogil:
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):
+cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):
     
     cdef int D,N,i,j
     D = gammas.shape[0]
@@ -280,11 +279,11 @@ cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double
     #periodcorrection according to the rescaling factors of the inputs
     cdef double[:] periodalpha
     periodalpha=period[alpha_gamma,None] #this creates a 1D array with just my 1 period number I need
-    dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, n_jobs=n_jobs, squared=True)
+    dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, njobs=njobs, squared=True)
     cdef double [:,:] d_s_A_view = dists_squared_A
     
     #for i in range(N):
-    with nogil, parallel(num_threads=n_jobs):
+    with nogil, parallel(num_threads=njobs):
         for i in prange(N, schedule='static'):
             summ = 0.
             for j in range(N):
@@ -311,7 +310,7 @@ cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):
+cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):
     
     cdef int D,N,i,j
     D = gammas.shape[0]
@@ -324,10 +323,10 @@ cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:
     t2 = np.empty(N, dtype=float)
     cdef double[:] second_term = t2
     
-    cdef double [:,:] d_s_A_view = compute_dist_cython_parallel(alphacolumn, n_jobs=n_jobs, squared=True)
+    cdef double [:,:] d_s_A_view = compute_dist_cython_parallel(alphacolumn, njobs=njobs, squared=True)
 
     #for i in range(N):
-    with nogil, parallel(num_threads=n_jobs):
+    with nogil, parallel(num_threads=njobs):
         for i in prange(N, schedule='static'):
             summ = 0.
             for j in range(N):

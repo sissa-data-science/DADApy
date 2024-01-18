@@ -73,7 +73,7 @@ exts_parallel = [
         include_dirs=[get_numpy_include()],
     ),
     Extension(
-        "dadapy._cython.cython_differentiable_imbalance.pyx",
+        "dadapy._cython.cython_differentiable_imbalance",
         sources=["dadapy/_cython/cython_differentiable_imbalance.c"],
         include_dirs=[get_numpy_include()],
     )

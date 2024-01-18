@@ -122,7 +122,7 @@ class FeatureSelection(MetricComparisons):
             period = np.full((in_dims), fill_value=in_period, dtype=float)
         else:
             raise ValueError(
-                f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
+                f"'period' must be either a float scalar or a numpy array of floats of shape ({in_dims},)"
             )
         return period
 

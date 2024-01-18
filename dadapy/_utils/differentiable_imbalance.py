@@ -15,14 +15,57 @@
 
 """Not user-friendly functions for calculating eg. full distance matrix etc."""
 
+from functools import wraps
 import time
 
 import numpy as np
 from joblib import Parallel, delayed  # TODO: might not be necessary
+from scipy.spatial import cKDTree # TODO: remove with compute_dist_PBC
 from scipy.stats import rankdata
-from sklearn.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import euclidean_distances
 
-from dadapy._cython import differentiable_imbalance as c_dii
+from dadapy._cython import cython_differentiable_imbalance as c_dii
+
+CYTHON_DTYPE = np.float64
+
+def cast_ndarrays(func: callable):
+    """Convert any float np.ndarray to the datatype that cython accepts.
+
+    Args:
+        func (callable): function to be decorated
+
+    Returns:
+        func (callable): function with all float type np.ndarrays converted to CYTHON_TYPE
+    """
+    @wraps(func)
+    def cast_wrapped(*args, **kwargs):
+        args = (arg.astype(CYTHON_DTYPE) if (isinstance(arg, np.ndarray) and arg.dtype.kind == 'f') else arg for arg in args)
+        for key, value in kwargs.items():
+            if isinstance(value, np.ndarray) and (value.dtype.kind == 'f'):
+                kwargs[key] = value.astype(CYTHON_DTYPE)
+        return func(*args, **kwargs)
+    return cast_wrapped
+
+
+def _compute_dist_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
+    """Compute the neighbours of each point taking into account periodic boundaries conditions and eventual cutoff
+    Args:
+        X (np.ndarray): array of dimension N x D
+        maxk (int): number of neighbours to save
+        box_size (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
+        p (int): Minkowski p-norm used
+        cutoff (float): set an upper bound to the distances. Over such threshold a np.inf will occur
+    Returns:
+        distmatrix (np.ndarray(float)): N x maxk (maxk=usually N) array containing the distances from each point to the first maxk nn
+    """
+    # TODO: This should not be here, find out where in dadapy this is
+    box_size_copy = [i!=0. for i in box_size] # get a mask for potential 0-period variables
+    X = np.mod(X, box_size, out=X, where=box_size_copy) # wrap all variables around the period (modulus), except the 0-period ones
+    tree = cKDTree(X, boxsize=box_size)
+    dist, ind = tree.query(X, k=maxk, p=p, distance_upper_bound=cutoff)
+    # resorts the NN-sorted indices back into order and select the according distances
+    distmatrix = np.take_along_axis(dist,np.argsort(ind, axis=1), axis=1) 
+    return distmatrix
 
 
 def _compute_optimal_lambda_from_distances(distance_matrix, fraction):
@@ -33,6 +76,7 @@ def _compute_optimal_lambda_from_distances(distance_matrix, fraction):
     return fraction * ((np.min(min_distances_nn) + np.nanmean(min_distances_nn)) / 2)
 
 
+@cast_ndarrays
 def _compute_full_dist_matrix(data, period, njobs, cythond=True):
     """Computes the distance matrix based on input data points and optionally a period array.
 
@@ -58,21 +102,19 @@ def _compute_full_dist_matrix(data, period, njobs, cythond=True):
             which is necessary for several other functions, including ranking
     """
     # TODO: add the faster python implementation of this (probably sklearn)
-    N = data.shape[0]
-    D = data.shape[1]
 
     # Make matrix of distances
     if period is None:
         dist_matrix = euclidean_distances(data)
     else:
-        if cythond == True:
+        if cythond:
+            print(data, period, njobs)
             dist_matrix = c_dii.compute_dist_PBC_cython_parallel(
-                data, box_size=period, njobs=njobs
+                data.astype(CYTHON_DTYPE), period.astype(CYTHON_DTYPE), njobs
             )
         else:
-            dist_matrix = c_dii.compute_dist_PBC(
-                data, maxk=data.shape[0], box_size=period, p=2
-            )
+            # TODO: fix this, either something from dadapy, or for full matrix prob. something else
+            dist_matrix = _compute_dist_PBC(data, maxk=data.shape[0], box_size=period, p=2)
     np.fill_diagonal(
         dist_matrix, np.max(dist_matrix) + 1
     )  ###CHANGE - this cannot be 0 because of divide by 0 and not NaN because of cython
@@ -172,6 +214,7 @@ def _compute_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
     return kernel_imbalance
 
 
+@cast_ndarrays
 def _compute_kernel_imbalance_gradient(
     dists_rescaled_A, data_A, rank_matrix_B, gammas, lambd, period, njobs, cythond=True
 ):
@@ -204,7 +247,7 @@ def _compute_kernel_imbalance_gradient(
     # TODO: move typechecks to parent
     N = data_A.shape[0]
     D = data_A.shape[1]
-    gradient = np.zeros(D)
+    gradient = np.zeros(D, dtype=CYTHON_DTYPE)
 
     if lambd == 0:  # TODO: remove type check, this should be handled in class object
         gradient = np.nan * gradient
@@ -213,7 +256,7 @@ def _compute_kernel_imbalance_gradient(
             if isinstance(period, np.ndarray) and period.shape == (D,):
                 period = period
             elif isinstance(period, (int, float)):
-                period = np.full((D), fill_value=period, dtype=float)
+                period = np.full((D), fill_value=period, dtype=CYTHON_DTYPE)
             else:
                 raise ValueError(
                     f"'period' must be either a float scalar or a numpy array of floats of shape ({D},)"
@@ -247,20 +290,23 @@ def _compute_kernel_imbalance_gradient(
                 else:
                     # periodcorrection according to the rescaling factors of the inputs
                     # start=time.time()
-                    periodalpha = period[alpha_gamma]
                     if cythond:
+                        # @wildromi I cannot get this to work anymore, but it could be removed anyhow
+                        raise NotImplementedError("This function is deprecated")
+                        periodalpha = period[alpha_gamma, np.newaxis]
                         dists_squared_A = c_dii.compute_dist_PBC_cython_parallel(
                             data_A[:, alpha_gamma, np.newaxis],
-                            box_size=periodalpha[:, np.newaxis],
-                            njobs=njobs,
+                            periodalpha, # box size
+                            njobs, # njobs
                             squared=True,
                         )
                     else:
+                        periodalpha = period[alpha_gamma]
                         dists_squared_A = np.square(
                             _compute_dist_PBC(
                                 data_A[:, alpha_gamma, np.newaxis],
                                 maxk=data_A.shape[0],
-                                box_size=periodalpha,
+                                box_size=[periodalpha],
                                 p=2,
                             )
                         )
@@ -276,7 +322,7 @@ def _compute_kernel_imbalance_gradient(
 
         # compute the gradient term for each gamma (parallelization is faster than the loop below):
         gradient_parallel = np.array(
-            Parallel(njobs=njobs, prefer="threads")(
+            Parallel(n_jobs=njobs, prefer="threads")(
                 delayed(alphagamma_gradientterm)(alpha_gamma)
                 for alpha_gamma in range(len(gammas))
             )
@@ -287,20 +333,21 @@ def _compute_kernel_imbalance_gradient(
     return gradient
 
 
+@cast_ndarrays
 def _optimize_kernel_imbalance(
-    groundtruth_data,
-    data,
-    njobs,
-    gammas_0=None,
-    lambd=None,
-    n_epochs=100,
-    l_rate=None,
-    constrain=False,
-    l1_penalty=0.0,
-    decaying_lr=True,
-    period=None,
-    groundtruthperiod=None,
-    cythond=True,
+    groundtruth_data:np.ndarray,
+    data:np.ndarray,
+    njobs:int,
+    gammas_0:np.ndarray=None,
+    lambd:float=None,
+    n_epochs:int=100,
+    l_rate:float=None,
+    constrain:bool=False,
+    l1_penalty:float=0.0,
+    decaying_lr:bool=True,
+    period:np.ndarray=None,
+    groundtruthperiod:np.ndarray=None,
+    cythond:bool=True,
 ):
     """Optimize the differentiable information imbalance using gradient descent of the kernel imbalance between input data matrix A and groundtruth data matrix B.
 
@@ -561,6 +608,7 @@ def _compute_optimal_learning_rate(
     return opt_l_rate, kernel_imbalances_list
 
 
+@cast_ndarrays
 def _optimize_kernel_imbalance_static_zeros(
     groundtruth_data,
     data,
