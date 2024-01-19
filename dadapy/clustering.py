@@ -186,7 +186,6 @@ class Clustering(DensityEstimation):
             self.cluster_assignment = deepcopy(dadac_handler.cluster_assignment)
             self.cluster_centers = deepcopy(dadac_handler.cluster_centers)
             self.bord_indices = deepcopy(dadac_handler.border_indices)
-            print(self.cluster_centers[2])
             
             #subtract a one on the diagonal only for consistency with the original implementation and conventions 
             self.log_den_bord     = deepcopy(dadac_handler.log_den_bord + log_den_min  -1.)
