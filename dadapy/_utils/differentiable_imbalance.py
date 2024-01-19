@@ -15,12 +15,12 @@
 
 """Not user-friendly functions for calculating eg. full distance matrix etc."""
 
-from functools import wraps
 import time
+from functools import wraps
 
 import numpy as np
 from joblib import Parallel, delayed  # TODO: might not be necessary
-from scipy.spatial import cKDTree # TODO: remove with compute_dist_PBC
+from scipy.spatial import cKDTree  # TODO: remove with compute_dist_PBC
 from scipy.stats import rankdata
 from sklearn.metrics.pairwise import euclidean_distances
 
@@ -28,7 +28,8 @@ from dadapy._cython import cython_differentiable_imbalance as c_dii
 
 CYTHON_DTYPE = np.float64
 
-def cast_ndarrays(func: callable):
+
+def cast_ndarrays(func):
     """Convert any float np.ndarray to the datatype that cython accepts.
 
     Args:
@@ -37,13 +38,20 @@ def cast_ndarrays(func: callable):
     Returns:
         func (callable): function with all float type np.ndarrays converted to CYTHON_TYPE
     """
+
     @wraps(func)
     def cast_wrapped(*args, **kwargs):
-        args = (arg.astype(CYTHON_DTYPE) if (isinstance(arg, np.ndarray) and arg.dtype.kind == 'f') else arg for arg in args)
+        args = (
+            arg.astype(CYTHON_DTYPE)
+            if (isinstance(arg, np.ndarray) and arg.dtype.kind == "f")
+            else arg
+            for arg in args
+        )
         for key, value in kwargs.items():
-            if isinstance(value, np.ndarray) and (value.dtype.kind == 'f'):
+            if isinstance(value, np.ndarray) and (value.dtype.kind == "f"):
                 kwargs[key] = value.astype(CYTHON_DTYPE)
         return func(*args, **kwargs)
+
     return cast_wrapped
 
 
@@ -59,16 +67,20 @@ def _compute_dist_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
         distmatrix (np.ndarray(float)): N x maxk (maxk=usually N) array containing the distances from each point to the first maxk nn
     """
     # TODO: This should not be here, find out where in dadapy this is
-    box_size_copy = [i!=0. for i in box_size] # get a mask for potential 0-period variables
-    X = np.mod(X, box_size, out=X, where=box_size_copy) # wrap all variables around the period (modulus), except the 0-period ones
+    box_size_copy = [
+        i != 0.0 for i in box_size
+    ]  # get a mask for potential 0-period variables
+    X = np.mod(
+        X, box_size, out=X, where=box_size_copy
+    )  # wrap all variables around the period (modulus), except the 0-period ones
     tree = cKDTree(X, boxsize=box_size)
     dist, ind = tree.query(X, k=maxk, p=p, distance_upper_bound=cutoff)
     # resorts the NN-sorted indices back into order and select the according distances
-    distmatrix = np.take_along_axis(dist,np.argsort(ind, axis=1), axis=1) 
+    distmatrix = np.take_along_axis(dist, np.argsort(ind, axis=1), axis=1)
     return distmatrix
 
 
-def _compute_optimal_lambda_from_distances(distance_matrix, fraction):
+def _return_optimal_lambda_from_distances(distance_matrix, fraction=1.0):
     # sets lambda to the average between the smallest and mean (2nd NN - 1st NN)-distance
     # np.fill_diagonal(distance_matrix, np.nan) ###CHANGE: This I don't need because on the diagonal I have just big values
     NNs = np.sort(distance_matrix, axis=1)  #
@@ -77,7 +89,9 @@ def _compute_optimal_lambda_from_distances(distance_matrix, fraction):
 
 
 @cast_ndarrays
-def _compute_full_dist_matrix(data, period, njobs, cythond=True):
+def _return_full_dist_matrix(
+    data: np.ndarray, njobs: int, period: np.ndarray = None, cythond=True
+):
     """Computes the distance matrix based on input data points and optionally a period array.
 
     Args:
@@ -102,19 +116,18 @@ def _compute_full_dist_matrix(data, period, njobs, cythond=True):
             which is necessary for several other functions, including ranking
     """
     # TODO: add the faster python implementation of this (probably sklearn)
-
     # Make matrix of distances
     if period is None:
         dist_matrix = euclidean_distances(data)
     else:
         if cythond:
-            print(data, period, njobs)
-            dist_matrix = c_dii.compute_dist_PBC_cython_parallel(
-                data.astype(CYTHON_DTYPE), period.astype(CYTHON_DTYPE), njobs
-            )
+            # print(data, njobs, period, cythond)
+            dist_matrix = c_dii.compute_dist_PBC_cython_parallel(data, period, njobs)
         else:
             # TODO: fix this, either something from dadapy, or for full matrix prob. something else
-            dist_matrix = _compute_dist_PBC(data, maxk=data.shape[0], box_size=period, p=2)
+            dist_matrix = _compute_dist_PBC(
+                data, maxk=data.shape[0], box_size=period, p=2
+            )
     np.fill_diagonal(
         dist_matrix, np.max(dist_matrix) + 1
     )  ###CHANGE - this cannot be 0 because of divide by 0 and not NaN because of cython
@@ -122,7 +135,9 @@ def _compute_full_dist_matrix(data, period, njobs, cythond=True):
     return dist_matrix
 
 
-def _compute_full_rank_matrix(data, period, njobs, distances=False, cythond=True):
+def _return_full_rank_matrix(
+    data, njobs, period: np.ndarray = None, distances=False, cythond=True
+):
     """Computes the rank matrix based on input data points and optionally a period array, using the 'compute_dist_matrix' function.
 
     Args:
@@ -139,18 +154,8 @@ def _compute_full_rank_matrix(data, period, njobs, distances=False, cythond=True
         numpy.ndarray: N x N rank matrix, where N is the number of datapoints in the input data.
     """
     # TODO: build better method here, or at least have this only build from ranks
-    if period is not None:
-        D = data.shape[1]
-        if isinstance(period, np.ndarray) and period.shape == (D,):
-            period = period
-        elif isinstance(period, (int, float)):
-            period = np.full((D), fill_value=period, dtype=float)
-        else:
-            raise ValueError(
-                f"'period' must be either a float scalar or a numpy array of floats of shape ({D},)"
-            )
 
-    dist_matrix = _compute_full_dist_matrix(
+    dist_matrix = _return_full_dist_matrix(
         data=data, period=period, cythond=cythond, njobs=njobs
     )
     # np.fill_diagonal(dist_matrix, np.nan)  ### To give last rank to diag. The distance function already sets diagonal to max, so unnecessary
@@ -167,7 +172,7 @@ def _compute_full_rank_matrix(data, period, njobs, distances=False, cythond=True
         return rank_matrix
 
 
-def _compute_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
+def _return_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
     """Computes the kernel imbalance between two matrices based on distances of input data and rank information of groundtruth data.
 
     Args:
@@ -175,7 +180,7 @@ def _compute_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
             be computed with 'compute_dist_matrix'
         rank_matrix_B (np.ndarray): N x N rank matrix for the groundtruth data B.
         lambd (float, optional): The regularization parameter. Default: 0.1. The higher this value, the more nearest neighbors are included.
-            Can be calculated automatically with 'compute_optimal_lambda'. This sets lambda to a distance smaller than the average distance
+            Can be calculated automatically with 'return_optimal_lambda'. This sets lambda to a distance smaller than the average distance
             in the data set but bigger than the minimal distance
 
     Returns:
@@ -215,8 +220,15 @@ def _compute_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
 
 
 @cast_ndarrays
-def _compute_kernel_imbalance_gradient(
-    dists_rescaled_A, data_A, rank_matrix_B, gammas, lambd, period, njobs, cythond=True
+def _return_kernel_imbalance_gradient(
+    dists_rescaled_A,
+    data_A,
+    rank_matrix_B,
+    gammas,
+    lambd,
+    njobs,
+    period: np.ndarray = None,
+    cythond=True,
 ):
     """Compute the gradient of kernel imbalance between input data matrix A and groundtruth data matrix B.
 
@@ -234,7 +246,7 @@ def _compute_kernel_imbalance_gradient(
             The lambda scaling parameter of the softmax. If None, it is calculated automatically. Default is None.
         period : float or numpy.ndarray/list, optional
             D(input) periods (input formatted to be periodic starting at 0). If not a list, the same period is assumed for all D features
-            Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period, set those to 0.
+            Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period: np.ndarray=None set those to 0.
         njobs : int, optional
             The number of threads to use for parallel processing. Default is None, which uses the maximum number of available CPUs.
         cythond : bool, optional
@@ -290,14 +302,14 @@ def _compute_kernel_imbalance_gradient(
                 else:
                     # periodcorrection according to the rescaling factors of the inputs
                     # start=time.time()
-                    if cythond:
+                    if cythond:  # TODO: @wildromi this case will now never be reached.
                         # @wildromi I cannot get this to work anymore, but it could be removed anyhow
-                        raise NotImplementedError("This function is deprecated")
+                        raise NotImplementedError("This function is deprecated.")
                         periodalpha = period[alpha_gamma, np.newaxis]
                         dists_squared_A = c_dii.compute_dist_PBC_cython_parallel(
                             data_A[:, alpha_gamma, np.newaxis],
-                            periodalpha, # box size
-                            njobs, # njobs
+                            periodalpha,  # box size
+                            njobs,  # njobs
                             squared=True,
                         )
                     else:
@@ -333,21 +345,76 @@ def _compute_kernel_imbalance_gradient(
     return gradient
 
 
+from sklearn.metrics import pairwise_distances
+
+
+class GradientFuncs:
+    def __init__(
+        self,
+        truth_ranks: np.ndarray,
+        input_data: np.ndarray,
+        lambda_: float = 1.0,
+        kernel_cutoff=1e-6,
+    ):
+        self.truth_ranks = truth_ranks
+        self.input_data = input_data
+        self.n_data = self.truth_ranks.shape[0]
+        self.n_dim = self.input_data.shape[-1]
+        self.lambda_ = lambda_
+        self.cutoff_d = -np.log(kernel_cutoff) * self.lambda_
+
+    @staticmethod
+    def _kernel_func(distance_matrix, lambda_):
+        exp = np.exp(-distance_matrix / lambda_)
+        np.fill_diagonal(exp, 0.0)
+        return exp / np.sum(exp, axis=-1)[:, np.newaxis]
+
+    def _get_distance_matrix(self, gammas: np.ndarray):
+        return pairwise_distances(self.input_data * gammas)
+
+    def _get_dim_distance_sq(self, dim):
+        return np.square(
+            self.input_data[:, np.newaxis, dim] - self.input_data[np.newaxis, :, dim]
+        )
+
+    def gradient(self, gammas: np.ndarray):
+        gradient = np.zeros_like(gammas)
+
+        distance_matrix = self._get_distance_matrix(gammas)  # distance matrix
+        kernel = self._kernel_func(
+            distance_matrix=distance_matrix, lambda_=self.lambda_
+        )  # kernel with 0 diag
+        np.fill_diagonal(distance_matrix, 1.0)  # fill for division
+        for dim in range(self.n_dim):
+            distance_matrix[:, :] = (
+                self._get_dim_distance_sq(dim) / distance_matrix
+            )  # fraction, re-using memory
+            distance_matrix[:, :] = (
+                np.sum(distance_matrix * kernel, axis=-1)[:, np.newaxis]
+                - distance_matrix
+            )  # (\sum_m c_im fraction_im - fraction_ij)
+
+            gradient[dim] = (2 * gammas[dim]) / (self.lambda_ * (self.n_data**2))
+            gradient[dim] *= np.sum(kernel * distance_matrix * self.truth_ranks)
+
+        return gradient
+
+
 @cast_ndarrays
 def _optimize_kernel_imbalance(
-    groundtruth_data:np.ndarray,
-    data:np.ndarray,
-    njobs:int,
-    gammas_0:np.ndarray=None,
-    lambd:float=None,
-    n_epochs:int=100,
-    l_rate:float=None,
-    constrain:bool=False,
-    l1_penalty:float=0.0,
-    decaying_lr:bool=True,
-    period:np.ndarray=None,
-    groundtruthperiod:np.ndarray=None,
-    cythond:bool=True,
+    groundtruth_data: np.ndarray,
+    data: np.ndarray,
+    njobs: int,
+    gammas_0: np.ndarray = None,
+    lambd: float = None,
+    n_epochs: int = 100,
+    l_rate: float = None,
+    constrain: bool = False,
+    l1_penalty: float = 0.0,
+    decaying_lr: bool = True,
+    period: np.ndarray = None,
+    groundtruthperiod: np.ndarray = None,
+    cythond: bool = True,
 ):
     """Optimize the differentiable information imbalance using gradient descent of the kernel imbalance between input data matrix A and groundtruth data matrix B.
 
@@ -400,10 +467,9 @@ def _optimize_kernel_imbalance(
     gammas_list = np.zeros((n_epochs + 1, D))
     scaling = 1  # if there is no constraint on rescaling of gammas
 
-    rank_matrix_B = _compute_full_rank_matrix(
-        groundtruth_data, period=groundtruthperiod, cythond=cythond
+    rank_matrix_B = _return_full_rank_matrix(
+        groundtruth_data, njobs=njobs, period=groundtruthperiod, cythond=cythond
     )
-
     # initializations
     if constrain:
         scaling = 1 / np.max(np.abs(gammas_0))
@@ -416,12 +482,12 @@ def _optimize_kernel_imbalance(
     # for adaptive lambda: calculate distance matrix in rescaled input
     if period is not None:
         # Removed period typecheck here, this should be handled somewhere else
-        dists_rescaled_A = _compute_full_dist_matrix(
+        dists_rescaled_A = _return_full_dist_matrix(
             data=rescaled_data_A, period=gammas * period, cythond=cythond, njobs=njobs
         )
     else:
         periodarray = None
-        dists_rescaled_A = _compute_full_dist_matrix(
+        dists_rescaled_A = _return_full_dist_matrix(
             data=rescaled_data_A, period=None, cythond=cythond, njobs=njobs
         )
 
@@ -432,9 +498,9 @@ def _optimize_kernel_imbalance(
         adaptive_lambd = False
     else:
         adaptive_lambd = True
-        lambd = _compute_optimal_lambda_from_distances(dists_rescaled_A)
+        lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
-    kernel_imbalances[0] = _compute_kernel_imbalance(
+    kernel_imbalances[0] = _return_kernel_imbalance(
         dists_rescaled_A, rank_matrix_B, lambd
     )
     l1_penalties[0] = l1_penalty * np.sum(np.abs(gammas))
@@ -444,8 +510,15 @@ def _optimize_kernel_imbalance(
         # compute gradient * SCALING!!!! to be scale invariant
         if not cythond:
             gradient = (
-                _compute_kernel_imbalance_gradient(
-                    dists_rescaled_A, data, rank_matrix_B, gammas, lambd, period=period
+                _return_kernel_imbalance_gradient(
+                    dists_rescaled_A,
+                    data,
+                    rank_matrix_B,
+                    gammas,
+                    lambd,
+                    period=period,
+                    njobs=njobs,
+                    cythond=cythond,
                 )
                 * scaling
             )
@@ -457,15 +530,15 @@ def _optimize_kernel_imbalance(
                 periodic = False
                 myperiod = gammas * 0.0  # dummy array, not used in cython:
             gradient = (
-                c_dii.compute_kernel_imbalance_gradient_cython(
+                c_dii.return_kernel_imbalance_gradient_cython(
                     dists_rescaled_A,
                     data,
                     rank_matrix_B,
                     gammas,
                     lambd,
-                    period=myperiod,
-                    njobs=njobs,
-                    periodic=periodic,
+                    myperiod,
+                    njobs,
+                    periodic,
                 )
                 * scaling
             )
@@ -514,17 +587,17 @@ def _optimize_kernel_imbalance(
             rescaled_data_A = gammas * data
             if period is not None:
                 periodarray = gammas * period
-            dists_rescaled_A = _compute_full_dist_matrix(
+            dists_rescaled_A = _return_full_dist_matrix(
                 rescaled_data_A, period=periodarray, cythond=cythond, njobs=njobs
             )
             lambd = (
                 scaling * lambd
             )  # to make the gradient scale invariant. adaptive lambda automatically scales lambda to the features for scale invariance
             if adaptive_lambd:
-                lambd = _compute_optimal_lambda_from_distances(dists_rescaled_A)
+                lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
             # compute kernel imbalance
-            kernel_imbalances[i_epoch + 1] = _compute_kernel_imbalance(
+            kernel_imbalances[i_epoch + 1] = _return_kernel_imbalance(
                 dists_rescaled_A, rank_matrix_B, lambd
             )
             l1_penalties[i_epoch + 1] = l1_penalty * np.sum(np.abs(gammas))
@@ -537,91 +610,20 @@ def _optimize_kernel_imbalance(
         return gammas_list, kernel_imbalances, l1_penalties
 
 
-def _compute_optimal_learning_rate(
-    groundtruth_data,
-    data,
-    gammas_0,
-    lambd,
-    n_epochs=50,
-    constrain=False,
-    l1_penalty=0.0,
-    decaying_lr=True,
-    period=None,
-    groundtruthperiod=None,
-    nsamples=300,
-    lr_list=None,
-):
-    """Do a stepwise backward eliminitaion of features and after each elimination GD otpmize the kernel imblance
-    Args:
-        groundtruth_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
-        data (np.ndarray): N x D(input) array containing N datapoints in D input features whose weights are optimized to reproduce the groundtruth distances
-        gammas_0 (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
-        lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimial_lambda
-        n_epochs (int): number of epochs in each optimization cycle
-        constrain (bool): if True, rescale the weights so the biggest weight = 1
-        l1_penalty (float): l1 regularization strength
-        decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
-        period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
-        groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
-        nsamples (int): Number of samples to use for the learning rate screening. Default = 300.
-               lr_list (np.ndarray or list): learning rates to try
-    Returns:
-        opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
-        kernel_imbalances_list: values of the kernel imbalance during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
-    """
-    # TODO: smaller standard value for nsamples here?
-    stride = int(np.round(len(data) / nsamples))
-    # TODO: why not randomly select here?
-    in_data = data[::stride]
-    groundtruth = groundtruth_data[::stride]
-    if lr_list == None:
-        # TODO: np.logspace here?
-        lrates = [0.001, 0.01, 0.1, 1.0, 10.0, 50.0, 100.0, 200.0]
-    else:
-        lrates = lr_list
-    gs = np.zeros((len(lrates), n_epochs + 1, in_data.shape[1]))
-    ks = np.zeros((len(lrates), n_epochs + 1))
-
-    # optmizations for different learning rates
-    for i, lrate in enumerate(lrates):
-        gs[i], ks[i], _ = _optimize_kernel_imbalance(
-            groundtruth_data=groundtruth,
-            data=in_data,
-            gammas_0=gammas_0,
-            lambd=lambd,
-            n_epochs=n_epochs,
-            l_rate=lrate,
-            constrain=constrain,
-            l1_penalty=l1_penalty,
-            decaying_lr=decaying_lr,
-            period=period,
-            groundtruthperiod=groundtruthperiod,
-            njobs=None,
-            cythond=True,
-        )
-
-    # find best imbalance
-    opt_lrate_index = np.nanargmin(ks[:, -1])
-    opt_l_rate = lrates[opt_lrate_index]
-    kernel_imbalances_list = ks[opt_lrate_index]
-
-    return opt_l_rate, kernel_imbalances_list
-
-
 @cast_ndarrays
 def _optimize_kernel_imbalance_static_zeros(
-    groundtruth_data,
-    data,
-    gammas_0,
-    njobs,
-    lambd=None,
-    n_epochs=100,
-    l_rate=0.1,
-    constrain=False,
-    decaying_lr=True,
-    period=None,
-    groundtruthperiod=None,
-    cythond=True,
+    groundtruth_data: np.ndarray,
+    data: np.ndarray,
+    gammas_0: np.ndarray,
+    njobs: int,
+    lambd: float = None,
+    n_epochs: int = 100,
+    l_rate: float = 0.1,
+    constrain: bool = False,
+    decaying_lr: bool = True,
+    period: np.ndarray = None,
+    groundtruthperiod: np.ndarray = None,
+    cythond: bool = True,
 ):
     """Optimization where 0 weights stay 0. Used in backward eliminitaion of features
     Args:
@@ -646,21 +648,11 @@ def _optimize_kernel_imbalance_static_zeros(
     N = data.shape[0]
     D = data.shape[1]
 
-    if period is not None:
-        if isinstance(period, np.ndarray) and period.shape == (D,):
-            period = period
-        elif isinstance(period, (int, float)):
-            period = np.full((D), fill_value=period, dtype=float)
-        else:
-            raise ValueError(
-                f"'period' must be either a float scalar or a numpy array of floats of shape ({D},)"
-            )
-
     kernel_imbalances = np.ones(n_epochs + 1)  # +1: to include initial value
     gammas_list = np.zeros((n_epochs + 1, D))
     scaling = 1  # if there is no constraint on rescaling of gammas
-    rank_matrix_B = _compute_full_rank_matrix(
-        groundtruth_data, period=groundtruthperiod, cythond=cythond
+    rank_matrix_B = _return_full_rank_matrix(
+        groundtruth_data, period=groundtruthperiod, cythond=cythond, njobs=njobs
     )
 
     # initializations
@@ -674,9 +666,14 @@ def _optimize_kernel_imbalance_static_zeros(
 
     # for adaptive lambda: calculate distance matrix in rescaled input
     # for adaptive lambda: calculate distance matrix in rescaled input
-    dists_rescaled_A = _compute_full_dist_matrix(
-        data=rescaled_data_A, period=gammas * period, cythond=cythond, njobs=njobs
-    )
+    if period is not None:
+        dists_rescaled_A = _return_full_dist_matrix(
+            data=rescaled_data_A, period=gammas * period, cythond=cythond, njobs=njobs
+        )
+    else:
+        dists_rescaled_A = _return_full_dist_matrix(
+            data=rescaled_data_A, period=period, cythond=cythond, njobs=njobs
+        )
 
     if lambd is not None:
         lambd = (
@@ -685,9 +682,9 @@ def _optimize_kernel_imbalance_static_zeros(
         adaptive_lambd = False
     elif lambd is None:
         adaptive_lambd = True
-        lambd = _compute_optimal_lambda_from_distances(dists_rescaled_A)
+        lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
-    kernel_imbalances[0] = _compute_kernel_imbalance(
+    kernel_imbalances[0] = _return_kernel_imbalance(
         dists_rescaled_A, rank_matrix_B, lambd
     )
     lrate = l_rate  # for not expon. decaying learning rates
@@ -697,7 +694,7 @@ def _optimize_kernel_imbalance_static_zeros(
         # compute gradient * SCALING!!!! to be scale invariant
         if cythond == False:
             gradient = (
-                _compute_kernel_imbalance_gradient(
+                _return_kernel_imbalance_gradient(
                     dists_rescaled_A,
                     data,
                     rank_matrix_B,
@@ -716,15 +713,15 @@ def _optimize_kernel_imbalance_static_zeros(
                 periodic = False
                 myperiod = gammas * 0
             gradient = (
-                c_dii.compute_kernel_imbalance_gradient_cython(
+                c_dii.return_kernel_imbalance_gradient_cython(
                     dists_rescaled_A,
                     data,
                     rank_matrix_B,
                     gammas,
                     lambd,
-                    period=period,
-                    njobs=njobs,
-                    periodic=periodic,
+                    myperiod,
+                    njobs,
+                    periodic,
                 )
                 * scaling
             )
@@ -766,18 +763,25 @@ def _optimize_kernel_imbalance_static_zeros(
             # for adaptive lambda: calculate distance matrix in rescaled input
             rescaled_data_A = gammas * data
             if period is not None:
-                periodarray = gammas * period
-            dists_rescaled_A = _compute_full_dist_matrix(
-                rescaled_data_A, period=periodarray, cythond=cythond, njobs=njobs
-            )
+                dists_rescaled_A = _return_full_dist_matrix(
+                    rescaled_data_A,
+                    period=period * gammas,
+                    cythond=cythond,
+                    njobs=njobs,
+                )
+            else:
+                dists_rescaled_A = _return_full_dist_matrix(
+                    rescaled_data_A, period=period, cythond=cythond, njobs=njobs
+                )
+
             lambd = (
                 scaling * lambd
             )  # to make the gradient scale invariant. adaptive lambda automatically scales lambda to the features for scale invariance
             if adaptive_lambd:
-                lambd = _compute_optimal_lambda_from_distances(dists_rescaled_A)
+                lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
             # compute kernel imbalance
-            kernel_imbalances[i_epoch + 1] = _compute_kernel_imbalance(
+            kernel_imbalances[i_epoch + 1] = _return_kernel_imbalance(
                 dists_rescaled_A, rank_matrix_B, lambd
             )
             gammas_list[i_epoch + 1] = gammas
@@ -823,7 +827,8 @@ def _refine_lasso_optimization(
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
         kernel_imbalances_list: values of the kernel imbalance during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
     """
-    # TODO: cleanup
+    # TODO: @wildromi cleanup, or maybe let's just think on it a little bit
+    # TODO: @wildromi typehints
     # Find where to refine the lasso and decide on new l1 penalties
     gs[np.isnan(gs)] = 0
     l0gs = np.linalg.norm(gs[:, -1, :], 0, axis=1)
@@ -857,7 +862,7 @@ def _refine_lasso_optimization(
 
     all_l1s = l1_penalties[
         0 : refinement_needed[0][0] + 1
-    ]  # add old l1's until the first refinement
+    ]  # add old l1's until the first refinement # TODO: @wildromi, this throws an error sometimes?
     all_gs = list(gs[0 : refinement_needed[0][0] + 1])
     all_ks = list(ks[0 : refinement_needed[0][0] + 1])
     all_ls = list(ls[0 : refinement_needed[0][0] + 1])

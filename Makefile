@@ -13,7 +13,7 @@ black-check: ## check black formatting
 	black --check --verbose dadapy tests
 
 flake8: ## check style with flake8
-	flake8 dadapy/base.py dadapy/metric_comparisons.py dadapy/clustering.py dadapy/id_estimation.py dadapy/density_estimation.py dadapy/id_discrete.py dadapy/data.py tests #dev_scripts examples
+	flake8 dadapy/base.py dadapy/metric_comparisons.py dadapy/clustering.py dadapy/id_estimation.py dadapy/density_estimation.py dadapy/id_discrete.py dadapy/data.py dadapy/feature_selection.py tests #dev_scripts examples
 
 # to include the "dadapy" folder: pytest tests --doctest-modules dadapy tests/
 test: ## run tests quickly with the default Python

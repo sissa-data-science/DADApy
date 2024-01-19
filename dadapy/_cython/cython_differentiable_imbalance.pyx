@@ -12,7 +12,9 @@ from libc.math cimport (  # absolute values for floats, needed when using PBC
     sqrt,
 )
 
-# TODO: clean up
+
+# TODO: @wildromi clean up
+# TODO: @wildromi why does this not accept var=var assignments anymore
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
@@ -150,7 +152,7 @@ def compute_dist_cython_parallel(double[:, :] X, int njobs, bint squared=False):
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-def compute_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int njobs, bint periodic = False):
+def return_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int njobs, bint periodic = False):
     """Compute the gradient of kernel imbalance between input data matrix A and groundtruth data matrix B; Cython implementation.
 
     Args:
@@ -164,7 +166,7 @@ def compute_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not No
             The array of weight values for the input values, where D is the number of gammas.
             This cannot be initialized to 0's. It can be initialized to all 1 or the inverse of the standard deviation
         lambd : float
-            The lambda scaling parameter of the softmax. This can be calculated automatically with python function 'compute_optimal_lambda'.
+            The lambda scaling parameter of the softmax. This can be calculated automatically with python function 'return_optimal_lambda'.
         period : numpy.ndarray
             D(input) periods (input formatted to be periodic starting at 0). If some of the input feature do not have a a period, set those to 0.
             In this cython implementation this must be given, if there is no period read any dummy array of size D.
