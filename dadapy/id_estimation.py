@@ -51,7 +51,6 @@ class IdEstimation(Base):
             verbose (bool): whether you want the code to speak or shut up
             n_jobs (int): number of cores to be used
         """
-
         self.intrinsic_dim = None
         self.intrinsic_dim_err = None
         self.intrinsic_dim_scale = None

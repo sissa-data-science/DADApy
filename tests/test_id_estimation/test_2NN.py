@@ -29,7 +29,6 @@ X = np.load(filename)
 
 def test_compute_id_2NN():
     """Test that the id estimations with 2NN work correctly."""
-
     ie = IdEstimation(coordinates=X, rng_seed=42)
 
     ie.compute_id_2NN()
