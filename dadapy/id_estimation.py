@@ -38,15 +38,7 @@ cores = multiprocessing.cpu_count()
 class IdEstimation(Base):
     """IdEstimation class."""
 
-    def __init__(
-        self,
-        coordinates=None,
-        distances=None,
-        maxk=None,
-        period=None,
-        verbose=False,
-        njobs=cores,
-    ):
+    def __init__(self, *args, **kwargs):
         """Estimate the intrinsic dimension of a dataset choosing among various routines.
 
         Inherits from class Base.
@@ -57,22 +49,18 @@ class IdEstimation(Base):
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             period (np.array(float), optional): array containing periodicity for each coordinate. Default is None
             verbose (bool): whether you want the code to speak or shut up
-            njobs (int): number of cores to be used
+            n_jobs (int): number of cores to be used
         """
-        super().__init__(
-            coordinates=coordinates,
-            distances=distances,
-            maxk=maxk,
-            period=period,
-            verbose=verbose,
-            njobs=njobs,
-        )
 
         self.intrinsic_dim = None
         self.intrinsic_dim_err = None
         self.intrinsic_dim_scale = None
         self.intrinsic_dim_mus = None
         self.intrinsic_dim_mus_gride = None
+
+        super().__init__(*args, **kwargs)
+        if self.n_jobs is None:
+            self.n_jobs = cores
 
     # ----------------------------------------------------------------------------------------------
 

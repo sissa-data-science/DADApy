@@ -55,7 +55,7 @@ class Clustering(DensityEstimation):
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+        self, coordinates=None, distances=None, maxk=None, verbose=False, n_jobs=cores
     ):
         """Initialise the Clustering class."""
         super().__init__(
@@ -63,7 +63,7 @@ class Clustering(DensityEstimation):
             distances=distances,
             maxk=maxk,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
         self.cluster_indices = None

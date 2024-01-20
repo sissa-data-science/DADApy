@@ -43,7 +43,7 @@ class Data(Clustering, MetricComparisons):
         distances=None,
         maxk=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
         working_memory=1024,
     ):
         """Initialise a Data object, container of all DADApy methods.
@@ -56,7 +56,7 @@ class Data(Clustering, MetricComparisons):
             distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             verbose (bool): whether you want the code to speak or shut up
-            njobs (int): number of cores to be used
+            n_jobs (int): number of cores to be used
             working_memory (int): working memory (TODO: currently unused)
         """
         super().__init__(
@@ -64,7 +64,7 @@ class Data(Clustering, MetricComparisons):
             distances=distances,
             maxk=maxk,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
     def return_ids_kstar_gride(
