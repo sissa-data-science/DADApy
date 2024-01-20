@@ -211,7 +211,7 @@ class IdEstimation(Base):
             # do decimation from pure distance matrix
             if decimation_from_distances:
                 # random subsample a subset of indices
-                indices = np.random.choice(self.N, n_subset, replace=False)
+                indices = self.rng.choice(self.N, n_subset, replace=False)
                 # Is self.dist_indices[i, j] selected?
                 mask = np.isin(self.dist_indices, indices)
 
