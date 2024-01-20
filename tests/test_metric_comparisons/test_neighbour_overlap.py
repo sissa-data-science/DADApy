@@ -76,3 +76,11 @@ def test_return_label_overlap_selected_coords():
     )
 
     assert overlaps == pytest.approx(expected_overlaps)
+
+
+def test_return_data_overlap():
+    """Test that the label overlap works correctly."""
+    X = np.load(filename)
+    mc = MetricComparisons(coordinates=X)
+    ov_data = mc.return_data_overlap(coordinates=X[:, :1], k=30, avg=True)
+    assert pytest.approx(0.58333) == ov_data
