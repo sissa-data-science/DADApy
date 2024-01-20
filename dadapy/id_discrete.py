@@ -32,8 +32,6 @@ from dadapy import plot as ddp
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
-rng = np.random.default_rng()
-
 
 class IdDiscrete(Base):
     """Estimates the intrinsic dimension of a dataset with discrete features using a binomial likelihood.
@@ -146,7 +144,11 @@ class IdDiscrete(Base):
                 )
 
             self.distances, self.dist_indices = df.return_condensed_distances(
-                np.array(self.X, dtype=int), self.metric, d_max, self.period, self.njobs
+                np.array(self.X, dtype=int),
+                self.metric,
+                d_max,
+                self.period,
+                self.n_jobs,
             )
 
         else:
@@ -1120,7 +1122,7 @@ class IdDiscrete(Base):
             )
 
             # extract the artificial n
-            n_mod = rng.binomial(ki, p)
+            n_mod = self.rng.binomial(ki, p)
 
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
@@ -1254,7 +1256,7 @@ class IdDiscrete(Base):
                 lki, id_i
             )
             # extract the artificial n
-            n_mod = rng.binomial(ki, p)  # size=mask_i.sum())
+            n_mod = self.rng.binomial(ki, p)  # size=mask_i.sum())
 
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
@@ -1422,7 +1424,7 @@ class IdDiscrete(Base):
             else:
                 my_mask = np.zeros(self._mask.shape[0], dtype=bool)
                 idx = np.sort(
-                    rng.choice(
+                    self.rng.choice(
                         np.where(self._mask)[0],
                         subset,
                         replace=False,

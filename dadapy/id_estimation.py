@@ -33,7 +33,6 @@ from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
-rng = np.random.default_rng()
 
 
 class IdEstimation(Base):
@@ -237,13 +236,14 @@ class IdEstimation(Base):
                 n_survived[j] = distances.shape[0]
 
             else:
-                idx = np.random.choice(self.N, size=n_subset, replace=False)
+                idx = self.rng.choice(self.N, size=n_subset, replace=False)
                 x_decimated = self.X[idx]
                 distances, _ = compute_nn_distances(
                     x_decimated,
                     maxk=3,  # only compute first 2 nn
                     metric=self.metric,
                     period=self.period,
+                    n_jobs=self.n_jobs,
                 )
 
             mus[j] = distances[:, 2] / distances[:, 1]
@@ -556,7 +556,7 @@ class IdEstimation(Base):
                 self.X,
                 reduce_func=reduce_func,
                 metric=self.metric,
-                n_jobs=self.njobs,
+                n_jobs=self.n_jobs,
                 working_memory=1024,
                 **kwds,
             )
