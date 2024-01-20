@@ -35,6 +35,7 @@ from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
+import warnings
 
 
 class MetricComparisons(Base):
@@ -496,19 +497,29 @@ class MetricComparisons(Base):
 
         return overlaps
 
-    def _get_nn_indices(self, coordinates, distances, dist_indices):
-        if dist_indices is not None:
+    def _get_nn_indices(self, coordinates, distances, dist_indices, k):
+        if k > self.maxk and self.X is not None:
+            # if coordinates are available and k > maxk distances should be recomputed
+            # and nearest neighbors idenitified up to k.
+            _, dist_indices = compute_nn_distances(
+                coordinates, k, self.metric, self.period
+            )
+            return dist_indices
+
+        elif dist_indices is not None:
+            # otherwise if nearest neighbors are available (up to maxk) return them
             return dist_indices
 
         elif distances is not None:
-            _, dist_indices, _, _ = self._init_distances(distances, self.maxk)
-
+            # otherwise if distance matrix in square form is available find the first k nearest neighbors
+            _, dist_indices, _, _ = self._init_distances(distances, k)
+            return dist_indices
         else:
+            # otherwise compute distances and nearest neighbors up to k.
             _, dist_indices = compute_nn_distances(
                 coordinates, self.maxk, self.metric, self.period
             )
-
-        return dist_indices
+            return dist_indices
 
     def return_data_overlap(
         self,
@@ -533,27 +544,36 @@ class MetricComparisons(Base):
             (float): the neighbour overlap of the points
         """
         assert any(
+            var is not None for var in [self.X, self.distances, self.dist_indices]
+        ), "MetricComparisons should be initialized with a dataset."
+
+        assert any(
             var is not None for var in [coordinates, distances, dist_indices]
-        ), "provide at least one of coordinates, distances, dist_indices"
+        ), "The overlap with data requires a second dataset. \
+            Provide at least one of coordinates, distances, dist_indices."
 
-        dist_indices1 = self._get_nn_indices(coordinates, distances, dist_indices)
+        dist_indices_base = self._get_nn_indices(
+            self.X, self.distances, self.dist_indices, k
+        )
 
-        if any(var is not None for var in [coordinates2, distances2, dist_indices2]):
-            dist_indices2 = self._get_nn_indices(
-                coordinates2, distances2, dist_indices2
+        dist_indices_other = self._get_nn_indices(
+            coordinates, distances, dist_indices, k
+        )
+
+        assert dist_indices_base.shape[0] == dist_indices_other.shape[0]
+
+        ndata = self.N
+
+        if k > dist_indices_base.shape[1] - 1:
+            warnings.warn(
+                f"Chosen k = {k} is greater than max available number of\
+                nearest neighbors = {self.maxk}. Setting k = {self.maxk}"
             )
-
-        else:
-            dist_indices2 = self._get_nn_indices(self.X, None, self.dist_indices)
-
-        assert dist_indices1.shape[0] == dist_indices2.shape[0]
-
-        ndata = dist_indices1.shape[0]
-        k = min(k, dist_indices.shape[1] - 1)
+        k = min(k, dist_indices_base.shape[1] - 1)
 
         if use_cython:
             overlaps = c_ov._compute_data_overlap(
-                ndata, k, dist_indices1.astype(int), dist_indices2.astype(int)
+                ndata, k, dist_indices_base.astype(int), dist_indices_other.astype(int)
             )
         else:
             overlaps = -np.ones(ndata)
@@ -561,7 +581,8 @@ class MetricComparisons(Base):
                 overlaps[i] = (
                     len(
                         np.intersect1d(
-                            dist_indices1[i, 1 : k + 1], dist_indices2[i, 1 : k + 1]
+                            dist_indices_base[i, 1 : k + 1],
+                            dist_indices_other[i, 1 : k + 1],
                         )
                     )
                     / k
