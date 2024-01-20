@@ -16,8 +16,10 @@
 """Module for testing the 2NN ID estimator."""
 
 import os
+
 import numpy as np
 import pytest
+
 from dadapy import IdEstimation
 
 filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
