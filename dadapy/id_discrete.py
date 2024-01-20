@@ -33,6 +33,7 @@ from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
 
+
 class IdDiscrete(Base):
     """Estimates the intrinsic dimension of a dataset with discrete features using a binomial likelihood.
 
@@ -1041,7 +1042,7 @@ class IdDiscrete(Base):
                 self.ln, self.intrinsic_dim
             ) / df.compute_discrete_volume(self.lk, self.intrinsic_dim)
 
-        n_model = rng.binomial(k_eff, p, size=mask.sum())
+        n_model = self.rng.binomial(k_eff, p, size=mask.sum())
 
         s, pv = KS(n_eff, n_model)
 
