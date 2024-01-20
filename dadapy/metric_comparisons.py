@@ -47,7 +47,7 @@ class MetricComparisons(Base):
         maxk=None,
         period=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
     ):
         """Class containing several methods to compare metric spaces obtained using subsets of the data features.
 
@@ -60,7 +60,7 @@ class MetricComparisons(Base):
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
             verbose (bool): whether you want the code to speak or shut up
-            njobs (int): number of cores to be used
+            n_jobs (int): number of cores to be used
         """
         super().__init__(
             coordinates=coordinates,
@@ -68,7 +68,7 @@ class MetricComparisons(Base):
             maxk=maxk,
             period=period,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
     def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1):
@@ -822,7 +822,7 @@ class MetricComparisons(Base):
         """
         weights_grid = _compute_2d_grid(weights_cause, weights_conditioning)
 
-        d = MetricComparisons(maxk=cause_present.shape[0] - 1, njobs=self.n_jobs)
+        d = MetricComparisons(maxk=cause_present.shape[0] - 1, n_jobs=self.n_jobs)
 
         imbs_no_cause = d.return_inf_imb_causality(
             cause_present=conditioning_present,

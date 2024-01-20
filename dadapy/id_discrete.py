@@ -64,14 +64,14 @@ class IdDiscrete(Base):
         condensed=None,
         weights=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
     ):
         super().__init__(
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
         self.central_point = 0 if is_network else 1
