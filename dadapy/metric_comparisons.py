@@ -115,11 +115,11 @@ class MetricComparisons(Base):
         if self.verb:
             print(
                 "computing imbalances with coord number on {} processors".format(
-                    self.njobs
+                    self.n_jobs
                 )
             )
 
-        nmats = Parallel(n_jobs=self.njobs)(
+        nmats = Parallel(n_jobs=self.n_jobs)(
             delayed(self.return_inf_imb_two_selected_coords)([i], [j], k)
             for i in range(ncoords)
             for j in range(i)
@@ -225,10 +225,10 @@ class MetricComparisons(Base):
 
         if self.verb:
             print(
-                "computing loss with coord number on {} processors".format(self.njobs)
+                "computing loss with coord number on {} processors".format(self.n_jobs)
             )
 
-        n1s_n2s = Parallel(n_jobs=self.njobs)(
+        n1s_n2s = Parallel(n_jobs=self.n_jobs)(
             delayed(self._return_imb_with_coords)(self.X, coords, target_ranks, k)
             for coords in coord_list
         )
@@ -265,7 +265,7 @@ class MetricComparisons(Base):
             period_ = self.period
 
         _, dist_indices_coords = compute_nn_distances(
-            X_, self.maxk, self.metric, period_
+            X_, self.maxk, self.metric, period_, n_jobs=self.n_jobs
         )
 
         imb_coords_full = _return_imbalance(dist_indices_coords, dist_indices, k=k)
@@ -722,7 +722,7 @@ class MetricComparisons(Base):
             effect_future, self.maxk, self.metric, period_effect
         )
 
-        imbalances = Parallel(n_jobs=self.njobs)(
+        imbalances = Parallel(n_jobs=self.n_jobs)(
             delayed(self._return_inf_imb_causality_target_rank)(
                 cause_present,
                 effect_present,
@@ -822,7 +822,7 @@ class MetricComparisons(Base):
         """
         weights_grid = _compute_2d_grid(weights_cause, weights_conditioning)
 
-        d = MetricComparisons(maxk=cause_present.shape[0] - 1, njobs=self.njobs)
+        d = MetricComparisons(maxk=cause_present.shape[0] - 1, njobs=self.n_jobs)
 
         imbs_no_cause = d.return_inf_imb_causality(
             cause_present=conditioning_present,
@@ -883,7 +883,7 @@ class MetricComparisons(Base):
             period_cause, period_effect, dim_cause, dim_effect
         )
 
-        ranks_present = Parallel(n_jobs=self.njobs)(
+        ranks_present = Parallel(n_jobs=self.n_jobs)(
             delayed(compute_nn_distances)(
                 np.column_stack((weight * cause_present, effect_present)),
                 self.maxk,
@@ -927,7 +927,7 @@ class MetricComparisons(Base):
             effect_future, self.maxk, self.metric, period_effect
         )
 
-        imbalances = Parallel(n_jobs=self.njobs)(
+        imbalances = Parallel(n_jobs=self.n_jobs)(
             delayed(_return_imbalance)(
                 ranks_present[i_weight], ranks_effect_future, k=k
             )
