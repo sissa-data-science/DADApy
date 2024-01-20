@@ -567,7 +567,8 @@ class MetricComparisons(Base):
         if k > dist_indices_base.shape[1] - 1:
             warnings.warn(
                 f"Chosen k = {k} is greater than max available number of\
-                nearest neighbors = {self.maxk}. Setting k = {self.maxk}"
+                nearest neighbors = {self.maxk}. Setting k = {self.maxk}",
+                stacklevel=2,
             )
         k = min(k, dist_indices_base.shape[1] - 1)
 
