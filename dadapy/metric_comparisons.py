@@ -21,6 +21,7 @@ Algorithms for comparing different spaces are implemented as methods of this cla
 
 import multiprocessing
 import warnings
+
 import numpy as np
 from joblib import Parallel, delayed
 
@@ -33,7 +34,6 @@ from dadapy._utils.metric_comparisons import (
 )
 from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
-
 
 cores = multiprocessing.cpu_count()
 
