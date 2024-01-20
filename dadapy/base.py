@@ -78,6 +78,7 @@ class Base:
             self.N = self.X.shape[0]
             self.dims = coordinates.shape[1]
             self.distances = None
+            self.dist_indices = None
             if self.maxk is None:
                 self.maxk = min(100, self.N - 1)
 
