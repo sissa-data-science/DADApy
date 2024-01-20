@@ -103,7 +103,7 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None):
 
     if period is None:
         # nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, p=p).fit(X)
-        nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric).fit(X)
+        nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, n_jobs= -1).fit(X)
 
         distances, dist_indices = nbrs.kneighbors(X_new)
 
@@ -122,7 +122,7 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None):
             )
 
         tree = cKDTree(X, boxsize=period)
-        distances, dist_indices = tree.query(X_new, k=maxk, p=p)
+        distances, dist_indices = tree.query(X_new, k=maxk, p=p, workers=-1)
 
     return distances, dist_indices
 
