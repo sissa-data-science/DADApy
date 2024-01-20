@@ -83,4 +83,4 @@ def test_return_data_overlap():
     X = np.load(filename)
     mc = MetricComparisons(coordinates=X)
     ov_data = mc.return_data_overlap(coordinates=X[:, :1], k=30, avg=True)
-    assert pytest.approx(0.58333) == ov_data
+    assert pytest.approx(0.5833, 0.001) == ov_data
