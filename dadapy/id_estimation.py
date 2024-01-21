@@ -247,7 +247,12 @@ class IdEstimation(Base):
         return mus, ids, rs
 
     def return_id_scaling_2NN(
-        self, N_min=10, algorithm="base", fraction=0.9, set_attr=False
+        self,
+        N_min=10,
+        algorithm="base",
+        fraction=0.9,
+        set_attr=False,
+        return_sizes=True,
     ):
         """Compute the id with the 2NN algorithm at different scales.
 
@@ -316,11 +321,21 @@ class IdEstimation(Base):
             self.intrinsic_dim_scale_decimation = rs_scaling
             self.intrinsic_dim_mus_decimation = mus
 
-        return ids_scaling, ids_scaling_err, rs_scaling
+        scales = rs_scaling
+        if return_sizes:
+            scales = Nsubsets
+
+        return ids_scaling, ids_scaling_err, scales
 
     # ----------------------------------------------------------------------------------------------
     def return_id_scaling_gride(
-        self, range_max=64, d0=0.001, d1=1000, eps=1e-7, set_attr=False
+        self,
+        range_max=64,
+        d0=0.001,
+        d1=1000,
+        eps=1e-7,
+        set_attr=False,
+        return_ranks=True,
     ):
         """Compute the id at different scales using the Gride algorithm.
 
@@ -419,7 +434,11 @@ class IdEstimation(Base):
             self.intrinsic_dim_scale_gride = rs_scaling
             self.intrinsic_dim_mus_gride = mus
 
-        return ids_scaling, ids_scaling_err, rs_scaling
+        scales = rs_scaling
+        if return_ranks:
+            scales = nn_ranks
+
+        return ids_scaling, ids_scaling_err, scales
 
     # ----------------------------------------------------------------------------------------------
     def _compute_id_gride_multiscale(self, mus, d0, d1, eps):
