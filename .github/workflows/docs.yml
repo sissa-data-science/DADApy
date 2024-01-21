@@ -11,13 +11,13 @@ jobs:
   test-notebooks-examples:
     continue-on-error: True
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@master
         with:
-          python-version: 3.11
+          python-version: 3.12
       - name: Install dependencies
         run: |
           pip install -e ."[dev]"

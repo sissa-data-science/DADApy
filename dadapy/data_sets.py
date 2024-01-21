@@ -34,6 +34,9 @@ np.set_printoptions(precision=2)
 os.getcwd()
 
 
+rng = np.random.default_rng(42)
+
+
 class DataSets:
     """DataSets class."""
 
@@ -73,7 +76,7 @@ class DataSets:
             print("Not saving imbalances")
 
         random_indices = np.arange(len(d1.X))
-        np.random.shuffle(random_indices)
+        rng.shuffle(random_indices)
 
         removed_indices = random_indices[:n]
         imbalances_X1toX2 = []
@@ -88,7 +91,7 @@ class DataSets:
                 X2_i, d1.maxk - 1, d1.metric, d1.period
             )
 
-            imb_X1toX2 = _return_imbalance(d1_dist_indices, d2_dist_indices, k=k)
+            imb_X1toX2 = _return_imbalance(d1_dist_indices, d2_dist_indices, rng, k=k)
             imbalances_X1toX2.append(imb_X1toX2)
 
             if file_name is not None:
