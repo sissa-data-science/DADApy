@@ -13,11 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 import multiprocessing
-import re
 import warnings
 
 import numpy as np
 import scipy.special as sp
+from scipy.stats import beta as beta_d
 from scipy.spatial import cKDTree
 from scipy.special import binom
 from sklearn.metrics import pairwise_distances
@@ -380,9 +380,6 @@ def _beta_prior(k, n, r, a0=1, b0=1, posterior_profile=False):
         d_range (np.ndarray(float), optional): domain of the posterior (if plot==True)
         P (np.ndarray(float), optional): values of the posterior on the domain d_range (if plot==True)
     """
-    from scipy.special import beta as beta_f
-    from scipy.stats import beta as beta_d
-
     D_MAX = 100.0
     D_MIN = 0.0001
 

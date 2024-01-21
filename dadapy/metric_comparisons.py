@@ -93,8 +93,8 @@ class MetricComparisons(Base):
             X_, self.maxk, self.metric, self.period
         )
 
-        imb_ij = _return_imbalance(dist_indices_i, dist_indices_j, k=k)
-        imb_ji = _return_imbalance(dist_indices_j, dist_indices_i, k=k)
+        imb_ij = _return_imbalance(dist_indices_i, dist_indices_j, self.rng, k=k)
+        imb_ji = _return_imbalance(dist_indices_j, dist_indices_i, self.rng, k=k)
 
         return imb_ij, imb_ji
 
@@ -269,8 +269,12 @@ class MetricComparisons(Base):
             X_, self.maxk, self.metric, period_, n_jobs=self.n_jobs
         )
 
-        imb_coords_full = _return_imbalance(dist_indices_coords, dist_indices, k=k)
-        imb_full_coords = _return_imbalance(dist_indices, dist_indices_coords, k=k)
+        imb_coords_full = _return_imbalance(
+            dist_indices_coords, dist_indices, self.rng, k=k
+        )
+        imb_full_coords = _return_imbalance(
+            dist_indices, dist_indices_coords, self.rng, k=k
+        )
 
         return imb_full_coords, imb_coords_full
 
@@ -828,7 +832,7 @@ class MetricComparisons(Base):
             period_present,
         )
 
-        imb = _return_imbalance(ranks_present, ranks_effect_future, k=k)
+        imb = _return_imbalance(ranks_present, ranks_effect_future, self.rng, k=k)
 
         return imb
 
@@ -975,7 +979,7 @@ class MetricComparisons(Base):
 
         imbalances = Parallel(n_jobs=self.n_jobs)(
             delayed(_return_imbalance)(
-                ranks_present[i_weight], ranks_effect_future, k=k
+                ranks_present[i_weight], ranks_effect_future, self.rng, k=k
             )
             for i_weight in range(ranks_present.shape[0])
         )
