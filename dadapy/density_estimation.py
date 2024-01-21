@@ -344,13 +344,13 @@ class DensityEstimation(IdEstimation):
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
 
-        cross_distances, cross_dist_indices = compute_cross_nn_distances(
+        cross_distances, _ = compute_cross_nn_distances(
             X_new, self.X, self.maxk, self.metric, self.period
         )
 
         kstar = np.ones(X_new.shape[0], dtype=int) * k
 
-        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
+        log_den, log_den_err, _ = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
 
@@ -391,7 +391,7 @@ class DensityEstimation(IdEstimation):
             self.distances,
         )
 
-        log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
+        log_den, log_den_err, _ = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
 
@@ -432,7 +432,7 @@ class DensityEstimation(IdEstimation):
             self.distances,
         )
 
-        log_den, log_den_err, dc = return_not_normalised_density_PAk(
+        log_den, log_den_err, _ = return_not_normalised_density_PAk(
             cross_distances, self.intrinsic_dim, kstar, self.maxk, interpolation=True
         )
 
