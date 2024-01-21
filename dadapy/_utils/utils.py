@@ -17,9 +17,9 @@ import warnings
 
 import numpy as np
 import scipy.special as sp
-from scipy.stats import beta as beta_d
 from scipy.spatial import cKDTree
 from scipy.special import binom
+from scipy.stats import beta as beta_d
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
