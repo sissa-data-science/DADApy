@@ -15,7 +15,6 @@
 
 """Module for testing the 2NN ID estimator."""
 
-import math
 import os
 
 import numpy as np
