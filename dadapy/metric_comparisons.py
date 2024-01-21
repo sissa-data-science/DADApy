@@ -464,7 +464,54 @@ class MetricComparisons(Base):
 
         return np.array(coord_list), np.array(imbalances)
 
-    def return_label_overlap(self, labels, k=30, avg=True, point_adaptive=False):
+    def _get_nn_indices(self, coordinates, distances, dist_indices, k, coords=None):
+        if coords is not None:
+            assert (
+                coordinates is not None
+            ), "when coords is not None the coordinate matrix \
+                coordinates must be defined."
+            X_ = coordinates[:, coords]
+            _, dist_indices = compute_nn_distances(X_, k)
+            return dist_indices, k
+
+        if k > self.maxk:
+            if dist_indices is None and distances is not None:
+                # if we are given only a distance matrix without indices we expect it to be in square form
+                assert distances.shape[0] == distances.shape[1]
+                _, dist_indices, _, _ = self._init_distances(distances, k)
+                return dist_indices, k
+            elif coordinates is not None:
+                # if coordinates are available and k > maxk distances should be recomputed
+                # and nearest neighbors idenitified up to k.
+                _, dist_indices = compute_nn_distances(
+                    coordinates, k, self.metric, self.period
+                )
+                return dist_indices, k
+            else:
+                # we must set k=self.maxk and continue the compuation
+                warnings.warn(
+                    f"Chosen k = {k} is greater than max available number of\
+                    nearest neighbors = {self.maxk}. Setting k = {self.maxk}",
+                    stacklevel=2,
+                )
+                k = self.maxk
+
+        if dist_indices is not None:
+            # if nearest neighbors are available (up to maxk) return them
+            return dist_indices, k
+
+        elif distances is not None:
+            # otherwise if distance matrix in square form is available find the first k nearest neighbors
+            _, dist_indices, _, _ = self._init_distances(distances, k)
+            return dist_indices, k
+        else:
+            # otherwise compute distances and nearest neighbors up to k.
+            _, dist_indices = compute_nn_distances(
+                coordinates, k, self.metric, self.period
+            )
+            return dist_indices, k
+
+    def return_label_overlap(self, labels, k=30, avg=True, coords=None):
         """Return the neighbour overlap between the full space and a set of labels.
 
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
@@ -476,16 +523,12 @@ class MetricComparisons(Base):
         Returns:
             (float): the neighbour overlap of the points
         """
-        if self.distances is None:
-            assert self.X is not None
-            self.compute_distances()
-
-        assert len(labels) == self.dist_indices.shape[0]
-        if self.maxk < k:
-            k = self.maxk
-
-        if point_adaptive:
-            self.compute_kstar()
+        # get the nearest neighbors indices up to k for the N datapoints
+        # if k > self.maxk and distances can not be recomputed --> k = self.maxk
+        dist_indices, k = self._get_nn_indices(
+            self.X, self.distances, self.dist_indices, k, coords
+        )
+        assert len(labels) == dist_indices.shape[0]
 
         neighbor_index = self.dist_indices[:, 1 : k + 1]
         ground_truth_labels = np.repeat(np.array([labels]).T, repeats=k, axis=1)
@@ -496,30 +539,6 @@ class MetricComparisons(Base):
             overlaps = np.mean(overlaps)
 
         return overlaps
-
-    def _get_nn_indices(self, coordinates, distances, dist_indices, k):
-        if k > self.maxk and self.X is not None:
-            # if coordinates are available and k > maxk distances should be recomputed
-            # and nearest neighbors idenitified up to k.
-            _, dist_indices = compute_nn_distances(
-                coordinates, k, self.metric, self.period
-            )
-            return dist_indices
-
-        elif dist_indices is not None:
-            # otherwise if nearest neighbors are available (up to maxk) return them
-            return dist_indices
-
-        elif distances is not None:
-            # otherwise if distance matrix in square form is available find the first k nearest neighbors
-            _, dist_indices, _, _ = self._init_distances(distances, k)
-            return dist_indices
-        else:
-            # otherwise compute distances and nearest neighbors up to k.
-            _, dist_indices = compute_nn_distances(
-                coordinates, self.maxk, self.metric, self.period
-            )
-            return dist_indices
 
     def return_data_overlap(
         self,
@@ -552,25 +571,17 @@ class MetricComparisons(Base):
         ), "The overlap with data requires a second dataset. \
             Provide at least one of coordinates, distances, dist_indices."
 
-        dist_indices_base = self._get_nn_indices(
+        dist_indices_base, k_base = self._get_nn_indices(
             self.X, self.distances, self.dist_indices, k
         )
 
-        dist_indices_other = self._get_nn_indices(
+        dist_indices_other, k_other = self._get_nn_indices(
             coordinates, distances, dist_indices, k
         )
 
         assert dist_indices_base.shape[0] == dist_indices_other.shape[0]
-
+        k = min(k_base, k_other)
         ndata = self.N
-
-        if k > dist_indices_base.shape[1] - 1:
-            warnings.warn(
-                f"Chosen k = {k} is greater than max available number of\
-                nearest neighbors = {self.maxk}. Setting k = {self.maxk}",
-                stacklevel=2,
-            )
-        k = min(k, dist_indices_base.shape[1] - 1)
 
         if use_cython:
             overlaps = c_ov._compute_data_overlap(
