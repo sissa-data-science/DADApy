@@ -42,7 +42,7 @@ log_den, log_den_error = data.compute_density_PAk()
 cluster_assignment = data.compute_clustering_ADP()
 
 # compute the neighborhood overlap with another dataset
-X2 = np.random.normal(0, 1, (1000, 3))
+X2 = np.random.normal(0, 1, (1000, 5))
 overlap_x2 = data.return_data_overlap(X2)
 
 # compute the neighborhood overlap with a set of labels
@@ -86,7 +86,7 @@ overlap_labels = data.return_label_overlap(labels)
 
 
 # Installation
-The package is compatible with Python >= 3.7 (tested on 3.7, 3.8, 3.9, 3.10, 3.11). We currently only support Unix-based systems, including Linux and macOS. 
+The package is compatible with the Python versions 3.7, 3.8, 3.9, 3.10, 3.11, and 3.12. We currently only support Unix-based systems, including Linux and macOS. 
 For Windows machines, we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
 
 The package requires `numpy`, `scipy` and `scikit-learn`, and `matplotlib` for the visualizations.
