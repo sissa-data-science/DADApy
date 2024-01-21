@@ -618,8 +618,11 @@ class MetricComparisons(Base):
         Returns:
             (float): the neighbour overlap of the points
         """
-        assert False, """This function is outdated and will be removed in a future version of the package. \
+        raise AssertionError(
+            """This function is outdated and will be removed in a future version of the package. \
         Use "compute_label_overlap" instead."""
+        )
+
         assert self.X is not None
 
         X_ = self.X[:, coords]
@@ -648,9 +651,11 @@ class MetricComparisons(Base):
         Returns:
             (float): the neighbour overlap of the two subspaces
         """
-        assert False, """This function is a wrong implementation of the overlap between two \
+        raise AssertionError(
+            """This function is a wrong implementation of the overlap between two \
             sets of coordinates and will be removed in a future version of the package. \
             Use "compute_data_overlap" instead."""
+        )
 
         assert self.X is not None
 
@@ -677,9 +682,11 @@ class MetricComparisons(Base):
         Returns:
             (list(float)): a list of neighbour overlaps of the points
         """
-        assert False, """This function is a wrong implementation of the overlap between two \
+        raise AssertionError(
+            """This function is a wrong implementation of the overlap between two \
             sets of coordinates and will be removed in a future version of the package. \
             Use "compute_data_overlap" instead."""
+        )
         assert self.X is not None
 
         overlaps = []
