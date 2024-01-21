@@ -34,7 +34,7 @@ def test_compute_id_gride():
     ie = IdEstimation(coordinates=X)
 
     # testing gride scaling
-    ids, ids_err, rs = ie.return_id_scaling_gride()
+    ids, ids_err, rs = ie.return_id_scaling_gride(return_ranks=False)
 
     assert ids == pytest.approx(
         [2.00075528, 2.0321371, 1.91183327, 2.00055726, 1.6747242], abs=0.01

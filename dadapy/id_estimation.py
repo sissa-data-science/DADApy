@@ -77,15 +77,15 @@ class IdEstimation(Base):
             intrinsic_dim (float): the estimation of the intrinsic dimension
         """
         N = mus.shape[0]
-        N_eff = int(N * fraction)
+        n_eff = int(N * fraction)
         log_mus = np.log(mus)
-        log_mus_reduced = np.sort(log_mus)[:N_eff]
+        log_mus_reduced = np.sort(log_mus)[:n_eff]
 
         if algorithm == "ml":
             intrinsic_dim = (N - 1) / np.sum(log_mus)
 
         elif algorithm == "base":
-            y = -np.log(1 - np.arange(1, N_eff + 1) / N)
+            y = -np.log(1 - np.arange(1, n_eff + 1) / N)
 
             def func(x, m):
                 return m * x
@@ -160,7 +160,7 @@ class IdEstimation(Base):
             0.0 < decimation and decimation <= 1.0
         ), "'decimation' must be between 0 and 1"
         assert 0.0 < fraction and fraction <= 1.0, "'fraction' must be between 0 and 1"
-        if fraction == 1.0 and algorithm == "base":
+        if math.isclose(fraction, 1.0) and algorithm == "base":
             algorithm = "ml"
             print("fraction = 1: algorithm set to ml")
 
@@ -248,7 +248,7 @@ class IdEstimation(Base):
 
     def return_id_scaling_2NN(
         self,
-        N_min=10,
+        n_min=10,
         algorithm="base",
         fraction=0.9,
         set_attr=False,
@@ -295,22 +295,22 @@ class IdEstimation(Base):
                 array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
         """
         max_ndec = int(math.log(self.N, 2)) - 1
-        Nsubsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
-        Nsubsets = Nsubsets.astype(int)
+        num_subsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
+        num_subsets = num_subsets.astype(int)
 
-        if N_min is not None:
-            Nsubsets = Nsubsets[Nsubsets > N_min]
+        if n_min is not None:
+            num_subsets = num_subsets[num_subsets > n_min]
 
-        ids_scaling = np.zeros(Nsubsets.shape[0])
-        ids_scaling_err = np.zeros(Nsubsets.shape[0])
-        rs_scaling = np.zeros((Nsubsets.shape[0]))
+        ids_scaling = np.zeros(num_subsets.shape[0])
+        ids_scaling_err = np.zeros(num_subsets.shape[0])
+        rs_scaling = np.zeros((num_subsets.shape[0]))
 
         mus = []
-        for i, N_subset in enumerate(Nsubsets):
+        for i, num_subset in enumerate(num_subsets):
             ids_scaling[i], ids_scaling_err[i], rs_scaling[i] = self.compute_id_2NN(
                 algorithm=algorithm,
                 fraction=fraction,
-                decimation=N_subset / self.N,
+                decimation=num_subset / self.N,
                 set_attr=True,
             )
             mus.append(self.intrinsic_dim_mus)
@@ -323,7 +323,7 @@ class IdEstimation(Base):
 
         scales = rs_scaling
         if return_sizes:
-            scales = Nsubsets
+            scales = num_subsets
 
         return ids_scaling, ids_scaling_err, scales
 
@@ -398,7 +398,7 @@ class IdEstimation(Base):
                 stacklevel=2,
             )
         max_step = int(math.log(max_rank, 2))
-        nn_ranks = np.array([2**i for i in range(max_step)])
+        nn_ranks = np.array([2**i for i in range(max_step + 1)])
 
         if self.distances is not None and max_rank < self.maxk + 1:
             mus = self.distances[:, nn_ranks[1:]] / self.distances[:, nn_ranks[:-1]]
@@ -436,7 +436,7 @@ class IdEstimation(Base):
 
         scales = rs_scaling
         if return_ranks:
-            scales = nn_ranks
+            scales = nn_ranks[1:]
 
         return ids_scaling, ids_scaling_err, scales
 
@@ -513,7 +513,7 @@ class IdEstimation(Base):
         """
         # argsort may be faster than argpartition when gride is applied on the full dataset (for the moment not used)
         max_step = int(math.log(range_scaling, 2))
-        steps = np.array([2**i for i in range(max_step)])
+        steps = np.array([2**i for i in range(max_step + 1)])
 
         sample_range = np.arange(dist.shape[0])[:, None]
         neigh_ind = np.argpartition(dist, steps[-1], axis=1)
@@ -719,7 +719,7 @@ class IdEstimation(Base):
 
         e_n = n_eff.mean()
         e_k = k_eff.mean()
-        if e_n == 1.0:
+        if math.isclose(e_n, 1.0):
             print(
                 "No points in the inner shell, returning 0. Consider increasing rk and/or the ratio"
             )
@@ -815,7 +815,7 @@ class IdEstimation(Base):
         # routine
         n = self._fix_k(k, r)
         e_n = n.mean()
-        if e_n == 1.0:
+        if math.isclose(e_n, 1.0):
             print(
                 "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
             )

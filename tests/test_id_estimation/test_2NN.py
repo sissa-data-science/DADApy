@@ -22,30 +22,34 @@ import pytest
 
 from dadapy import IdEstimation
 
+
+import math
+
+
 filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 
 X = np.load(filename)
 
 
-def test_compute_id_2NN():
+def test_compute_id_2nn():
     """Test that the id estimations with 2NN work correctly."""
     ie = IdEstimation(coordinates=X, rng_seed=42)
 
     ie.compute_id_2NN()
-    assert pytest.approx(ie.intrinsic_dim, abs=0.01) == 1.85
+    assert ie.intrinsic_dim == pytest.approx(1.85, abs=0.01)
 
     # testing 2NN scaling
-    ids, ids_err, rs = ie.return_id_scaling_2NN()
+    ids, ids_err, rs = ie.return_id_scaling_2NN(return_sizes=False)
 
     assert ids == pytest.approx([1.85491, 2.03909, 2.28923, 2.41457], abs=0.01)
     assert ids_err == pytest.approx([0.0, 0.04846, 0.39487, 0.20226], abs=0.01)
     assert rs == pytest.approx([0.39476, 0.52098, 0.73865, 1.15109], abs=0.01)
 
 
-def test_compute_id_2NN_wprior():
+def test_compute_id_2nn_wprior():
     """Test that the id estimation with a Bayesian 2NN works correctly."""
     ie = IdEstimation(coordinates=X)
 
     ie.compute_id_2NN_wprior()
 
-    assert pytest.approx(ie.intrinsic_dim, abs=0.0001) == 1.8722
+    assert ie.intrinsic_dim == pytest.approx(1.8722, abs=0.0001)

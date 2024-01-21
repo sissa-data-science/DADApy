@@ -620,7 +620,7 @@ class MetricComparisons(Base):
         """
         raise AssertionError(
             """This function is outdated and will be removed in a future version of the package. \
-        Use "compute_label_overlap" instead."""
+        Use "return_label_overlap" instead."""
         )
 
         assert self.X is not None
@@ -654,7 +654,7 @@ class MetricComparisons(Base):
         raise AssertionError(
             """This function is a wrong implementation of the overlap between two \
             sets of coordinates and will be removed in a future version of the package. \
-            Use "compute_data_overlap" instead."""
+            Use "return_data_overlap" instead."""
         )
 
         assert self.X is not None
@@ -685,7 +685,7 @@ class MetricComparisons(Base):
         raise AssertionError(
             """This function is a wrong implementation of the overlap between two \
             sets of coordinates and will be removed in a future version of the package. \
-            Use "compute_data_overlap" instead."""
+            Use "return_data_overlap" instead."""
         )
         assert self.X is not None
 

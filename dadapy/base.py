@@ -231,18 +231,18 @@ class Base:
             )
 
         # removal of overlapping data points
-        X_unique = np.unique(self.X, axis=0)
+        x_unique = np.unique(self.X, axis=0)
 
-        N_unique = X_unique.shape[0]
+        n_unique = x_unique.shape[0]
 
-        if N_unique < self.N:
+        if n_unique < self.N:
             print(
-                f"{self.N - N_unique} overlapping datapoints found: keeping {N_unique} unique elements",
+                f"{self.N - n_unique} overlapping datapoints found: keeping {n_unique} unique elements",
                 "WARNING: the order of points has been changed!",
             )
 
-            self.X = X_unique
-            self.N = N_unique
+            self.X = x_unique
+            self.N = n_unique
             self.maxk = min(self.maxk, self.N - 1)
 
             if self.distances is not None:
