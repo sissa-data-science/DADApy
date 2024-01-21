@@ -30,13 +30,25 @@ data = Data(X)
 data.compute_distances(maxk=100)
 
 # compute the intrinsic dimension using 2nn estimator
-data.compute_id_2NN()
+id, id_error, id_scale = data.compute_id_2NN()
+
+# compute the intrinsic dimension up to the 64th nearest neighbors using Gride
+id_list, id_error_list, id_rank_list = data.return_id_scaling_gride(range_max=64)
 
 # compute the density using PAk, a point adaptive kNN estimator
-data.compute_density_PAk()
+log_den, log_den_error = data.compute_density_PAk()
 
 # find the peaks of the density profile through the ADP algorithm
-data.compute_clustering_ADP()
+cluster_assignment = data.compute_clustering_ADP()
+
+# compute the neighborhood overlap with another dataset
+X2 = np.random.normal(0, 1, (1000, 3))
+overlap_x2 = data.return_data_overlap(X2)
+
+# compute the neighborhood overlap with a set of labels
+labels = np.repeat(np.arange(10), 100)
+overlap_labels = data.return_label_overlap(labels)
+
 ```
 
 # Currently implemented algorithms
