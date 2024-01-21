@@ -24,4 +24,4 @@ jobs:
 
       - name: Notebook tests
         run: |
-          tox -e py3.11-nb
+          tox -e py3.12-nb
