@@ -28,7 +28,14 @@ import scipy as sp
 
 from dadapy._cython import cython_clustering as cf
 from dadapy._cython import cython_clustering_v2 as cf2
-from dadac import Data as c_data
+
+try:
+    from dadac import Data as c_data
+except:
+    warnings.warn("""C accelerated implementation is not provided, 
+                     something went wrong when installing dadac dependency""")
+    
+
 from dadapy.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()
@@ -98,6 +105,18 @@ class Clustering(DensityEstimation):
                 non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
 
         """
+
+
+        try:
+            # try to generate the dadac handler, if it fails print a warning and then 
+            # fall back to default 
+            dadac_handler = c_data(self.X, verbose=self.verb) 
+        except:
+            warnings.warn("""
+                          Cannot load dadac.Data, falling back to python/cython implementation
+                          """)
+            impl = "py"
+
         if impl == "py":
             if self.log_den is None:
                 self.compute_density_PAk()
@@ -171,7 +190,7 @@ class Clustering(DensityEstimation):
                 print(f"total time is, {secf - seci}")
         else:
             #handle with dadaC
-            dadac_handler = c_data(self.X, verbose=self.verb) 
+            #dadac_handler = c_data(self.X, verbose=self.verb) 
             if self.log_den is None: 
                 self.compute_density_PAk()
             log_den_min = np.min(self.log_den - Z * self.log_den_err)
