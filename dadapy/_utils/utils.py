@@ -83,7 +83,7 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
 
 
 def compute_cross_nn_distances(
-        X_new, X, maxk, metric="euclidean", period=None, n_jobs = None
+        X_new, X, maxk, metric="euclidean", period=None, n_jobs=None
     ):
     """Compute distances, up to neighbour maxk, between points of X_new and points of X.
 
