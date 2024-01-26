@@ -82,7 +82,9 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
     return distances, dist_indices
 
 
-def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None, n_jobs = None):
+def compute_cross_nn_distances(
+        X_new, X, maxk, metric="euclidean", period=None, n_jobs = None
+    ):
     """Compute distances, up to neighbour maxk, between points of X_new and points of X.
 
     The element distances[i,j] represents the distance between point i in dataset X and its j-th neighbour in dataset
@@ -102,7 +104,7 @@ def compute_cross_nn_distances(X_new, X, maxk, metric="euclidean", period=None, 
     """
 
     if period is None:
-        nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, p=p, n_jobs=n_jobs).fit(X)
+        nbrs = NearestNeighbors(n_neighbors=maxk, metric=metric, n_jobs=n_jobs).fit(X)
 
         distances, dist_indices = nbrs.kneighbors(X_new)
 
