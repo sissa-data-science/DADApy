@@ -43,7 +43,8 @@ def _compute_data_overlap(DTYPE_t Nele,
     return overlaps
 
 
-
+@cython.boundscheck(False)
+@cython.cdivision(True)
 def return_label_overlap(self, int[:] labels, int k=30, bint avg=True, coords=None, float k_per_classes=0.1):
     """Return the neighbour overlap between the full space and a set of labels.
 
@@ -71,6 +72,7 @@ def return_label_overlap(self, int[:] labels, int k=30, bint avg=True, coords=No
         float total_k_classes = 0
         float overlaps_result = 0
 
+    labels = labels.astype(int)
     class_count = np.bincount(labels)
 
     class_imbalance = not np.all(class_count == np.repeat(class_count[0], class_count.shape[0]))

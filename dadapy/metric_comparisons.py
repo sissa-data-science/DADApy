@@ -530,6 +530,8 @@ class MetricComparisons(Base):
         # get the nearest neighbors indices up to k for the N datapoints
         # if k > self.maxk and distances can not be recomputed --> k = self.maxk
         
+        #cast labels to int
+        labels = labels.astype(int)
         class_count = np.bincount(labels)
         
         if (class_imbalance:=not np.all(class_count==np.repeat(class_count[0], 
