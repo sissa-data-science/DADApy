@@ -514,8 +514,8 @@ class MetricComparisons(Base):
                 coordinates, k, self.metric, self.period
             )
             return dist_indices, k
-
-    def return_label_overlap(self, labels, k=30, avg=True, coords=None):
+        
+    def return_label_overlap(self, labels, k=30, avg=True, coords=None, k_per_classes=0.1):
         """Return the neighbour overlap between the full space and a set of labels.
 
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
@@ -529,6 +529,16 @@ class MetricComparisons(Base):
         """
         # get the nearest neighbors indices up to k for the N datapoints
         # if k > self.maxk and distances can not be recomputed --> k = self.maxk
+        
+        class_count = np.bincount(labels)
+        
+        if (class_imbalance:=not np.all(class_count==np.repeat(class_count[0], 
+                            class_count.shape[0]))):
+            warnings.warn(
+                f"Class imbalance detected. For each class, k will be set as [5% 10% 20% 50%] of tot instances",
+                stacklevel=2,
+            )
+            k = int(np.max(class_count)*k_per_classes)
         dist_indices, k = self._get_nn_indices(
             self.X, self.distances, self.dist_indices, k, coords
         )
@@ -537,10 +547,21 @@ class MetricComparisons(Base):
         neighbor_index = self.dist_indices[:, 1 : k + 1]
         ground_truth_labels = np.repeat(np.array([labels]).T, repeats=k, axis=1)
         overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
-
-        overlaps = np.mean(overlaps, axis=1)
-        if avg:
-            overlaps = np.mean(overlaps)
+        if class_imbalance:
+            k_per_classes = np.array([int(class_count[labels[i]]*k_per_classes) 
+                            for i in range(labels.shape[0])])
+            if avg:    
+                _, cols = overlaps.shape
+                col_indices = np.arange(cols)[np.newaxis, :]
+                mask = col_indices >= k_per_classes[:, np.newaxis]
+                overlaps[mask] = False
+                overlaps = overlaps.sum()/k_per_classes.sum()
+            else:
+                overlaps = overlaps.sum(axis=1)/k_per_classes
+        else:            
+            overlaps = np.mean(overlaps, axis=1)
+            if avg:
+                overlaps = np.mean(overlaps)
 
         return overlaps
 
