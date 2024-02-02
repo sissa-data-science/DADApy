@@ -22,7 +22,7 @@ import pytest
 
 from dadapy import MetricComparisons
 
-filename = os.path.join(os.path.split(__file__)[0], "../2d_gaussians_in_2d_overlap.npy")
+filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d_overlap.npy")
 
 
 def test_return_label_overlap():
@@ -52,5 +52,5 @@ def test_return_data_overlap():
     """Test that the label overlap works correctly."""
     X = np.load(filename)
     mc = MetricComparisons(coordinates=X)
-    ov_data = mc.return_data_overlap(coordinates=X[:, :1], k=30, avg=True)
-    assert pytest.approx(0.5833, 0.001) == ov_data
+    ov_data = mc.return_data_overlap(coordinates=X[:, 1:], k=30, avg=True)
+    assert pytest.approx(0.78, 0.001) == ov_data

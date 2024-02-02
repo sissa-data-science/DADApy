@@ -557,7 +557,7 @@ class MetricComparisons(Base):
                 as a fraction of the total number of class samples. \
                 Useful when classes are imbalanced.
             weighted (bool): if True the overlap is weighted \
-                inversely proportional to the class population. 
+                inversely proportional to the class population 
 
         Returns:
             (float): the neighbour overlap with the class labels.
