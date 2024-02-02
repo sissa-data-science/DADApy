@@ -514,53 +514,72 @@ class MetricComparisons(Base):
                 coordinates, k, self.metric, self.period
             )
             return dist_indices, k
-        
-    def return_label_overlap(self, labels, k=30, avg=True, coords=None, k_per_classes=0.1):
+
+    def return_label_overlap(
+        self, labels, k=30, avg=True, coords=None, class_fraction=None, weighted=True
+    ):
         """Return the neighbour overlap between the full space and a set of labels.
 
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
 
         Args:
-            labels (list): the labels with respect to which the overlap is computed
-            k (int): the number of neighbours considered for the overlap
+            labels (list): the labels with respect to which the overlap is computed.
+            k (int): the number of neighbours considered for the overlap.
+            coords (array): subset of indices on which the overlap is computed.
+            class_fraction (float): number of nearest neighbor considered expressed \
+                as a fraction of the total number of class samples. \
+                Useful when classes are imbalanced.
+            weighted (bool): if True the overlap is weighted \
+                inversely proportional to the class population. 
 
         Returns:
             (float): the neighbour overlap of the points
         """
-        # get the nearest neighbors indices up to k for the N datapoints
-        # if k > self.maxk and distances can not be recomputed --> k = self.maxk
-        
-        #cast labels to int
+        # cast labels to int
         labels = labels.astype(int)
-        class_count = np.bincount(labels)
-        
-        if (class_imbalance:=not np.all(class_count==np.repeat(class_count[0], 
-                            class_count.shape[0]))):
-            warnings.warn(
-                f"Class imbalance detected. For each class, k will be set as [5% 10% 20% 50%] of tot instances",
-                stacklevel=2,
-            )
-            k = int(np.max(class_count)*k_per_classes)
-        dist_indices, k = self._get_nn_indices(
-            self.X, self.distances, self.dist_indices, k, coords
+
+        max_k = k
+        if class_fraction is not None:
+            # number of elements per class
+            class_count = np.bincount(labels)
+            # number of nn per class
+            k_per_class_ = np.array(class_count * class_fraction, dtype=int)
+            # all ks must be greater than 0
+            k_per_class = np.where(k_per_class_ == 0, 1, k_per_class_)
+            if np.any(k_per_class != k_per_class_):
+                warnings.warn(
+                    "For some classes max_k < 1 and is set to 1.\
+                    Consider increasing class_fraction."
+                )
+            max_k = max(k_per_class)
+
+        dist_indices, max_k = self._get_nn_indices(
+            self.X, self.distances, self.dist_indices, max_k, coords
         )
         assert len(labels) == dist_indices.shape[0]
 
-        neighbor_index = self.dist_indices[:, 1 : k + 1]
-        ground_truth_labels = np.repeat(np.array([labels]).T, repeats=k, axis=1)
+        neighbor_index = self.dist_indices[:, 1 : max_k + 1]
+        ground_truth_labels = np.repeat(np.array([labels]).T, repeats=max_k, axis=1)
         overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
-        if class_imbalance:
-            k_per_classes = np.array([int(class_count[labels[i]]*k_per_classes) 
-                            for i in range(labels.shape[0])])
-            if avg:    
-                _, cols = overlaps.shape
-                col_indices = np.arange(cols)[np.newaxis, :]
-                mask = col_indices >= k_per_classes[:, np.newaxis]
-                overlaps[mask] = False
-                overlaps = overlaps.sum()/k_per_classes.sum()
-            else:
-                overlaps = overlaps.sum(axis=1)/k_per_classes
-        else:            
+
+        if class_fraction is not None:
+
+            k_per_sample = np.array([k_per_class[label] for label in labels])
+            col_indices = np.arange(max_k)[np.newaxis, :]
+            # should this overlaps entry be discarded?
+            mask = col_indices >= k_per_sample[:, np.newaxis]
+            # mask out the entries to be discarded
+            overlaps[mask] = False
+            overlaps = overlaps.sum(axis=1) / k_per_sample
+
+            if avg and weighted:
+                class_weights = 1 / class_count
+                sample_weights = np.array([class_weights[label] for label in labels])
+                overlaps = np.average(overlaps, sample_weights)
+            elif avg:
+                overlaps = np.mean(overlaps)
+
+        else:
             overlaps = np.mean(overlaps, axis=1)
             if avg:
                 overlaps = np.mean(overlaps)
