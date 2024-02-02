@@ -22,25 +22,30 @@ import pytest
 
 from dadapy import MetricComparisons
 
-filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
+filename = os.path.join(os.path.split(__file__)[0], "../2d_gaussians_in_2d_overlap.npy")
 
 
 def test_return_label_overlap():
     """Test that the label overlap works correctly."""
-    X1 = np.load(filename)
-    X2 = X1 + 1.0  # shifted gaussian
-
-    X = np.vstack((X1, X2))  # datasets with two Gaussians
-
-    # the labels distinguish the two Gaussians
-    labels = np.ones(X.shape[0])
-    labels[: X1.shape[0]] = 0
+    X = np.load(filename)
 
     mc = MetricComparisons(coordinates=X)
-    mc.compute_distances()
-    overlap = mc.return_label_overlap(labels=labels)
+    labels = np.ones(X.shape[0], dtype=int)
+    # 20 points centerd in -1 are labeled = 0, 20 points centered in 1 are labeled 1
+    labels[X[:, 0] < 0] = 0
+    overlap = mc.return_label_overlap(labels=labels, k=5, avg=True)
+    assert overlap == pytest.approx(1.0, 0.001)
 
-    assert overlap == pytest.approx(0.8676666666666668, 0.001)
+    labels[30:] = 2
+    ov_label = mc.return_label_overlap(
+        labels=labels, class_fraction=0.25, avg=True, weighted=False
+    )
+    assert pytest.approx(0.675, 0.001) == ov_label
+
+    ov_label = mc.return_label_overlap(
+        labels=labels, class_fraction=0.25, avg=True, weighted=True
+    )
+    assert pytest.approx(0.5666, 0.001) == ov_label
 
 
 def test_return_data_overlap():

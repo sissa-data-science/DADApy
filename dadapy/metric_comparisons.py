@@ -21,6 +21,7 @@ Algorithms for comparing different spaces are implemented as methods of this cla
 
 import multiprocessing
 import warnings
+from collections import Counter
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -515,8 +516,34 @@ class MetricComparisons(Base):
             )
             return dist_indices, k
 
+    def _label_imbalance_helper(self, labels, k, class_fraction):
+        if k is not None:
+            max_k = k
+            k_per_sample = np.array([k for _ in range(len(labels))])
+
+        k_per_class = {}
+        class_count = Counter(labels)
+        # potentially overwrites k_per_sample
+        if class_fraction is not None:
+            for label, count in class_count.items():
+                class_k = int(count * class_fraction)
+                k_per_class[label] = class_k
+                if class_k == 0:
+                    k_per_class[label] = 1
+                    warnings.warn(
+                        f" max_k < 1 for label {label}. max_k set to 1.\
+                        Consider increasing class_fraction."
+                    )
+            max_k = max([k for k in k_per_class.values()])
+            k_per_sample = np.array([k_per_class[label] for label in labels])
+
+        class_weights = {label: 1 / count for label, count in class_count.items()}
+        sample_weights = np.array([class_weights[label] for label in labels])
+
+        return k_per_sample, sample_weights, max_k
+
     def return_label_overlap(
-        self, labels, k=30, avg=True, coords=None, class_fraction=None, weighted=True
+        self, labels, k=None, avg=True, coords=None, class_fraction=None, weighted=True
     ):
         """Return the neighbour overlap between the full space and a set of labels.
 
@@ -535,54 +562,35 @@ class MetricComparisons(Base):
         Returns:
             (float): the neighbour overlap with the class labels.
         """
-        # cast labels to int
+        assert (
+            k is not None or class_fraction is not None
+        ), "k and class fraction are None. set al least one of them."
         labels = labels.astype(int)
-
-        max_k = k
-        if class_fraction is not None:
-            # number of elements per class
-            class_count = np.bincount(labels)
-            # number of nn per class
-            k_per_class_ = np.array(class_count * class_fraction, dtype=int)
-            # all ks must be greater than 0
-            k_per_class = np.where(k_per_class_ == 0, 1, k_per_class_)
-            if np.any(k_per_class != k_per_class_):
-                warnings.warn(
-                    "For some classes max_k < 1 and is set to 1.\
-                    Consider increasing class_fraction."
-                )
-            max_k = max(k_per_class)
+        k_per_sample, sample_weights, max_k = self._label_imbalance_helper(
+            labels, k, class_fraction
+        )
 
         dist_indices, max_k = self._get_nn_indices(
             self.X, self.distances, self.dist_indices, max_k, coords
         )
         assert len(labels) == dist_indices.shape[0]
 
-        neighbor_index = self.dist_indices[:, 1 : max_k + 1]
+        neighbor_index = dist_indices[:, 1 : max_k + 1]
         ground_truth_labels = np.repeat(np.array([labels]).T, repeats=max_k, axis=1)
         overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
 
         if class_fraction is not None:
-
-            k_per_sample = np.array([k_per_class[label] for label in labels])
             nearest_neighbor_rank = np.arange(max_k)[np.newaxis, :]
             # should this overlap entry be discarded?
             mask = nearest_neighbor_rank >= k_per_sample[:, np.newaxis]
             # mask out the entries to be discarded
             overlaps[mask] = False
-            overlaps = overlaps.sum(axis=1) / k_per_sample
 
-            if avg and weighted:
-                class_weights = 1 / class_count
-                sample_weights = np.array([class_weights[label] for label in labels])
-                overlaps = np.average(overlaps, sample_weights)
-            elif avg:
-                overlaps = np.mean(overlaps)
-
-        else:
-            overlaps = np.mean(overlaps, axis=1)
-            if avg:
-                overlaps = np.mean(overlaps)
+        overlaps = overlaps.sum(axis=1) / k_per_sample
+        if avg and weighted:
+            overlaps = np.average(overlaps, weights=sample_weights)
+        elif avg:
+            overlaps = np.mean(overlaps)
 
         return overlaps
 
