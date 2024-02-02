@@ -532,7 +532,8 @@ class MetricComparisons(Base):
                     k_per_class[label] = 1
                     warnings.warn(
                         f" max_k < 1 for label {label}. max_k set to 1.\
-                        Consider increasing class_fraction."
+                        Consider increasing class_fraction.",
+                        stacklevel=2,
                     )
             max_k = max([k for k in k_per_class.values()])
             k_per_sample = np.array([k_per_class[label] for label in labels])
