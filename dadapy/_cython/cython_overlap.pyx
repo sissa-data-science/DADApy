@@ -4,8 +4,6 @@ import cython
 import numpy as np
 cimport numpy as np
 
-cimport numpy as np
-
 DTYPE = np.int64
 floatTYPE = np.float64
 
