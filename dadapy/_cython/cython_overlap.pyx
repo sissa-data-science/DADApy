@@ -83,7 +83,7 @@ def return_label_overlap(self, int[:] labels, int k=30, bint avg=True, coords=No
     dist_indices, k = self._get_nn_indices(self.X, self.distances, self.dist_indices, k, coords)
     assert num_labels == dist_indices.shape[0]
 
-    neighbor_index = self.dist_indices[:, 1:k+1]
+    neighbor_index = dist_indices[:, 1:k+1]
     ground_truth_labels = np.repeat(np.array([labels]).T, repeats=k, axis=1)
     overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
 
