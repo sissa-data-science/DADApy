@@ -63,7 +63,7 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def _compute_id_2NN(self, mus, fraction, algorithm="base"):
+    def _compute_id_2NN(self, mus, mu_fraction, algorithm="base"):
         """Compute the id using the 2NN algorithm.
 
         Helper of return return_id_2NN.
@@ -77,7 +77,7 @@ class IdEstimation(Base):
             intrinsic_dim (float): the estimation of the intrinsic dimension
         """
         N = mus.shape[0]
-        n_eff = int(N * fraction)
+        n_eff = int(N * mu_fraction)
         log_mus = np.log(mus)
         log_mus_reduced = np.sort(log_mus)[:n_eff]
 
@@ -101,8 +101,8 @@ class IdEstimation(Base):
     def compute_id_2NN(
         self,
         algorithm="base",
-        fraction=0.9,
-        decimation=1,
+        mu_fraction=0.9,
+        data_fraction=1,
         n_iter=None,
         set_attr=True,
     ):
@@ -111,7 +111,7 @@ class IdEstimation(Base):
         Args:
             algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
             fraction (float): fraction of mus that will be considered for the estimate (discard highest mus)
-            decimation (float): fraction of randomly sampled points used to compute the id
+            data_fraction (float): fraction of randomly sampled points used to compute the id
             n_iter (int): number of times the ID is computed on data subsets (useful when decimation < 1)
             set_attr (bool): whether to change the class attributes as a result of the computation
 
@@ -157,29 +157,31 @@ class IdEstimation(Base):
         ), """2NN algorithm requires that either self.X or self.distances is not None.\
             Please initialize a coordinate or distance matrix."""
         assert (
-            0.0 < decimation and decimation <= 1.0
-        ), "'decimation' must be between 0 and 1"
-        assert 0.0 < fraction and fraction <= 1.0, "'fraction' must be between 0 and 1"
-        if math.isclose(fraction, 1.0) and algorithm == "base":
+            0.0 < data_fraction and data_fraction <= 1.0
+        ), "'data_fraction' must be between 0 and 1"
+        assert (
+            0.0 < mu_fraction and mu_fraction <= 1.0
+        ), "'fraction' must be between 0 and 1"
+        if math.isclose(mu_fraction, 1.0) and algorithm == "base":
             algorithm = "ml"
             print("fraction = 1: algorithm set to ml")
 
-        if decimation == 1:
+        if data_fraction == 1:
             if self.distances is None:
                 self.compute_distances()
 
             mus = self.distances[:, 2] / self.distances[:, 1]
-            intrinsic_dim = self._compute_id_2NN(mus, fraction, algorithm)
+            intrinsic_dim = self._compute_id_2NN(mus, mu_fraction, algorithm)
             intrinsic_dim_err = 0.0
             intrinsic_dim_scale = np.mean(self.distances[:, np.array([1, 2])])
 
         else:
-            n_subset = int(np.rint(self.N * decimation))
+            n_subset = int(np.rint(self.N * data_fraction))
             if n_iter is None:
-                n_iter = int(np.rint(1.0 / decimation))
+                n_iter = int(np.rint(1.0 / data_fraction))
 
             mus, id_list, r_list = self._compute_id_iterated(
-                n_iter, n_subset, fraction, algorithm
+                n_iter, n_subset, mu_fraction, algorithm
             )
 
             intrinsic_dim = np.mean(id_list)
@@ -250,7 +252,7 @@ class IdEstimation(Base):
         self,
         n_min=10,
         algorithm="base",
-        fraction=0.9,
+        mu_fraction=0.9,
         set_attr=False,
         return_sizes=True,
     ):
@@ -309,8 +311,8 @@ class IdEstimation(Base):
         for i, num_subset in enumerate(num_subsets):
             ids_scaling[i], ids_scaling_err[i], rs_scaling[i] = self.compute_id_2NN(
                 algorithm=algorithm,
-                fraction=fraction,
-                decimation=num_subset / self.N,
+                mu_fraction=mu_fraction,
+                data_fraction=num_subset / self.N,
                 set_attr=True,
             )
             mus.append(self.intrinsic_dim_mus)

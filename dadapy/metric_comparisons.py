@@ -678,21 +678,6 @@ class MetricComparisons(Base):
         Use "return_label_overlap" instead."""
         )
 
-        assert self.X is not None
-
-        X_ = self.X[:, coords]
-
-        _, dist_indices_ = compute_nn_distances(X_, self.maxk, self.metric, self.period)
-
-        overlaps = []
-        for i in range(self.N):
-            neigh_idx_i = dist_indices_[i, 1 : k + 1]
-            overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
-
-        overlap = np.mean(overlaps)
-
-        return overlap
-
     def return_overlap_coords(self, coords1, coords2, k=30):
         """Return the neighbour overlap between two subspaces defined by two sets of coordinates.
 
@@ -712,18 +697,6 @@ class MetricComparisons(Base):
             Use "return_data_overlap" instead."""
         )
 
-        assert self.X is not None
-
-        X1_ = self.X[:, coords1]
-        X2_ = self.X[:, coords2]
-
-        _, dist_indices1_ = compute_nn_distances(X1_, k + 2, self.metric, self.period)
-        _, dist_indices2_ = compute_nn_distances(X2_, k + 2, self.metric, self.period)
-
-        overlap = np.mean(dist_indices1_[:, 1 : k + 1] == dist_indices2_[:, 1 : k + 1])
-
-        return overlap
-
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
         """Return a list of neighbour overlaps computed on a list of selected coordinates.
 
@@ -738,21 +711,9 @@ class MetricComparisons(Base):
             (list(float)): a list of neighbour overlaps of the points
         """
         raise AssertionError(
-            """This function is a wrong implementation of the overlap between two \
-            sets of coordinates and will be removed in a future version of the package. \
-            Use "return_data_overlap" instead."""
+            """This function is outdated and will be removed in a future version of the package. \
+        Use "return_label_overlap" instead."""
         )
-        assert self.X is not None
-
-        overlaps = []
-        for coords in coord_list:
-            if self.verb:
-                print("computing overlap for coord selection")
-
-            overlap = self.return_label_overlap_coords(labels, coords, k)
-            overlaps.append(overlap)
-
-        return overlaps
 
     def return_inf_imb_causality(
         self,
