@@ -533,7 +533,7 @@ class MetricComparisons(Base):
                 inversely proportional to the class population. 
 
         Returns:
-            (float): the neighbour overlap of the points
+            (float): the neighbour overlap with the class labels.
         """
         # cast labels to int
         labels = labels.astype(int)
@@ -565,9 +565,9 @@ class MetricComparisons(Base):
         if class_fraction is not None:
 
             k_per_sample = np.array([k_per_class[label] for label in labels])
-            col_indices = np.arange(max_k)[np.newaxis, :]
-            # should this overlaps entry be discarded?
-            mask = col_indices >= k_per_sample[:, np.newaxis]
+            nearest_neighbor_rank = np.arange(max_k)[np.newaxis, :]
+            # should this overlap entry be discarded?
+            mask = nearest_neighbor_rank >= k_per_sample[:, np.newaxis]
             # mask out the entries to be discarded
             overlaps[mask] = False
             overlaps = overlaps.sum(axis=1) / k_per_sample
