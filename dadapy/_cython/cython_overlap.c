@@ -1213,7 +1213,6 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include "numpy/ndarraytypes.h"
 #include "numpy/arrayscalars.h"
 #include "numpy/ufuncobject.h"
-#include <math.h>
 #include "pythread.h"
 #include <stdlib.h>
 #ifdef _OPENMP
@@ -1823,7 +1822,7 @@ typedef npy_double __pyx_t_5numpy_double_t;
  */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
-/* "dadapy/_cython/cython_overlap.pyx":12
+/* "dadapy/_cython/cython_overlap.pyx":10
  * floatTYPE = np.float64
  * 
  * ctypedef np.int_t DTYPE_t             # <<<<<<<<<<<<<<
@@ -1832,7 +1831,7 @@ typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
  */
 typedef __pyx_t_5numpy_int_t __pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t;
 
-/* "dadapy/_cython/cython_overlap.pyx":13
+/* "dadapy/_cython/cython_overlap.pyx":11
  * 
  * ctypedef np.int_t DTYPE_t
  * ctypedef np.float64_t floatTYPE_t             # <<<<<<<<<<<<<<
@@ -3151,8 +3150,6 @@ static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__p
 
 /* Module declarations from "numpy" */
 
-/* Module declarations from "libc.math" */
-
 /* Module declarations from "dadapy._cython.cython_overlap" */
 static PyObject *__pyx_collections_abc_Sequence = 0;
 static PyObject *generic = 0;
@@ -3471,8 +3468,6 @@ typedef struct {
   PyTypeObject *__pyx_ptype_5numpy_flexible;
   PyTypeObject *__pyx_ptype_5numpy_character;
   PyTypeObject *__pyx_ptype_5numpy_ufunc;
-  #if CYTHON_USE_MODULE_STATE
-  #endif
   #if CYTHON_USE_MODULE_STATE
   PyObject *__pyx_type___pyx_array;
   PyObject *__pyx_type___pyx_MemviewEnum;
@@ -4159,8 +4154,6 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_ptype_5numpy_flexible __pyx_mstate_global->__pyx_ptype_5numpy_flexible
 #define __pyx_ptype_5numpy_character __pyx_mstate_global->__pyx_ptype_5numpy_character
 #define __pyx_ptype_5numpy_ufunc __pyx_mstate_global->__pyx_ptype_5numpy_ufunc
-#if CYTHON_USE_MODULE_STATE
-#endif
 #if CYTHON_USE_MODULE_STATE
 #define __pyx_type___pyx_array __pyx_mstate_global->__pyx_type___pyx_array
 #define __pyx_type___pyx_MemviewEnum __pyx_mstate_global->__pyx_type___pyx_MemviewEnum
@@ -19227,7 +19220,7 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_overlap.pyx":17
+/* "dadapy/_cython/cython_overlap.pyx":15
  * # ----------------------------------------------------------------------------------------------
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -19297,7 +19290,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -19305,9 +19298,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, 1); __PYX_ERR(0, 17, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, 1); __PYX_ERR(0, 15, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -19315,9 +19308,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[2]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, 2); __PYX_ERR(0, 17, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, 2); __PYX_ERR(0, 15, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
@@ -19325,14 +19318,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[3]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, 3); __PYX_ERR(0, 17, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, 3); __PYX_ERR(0, 15, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "_compute_data_overlap") < 0)) __PYX_ERR(0, 17, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "_compute_data_overlap") < 0)) __PYX_ERR(0, 15, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 4)) {
       goto __pyx_L5_argtuple_error;
@@ -19342,14 +19335,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
       values[2] = __Pyx_Arg_FASTCALL(__pyx_args, 2);
       values[3] = __Pyx_Arg_FASTCALL(__pyx_args, 3);
     }
-    __pyx_v_Nele = __Pyx_PyInt_As_npy_long(values[0]); if (unlikely((__pyx_v_Nele == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 19, __pyx_L3_error)
-    __pyx_v_k = __Pyx_PyInt_As_npy_long(values[1]); if (unlikely((__pyx_v_k == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L3_error)
+    __pyx_v_Nele = __Pyx_PyInt_As_npy_long(values[0]); if (unlikely((__pyx_v_Nele == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L3_error)
+    __pyx_v_k = __Pyx_PyInt_As_npy_long(values[1]); if (unlikely((__pyx_v_k == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 18, __pyx_L3_error)
     __pyx_v_dist_indices1 = ((PyArrayObject *)values[2]);
     __pyx_v_dist_indices2 = ((PyArrayObject *)values[3]);
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 17, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("_compute_data_overlap", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 15, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -19363,8 +19356,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_dist_indices1), __pyx_ptype_5numpy_ndarray, 1, "dist_indices1", 0))) __PYX_ERR(0, 21, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_dist_indices2), __pyx_ptype_5numpy_ndarray, 1, "dist_indices2", 0))) __PYX_ERR(0, 22, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_dist_indices1), __pyx_ptype_5numpy_ndarray, 1, "dist_indices1", 0))) __PYX_ERR(0, 19, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_dist_indices2), __pyx_ptype_5numpy_ndarray, 1, "dist_indices2", 0))) __PYX_ERR(0, 20, __pyx_L1_error)
   __pyx_r = __pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overlap(__pyx_self, __pyx_v_Nele, __pyx_v_k, __pyx_v_dist_indices1, __pyx_v_dist_indices2);
 
   /* function exit code */
@@ -19436,28 +19429,28 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
   __pyx_pybuffernd_dist_indices2.rcbuffer = &__pyx_pybuffer_dist_indices2;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_dist_indices1.rcbuffer->pybuffer, (PyObject*)__pyx_v_dist_indices1, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 17, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_dist_indices1.rcbuffer->pybuffer, (PyObject*)__pyx_v_dist_indices1, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 15, __pyx_L1_error)
   }
   __pyx_pybuffernd_dist_indices1.diminfo[0].strides = __pyx_pybuffernd_dist_indices1.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_dist_indices1.diminfo[0].shape = __pyx_pybuffernd_dist_indices1.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_dist_indices1.diminfo[1].strides = __pyx_pybuffernd_dist_indices1.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_dist_indices1.diminfo[1].shape = __pyx_pybuffernd_dist_indices1.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_dist_indices2.rcbuffer->pybuffer, (PyObject*)__pyx_v_dist_indices2, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 17, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_dist_indices2.rcbuffer->pybuffer, (PyObject*)__pyx_v_dist_indices2, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 15, __pyx_L1_error)
   }
   __pyx_pybuffernd_dist_indices2.diminfo[0].strides = __pyx_pybuffernd_dist_indices2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_dist_indices2.diminfo[0].shape = __pyx_pybuffernd_dist_indices2.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_dist_indices2.diminfo[1].strides = __pyx_pybuffernd_dist_indices2.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_dist_indices2.diminfo[1].shape = __pyx_pybuffernd_dist_indices2.rcbuffer->pybuffer.shape[1];
 
-  /* "dadapy/_cython/cython_overlap.pyx":25
+  /* "dadapy/_cython/cython_overlap.pyx":23
  * ):
  * 
  *     cdef np.ndarray[floatTYPE_t, ndim=1] overlaps = -np.ones(Nele)             # <<<<<<<<<<<<<<
  *     cdef floatTYPE_t count
  *     cdef DTYPE_t i, j, l
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_ones); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_ones); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyInt_From_npy_long(__pyx_v_Nele); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_npy_long(__pyx_v_Nele); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -19478,20 +19471,20 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
     __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_3, __pyx_callargs+1-__pyx_t_5, 1+__pyx_t_5);
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 23, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   }
-  __pyx_t_3 = PyNumber_Negative(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Negative(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 25, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 23, __pyx_L1_error)
   __pyx_t_6 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_overlaps.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_nn___pyx_t_6dadapy_7_cython_14cython_overlap_floatTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_overlaps = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_overlaps.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 25, __pyx_L1_error)
+      __PYX_ERR(0, 23, __pyx_L1_error)
     } else {__pyx_pybuffernd_overlaps.diminfo[0].strides = __pyx_pybuffernd_overlaps.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_overlaps.diminfo[0].shape = __pyx_pybuffernd_overlaps.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -19499,31 +19492,31 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
   __pyx_v_overlaps = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "dadapy/_cython/cython_overlap.pyx":28
+  /* "dadapy/_cython/cython_overlap.pyx":26
  *     cdef floatTYPE_t count
  *     cdef DTYPE_t i, j, l
  *     cdef DTYPE_t[:, ::1] indices1 = dist_indices1             # <<<<<<<<<<<<<<
  *     cdef DTYPE_t[:, ::1] indices2 = dist_indices2
  * 
  */
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t(((PyObject *)__pyx_v_dist_indices1), PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t(((PyObject *)__pyx_v_dist_indices1), PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 26, __pyx_L1_error)
   __pyx_v_indices1 = __pyx_t_7;
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "dadapy/_cython/cython_overlap.pyx":29
+  /* "dadapy/_cython/cython_overlap.pyx":27
  *     cdef DTYPE_t i, j, l
  *     cdef DTYPE_t[:, ::1] indices1 = dist_indices1
  *     cdef DTYPE_t[:, ::1] indices2 = dist_indices2             # <<<<<<<<<<<<<<
  * 
  *     for i in range(Nele):
  */
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t(((PyObject *)__pyx_v_dist_indices2), PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_nn___pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t(((PyObject *)__pyx_v_dist_indices2), PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 27, __pyx_L1_error)
   __pyx_v_indices2 = __pyx_t_7;
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "dadapy/_cython/cython_overlap.pyx":31
+  /* "dadapy/_cython/cython_overlap.pyx":29
  *     cdef DTYPE_t[:, ::1] indices2 = dist_indices2
  * 
  *     for i in range(Nele):             # <<<<<<<<<<<<<<
@@ -19535,7 +19528,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
     __pyx_v_i = __pyx_t_10;
 
-    /* "dadapy/_cython/cython_overlap.pyx":32
+    /* "dadapy/_cython/cython_overlap.pyx":30
  * 
  *     for i in range(Nele):
  *         count = 0             # <<<<<<<<<<<<<<
@@ -19544,7 +19537,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
  */
     __pyx_v_count = 0.0;
 
-    /* "dadapy/_cython/cython_overlap.pyx":33
+    /* "dadapy/_cython/cython_overlap.pyx":31
  *     for i in range(Nele):
  *         count = 0
  *         for j in range(1, k+1):             # <<<<<<<<<<<<<<
@@ -19556,7 +19549,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
     for (__pyx_t_13 = 1; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
       __pyx_v_j = __pyx_t_13;
 
-      /* "dadapy/_cython/cython_overlap.pyx":34
+      /* "dadapy/_cython/cython_overlap.pyx":32
  *         count = 0
  *         for j in range(1, k+1):
  *             elem = indices1[i, j]             # <<<<<<<<<<<<<<
@@ -19569,7 +19562,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
       if (__pyx_t_15 < 0) __pyx_t_15 += __pyx_v_indices1.shape[1];
       __pyx_v_elem = (*((__pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t *) ( /* dim=1 */ ((char *) (((__pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t *) ( /* dim=0 */ (__pyx_v_indices1.data + __pyx_t_14 * __pyx_v_indices1.strides[0]) )) + __pyx_t_15)) )));
 
-      /* "dadapy/_cython/cython_overlap.pyx":35
+      /* "dadapy/_cython/cython_overlap.pyx":33
  *         for j in range(1, k+1):
  *             elem = indices1[i, j]
  *             for l in range(1, k + 1):             # <<<<<<<<<<<<<<
@@ -19581,7 +19574,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
       for (__pyx_t_18 = 1; __pyx_t_18 < __pyx_t_17; __pyx_t_18+=1) {
         __pyx_v_l = __pyx_t_18;
 
-        /* "dadapy/_cython/cython_overlap.pyx":36
+        /* "dadapy/_cython/cython_overlap.pyx":34
  *             elem = indices1[i, j]
  *             for l in range(1, k + 1):
  *                 if elem == indices2[i, l]:             # <<<<<<<<<<<<<<
@@ -19595,7 +19588,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
         __pyx_t_19 = (__pyx_v_elem == (*((__pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t *) ( /* dim=1 */ ((char *) (((__pyx_t_6dadapy_7_cython_14cython_overlap_DTYPE_t *) ( /* dim=0 */ (__pyx_v_indices2.data + __pyx_t_15 * __pyx_v_indices2.strides[0]) )) + __pyx_t_14)) ))));
         if (__pyx_t_19) {
 
-          /* "dadapy/_cython/cython_overlap.pyx":37
+          /* "dadapy/_cython/cython_overlap.pyx":35
  *             for l in range(1, k + 1):
  *                 if elem == indices2[i, l]:
  *                     count += 1             # <<<<<<<<<<<<<<
@@ -19604,7 +19597,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
  */
           __pyx_v_count = (__pyx_v_count + 1.0);
 
-          /* "dadapy/_cython/cython_overlap.pyx":38
+          /* "dadapy/_cython/cython_overlap.pyx":36
  *                 if elem == indices2[i, l]:
  *                     count += 1
  *                     break             # <<<<<<<<<<<<<<
@@ -19613,7 +19606,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
  */
           goto __pyx_L8_break;
 
-          /* "dadapy/_cython/cython_overlap.pyx":36
+          /* "dadapy/_cython/cython_overlap.pyx":34
  *             elem = indices1[i, j]
  *             for l in range(1, k + 1):
  *                 if elem == indices2[i, l]:             # <<<<<<<<<<<<<<
@@ -19625,7 +19618,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
       __pyx_L8_break:;
     }
 
-    /* "dadapy/_cython/cython_overlap.pyx":39
+    /* "dadapy/_cython/cython_overlap.pyx":37
  *                     count += 1
  *                     break
  *         overlaps[i] = count / k             # <<<<<<<<<<<<<<
@@ -19637,17 +19630,18 @@ static PyObject *__pyx_pf_6dadapy_7_cython_14cython_overlap__compute_data_overla
     *__Pyx_BufPtrStrided1d(__pyx_t_6dadapy_7_cython_14cython_overlap_floatTYPE_t *, __pyx_pybuffernd_overlaps.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_overlaps.diminfo[0].strides) = (__pyx_v_count / ((__pyx_t_6dadapy_7_cython_14cython_overlap_floatTYPE_t)__pyx_v_k));
   }
 
-  /* "dadapy/_cython/cython_overlap.pyx":41
+  /* "dadapy/_cython/cython_overlap.pyx":39
  *         overlaps[i] = count / k
  * 
  *     return overlaps             # <<<<<<<<<<<<<<
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF((PyObject *)__pyx_v_overlaps);
   __pyx_r = ((PyObject *)__pyx_v_overlaps);
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_overlap.pyx":17
+  /* "dadapy/_cython/cython_overlap.pyx":15
  * # ----------------------------------------------------------------------------------------------
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -20795,7 +20789,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 }
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 31, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 29, __pyx_L1_error)
   __pyx_builtin___import__ = __Pyx_GetBuiltinName(__pyx_n_s_import); if (!__pyx_builtin___import__) __PYX_ERR(1, 100, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 141, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(1, 156, __pyx_L1_error)
@@ -20975,17 +20969,17 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__20);
   __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_pyx_unpickle_Enum, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(1, 1, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_overlap.pyx":17
+  /* "dadapy/_cython/cython_overlap.pyx":15
  * # ----------------------------------------------------------------------------------------------
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * def _compute_data_overlap(DTYPE_t Nele,
  */
-  __pyx_tuple__22 = PyTuple_Pack(12, __pyx_n_s_Nele, __pyx_n_s_k, __pyx_n_s_dist_indices1, __pyx_n_s_dist_indices2, __pyx_n_s_overlaps, __pyx_n_s_count, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_l, __pyx_n_s_indices1, __pyx_n_s_indices2, __pyx_n_s_elem); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_tuple__22 = PyTuple_Pack(12, __pyx_n_s_Nele, __pyx_n_s_k, __pyx_n_s_dist_indices1, __pyx_n_s_dist_indices2, __pyx_n_s_overlaps, __pyx_n_s_count, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_l, __pyx_n_s_indices1, __pyx_n_s_indices2, __pyx_n_s_elem); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__22);
   __Pyx_GIVEREF(__pyx_tuple__22);
-  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__22, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_overlap_pyx, __pyx_n_s_compute_data_overlap, 17, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__22, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_overlap_pyx, __pyx_n_s_compute_data_overlap, 15, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -22097,54 +22091,54 @@ if (!__Pyx_RefNanny) {
  * 
  * import cython
  * import numpy as np             # <<<<<<<<<<<<<<
- * 
  * cimport numpy as np
+ * 
  */
   __pyx_t_7 = __Pyx_ImportDottedModule(__pyx_n_s_numpy, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_7) < 0) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_overlap.pyx":9
- * from libc.math cimport exp
+  /* "dadapy/_cython/cython_overlap.pyx":7
+ * cimport numpy as np
  * 
  * DTYPE = np.int64             # <<<<<<<<<<<<<<
  * floatTYPE = np.float64
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 9, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_7, __pyx_n_s_np); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_int64); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 9, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_7, __pyx_n_s_int64); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_4) < 0) __PYX_ERR(0, 9, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_4) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "dadapy/_cython/cython_overlap.pyx":10
+  /* "dadapy/_cython/cython_overlap.pyx":8
  * 
  * DTYPE = np.int64
  * floatTYPE = np.float64             # <<<<<<<<<<<<<<
  * 
  * ctypedef np.int_t DTYPE_t
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_floatTYPE, __pyx_t_7) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_floatTYPE, __pyx_t_7) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_overlap.pyx":17
+  /* "dadapy/_cython/cython_overlap.pyx":15
  * # ----------------------------------------------------------------------------------------------
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * def _compute_data_overlap(DTYPE_t Nele,
  */
-  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_14cython_overlap_1_compute_data_overlap, 0, __pyx_n_s_compute_data_overlap, NULL, __pyx_n_s_dadapy__cython_cython_overlap, __pyx_d, ((PyObject *)__pyx_codeobj__23)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 17, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_14cython_overlap_1_compute_data_overlap, 0, __pyx_n_s_compute_data_overlap, NULL, __pyx_n_s_dadapy__cython_cython_overlap, __pyx_d, ((PyObject *)__pyx_codeobj__23)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_data_overlap, __pyx_t_7) < 0) __PYX_ERR(0, 17, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_data_overlap, __pyx_t_7) < 0) __PYX_ERR(0, 15, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
   /* "dadapy/_cython/cython_overlap.pyx":1

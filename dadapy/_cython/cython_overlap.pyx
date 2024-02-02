@@ -2,9 +2,7 @@
 
 import cython
 import numpy as np
-
 cimport numpy as np
-from libc.math cimport exp
 
 DTYPE = np.int64
 floatTYPE = np.float64
@@ -39,3 +37,4 @@ def _compute_data_overlap(DTYPE_t Nele,
         overlaps[i] = count / k
 
     return overlaps
+    
