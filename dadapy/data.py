@@ -85,11 +85,14 @@ class Data(Clustering, MetricComparisons, FeatureWeighting):
             ids, ids_err, kstars, log_likelihoods
         """
         # start with an initial estimate of the ID
+        # start with an initial estimate of the ID
         if initial_id is None:
-            self.compute_id_2NN()
+            id, _, _ = self.compute_id_2NN()
+            id = id[0] # TODO: change self.compute_id_2NN() to return a scalar!
         else:
             self.compute_distances()
             self.set_id(initial_id)
+            id = initial_id
 
         ids = []
         ids_err = []
@@ -143,39 +146,47 @@ class Data(Clustering, MetricComparisons, FeatureWeighting):
 
         return ids, ids_err, kstars, log_likelihoods
 
-    def return_ids_kstar_binomial(
-        self, initial_id=None, n_iter=5, Dthr=23.92812698, r=0.5
+    def return_ids_abide(
+        self, initial_id=None, eps_iter = 0.001, max_iter=10, Dthr=23.92812698, r=None
     ):
         """Return the id estimates of the binomial algorithm coupled with the kstar estimation of the scale.
 
         Args:
             initial_id (float): initial estimate of the id default uses 2NN
-            n_iter (int): number of iteration
+            eps_iter (float): threshold for the convergence of the algorithm
+            max_iter (int): maximum number of iteration
             Dthr (float): threshold value for the kstar test
-            r (float): parameter of binomial estimator, 0 < r < 1
+            r (float): parameter of binomial estimator, 0 < r < 1. If None, then r is set to 0.2302^(1/d_t).
         Returns:
             ids, ids_err, kstars, log_likelihoods
         """
         # start with an initial estimate of the ID
         if initial_id is None:
-            self.compute_id_binomial_k(k=10, r=r)
-            id = self.intrinsic_dim
+            id, _, _ = self.compute_id_2NN()
+            id = id[0] # TODO: change self.compute_id_2NN() to return a scalar!
         else:
             self.compute_distances()
             self.set_id(initial_id)
             id = initial_id
+
+        
+        if r is None:
+            adaptive_r = True
+        else:
+            assert 0 < r < 1
+            adaptive_r = False
 
         ids = []
         ids_err = []
         kstars = []
         log_likelihoods = []
 
-        for i in range(n_iter):
+        for i in range(max_iter):
             # compute kstar
-            self.compute_kstar(Dthr)
-            print("iteration ", i)
-            print("id ", id)
+            if adaptive_r:
+                r = 0.2302 ** (1 / id)
 
+            self.compute_kstar(Dthr)
             rk = np.array([dd[self.kstar[j]] for j, dd in enumerate(self.distances)])
             rn = rk * r
             n = np.sum([dd < rn[j] for j, dd in enumerate(self.distances)], axis=1)
@@ -187,6 +198,13 @@ class Data(Clustering, MetricComparisons, FeatureWeighting):
             ids_err.append(id_err)
             kstars.append(self.kstar)
             log_likelihoods.append(log_lik)
+    
+            if self.verb == True:
+                print("ABIDE iteration: ", i)
+                print("id: ", id)
+            
+            if i > 0 and abs(ids[-1] - ids[-2]) < eps_iter:
+                break
 
         ids = np.array(ids)
         ids_err = np.array(ids_err)
