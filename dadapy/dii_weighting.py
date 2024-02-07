@@ -29,13 +29,13 @@ import numpy as np
 from scipy.linalg import norm
 
 from dadapy._utils.differentiable_imbalance import (
-    _optimize_kernel_imbalance,
-    _optimize_kernel_imbalance_static_zeros,
+    _optimize_dii,
+    _optimize_dii_static_zeros,
     _refine_lasso_optimization,
     _return_full_dist_matrix,
     _return_full_rank_matrix,
-    _return_kernel_imbalance,
-    _return_kernel_imbalance_gradient,
+    _return_dii,
+    _return_dii_gradient,
     _return_optimal_lambda_from_distances,
 )
 from dadapy.base import Base
@@ -60,7 +60,6 @@ def check_maxk(func):
     return with_check
 
 
-# TODO: everything that is named kernel... rename to dii
 # TODO: compute changes class attributes, return just returns - rename
 class DIIWeighting(Base):
     def __init__(
@@ -81,9 +80,10 @@ class DIIWeighting(Base):
             njobs=njobs,
         )
 
-        # TODO: This does not need to be here
+        # TODO: This does not need to be here @FelixWodaczek let's kick out optinal cython?
         self.cythond = True
         # TODO: Stop returning history everywhere and instead save it here and implement self.get_history()
+        # TODO: @FelixWodaczek how does this work? which kind of history?
         self.history = None
         self._full_distance_matrix = None
 
@@ -185,13 +185,13 @@ class DIIWeighting(Base):
         self,
         target_data: Type[Base],
         n_epochs: int = 50,
-        n_samples: int = 300,
+        n_samples: int = 200,
         initial_gammas: Union[np.ndarray, int, float] = None,
         lambd: float = None,
         decaying_lr: bool = True,
         trial_learning_rates: np.ndarray = None,
     ):
-        """Do a stepwise backward eliminitaion of features and after each elimination GD otpmize the kernel imblance
+        """Find the optimal learning rate for the optimization of the DII by testing several on a reduced set
         Args:
             groundtruth_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
             data (np.ndarray): N x D(input) array containing N datapoints in D input features whose weights are optimized to reproduce the groundtruth distances
@@ -207,17 +207,14 @@ class DIIWeighting(Base):
                 lr_list (np.ndarray or list): learning rates to try
         Returns:
             opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
-            kernel_imbalances_list: values of the kernel imbalance during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
+            diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
         """
         in_data = self.X.copy()
         groundtruth = target_data.X.copy()
 
         if n_samples <= len(in_data):
-            # TODO: @wildromi smaller standard value for nsamples here?
-            stride = int(np.round(len(in_data) / n_samples))
-            # TODO: @wildromi why not randomly select here?
-            in_data = in_data[::stride]
-            groundtruth = groundtruth[::stride]
+            in_data = in_data[-n_samples:]
+            groundtruth = groundtruth[-n_samples:]
 
         initial_gammas = self._parse_initial_gammas(initial_gammas)
         period = self._parse_own_period()
@@ -226,7 +223,7 @@ class DIIWeighting(Base):
         )
 
         if trial_learning_rates is None:
-            # TODO: @wildromi np.logspace here?
+            # these learning rates seem to work well for most data
             lrates = np.array([0.001, 0.01, 0.1, 1.0, 10.0, 50.0, 100.0, 200.0])
         else:
             lrates = trial_learning_rates
@@ -242,7 +239,7 @@ class DIIWeighting(Base):
                 gammas_per_epoch_per_lr[i],
                 dii_per_epoch_per_lr[i],
                 _,
-            ) = _optimize_kernel_imbalance(
+            ) = _optimize_dii(
                 groundtruth_data=groundtruth,
                 data=in_data,
                 gammas_0=initial_gammas,
@@ -261,7 +258,7 @@ class DIIWeighting(Base):
         # find best imbalance
         opt_lrate_index = np.nanargmin(dii_per_epoch_per_lr[:, -1])
         opt_l_rate = lrates[opt_lrate_index]
-        # kernel_imbalances_list = dii_per_epoch_per_lr[opt_lrate_index]
+        # diis_list = dii_per_epoch_per_lr[opt_lrate_index]
 
         self.history = {
             "dii_per_epoch_per_lr": dii_per_epoch_per_lr,
@@ -271,8 +268,8 @@ class DIIWeighting(Base):
         return opt_l_rate
 
     @check_maxk
-    def return_kernel_imbalance(self, target_data: Type[Base], lambd=None):
-        """Computes the kernel imbalance between two matrices based on distances of input data and rank information of groundtruth data.
+    def return_dii(self, target_data: Type[Base], lambd=None):
+        """Computes the DII between two matrices based on distances of input data and rank information of groundtruth data.
 
         Args:
             dist_matrix_A (np.ndarray): N x N array - The distance matrix for between all input data points of input space A. Can
@@ -283,7 +280,7 @@ class DIIWeighting(Base):
                 in the data set but bigger than the minimal distance
 
         Returns:
-            kernel_imbalance (float): The computed kernel imbalance value. Please mind that this depends (unlike in the classic information imbalance)
+            dii (float): The computed DII value. Please mind that this depends (unlike in the classic information imbalance)
                 on the chosen lambda. To compare several scaled distances compare them using the same lambda, even if they were optimized with different ones.
 
         Raises:
@@ -301,14 +298,13 @@ class DIIWeighting(Base):
             njobs=self.njobs,
         )
 
-        return _return_kernel_imbalance(
-            dist_matrix_i=distances_i, rank_matrix_j=rank_matrix_j, lambd=lambd
+        return _return_dii(
+            dist_matrix_A=distances_i, rank_matrix_B=rank_matrix_j, lambd=lambd
         )
 
-        # sets lambda to the average between the smallest and mean (2nd NN - 1st NN)-distance
 
     @check_maxk
-    def return_kernel_imbalance_gradient(
+    def return_dii_gradient(
         self, target_data: Type[Base], gammas: np.ndarray, lambd: float = None
     ):
         # TODO: this should call the cython implementation
@@ -329,7 +325,7 @@ class DIIWeighting(Base):
             target_data.X, period=target_period, njobs=self.njobs
         )
 
-        return _return_kernel_imbalance_gradient(
+        return _return_dii_gradient(
             rescaled_distances_i,
             self.X,
             rank_matrix_j,
@@ -341,7 +337,7 @@ class DIIWeighting(Base):
         )
 
     @check_maxk
-    def optimize_kernel_imbalance(
+    def optimize_dii(
         self,
         target_data: Type[Base],
         n_epochs=100,
@@ -371,7 +367,7 @@ class DIIWeighting(Base):
                 trial_learning_rates=None,
             )
 
-        gammas_list, kernel_imbalances, l1_penalties = _optimize_kernel_imbalance(
+        gammas_list, diis, l1_penalties = _optimize_dii(
             groundtruth_data=target_data.X,
             groundtruthperiod=self._parse_period_for_dii(
                 target_data.period, target_data.dims
@@ -380,7 +376,7 @@ class DIIWeighting(Base):
             period=period,
             gammas_0=initial_gammas,
             constrain=constrain,
-            l1_penalty=l1_penalty,  # TODO: @wildromi I think we should include a function that gives at least a reasonable estimate for the l1 penalty when wanting x features
+            l1_penalty=l1_penalty,  # TODO: @wildromi we should include a function that gives at least a reasonable estimate for the l1 penalty when wanting x features
             n_epochs=n_epochs,
             l_rate=learning_rate,
             decaying_lr=decaying_lr,
@@ -390,14 +386,13 @@ class DIIWeighting(Base):
 
         self.history = {
             "gammas_per_epoch": gammas_list,
-            "dii_per_epoch": kernel_imbalances,
+            "dii_per_epoch": diis,
             "l1_penalty_per_epoch": l1_penalties,
         }
-        # TODO: @wildromi I think we should only return one set of gammas here, but which one? Last one? Best one? If best, write class method that does that
         return gammas_list[-1]
 
     @check_maxk
-    def eliminate_backward_greedy_kernel_imbalance(
+    def eliminate_backward_greedy_dii(
         self,
         target_data: Type[Base],
         initial_gammas: Union[np.ndarray, int, float] = None,
@@ -407,7 +402,7 @@ class DIIWeighting(Base):
         constrain: bool = False,
         decaying_lr: bool = True,
     ):
-        """Do a stepwise backward eliminitaion of features and after each elimination GD otpmize the kernel imblance
+        """Do a stepwise backward eliminitaion of features and after each elimination GD otpmize the DII
         Args:
             groundtruth_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
             data (np.ndarray): N x D(input) array containing N datapoints in D input features whose weights are optimized to reproduce the groundtruth distances
@@ -422,10 +417,8 @@ class DIIWeighting(Base):
             groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
         Returns:
             gammas_list (np.ndarray): D x n_epochs x D. All weights for each optimization step for each number of nonzero weights. For final weights: gammas_list[:,-1,:]
-            kernel_imbalances_list (np.ndarray): D x n_epochs. Imbalance for each optimization step for each number of nonzero weights. For final imbalances: kernel_imbalances_list[:,-1]
+            diis_list (np.ndarray): D x n_epochs. Imbalance for each optimization step for each number of nonzero weights. For final imbalances: diis_list[:,-1]
         """
-        # find a suitable learning rate by chosing the best optimization
-        # TODO: @wildromi is it necessary to add gamma_0 by hand here? If so, why?
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
         if lambd is None:
@@ -442,10 +435,10 @@ class DIIWeighting(Base):
                 trial_learning_rates=None,
             )
 
-        gammaslist = []
-        imbalancelist = []
-        # do this just for making a warm start even for the first optimization
-        _ = self.optimize_kernel_imbalance(
+        weights_per_epoch = np.full((self.dims,n_epochs+1, self.dims), np.nan)
+        imbalances_per_epoch = np.full((self.dims,n_epochs+1), np.nan)
+        # for making a warm start already for the first optimization
+        _ = self.optimize_dii(
             target_data=target_data,
             n_epochs=n_epochs,
             initial_gammas=initial_gammas,
@@ -454,22 +447,16 @@ class DIIWeighting(Base):
             decaying_lr=decaying_lr,
             l1_penalty=0.0,
         )
-        gammass = self.history["gammas_per_epoch"]
-        gammaslist.append(gammass)
-        imbalancelist.append(
-            self.history["dii_per_epoch"]
-        )  # TODO: @wildromi maybe these should be arrays?
-
-        gammasss = gammass[-1]
-        nonzeros = norm(gammasss, 0)
-        # counter = len(gammasss)
+        weights = self.history["gammas_per_epoch"]
+        end_weights = weights[-1]
+        nonzeros = norm(end_weights, 0)
 
         while nonzeros >= 1:
             start = time.time()
-            gs, imbs = _optimize_kernel_imbalance_static_zeros(
+            gs, imbs = _optimize_dii_static_zeros(
                 groundtruth_data=target_data.X,
                 data=self.X,
-                gammas_0=gammasss,
+                gammas_0=end_weights,
                 lambd=lambd,
                 n_epochs=n_epochs,
                 l_rate=learning_rate,
@@ -486,26 +473,28 @@ class DIIWeighting(Base):
             end = time.time()
             timing = end - start
             print("number of nonzero weights= ", nonzeros, ", time: ", timing)
-            gammasss = gs[-1]
-            arr = 1 * gammasss
+            end_weights = 1 * gs[-1]  # 1* to make a deepcopy
+            arr = 1 * end_weights
             arr[arr == 0] = np.nan
             if np.isnan(arr).all():
-                gammaslist.append(gs)
-                imbalancelist.append(imbs)
+                weights_per_epoch[self.dims - int(nonzeros)] = gs
+                imbalances_per_epoch[self.dims - int(nonzeros)] = imbs
                 break
             mingamma = np.nanargmin(arr)
-            gammasss[mingamma] = 0
-            nonzeros = norm(gammasss, 0)
-            gammaslist.append(gs)
-            imbalancelist.append(imbs)
+            end_weights[mingamma] = 0
+            weights_per_epoch[self.dims - (int(nonzeros))] = gs
+            imbalances_per_epoch[self.dims - (int(nonzeros))] = imbs
+            nonzeros = norm(end_weights, 0)
 
-        self.history = {"dii_per_epoch": np.array(imbalancelist)}
-        # TODO: @wildromi, let's think about what would be smart to return here, surely we don't always want to force people to hand select their features?
-        # TODO: Or at least include plotting function here
-        return np.array(gammaslist)
+
+        self.history = {"dii_per_epoch_greedy": imbalances_per_epoch,
+                        "weights_per_epoch_greedy": weights_per_epoch}
+
+        # to select a sensible set of features, plot the imbalances and chose at which number of non-zero weights still enough information is retained
+        return imbalances_per_epoch[:,-1], weights_per_epoch[:,-1,:]
 
     @check_maxk
-    def search_lasso_optimization_kernel_imbalance(
+    def search_lasso_optimization_dii(
         self,
         target_data: Type[Base],
         initial_gammas: Union[np.ndarray, int, float] = None,
@@ -542,7 +531,7 @@ class DIIWeighting(Base):
         ls = np.zeros((len(l1_penalties), n_epochs + 1))
 
         for i in range(len(l1_penalties)):
-            gs[i], ks[i], ls[i] = _optimize_kernel_imbalance(
+            gs[i], ks[i], ls[i] = _optimize_dii(
                 groundtruth_data=target_data.X,
                 data=self.X,
                 gammas_0=initial_gammas,
@@ -564,7 +553,7 @@ class DIIWeighting(Base):
 
         (
             gammas_list,
-            kernel_list,
+            dii_list,
             lassoterm_list,
             penalties,
         ) = _refine_lasso_optimization(
@@ -589,4 +578,4 @@ class DIIWeighting(Base):
         )
         # TODO: @wildromi, let's think about how and what we would like to return here
         # TODO: maybe a function that selects for n_features? or at least a plotter?
-        return gammas_list, kernel_list, lassoterm_list, penalties
+        return gammas_list, dii_list, lassoterm_list, penalties
