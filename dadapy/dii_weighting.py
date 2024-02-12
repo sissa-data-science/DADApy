@@ -37,6 +37,8 @@ from dadapy._utils.differentiable_imbalance import (
     _return_dii,
     _return_dii_gradient,
     _return_optimal_lambda_from_distances,
+    _extract_min_diis_lasso_optimization,
+    _plot_min_lasso_results
 )
 from dadapy.base import Base
 
@@ -348,6 +350,36 @@ class DIIWeighting(Base):
         l1_penalty=0.0,
         decaying_lr=True,
     ):
+        """Optimize the differentiable information imbalance using gradient descent of the DII between input data object A and groundtruth data object B.
+
+        Args:
+            target_data : numpy.ndarray, shape (N, Dg)
+                The data set used as groundtruth, where N is the number of points and Dg the dimension of it.
+            n_epochs: int, optional
+                The number of epochs in the gradient descent optimization. If None, it is set to 100.
+            constrain: bool
+                Constrain the sum of the weights to sum up to the number of weights. Default: False
+            initial_ gammas : numpy.ndarray, shape (D,)
+                The array of starting weight values for the input values, where D is the dimension of data. If none, it is initialized to 1/var for each variable
+                This cannot be initialized to 0's. It can be initialized to all 1 or the inverse of the standard deviation
+            lambd : float, optional
+                The lambda scaling parameter of the softmax. If None, it is calculated automatically. Default is None.
+            learning_rate: float, optional
+                The learning rate of the gradient descent. If None, automatically estimated to be fast.
+            l1_penalty: float, optional
+                The l1-regularization strength, if sparcity is needed. Default: 0 (l1-regularization turned off).
+            decaying_lr: bool
+                Use exponentially decaying learning rate in gradient descent or not. Default: True.
+
+        Returns:
+            final_weights: np.ndarray, shape (D). Array of the optmized weights.
+
+        Attribures added to object history dictionary: access by "objectname.history["attribute"]"
+            weights_per_epoch: np.ndarray, shape (n_epochs, D). List of lists of the weights during optimization.
+            dii_per_epoch: np.ndarray, shape (n_epochs, ). List of the differentiable information imbalances during optimization.
+            l1_loss_term_per_epoch: np.ndarray, shape (n_epochs, ). List of the l1_penalty terms contributing to the the loss function during optimization.
+        """
+        # TODO: @FelixWodaczek how to introduce the history attributes here above?
         # TODO: do typechecks here, maybe remove some functions above
         # TODO: is Union typing correct here?
         # TODO: maybe there should be a .select features class here that requires less effort
@@ -360,14 +392,14 @@ class DIIWeighting(Base):
             learning_rate = self.return_optimal_learning_rate(
                 target_data=target_data,
                 n_epochs=50,
-                n_samples=300,
+                n_samples=200,
                 initial_gammas=initial_gammas,
                 lambd=lambd,
                 decaying_lr=decaying_lr,
                 trial_learning_rates=None,
             )
 
-        gammas_list, diis, l1_penalties = _optimize_dii(
+        gammas_list, diis, l1_loss_terms = _optimize_dii(
             groundtruth_data=target_data.X,
             groundtruthperiod=self._parse_period_for_dii(
                 target_data.period, target_data.dims
@@ -385,9 +417,9 @@ class DIIWeighting(Base):
         )
 
         self.history = {
-            "gammas_per_epoch": gammas_list,
+            "weights_per_epoch": gammas_list,
             "dii_per_epoch": diis,
-            "l1_penalty_per_epoch": l1_penalties,
+            "l1_loss_term_per_epoch": l1_loss_terms,
         }
         return gammas_list[-1]
 
@@ -421,14 +453,15 @@ class DIIWeighting(Base):
         """
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
-        if lambd is None:
-            lambd = self.return_optimal_lambda(target_data=target_data)
+       # TODO: @FelixWodaczek, INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
+       # if lambd is None:
+       #     lambd = self.return_optimal_lambda(target_data=target_data)
 
         if learning_rate is None:
             learning_rate = self.return_optimal_learning_rate(
                 target_data=target_data,
                 n_epochs=50,
-                n_samples=300,
+                n_samples=200,
                 initial_gammas=initial_gammas,
                 lambd=lambd,
                 decaying_lr=decaying_lr,
@@ -501,37 +534,63 @@ class DIIWeighting(Base):
         lambd: float = None,
         n_epochs: int = 100,
         learning_rate: float = None,
+        l1_penalties: Union[list, float] = None,
         constrain: bool = False,
         decaying_lr: bool = True,
+        refine: bool = False,
+        plotlasso: bool = True
     ):
+        """Search the number of resulting non-zero weights and the optimized DII for several l1-regularization strengths
+        Args:
+            target_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
+            initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed. If None (default), the inverse standard deviation of the input features is used
+            lambd (float or None): softmax scaling. If None (default) this chosen automatically with compute_optimial_lambda
+            n_epochs (int): number of epochs in each optimization cycle. Default: 100
+            learning_rate (float or None): learning rate. If None (default) is tuned and chosen automatically. Has to be tuned if constrain=True (otherwise optmization could fail)
+            constrain (bool): if True, rescale the weights so the biggest weight = 1
+            l1_penalties (list or None): l1 regularization strengths to be tested. If None (default), a list of 10 sensible l1-penalties is tested, which are chosen depending on the learning rate
+            decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
+        Returns:
+            num_nonzero_features (np.ndarray): D-dimensional numbers of non-zero features. Returns nan if no solution was found for a certain number of non-zero weights. In the same order as the according l1-penalties used, final DIIs and final weights.
+            l1_penalties_opt_per_nfeatures: (np.ndarray): D-dimensional. L1-regularization strengths for each num_nonzero_features, in the same order as the according final DIIs and final weights. If several l1-penalties led to the same number of non-zero weights, the solution with the lowest DII is selected. Returns nan if no solution was found for a certain number of non-zero weights.
+            dii_opt_per_nfeatures: (np.ndarray): D-dimensional. Final DIIs for each num_nonzero_features, in the same order as the according l1-penalties used and final weights. Returns nan if no solution was found for a certain number of non-zero weights. 
+            weights_opt_per_nfeatures: (np.ndarray): D x D-dimensional. Final weights for each num_nonzero_features, in the same order as the according l1-penalties used and final DIIs used. Returns nan if no solution was found for a certain number of non-zero weights.       
+        """
+            #weights (np.ndarray): len(l1_penalties) x n_epochs x D. All weights for each optimization step for each number of l1-regularization. For final weights: gammas_list[:,-1,:]
+            #diis (np.ndarray): len(l1_penalties) x n_epochs. Imbalance for each optimization step for each number of l1-regularization strength. For final imbalances: diis_list[:,-1]
+            #l1_loss_contributions (np.ndarray): len(l1_penalties) x n_epochs. L1 loss contributions for each optimization step for each number of nonzero weights. For final l1_loss_contributions: l1_loss_contributions[:,-1]
+            #l1_penalties (np.ndarray): len(l1_penalties). The l1-regularization strengths tested (in the order of the returned weights, diis and l1_loss_contributions)
+
         # Initial l1 search
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
-        if lambd is None:
-            lambd = self.return_optimal_lambda(target_data=target_data)
+       # TODO: @FelixWodaczek, INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
+       # if lambd is None:
+       #     lambd = self.return_optimal_lambda(target_data=target_data)
 
         if learning_rate is None:
             learning_rate = self.return_optimal_learning_rate(
                 target_data=target_data,
                 n_epochs=50,
-                n_samples=300,
+                n_samples=200,
                 initial_gammas=initial_gammas,
                 lambd=lambd,
                 decaying_lr=decaying_lr,
                 trial_learning_rates=None,
             )
 
-        # TODO: @wildromi logspace here?
-        l1_penalties = [0] + list(
-            np.linspace((1 / learning_rate) / 200, (1 / learning_rate) * 2, 9)
-        )  # test l1's depending on the learning rate
+        if l1_penalties is None:
+            l1_penalties = [0] + list(
+                np.logspace(np.floor(np.log10((1/learning_rate)/1000)),  np.ceil(np.log10((1/learning_rate)*1.5)), 9))  # test l1's depending on the learning rate
 
-        gs = np.zeros((len(l1_penalties), n_epochs + 1, self.dims))
-        ks = np.zeros((len(l1_penalties), n_epochs + 1))
-        ls = np.zeros((len(l1_penalties), n_epochs + 1))
+        weights = np.zeros((len(l1_penalties), n_epochs + 1, self.dims))
+        diis = np.zeros((len(l1_penalties), n_epochs + 1))
+        l1_loss_contributions = np.zeros((len(l1_penalties), n_epochs + 1))
 
+        print(len(l1_penalties), "l1-penalties to test:")
         for i in range(len(l1_penalties)):
-            gs[i], ks[i], ls[i] = _optimize_dii(
+            start = time.time()
+            weights[i], diis[i], l1_loss_contributions[i] = _optimize_dii(
                 groundtruth_data=target_data.X,
                 data=self.X,
                 gammas_0=initial_gammas,
@@ -548,34 +607,64 @@ class DIIWeighting(Base):
                 njobs=self.njobs,
                 cythond=self.cythond,
             )
+            end=time.time()
+            print("optimization with l1-penalty", i+1, "of strength ", np.around(l1_penalties[i], 4), "took:", end-start, "s in total.")
 
         # Refine l1 search
+        if refine is True:
+            (
+                gammas_list,
+                dii_list,
+                lassoterm_list,
+                penalties,
+            ) = _refine_lasso_optimization(
+                weights,
+                diis,
+                l1_loss_contributions,
+                l1_penalties,
+                groundtruth_data=target_data.X,
+                data=self.X,
+                gammas_0=initial_gammas,
+                lambd=lambd,
+                n_epochs=n_epochs,
+                l_rate=learning_rate,
+                constrain=constrain,
+                decaying_lr=decaying_lr,
+                period=self._parse_own_period(),
+                groundtruthperiod=self._parse_period_for_dii(
+                    target_data.period, target_data.dims
+                ),
+                njobs=self.njobs,
+                cythond=self.cythond,
+            )
+            weights = gammas_list
+            diis = dii_list
+            l1_loss_contributions = lassoterm_list
+            l1_penalties = penalties
+        l1_penalties = np.array(l1_penalties)
+
+        self.history = {"l1_penalties_lasso": l1_penalties,
+                        "weights_per_l1_per_epoch_lasso": weights,
+                        "diis_per_l1_per_epoch_lasso": l1_penalties,
+                        "l1_loss_per_l1_per_epoch_lasso": l1_loss_contributions}
 
         (
-            gammas_list,
-            dii_list,
-            lassoterm_list,
-            penalties,
-        ) = _refine_lasso_optimization(
-            gs,
-            ks,
-            ls,
-            l1_penalties,
-            groundtruth_data=target_data.X,
-            data=self.X,
-            gammas_0=initial_gammas,
-            lambd=lambd,
-            n_epochs=n_epochs,
-            l_rate=learning_rate,
-            constrain=constrain,
-            decaying_lr=decaying_lr,
-            period=self._parse_own_period(),
-            groundtruthperiod=self._parse_period_for_dii(
-                target_data.period, target_data.dims
-            ),
-            njobs=self.njobs,
-            cythond=self.cythond,
+            num_nonzero_features, 
+            l1_penalties_opt_per_nfeatures, 
+            dii_opt_per_nfeatures, 
+            weights_opt_per_nfeatures 
+            
+        ) = _extract_min_diis_lasso_optimization(
+            weights,
+            diis,
+            l1_penalties
         )
-        # TODO: @wildromi, let's think about how and what we would like to return here
-        # TODO: maybe a function that selects for n_features? or at least a plotter?
-        return gammas_list, dii_list, lassoterm_list, penalties
+
+        if plotlasso is True:
+            _plot_min_lasso_results(
+                dii_opt_per_nfeatures,
+                num_nonzero_features,
+                l1_penalties_opt_per_nfeatures
+            )
+
+        return num_nonzero_features, l1_penalties_opt_per_nfeatures, dii_opt_per_nfeatures, weights_opt_per_nfeatures 

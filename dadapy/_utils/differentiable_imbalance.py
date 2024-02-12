@@ -19,6 +19,7 @@ import time
 from functools import wraps
 
 import numpy as np
+import matplotlib.pyplot as plt
 from joblib import Parallel, delayed  # TODO: might not be necessary
 from scipy.spatial import cKDTree  # TODO: remove with compute_dist_PBC
 from scipy.stats import rankdata
@@ -82,7 +83,6 @@ def _compute_dist_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
 
 def _return_optimal_lambda_from_distances(distance_matrix, fraction=1.0):
     # sets lambda to the average between the smallest and mean (2nd NN - 1st NN)-distance
-    # np.fill_diagonal(distance_matrix, np.nan) ###CHANGE: This I don't need because on the diagonal I have just big values
     NNs = np.sort(distance_matrix, axis=1)  #
     min_distances_nn = NNs[:, 1] - NNs[:, 0]
     return fraction * ((np.min(min_distances_nn) + np.nanmean(min_distances_nn)) / 2)
@@ -131,7 +131,7 @@ def _return_full_dist_matrix(
             )
     np.fill_diagonal(
         dist_matrix, np.max(dist_matrix) + 1
-    )  ###CHANGE - this cannot be 0 because of divide by 0 and not NaN because of cython
+    )  # this cannot be 0 because of divide by 0 and not NaN because of cython
 
     return dist_matrix
 
@@ -164,9 +164,6 @@ def _return_full_rank_matrix(
     rank_matrix = rankdata(dist_matrix, method="average", axis=1).astype(
         int, copy=False
     )
-    # rank_matrix[rank_matrix == rank_matrix.shape[0]] = np.nan ###CHANGE
-    # # we don't need to set this to nan for it not to count in the sum of DII and gradient. Instead,
-    # # we set now the diagonal of the c matrix to 0
     if distances:
         return rank_matrix, dist_matrix
     else:
@@ -197,7 +194,7 @@ def _return_dii(dist_matrix_A, rank_matrix_B, lambd):
     # take distance of first nearest neighbor for each point
     min_dists = np.min(dist_matrix_A, axis=1)[
         :, np.newaxis
-    ]  ###CHANGE do I need nanmin coming from optimization or gradient?
+    ]  
 
     # Make the exponential of the negative distances from the input space / lambda;
     # subtraction of minimum distance does not change c_ij coefficients but avoids
@@ -208,7 +205,7 @@ def _return_dii(dist_matrix_A, rank_matrix_B, lambd):
     # not obtained with function 'compute_rank_matrix'
     np.fill_diagonal(
         exp_matrix, 0
-    )  ###CHANGE # before I used to set it to nan and do nansum
+    ) 
 
     # compute c_ij matrix
     rowsums = np.sum(exp_matrix, axis=1)[:, np.newaxis]
@@ -258,11 +255,14 @@ def _return_dii_gradient(
     """
     # TODO: Add faster function for python side of this, or remove python entirely.
     # TODO: move typechecks to parent
+    raise NotImplementedError("This function is deprecated. The gradient is now computed in Cython.")
+
     N = data_A.shape[0]
     D = data_A.shape[1]
     gradient = np.zeros(D, dtype=CYTHON_DTYPE)
 
     if lambd == 0:  # TODO: remove type check, this should be handled in class object
+                    # TODO: @FelizWodaczek the lambda is not an attribute of a class object, it will change throughout the optimization
         gradient = np.nan * gradient
     else:
         if period is not None:
@@ -278,19 +278,19 @@ def _return_dii_gradient(
         # take distance of first nearest neighbor for each point
         min_dists = np.min(dists_rescaled_A, axis=1)[
             :, np.newaxis
-        ]  ###CHANGE: do I need nanmin?
+        ] 
 
         # compute the exponential of the negative distances / lambda
         # subtraction of minimum distance to avoid overflow problems
         exp_matrix = np.exp(-(dists_rescaled_A - min_dists) / lambd)
         np.fill_diagonal(
             exp_matrix, 0
-        )  ###CHANGE # before I didn't have this line because the diagonal of dists_rescaled_A was nan already
+        )  
 
         # compute c_ij matrix
         c_matrix = (
             exp_matrix / np.sum(exp_matrix, axis=1)[:, np.newaxis]
-        )  ###CHANGE: before nansum
+        ) 
 
         def alphagamma_gradientterm(alpha_gamma):
             if gammas[alpha_gamma] == 0:
@@ -302,38 +302,26 @@ def _return_dii_gradient(
                     )
                 else:
                     # periodcorrection according to the rescaling factors of the inputs
-                    # start=time.time()
-                    if cythond:  # TODO: @wildromi this case will now never be reached.
-                        # @wildromi I cannot get this to work anymore, but it could be removed anyhow
-                        raise NotImplementedError("This function is deprecated.")
-                        periodalpha = period[alpha_gamma, np.newaxis]
-                        dists_squared_A = c_dii.compute_dist_PBC_cython_parallel(
+                    periodalpha = period[alpha_gamma]
+                    dists_squared_A = np.square(
+                        _compute_dist_PBC(
                             data_A[:, alpha_gamma, np.newaxis],
-                            periodalpha,  # box size
-                            njobs,  # njobs
-                            squared=True,
+                            maxk=data_A.shape[0],
+                            box_size=[periodalpha],
+                            p=2,
                         )
-                    else:
-                        periodalpha = period[alpha_gamma]
-                        dists_squared_A = np.square(
-                            _compute_dist_PBC(
-                                data_A[:, alpha_gamma, np.newaxis],
-                                maxk=data_A.shape[0],
-                                box_size=[periodalpha],
-                                p=2,
-                            )
-                        )
+                    )
                 first_term = -dists_squared_A / dists_rescaled_A
                 second_term = np.sum(
                     dists_squared_A / dists_rescaled_A * c_matrix, axis=1
                 )[
                     :, np.newaxis
-                ]  ###CHAGNE, before nansum
+                ] 
                 product_matrix = c_matrix * rank_matrix_B * (first_term + second_term)
-                gradient_alphagamma = np.sum(product_matrix)  ###CHANGE, before nansum
+                gradient_alphagamma = np.sum(product_matrix) 
             return gradient_alphagamma
 
-        # compute the gradient term for each gamma (parallelization is faster than the loop below):
+        # compute the gradient term for each gamma (parallelization is faster):
         gradient_parallel = np.array(
             Parallel(n_jobs=njobs, prefer="threads")(
                 delayed(alphagamma_gradientterm)(alpha_gamma)
@@ -508,7 +496,7 @@ def _optimize_dii(
     lrate = l_rate  # for not expon. decaying learning rates
 
     for i_epoch in range(n_epochs):
-        # compute gradient * SCALING!!!! to be scale invariant
+        # compute gradient * SCALING!!!! to be scale invariant in case of no adaptive lambda
         if not cythond:
             gradient = (
                 _return_dii_gradient(
@@ -529,7 +517,7 @@ def _optimize_dii(
                 myperiod = period
             else:
                 periodic = False
-                myperiod = gammas * 0.0  # dummy array, not used in cython:
+                myperiod = gammas * 0.0  # dummy array, but necessary for cython. 0-periods are not used in the cython function.
             gradient = (
                 c_dii.return_dii_gradient_cython(
                     dists_rescaled_A,
@@ -666,7 +654,6 @@ def _optimize_dii_static_zeros(
     rescaled_data_A = gammas * data
 
     # for adaptive lambda: calculate distance matrix in rescaled input
-    # for adaptive lambda: calculate distance matrix in rescaled input
     if period is not None:
         dists_rescaled_A = _return_full_dist_matrix(
             data=rescaled_data_A, period=gammas * period, cythond=cythond, njobs=njobs
@@ -751,9 +738,6 @@ def _optimize_dii_static_zeros(
                     gammas_new[i] = max(0.0, gam)
                 elif gam < 0:
                     gammas_new[i] = np.abs(min(0.0, gam))
-            ## don't use this line: it makes the performance also without lasso worse:
-            # gammas[gammas_new < gammas] = gammas_new[gammas_new < gammas] #only accept steps that actually make the current weight smaller
-            ## use instead:
             gammas = gammas_new
 
             # apply constrain on the weights
@@ -828,7 +812,7 @@ def _refine_lasso_optimization(
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
         diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
     """
-    # TODO: @wildromi cleanup, or maybe let's just think on it a little bit
+    # TODO: @wildromi cleanup
     # TODO: @wildromi typehints
     # Find where to refine the lasso and decide on new l1 penalties
     gs[np.isnan(gs)] = 0
@@ -933,3 +917,70 @@ def _refine_lasso_optimization(
             all_ks = all_ks + list(ks[refinement_needed[i][1] :])
             all_ls = all_ls + list(ls[refinement_needed[i][1] :])
     return np.array(all_gs), np.array(all_ks), np.array(all_ls), all_l1s
+
+def _extract_min_diis_lasso_optimization(
+        weights, 
+        diis, 
+        l1_penalties
+):
+    # Which run had which number of non-zero features.
+    # If the same number of non-zero features appeared in several runs, chose the lowest dii
+    total_number_of_features = len(weights[0][0])
+    final_weights =  weights[:,-1,:]
+    final_n_nonzero_features = np.linalg.norm(final_weights,0,axis=1)
+    final_diis = diis[:,-1]
+    num_feats = []
+    for i in range(total_number_of_features,0,-1):
+        num_feats.append(np.where(final_n_nonzero_features==i))
+
+    min_dii_per_nfeatures=[]
+    for i in num_feats:
+        if len(i[0]) > 0:
+            minimum_imb=np.argmin(final_diis[i[0]])
+            min_dii_per_nfeatures.append(i[0][minimum_imb])
+        else:
+            min_dii_per_nfeatures.append(np.nan)
+
+    # Now select of the penalties, imbalances and weights by index 
+    # that correspond to the lowest imbalance for a certain number of non-zero features
+    p_min = np.ones(len(min_dii_per_nfeatures)) * np.nan #penalties
+    dii_min = np.ones(len(min_dii_per_nfeatures)) * np.nan #kernelimbalances
+    weights_min = np.ones((len(min_dii_per_nfeatures), len(final_weights))) * np.nan #weights
+    for i, indexx in enumerate(min_dii_per_nfeatures):
+        if np.isnan(indexx):
+            pass 
+        else:
+            p_min[i] = l1_penalties[indexx]
+            dii_min[i] = final_diis[indexx]
+            weights_min[i] = final_weights[indexx]
+    num_nonzero_features = np.count_nonzero(np.nan_to_num(weights_min*1,0),axis=1)
+    num_nonzero_features = np.where(num_nonzero_features==0, np.nan, num_nonzero_features)
+    return num_nonzero_features, p_min, dii_min, weights_min
+
+def _plot_min_lasso_results(
+        dii_min,
+        num_nonzero_features,
+        p_min
+):
+    fig = plt.figure(figsize=(8,5))
+    ax = fig.add_subplot(1, 1, 1)
+    dii_minmask = np.isfinite(dii_min)
+    plt.plot(num_nonzero_features[dii_minmask], dii_min[dii_minmask],"-o", label='$L_1$-reg. search', zorder=7)
+    plt.scatter(num_nonzero_features, dii_min, s=50,c=np.log(p_min), zorder=8)
+    cb = plt.colorbar()
+    cb.set_label(label='ln($L_1$-strength)', size='large')
+    cb.ax.tick_params(labelsize='large')
+
+
+    plt.title("Best resulting DIIs in $L_1$-regulated search", fontsize=14)
+    plt.xlabel("Number of non-zero features", fontsize=14)
+    plt.ylabel("DII", fontsize=14)
+    plt.legend(fontsize=14)
+    plt.grid(visible=True, which='major', axis='both')
+    plt.xticks(range(0,len(num_nonzero_features)+1,5), fontsize=11)
+    plt.yticks(fontsize=11)
+    minor_ticks = np.arange(0, len(num_nonzero_features), 1)
+    ax.set_xticks(minor_ticks, minor=True)
+    plt.ylim(0,np.maximum(0.2, np.nanmax(dii_min)))
+    plt.grid(visible=True, which='minor', axis='x', linestyle=':', linewidth=0.5)
+    plt.show()
