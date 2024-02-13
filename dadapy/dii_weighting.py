@@ -165,20 +165,17 @@ class DIIWeighting(Base):
         return initial_gammas
 
     @check_maxk
-    def return_optimal_lambda(self, target_data: Type[Base] = None, fraction=1.0):
-        # TODO: consider most likely use case and stop having it accept a distance matrix
-        # TODO: if kept like this move to _utils.differentiable_imbalance
-        if target_data is None:
-            target_data = self
-
-        if issubclass(DIIWeighting, type(target_data)):
-            distance_matrix = target_data.full_distance_matrix
-        else:
-            distance_matrix = _return_full_dist_matrix(
-                target_data.X,
-                target_data.njobs,
-                period=self._parse_period_for_dii(target_data.period, target_data.dims),
-            )
+    def return_optimal_lambda(self, fraction=1.0):
+        """Computes the optimal softmax scaling parameter lambda for the DII optimization. This parameter represents a reasonable scale of distances of the data points in the input data set.
+        Args:
+            fraction (float): Zoom in or out from the optimal distance scale. Default: 1.0. Suggested to keep it at default. Values > 1. show a bigger scale (in the optimization, this means include more neigbors), values < 1 show a smaller scale (in the optimization, this means include less neighbors in the softmax). Values < 1. include on average less neighbors, and very small values only the first neighbor.
+        """
+        # TODO: consider most likely use case and stop having it accept a distance matrix?
+        distance_matrix = _return_full_dist_matrix(
+            self.X,
+            self.njobs,
+            period=self._parse_period_for_dii(self.period, self.dims),
+        )
 
         return _return_optimal_lambda_from_distances(distance_matrix, fraction)
 
