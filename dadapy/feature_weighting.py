@@ -14,7 +14,7 @@
 # ==============================================================================
 
 """
-The *feature_weighting* module contains the *DIIWeighting* class.
+The *feature_weighting* module contains the *FeatureWeighting* class.
 
 This class uses Differentiable Information Imbalance
 """
@@ -50,7 +50,7 @@ def check_maxk(func):
     # TODO: check this is the correct values for maxk != N
     @wraps(func)
     def with_check(*args, **kwargs):
-        feature_selector: type[DIIWeighting] = args[0]
+        feature_selector: type[FeatureWeighting] = args[0]
         if feature_selector.maxk != feature_selector.N - 1:
             warnings.warn(
                 f"""maxk neighbors is not available for this functionality.\
@@ -63,7 +63,7 @@ def check_maxk(func):
 
 
 # TODO: compute changes class attributes, return just returns - rename
-class DIIWeighting(Base):
+class FeatureWeighting(Base):
     def __init__(
         self,
         coordinates=None,
@@ -192,7 +192,7 @@ class DIIWeighting(Base):
     ):
         """Find the optimal learning rate for the optimization of the DII by testing several on a reduced set
         Args:
-            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            target_data: FeatureWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             n_epochs (int): number of epochs in each optimization cycle            
             n_samples (int): Number of samples to use for the learning rate screening. Default = 300.
             initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
@@ -264,10 +264,10 @@ class DIIWeighting(Base):
 
     @check_maxk
     def return_dii(self, target_data: Type[Base], lambd: float = None):
-        """Computes the DII between two DIIWeighting objects based on distances of input data and rank information of groundtruth data.
+        """Computes the DII between two FeatureWeighting objects based on distances of input data and rank information of groundtruth data.
 
         Args:
-            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            target_data: FeatureWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             lambd (float, optional): The regularization parameter. Default: 0.1. The higher this value, the more nearest neighbors are included.
                 Can be calculated automatically with 'return_optimal_lambda'. This sets lambda to a distance smaller than the average distance
                 in the data set but bigger than the minimal distance
@@ -301,10 +301,10 @@ class DIIWeighting(Base):
         gammas: np.ndarray, 
         lambd: float = None
     ):
-        """Computes the gradient of the DII between two DIIWeighting objects (input object and ground truth object (= target_data)) with respect to the weights of the input features.
+        """Computes the gradient of the DII between two FeatureWeighting objects (input object and ground truth object (= target_data)) with respect to the weights of the input features.
 
         Args:
-            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            target_data: FeatureWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             gammas (np.ndarray): The array of weight values for the input values, where D is the dimension of data.
             lambd (float, optional): The regularization parameter. Default: 0.1. The higher this value, the more nearest neighbors are included.
                 Can be calculated automatically with 'return_optimal_lambda'. This sets lambda to a distance smaller than the average distance
@@ -360,7 +360,7 @@ class DIIWeighting(Base):
         """Optimize the differentiable information imbalance using gradient descent of the DII between input data object A and groundtruth data object B.
 
         Args:
-            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            target_data: FeatureWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             n_epochs: int, optional
                 The number of epochs in the gradient descent optimization. If None, it is set to 100.
             constrain: bool
@@ -380,7 +380,7 @@ class DIIWeighting(Base):
         Returns:
             final_weights: np.ndarray, shape (D). Array of the optmized weights.
 
-        History entries added to DIIWeighting object:
+        History entries added to FeatureWeighting object:
             weights_per_epoch: np.ndarray, shape (n_epochs, D). List of lists of the weights during optimization.
             dii_per_epoch: np.ndarray, shape (n_epochs, ). List of the differentiable information imbalances during optimization.
             l1_loss_term_per_epoch: np.ndarray, shape (n_epochs, ). List of the l1_penalty terms contributing to the the loss function during optimization.
@@ -444,7 +444,7 @@ class DIIWeighting(Base):
     ):
         """Do a stepwise backward eliminitaion of feature weights, always eleminiating the lowest weight, and after each elimination GD otpmize the DII
         Args:
-            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            target_data: FeatureWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimial_lambda
             n_epochs (int): number of epochs in each optimization cycle
@@ -550,7 +550,7 @@ class DIIWeighting(Base):
     ):
         """Search the number of resulting non-zero weights and the optimized DII for several l1-regularization strengths
         Args:
-            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            target_data: FeatureWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed. If None (default), the inverse standard deviation of the input features is used
             lambd (float or None): softmax scaling. If None (default), lambd is chosen automatically with compute_optimial_lambda.
             n_epochs (int): number of epochs in each optimization cycle. Default: 100.
