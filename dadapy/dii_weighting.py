@@ -195,22 +195,18 @@ class DIIWeighting(Base):
     ):
         """Find the optimal learning rate for the optimization of the DII by testing several on a reduced set
         Args:
-            groundtruth_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
-            data (np.ndarray): N x D(input) array containing N datapoints in D input features whose weights are optimized to reproduce the groundtruth distances
-            gammas_0 (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
+            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            n_epochs (int): number of epochs in each optimization cycle            
+            n_samples (int): Number of samples to use for the learning rate screening. Default = 300.
+            initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimial_lambda
-            n_epochs (int): number of epochs in each optimization cycle
-            constrain (bool): if True, rescale the weights so the biggest weight = 1
-            l1_penalty (float): l1 regularization strength
             decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
-            period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
-            groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
-            nsamples (int): Number of samples to use for the learning rate screening. Default = 300.
-                lr_list (np.ndarray or list): learning rates to try
+            trial_learning_rates (np.ndarray or list or None): learning rates to try
         Returns:
             opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
-            diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
-        """
+         """
+            #diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
+
         in_data = self.X.copy()
         groundtruth = target_data.X.copy()
 
@@ -270,20 +266,17 @@ class DIIWeighting(Base):
         return opt_l_rate
 
     @check_maxk
-    def return_dii(self, target_data: Type[Base], lambd=None):
-        """Computes the DII between two matrices based on distances of input data and rank information of groundtruth data.
+    def return_dii(self, target_data: Type[Base], lambd: float = None):
+        """Computes the DII between two DIIWeighting objects based on distances of input data and rank information of groundtruth data.
 
         Args:
-            dist_matrix_A (np.ndarray): N x N array - The distance matrix for between all input data points of input space A. Can
-                be computed with 'compute_dist_matrix'
-            rank_matrix_B (np.ndarray): N x N rank matrix for the groundtruth data B.
+            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             lambd (float, optional): The regularization parameter. Default: 0.1. The higher this value, the more nearest neighbors are included.
                 Can be calculated automatically with 'return_optimal_lambda'. This sets lambda to a distance smaller than the average distance
                 in the data set but bigger than the minimal distance
 
         Returns:
-            dii (float): The computed DII value. Please mind that this depends (unlike in the classic information imbalance)
-                on the chosen lambda. To compare several scaled distances compare them using the same lambda, even if they were optimized with different ones.
+            dii (float): The computed DII value. Depends on the softmax scale lambda.
 
         Raises:
             None.
@@ -307,8 +300,25 @@ class DIIWeighting(Base):
 
     @check_maxk
     def return_dii_gradient(
-        self, target_data: Type[Base], gammas: np.ndarray, lambd: float = None
+        self, target_data: Type[Base], 
+        gammas: np.ndarray, 
+        lambd: float = None
     ):
+        """Computes the gradient of the DII between two DIIWeighting objects (input object and ground truth object (= target_data)) with respect to the weights of the input features.
+
+        Args:
+            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
+            gammas (np.ndarray): The array of weight values for the input values, where D is the dimension of data.
+            lambd (float, optional): The regularization parameter. Default: 0.1. The higher this value, the more nearest neighbors are included.
+                Can be calculated automatically with 'return_optimal_lambda'. This sets lambda to a distance smaller than the average distance
+                in the data set but bigger than the minimal distance
+
+        Returns:
+            dii_weight_gradient (np.ndarray): The computed gradient of DII with respect to the weights. Depends on the softmax scale lambda.
+
+        Raises:
+            None.
+        """
         # TODO: this should call the cython implementation
         if lambd is None:
             lambd = self.return_optimal_lambda()
@@ -342,19 +352,18 @@ class DIIWeighting(Base):
     def optimize_dii(
         self,
         target_data: Type[Base],
-        n_epochs=100,
-        constrain=False,
+        n_epochs: int = 100,
+        constrain: bool = False,
         initial_gammas: Union[np.ndarray, int, float] = None,
         lambd: float = None,
         learning_rate: float = None,
-        l1_penalty=0.0,
-        decaying_lr=True,
+        l1_penalty: float = 0.0,
+        decaying_lr: bool = True,
     ):
         """Optimize the differentiable information imbalance using gradient descent of the DII between input data object A and groundtruth data object B.
 
         Args:
-            target_data : numpy.ndarray, shape (N, Dg)
-                The data set used as groundtruth, where N is the number of points and Dg the dimension of it.
+            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             n_epochs: int, optional
                 The number of epochs in the gradient descent optimization. If None, it is set to 100.
             constrain: bool
@@ -379,7 +388,7 @@ class DIIWeighting(Base):
             dii_per_epoch: np.ndarray, shape (n_epochs, ). List of the differentiable information imbalances during optimization.
             l1_loss_term_per_epoch: np.ndarray, shape (n_epochs, ). List of the l1_penalty terms contributing to the the loss function during optimization.
         """
-        # TODO: @FelixWodaczek how to introduce the history attributes here above?
+        # TODO: @FelixWodaczek how to introduce the history attributes here above into the docstring?
         # TODO: do typechecks here, maybe remove some functions above
         # TODO: is Union typing correct here?
         # TODO: maybe there should be a .select features class here that requires less effort
@@ -407,6 +416,7 @@ class DIIWeighting(Base):
             data=self.X,
             period=period,
             gammas_0=initial_gammas,
+            lambd=lambd,
             constrain=constrain,
             l1_penalty=l1_penalty,  # TODO: @wildromi we should include a function that gives at least a reasonable estimate for the l1 penalty when wanting x features
             n_epochs=n_epochs,
@@ -434,10 +444,9 @@ class DIIWeighting(Base):
         constrain: bool = False,
         decaying_lr: bool = True,
     ):
-        """Do a stepwise backward eliminitaion of features and after each elimination GD otpmize the DII
+        """Do a stepwise backward eliminitaion of feature weights, always eleminiating the lowest weight, and after each elimination GD otpmize the DII
         Args:
-            groundtruth_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
-            data (np.ndarray): N x D(input) array containing N datapoints in D input features whose weights are optimized to reproduce the groundtruth distances
+            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimial_lambda
             n_epochs (int): number of epochs in each optimization cycle
@@ -445,12 +454,13 @@ class DIIWeighting(Base):
             constrain (bool): if True, rescale the weights so the biggest weight = 1
             l1_penalty (float): l1 regularization strength
             decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
-            period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
-            groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
         Returns:
-            gammas_list (np.ndarray): D x n_epochs x D. All weights for each optimization step for each number of nonzero weights. For final weights: gammas_list[:,-1,:]
-            diis_list (np.ndarray): D x n_epochs. Imbalance for each optimization step for each number of nonzero weights. For final imbalances: diis_list[:,-1]
+            final_weights: np.ndarray, shape (D x D). Array of the optmized weights for each number of non-zero weights.
+            final_diis: np.ndarray, shape (D). Array of the optmized DII for each of the according weights.
         """
+            #gammas_list (np.ndarray): D x n_epochs x D. All weights for each optimization step for each number of nonzero weights. For final weights: gammas_list[:,-1,:]
+            #diis_list (np.ndarray): D x n_epochs. Imbalance for each optimization step for each number of nonzero weights. For final imbalances: diis_list[:,-1]
+
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
        # TODO: @FelixWodaczek, INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
@@ -542,14 +552,16 @@ class DIIWeighting(Base):
     ):
         """Search the number of resulting non-zero weights and the optimized DII for several l1-regularization strengths
         Args:
-            target_data (np.ndarray): N x D(groundtruth) array containing N datapoints in all the groundtruth features D(groundtruth)
+            target_data: DIIWeighting object, containing the groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed. If None (default), the inverse standard deviation of the input features is used
-            lambd (float or None): softmax scaling. If None (default) this chosen automatically with compute_optimial_lambda
-            n_epochs (int): number of epochs in each optimization cycle. Default: 100
-            learning_rate (float or None): learning rate. If None (default) is tuned and chosen automatically. Has to be tuned if constrain=True (otherwise optmization could fail)
-            constrain (bool): if True, rescale the weights so the biggest weight = 1
-            l1_penalties (list or None): l1 regularization strengths to be tested. If None (default), a list of 10 sensible l1-penalties is tested, which are chosen depending on the learning rate
-            decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
+            lambd (float or None): softmax scaling. If None (default), lambd is chosen automatically with compute_optimial_lambda.
+            n_epochs (int): number of epochs in each optimization cycle. Default: 100.
+            learning_rate (float or None): learning rate. If None (default) is tuned and chosen automatically. Has to be tuned if constrain=True (otherwise optmization could fail).
+            constrain (bool): if True, rescale the weights so the biggest weight = 1. Default: False.
+            l1_penalties (list or None): l1 regularization strengths to be tested. If None (default), a list of 10 sensible l1-penalties is tested, which are chosen depending on the learning rate.
+            decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed.
+            refine (bool): default: False. If True, the l1-penalties are added in between penalties where the number of non-zero weights changes by more than one. This is done to find the optimal l1-penalty for each number of non-zero weights. This option is not suitable for high-dimensional data with more than ~100 features, because the computational time scales with the number of dimensions.
+            plotlasso (bool): default: True. If True, a plot is shown, with the optimal DII for each number of non-zero weights, colored by the l1-penalty used. This plot can be used to select select results with reasonably low DII.
         Returns:
             num_nonzero_features (np.ndarray): D-dimensional numbers of non-zero features. Returns nan if no solution was found for a certain number of non-zero weights. In the same order as the according l1-penalties used, final DIIs and final weights.
             l1_penalties_opt_per_nfeatures: (np.ndarray): D-dimensional. L1-regularization strengths for each num_nonzero_features, in the same order as the according final DIIs and final weights. If several l1-penalties led to the same number of non-zero weights, the solution with the lowest DII is selected. Returns nan if no solution was found for a certain number of non-zero weights.
