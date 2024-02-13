@@ -380,10 +380,11 @@ class DIIWeighting(Base):
         Returns:
             final_weights: np.ndarray, shape (D). Array of the optmized weights.
 
-        Attribures added to object history dictionary: access by "objectname.history["attribute"]"
+        History entries added to DIIWeighting object:
             weights_per_epoch: np.ndarray, shape (n_epochs, D). List of lists of the weights during optimization.
             dii_per_epoch: np.ndarray, shape (n_epochs, ). List of the differentiable information imbalances during optimization.
             l1_loss_term_per_epoch: np.ndarray, shape (n_epochs, ). List of the l1_penalty terms contributing to the the loss function during optimization.
+        These history entries can be accessed as follows: objectname.history['entry_name']
         """
         # TODO: @FelixWodaczek how to introduce the history attributes here above into the docstring?
         # TODO: do typechecks here, maybe remove some functions above
