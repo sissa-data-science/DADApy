@@ -188,7 +188,6 @@ def _return_dii(dist_matrix_A, rank_matrix_B, lambd):
     Raises:
         None.
     """
-    # TODO: clean up
     N = dist_matrix_A.shape[0]
 
     # take distance of first nearest neighbor for each point
@@ -261,8 +260,7 @@ def _return_dii_gradient(
     D = data_A.shape[1]
     gradient = np.zeros(D, dtype=CYTHON_DTYPE)
 
-    if lambd == 0:  # TODO: remove type check, this should be handled in class object
-                    # TODO: @FelizWodaczek the lambda is not an attribute of a class object, it will change throughout the optimization
+    if lambd == 0:
         gradient = np.nan * gradient
     else:
         if period is not None:
@@ -965,22 +963,21 @@ def _plot_min_lasso_results(
     fig = plt.figure(figsize=(8,5))
     ax = fig.add_subplot(1, 1, 1)
     dii_minmask = np.isfinite(dii_min)
-    plt.plot(num_nonzero_features[dii_minmask], dii_min[dii_minmask],"-o", label='$L_1$-reg. search', zorder=7)
-    plt.scatter(num_nonzero_features, dii_min, s=50,c=np.log(p_min), zorder=8)
-    cb = plt.colorbar()
+    ax.plot(num_nonzero_features[dii_minmask], dii_min[dii_minmask],"-o", label='$L_1$-reg. search', zorder=7)
+    sc = ax.scatter(num_nonzero_features, dii_min, s=50,c=np.log(p_min), zorder=8)
+    cb = fig.colorbar(sc, ax=ax, orientation='vertical')
     cb.set_label(label='ln($L_1$-strength)', size='large')
     cb.ax.tick_params(labelsize='large')
 
-
-    plt.title("Best resulting DIIs in $L_1$-regulated search", fontsize=14)
-    plt.xlabel("Number of non-zero features", fontsize=14)
-    plt.ylabel("DII", fontsize=14)
-    plt.legend(fontsize=14)
-    plt.grid(visible=True, which='major', axis='both')
-    plt.xticks(range(0,len(num_nonzero_features)+1,5), fontsize=11)
-    plt.yticks(fontsize=11)
+    ax.set_title("Best resulting DIIs in $L_1$-regulated search", fontsize=14)
+    ax.set_xlabel("Number of non-zero features", fontsize=14)
+    ax.set_ylabel("DII", fontsize=14)
+    ax.legend(fontsize=14)
+    ax.grid(visible=True, which='major', axis='both')
+    ax.set_xticks(range(0,len(num_nonzero_features)+1,5), fontsize=11)
+    ax.set_yticks(fontsize=11)
     minor_ticks = np.arange(0, len(num_nonzero_features), 1)
     ax.set_xticks(minor_ticks, minor=True)
-    plt.ylim(0,np.maximum(0.2, np.nanmax(dii_min)))
-    plt.grid(visible=True, which='minor', axis='x', linestyle=':', linewidth=0.5)
+    ax.set_ylim(0,np.maximum(0.2, np.nanmax(dii_min)))
+    ax.grid(visible=True, which='minor', axis='x', linestyle=':', linewidth=0.5)
     plt.show()

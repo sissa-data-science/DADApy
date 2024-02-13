@@ -165,19 +165,12 @@ class FeatureWeighting(Base):
         return initial_gammas
 
     @check_maxk
-    def return_optimal_lambda(self, fraction=1.0):
+    def return_optimal_lambda(self, fraction: float = 1.0):
         """Computes the optimal softmax scaling parameter lambda for the DII optimization. This parameter represents a reasonable scale of distances of the data points in the input data set.
         Args:
             fraction (float): Zoom in or out from the optimal distance scale. Default: 1.0. Suggested to keep it at default. Values > 1. show a bigger scale (in the optimization, this means include more neigbors), values < 1 show a smaller scale (in the optimization, this means include less neighbors in the softmax). Values < 1. include on average less neighbors, and very small values only the first neighbor.
         """
-        # TODO: consider most likely use case and stop having it accept a distance matrix?
-        distance_matrix = _return_full_dist_matrix(
-            self.X,
-            self.njobs,
-            period=self._parse_period_for_dii(self.period, self.dims),
-        )
-
-        return _return_optimal_lambda_from_distances(distance_matrix, fraction)
+        return _return_optimal_lambda_from_distances(self.full_distance_matrix, fraction)
 
     @check_maxk
     def return_optimal_learning_rate(
@@ -253,7 +246,6 @@ class FeatureWeighting(Base):
         # find best imbalance
         opt_lrate_index = np.nanargmin(dii_per_epoch_per_lr[:, -1])
         opt_l_rate = lrates[opt_lrate_index]
-        # diis_list = dii_per_epoch_per_lr[opt_lrate_index]
 
         self.history = {
             "dii_per_epoch_per_lr": dii_per_epoch_per_lr,
@@ -387,9 +379,6 @@ class FeatureWeighting(Base):
         These history entries can be accessed as follows: objectname.history['entry_name']
         """
         # TODO: @FelixWodaczek how to introduce the history attributes here above into the docstring?
-        # TODO: do typechecks here, maybe remove some functions above
-        # TODO: is Union typing correct here?
-        # TODO: maybe there should be a .select features class here that requires less effort
         # initiate the weights
         period = self._parse_own_period()
         initial_gammas = self._parse_initial_gammas(initial_gammas)
@@ -461,10 +450,7 @@ class FeatureWeighting(Base):
 
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
-       # TODO: @FelixWodaczek, INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
-       # if lambd is None:
-       #     lambd = self.return_optimal_lambda(target_data=target_data)
-
+       # INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
         if learning_rate is None:
             learning_rate = self.return_optimal_learning_rate(
                 target_data=target_data,
@@ -514,8 +500,8 @@ class FeatureWeighting(Base):
             end = time.time()
             timing = end - start
             print("number of nonzero weights= ", nonzeros, ", time: ", timing)
-            end_weights = 1 * gs[-1]  # 1* to make a deepcopy
-            arr = 1 * end_weights
+            end_weights = gs[-1].copy()
+            arr = end_weights.copy()
             arr[arr == 0] = np.nan
             if np.isnan(arr).all():
                 weights_per_epoch[self.dims - int(nonzeros)] = gs
@@ -574,9 +560,7 @@ class FeatureWeighting(Base):
         # Initial l1 search
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
-       # TODO: @FelixWodaczek, INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
-       # if lambd is None:
-       #     lambd = self.return_optimal_lambda(target_data=target_data)
+       # INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
 
         if learning_rate is None:
             learning_rate = self.return_optimal_learning_rate(
@@ -621,7 +605,7 @@ class FeatureWeighting(Base):
             print("optimization with l1-penalty", i+1, "of strength ", np.around(l1_penalties[i], 4), "took:", end-start, "s in total.")
 
         # Refine l1 search
-        if refine is True:
+        if refine:
             (
                 gammas_list,
                 dii_list,
