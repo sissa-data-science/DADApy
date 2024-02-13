@@ -14,7 +14,7 @@
 # ==============================================================================
 
 """
-The *dii_weighting* module contains the *DIIWeighting* class.
+The *feature_weighting* module contains the *DIIWeighting* class.
 
 This class uses Differentiable Information Imbalance
 """
