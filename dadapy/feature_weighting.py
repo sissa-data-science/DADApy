@@ -84,8 +84,6 @@ class FeatureWeighting(Base):
 
         # TODO: This does not need to be here @FelixWodaczek let's kick out optinal cython?
         self.cythond = True
-        # TODO: Stop returning history everywhere and instead save it here and implement self.get_history()
-        # TODO: @FelixWodaczek how does this work? which kind of history?
         self.history = None
         self._full_distance_matrix = None
 
@@ -191,12 +189,16 @@ class FeatureWeighting(Base):
             initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimial_lambda
             decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
-            trial_learning_rates (np.ndarray or list or None): learning rates to try
+            trial_learning_rates (np.ndarray or list or None): learning rates to try. If None are given, a sensible set of learning rates is tested.
         Returns:
             opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
+        
+        History entries added to FeatureWeighting object:
+            trial_learning_rates: np.ndarray. learning rates which were tested to find optimal one.
+            dii_per_epoch_per_lr: np.ndarray, shape (len(trial_learning_rates), n_epochs+1). DII for each trial learning rate at each epoch.
+            weights_per_epoch_per_lr: np.ndarray, shape (len(trial_learning_rates), n_epochs+1, D). Weights for each trial learning rate and at each epoch.
+        These history entries can be accessed as follows: objectname.history['entry_name']
          """
-            #diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
-
         in_data = self.X.copy()
         groundtruth = target_data.X.copy()
 
@@ -304,9 +306,6 @@ class FeatureWeighting(Base):
 
         Returns:
             dii_weight_gradient (np.ndarray): The computed gradient of DII with respect to the weights. Depends on the softmax scale lambda.
-
-        Raises:
-            None.
         """
         # TODO: this should call the cython implementation
         if lambd is None:
@@ -373,12 +372,11 @@ class FeatureWeighting(Base):
             final_weights: np.ndarray, shape (D). Array of the optmized weights.
 
         History entries added to FeatureWeighting object:
-            weights_per_epoch: np.ndarray, shape (n_epochs, D). List of lists of the weights during optimization.
-            dii_per_epoch: np.ndarray, shape (n_epochs, ). List of the differentiable information imbalances during optimization.
-            l1_loss_term_per_epoch: np.ndarray, shape (n_epochs, ). List of the l1_penalty terms contributing to the the loss function during optimization.
+            weights_per_epoch: np.ndarray, shape (n_epochs+1, D). List of lists of the weights during optimization.
+            dii_per_epoch: np.ndarray, shape (n_epochs+1, ). List of the differentiable information imbalances during optimization.
+            l1_loss_term_per_epoch: np.ndarray, shape (n_epochs+1, ). List of the l1_penalty terms contributing to the the loss function during optimization.
         These history entries can be accessed as follows: objectname.history['entry_name']
         """
-        # TODO: @FelixWodaczek how to introduce the history attributes here above into the docstring?
         # initiate the weights
         period = self._parse_own_period()
         initial_gammas = self._parse_initial_gammas(initial_gammas)
@@ -405,7 +403,7 @@ class FeatureWeighting(Base):
             gammas_0=initial_gammas,
             lambd=lambd,
             constrain=constrain,
-            l1_penalty=l1_penalty,  # TODO: @wildromi we should include a function that gives at least a reasonable estimate for the l1 penalty when wanting x features
+            l1_penalty=l1_penalty,  # TODO: include a function that gives at least a reasonable estimate for the l1 penalty when wanting x features
             n_epochs=n_epochs,
             l_rate=learning_rate,
             decaying_lr=decaying_lr,
@@ -441,13 +439,16 @@ class FeatureWeighting(Base):
             constrain (bool): if True, rescale the weights so the biggest weight = 1
             l1_penalty (float): l1 regularization strength
             decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
+        
         Returns:
             final_weights: np.ndarray, shape (D x D). Array of the optmized weights for each number of non-zero weights.
             final_diis: np.ndarray, shape (D). Array of the optmized DII for each of the according weights.
-        """
-            #gammas_list (np.ndarray): D x n_epochs x D. All weights for each optimization step for each number of nonzero weights. For final weights: gammas_list[:,-1,:]
-            #diis_list (np.ndarray): D x n_epochs. Imbalance for each optimization step for each number of nonzero weights. For final imbalances: diis_list[:,-1]
 
+        History entries added to FeatureWeighting object:
+            dii_per_epoch: np.ndarray, shape (D, n_epochs+1, D). Weights during optimisation for every epoch and every number of non-zero weights. For final weights: gammas_list[:,-1,:]
+            weights_per_epoch: np.ndarray, shape (D, n_epochs+1, ). DII during optimization for every epoch and number of non-zero weights. For final imbalances: diis_list[:,-1]
+        These history entries can be accessed as follows: objectname.history['entry_name']
+        """
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
        # INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization and the results are not optimal any more.
@@ -462,10 +463,10 @@ class FeatureWeighting(Base):
                 trial_learning_rates=None,
             )
 
-        weights_per_epoch = np.full((self.dims,n_epochs+1, self.dims), np.nan)
+        weights_per_epoch = np.full((self.dims, n_epochs+1, self.dims), np.nan)
         imbalances_per_epoch = np.full((self.dims,n_epochs+1), np.nan)
         # for making a warm start already for the first optimization
-        _ = self.optimize_dii(
+        end_weights = self.optimize_dii(
             target_data=target_data,
             n_epochs=n_epochs,
             initial_gammas=initial_gammas,
@@ -474,8 +475,6 @@ class FeatureWeighting(Base):
             decaying_lr=decaying_lr,
             l1_penalty=0.0,
         )
-        weights = self.history["gammas_per_epoch"]
-        end_weights = weights[-1]
         nonzeros = norm(end_weights, 0)
 
         while nonzeros >= 1:
@@ -513,9 +512,9 @@ class FeatureWeighting(Base):
             imbalances_per_epoch[self.dims - (int(nonzeros))] = imbs
             nonzeros = norm(end_weights, 0)
 
-
-        self.history = {"dii_per_epoch_greedy": imbalances_per_epoch,
-                        "weights_per_epoch_greedy": weights_per_epoch}
+        # TODO: @wildromi this deletes other history anyways, no point in calling stuff <element>_greedy
+        self.history = {"dii_per_epoch": imbalances_per_epoch,
+                        "weights_per_epoch": weights_per_epoch}
 
         # to select a sensible set of features, plot the imbalances and chose at which number of non-zero weights still enough information is retained
         return imbalances_per_epoch[:,-1], weights_per_epoch[:,-1,:]
@@ -546,17 +545,21 @@ class FeatureWeighting(Base):
             decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed.
             refine (bool): default: False. If True, the l1-penalties are added in between penalties where the number of non-zero weights changes by more than one. This is done to find the optimal l1-penalty for each number of non-zero weights. This option is not suitable for high-dimensional data with more than ~100 features, because the computational time scales with the number of dimensions.
             plotlasso (bool): default: True. If True, a plot is shown, with the optimal DII for each number of non-zero weights, colored by the l1-penalty used. This plot can be used to select select results with reasonably low DII.
+        
         Returns:
             num_nonzero_features (np.ndarray): D-dimensional numbers of non-zero features. Returns nan if no solution was found for a certain number of non-zero weights. In the same order as the according l1-penalties used, final DIIs and final weights.
             l1_penalties_opt_per_nfeatures: (np.ndarray): D-dimensional. L1-regularization strengths for each num_nonzero_features, in the same order as the according final DIIs and final weights. If several l1-penalties led to the same number of non-zero weights, the solution with the lowest DII is selected. Returns nan if no solution was found for a certain number of non-zero weights.
             dii_opt_per_nfeatures: (np.ndarray): D-dimensional. Final DIIs for each num_nonzero_features, in the same order as the according l1-penalties used and final weights. Returns nan if no solution was found for a certain number of non-zero weights. 
             weights_opt_per_nfeatures: (np.ndarray): D x D-dimensional. Final weights for each num_nonzero_features, in the same order as the according l1-penalties used and final DIIs used. Returns nan if no solution was found for a certain number of non-zero weights.       
+        
+            
+        History entries added to FeatureWeighting object:
+            l1_penalties (np.ndarray): len(l1_penalties). The l1-regularization strengths tested (in the order of the returned weights, diis and l1_loss_contributions)
+            weights_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs x D. All weights for each optimization step for each number of l1-regularization. For final weights: gammas_list[:,-1,:]
+            dii_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs. Imbalance for each optimization step for each number of l1-regularization strength. For final imbalances: diis_list[:,-1]
+            l1_loss_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs. L1 loss contributions for each optimization step for each number of nonzero weights. For final l1_loss_contributions: l1_loss_contributions[:,-1]
+        These history entries can be accessed as follows: objectname.history['entry_name']
         """
-            #weights (np.ndarray): len(l1_penalties) x n_epochs x D. All weights for each optimization step for each number of l1-regularization. For final weights: gammas_list[:,-1,:]
-            #diis (np.ndarray): len(l1_penalties) x n_epochs. Imbalance for each optimization step for each number of l1-regularization strength. For final imbalances: diis_list[:,-1]
-            #l1_loss_contributions (np.ndarray): len(l1_penalties) x n_epochs. L1 loss contributions for each optimization step for each number of nonzero weights. For final l1_loss_contributions: l1_loss_contributions[:,-1]
-            #l1_penalties (np.ndarray): len(l1_penalties). The l1-regularization strengths tested (in the order of the returned weights, diis and l1_loss_contributions)
-
         # Initial l1 search
         initial_gammas = self._parse_initial_gammas(initial_gammas)
 
@@ -637,10 +640,13 @@ class FeatureWeighting(Base):
             l1_penalties = penalties
         l1_penalties = np.array(l1_penalties)
 
-        self.history = {"l1_penalties_lasso": l1_penalties,
-                        "weights_per_l1_per_epoch_lasso": weights,
-                        "diis_per_l1_per_epoch_lasso": l1_penalties,
-                        "l1_loss_per_l1_per_epoch_lasso": l1_loss_contributions}
+        # TODO: @wildromi this deletes other history anyways, no point in calling stuff <element>_lasso
+        self.history = {
+            "l1_penalties": l1_penalties,
+            "weights_per_l1_per_epoch": weights,
+            "dii_per_l1_per_epoch": l1_penalties,
+            "l1_loss_per_l1_per_epoch": l1_loss_contributions
+        }
 
         (
             num_nonzero_features, 

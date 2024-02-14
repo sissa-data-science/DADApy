@@ -790,7 +790,8 @@ def _refine_lasso_optimization(
     groundtruthperiod=None,
     cythond=True,
 ):
-    """Genereate more lasso runs in between lasso strengths that produced non-consecutive numbers of non-zero weights
+    """Generate more lasso runs in between lasso strengths that produced non-consecutive numbers of non-zero weights
+    
     Args:
         gs (np.ndarray): n_lassos x n_epochs x D array containing the weights during the optimization for each lasso strength in the previous optimization
         ks (np.ndarray): n_lassos x n_epochs array containing the information imbalance term of the loss in the previous optimization
@@ -806,6 +807,7 @@ def _refine_lasso_optimization(
         decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
         period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
         groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
+    
     Returns:
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
         diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
