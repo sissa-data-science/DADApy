@@ -67,7 +67,11 @@ class Base:
             assert isinstance(
                 self.X, np.ndarray
             ), "Coordinates must be in numpy ndarray format"
-            if self.X.dtype == np.float32 or self.X.dtype == np.float16:
+            if (
+                self.X.dtype == np.float32
+                or self.X.dtype == np.float16
+                or self.X.dtype == np.float64
+            ):
                 self.X = self.X.astype(np.float64, casting="safe")
             else:
                 warnings.warn(
