@@ -82,8 +82,8 @@ class FeatureWeighting(Base):
             njobs=njobs,
         )
 
-        # TODO: This does not need to be here @FelixWodaczek let's kick out optinal cython?
-        self.cythond = True
+        # This is quite useful for debugging
+        self._cythond = True
         self.history = None
         self._full_distance_matrix = None
 
@@ -97,7 +97,7 @@ class FeatureWeighting(Base):
                 data=self.X,
                 njobs=self.njobs,
                 period=self._parse_own_period(),
-                cythond=self.cythond,
+                cythond=self._cythond,
             )
         return self._full_distance_matrix
 
@@ -242,7 +242,7 @@ class FeatureWeighting(Base):
                 period=period,
                 groundtruthperiod=groundtruthperiod,
                 njobs=self.njobs,
-                cythond=self.cythond,
+                cythond=self._cythond,
             )
 
         # find best imbalance
@@ -333,7 +333,7 @@ class FeatureWeighting(Base):
             lambd=lambd,
             period=period,
             njobs=self.njobs,
-            cythond=self.cythond,
+            cythond=self._cythond,
         )
 
     @check_maxk
@@ -374,7 +374,7 @@ class FeatureWeighting(Base):
         History entries added to FeatureWeighting object:
             weights_per_epoch: np.ndarray, shape (n_epochs+1, D). List of lists of the weights during optimization.
             dii_per_epoch: np.ndarray, shape (n_epochs+1, ). List of the differentiable information imbalances during optimization.
-            l1_loss_term_per_epoch: np.ndarray, shape (n_epochs+1, ). List of the l1_penalty terms contributing to the the loss function during optimization.
+            l1_term_per_epoch: np.ndarray, shape (n_epochs+1, ). List of the l1_penalty terms contributing to the the loss function during optimization.
         These history entries can be accessed as follows: objectname.history['entry_name']
         """
         # initiate the weights
@@ -408,13 +408,13 @@ class FeatureWeighting(Base):
             l_rate=learning_rate,
             decaying_lr=decaying_lr,
             njobs=self.njobs,
-            cythond=self.cythond,
+            cythond=self._cythond,
         )
 
         self.history = {
             "weights_per_epoch": gammas_list,
             "dii_per_epoch": diis,
-            "l1_loss_term_per_epoch": l1_loss_terms,
+            "l1_term_per_epoch": l1_loss_terms,
         }
         return gammas_list[-1]
 
@@ -493,7 +493,7 @@ class FeatureWeighting(Base):
                     target_data.period, target_data.dims
                 ),
                 njobs=self.njobs,
-                cythond=self.cythond,
+                cythond=self._cythond,
             )
 
             end = time.time()
@@ -557,7 +557,7 @@ class FeatureWeighting(Base):
             l1_penalties (np.ndarray): len(l1_penalties). The l1-regularization strengths tested (in the order of the returned weights, diis and l1_loss_contributions)
             weights_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs x D. All weights for each optimization step for each number of l1-regularization. For final weights: gammas_list[:,-1,:]
             dii_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs. Imbalance for each optimization step for each number of l1-regularization strength. For final imbalances: diis_list[:,-1]
-            l1_loss_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs. L1 loss contributions for each optimization step for each number of nonzero weights. For final l1_loss_contributions: l1_loss_contributions[:,-1]
+            l1_term_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs. L1 loss contributions for each optimization step for each number of nonzero weights. For final l1_loss_contributions: l1_loss_contributions[:,-1]
         These history entries can be accessed as follows: objectname.history['entry_name']
         """
         # Initial l1 search
@@ -602,7 +602,7 @@ class FeatureWeighting(Base):
                     target_data.period, target_data.dims
                 ),
                 njobs=self.njobs,
-                cythond=self.cythond,
+                cythond=self._cythond,
             )
             end=time.time()
             print("optimization with l1-penalty", i+1, "of strength ", np.around(l1_penalties[i], 4), "took:", end-start, "s in total.")
@@ -632,7 +632,7 @@ class FeatureWeighting(Base):
                     target_data.period, target_data.dims
                 ),
                 njobs=self.njobs,
-                cythond=self.cythond,
+                cythond=self._cythond,
             )
             weights = gammas_list
             diis = dii_list
@@ -645,7 +645,7 @@ class FeatureWeighting(Base):
             "l1_penalties": l1_penalties,
             "weights_per_l1_per_epoch": weights,
             "dii_per_l1_per_epoch": l1_penalties,
-            "l1_loss_per_l1_per_epoch": l1_loss_contributions
+            "l1_term_per_l1_per_epoch": l1_loss_contributions
         }
 
         (

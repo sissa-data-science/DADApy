@@ -254,7 +254,6 @@ def _return_dii_gradient(
     """
     # TODO: Add faster function for python side of this, or remove python entirely.
     # TODO: move typechecks to parent
-    raise NotImplementedError("This function is deprecated. The gradient is now computed in Cython.")
 
     N = data_A.shape[0]
     D = data_A.shape[1]
