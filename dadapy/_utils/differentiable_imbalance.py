@@ -943,8 +943,8 @@ def _extract_min_diis_lasso_optimization(
     # Now select of the penalties, imbalances and weights by index 
     # that correspond to the lowest imbalance for a certain number of non-zero features
     p_min = np.ones(len(min_dii_per_nfeatures)) * np.nan #penalties
-    dii_min = np.ones(len(min_dii_per_nfeatures)) * np.nan #kernelimbalances
-    weights_min = np.ones((len(min_dii_per_nfeatures), len(final_weights))) * np.nan #weights
+    dii_min = np.ones(len(min_dii_per_nfeatures)) * np.nan #differentiable imbalances
+    weights_min = np.ones((len(min_dii_per_nfeatures), final_weights.shape[1])) * np.nan #weights
     for i, indexx in enumerate(min_dii_per_nfeatures):
         if np.isnan(indexx):
             pass 
