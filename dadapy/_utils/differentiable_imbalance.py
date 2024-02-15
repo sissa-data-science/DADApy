@@ -982,7 +982,7 @@ def _plot_min_lasso_results(
     ax.set_xticks(minor_xticks, minor=True)
     maxy = np.maximum(0.2, np.nanmax(dii_min))
     ax.set_ylim(0,maxy)
-    major_yticks = np.arange(0,maxy+0.01, maxy/5)
+    major_yticks = np.around(np.arange(0,maxy+0.01, maxy/5),2)
     ax.set_yticks(major_yticks)
     ax.set_yticklabels(major_yticks, fontsize=11)
     ax.grid(visible=True, which='minor', axis='x', linestyle=':', linewidth=0.5)

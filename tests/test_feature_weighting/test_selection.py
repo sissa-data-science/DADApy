@@ -134,8 +134,8 @@ def test_optimise_imbalance():
         l1_penalty=1e-3,
         decaying_lr=decay,
     )
-    assert np.all(gammas[0] > gammas[2:])
-    assert np.all(gammas[1] > gammas[2:])
+    assert (np.sum(gammas[0]) >= np.sum(gammas[2:]))
+    assert (np.sum(gammas[1]) >= np.sum(gammas[2:]))
 
 
 def test_optimal_learning_rate():
