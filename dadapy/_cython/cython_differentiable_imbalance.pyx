@@ -152,8 +152,8 @@ def compute_dist_cython_parallel(double[:, :] X, int njobs, bint squared=False):
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-def return_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int njobs, bint periodic = False):
-    """Compute the gradient of kernel imbalance between input data matrix A and groundtruth data matrix B; Cython implementation.
+def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int njobs, bint periodic = False):
+    """Compute the gradient of DII between input data matrix A and groundtruth data matrix B; Cython implementation.
 
     Args:
         dists_rescaled_A : numpy.ndarray, shape (N, N), of type 'float' (python) a.k.a. 'double' (C).
@@ -176,7 +176,7 @@ def return_kernel_imbalance_gradient_cython(double[:,:] dists_rescaled_A not Non
             Whether to use Cython implementation for computing distances. Default is True.
 
     Returns:
-        gradient: numpy.ndarray, shape (D,). The gradient of the kernel imbalance for each variable (dimension).
+        gradient: numpy.ndarray, shape (D,). The gradient of the DII for each variable (dimension).
     """
 # This syntax of typing 
 

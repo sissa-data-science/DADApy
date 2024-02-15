@@ -19,6 +19,7 @@ import time
 from functools import wraps
 
 import numpy as np
+import matplotlib.pyplot as plt
 from joblib import Parallel, delayed  # TODO: might not be necessary
 from scipy.spatial import cKDTree  # TODO: remove with compute_dist_PBC
 from scipy.stats import rankdata
@@ -82,7 +83,6 @@ def _compute_dist_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
 
 def _return_optimal_lambda_from_distances(distance_matrix, fraction=1.0):
     # sets lambda to the average between the smallest and mean (2nd NN - 1st NN)-distance
-    # np.fill_diagonal(distance_matrix, np.nan) ###CHANGE: This I don't need because on the diagonal I have just big values
     NNs = np.sort(distance_matrix, axis=1)  #
     min_distances_nn = NNs[:, 1] - NNs[:, 0]
     return fraction * ((np.min(min_distances_nn) + np.nanmean(min_distances_nn)) / 2)
@@ -125,12 +125,13 @@ def _return_full_dist_matrix(
             dist_matrix = c_dii.compute_dist_PBC_cython_parallel(data, period, njobs)
         else:
             # TODO: fix this, either something from dadapy, or for full matrix prob. something else
+            # TODO: @FelixWodaczek Maybe we take away the option to not do cython
             dist_matrix = _compute_dist_PBC(
                 data, maxk=data.shape[0], box_size=period, p=2
             )
     np.fill_diagonal(
         dist_matrix, np.max(dist_matrix) + 1
-    )  ###CHANGE - this cannot be 0 because of divide by 0 and not NaN because of cython
+    )  # this cannot be 0 because of divide by 0 and not NaN because of cython
 
     return dist_matrix
 
@@ -163,17 +164,14 @@ def _return_full_rank_matrix(
     rank_matrix = rankdata(dist_matrix, method="average", axis=1).astype(
         int, copy=False
     )
-    # rank_matrix[rank_matrix == rank_matrix.shape[0]] = np.nan ###CHANGE
-    # # we don't need to set this to nan for it not to count in the sum of kernel imbalance and gradient. Instead,
-    # # we set now the diagonal of the c matrix to 0
     if distances:
         return rank_matrix, dist_matrix
     else:
         return rank_matrix
 
 
-def _return_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
-    """Computes the kernel imbalance between two matrices based on distances of input data and rank information of groundtruth data.
+def _return_dii(dist_matrix_A, rank_matrix_B, lambd):
+    """Computes the DII between two matrices based on distances of input data and rank information of groundtruth data.
 
     Args:
         dist_matrix_A (np.ndarray): N x N array - The distance matrix for between all input data points of input space A. Can
@@ -184,19 +182,18 @@ def _return_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
             in the data set but bigger than the minimal distance
 
     Returns:
-        kernel_imbalance (float): The computed kernel imbalance value. Please mind that this depends (unlike in the classic information imbalance)
+        dii (float): The computed DII value. Please mind that this depends (unlike in the classic information imbalance)
             on the chosen lambda. To compare several scaled distances compare them using the same lambda, even if they were optimized with different ones.
 
     Raises:
         None.
     """
-    # TODO: clean up
     N = dist_matrix_A.shape[0]
 
     # take distance of first nearest neighbor for each point
     min_dists = np.min(dist_matrix_A, axis=1)[
         :, np.newaxis
-    ]  ###CHANGE do I need nanmin coming from optimization or gradient?
+    ]  
 
     # Make the exponential of the negative distances from the input space / lambda;
     # subtraction of minimum distance does not change c_ij coefficients but avoids
@@ -207,20 +204,20 @@ def _return_kernel_imbalance(dist_matrix_A, rank_matrix_B, lambd):
     # not obtained with function 'compute_rank_matrix'
     np.fill_diagonal(
         exp_matrix, 0
-    )  ###CHANGE # before I used to set it to nan and do nansum
+    ) 
 
     # compute c_ij matrix
     rowsums = np.sum(exp_matrix, axis=1)[:, np.newaxis]
     c_matrix = exp_matrix / rowsums
 
-    # compute kernel imbalance
-    kernel_imbalance = 2 / N**2 * np.sum(rank_matrix_B * c_matrix)
+    # compute DII
+    dii = 2 / N**2 * np.sum(rank_matrix_B * c_matrix)
 
-    return kernel_imbalance
+    return dii
 
 
 @cast_ndarrays
-def _return_kernel_imbalance_gradient(
+def _return_dii_gradient(
     dists_rescaled_A,
     data_A,
     rank_matrix_B,
@@ -230,7 +227,7 @@ def _return_kernel_imbalance_gradient(
     period: np.ndarray = None,
     cythond=True,
 ):
-    """Compute the gradient of kernel imbalance between input data matrix A and groundtruth data matrix B.
+    """Compute the gradient of DII between input data matrix A and groundtruth data matrix B.
 
     Args:
         dists_rescaled_A : numpy.ndarray, shape (N, N)
@@ -253,15 +250,16 @@ def _return_kernel_imbalance_gradient(
             Whether to use Cython implementation for computing distances. Default is True.
 
     Returns:
-        gradient: numpy.ndarray, shape (D,). The gradient of the kernel imbalance for each variable (dimension).
+        gradient: numpy.ndarray, shape (D,). The gradient of the DII for each variable (dimension).
     """
     # TODO: Add faster function for python side of this, or remove python entirely.
     # TODO: move typechecks to parent
+
     N = data_A.shape[0]
     D = data_A.shape[1]
     gradient = np.zeros(D, dtype=CYTHON_DTYPE)
 
-    if lambd == 0:  # TODO: remove type check, this should be handled in class object
+    if lambd == 0:
         gradient = np.nan * gradient
     else:
         if period is not None:
@@ -277,19 +275,19 @@ def _return_kernel_imbalance_gradient(
         # take distance of first nearest neighbor for each point
         min_dists = np.min(dists_rescaled_A, axis=1)[
             :, np.newaxis
-        ]  ###CHANGE: do I need nanmin?
+        ] 
 
         # compute the exponential of the negative distances / lambda
         # subtraction of minimum distance to avoid overflow problems
         exp_matrix = np.exp(-(dists_rescaled_A - min_dists) / lambd)
         np.fill_diagonal(
             exp_matrix, 0
-        )  ###CHANGE # before I didn't have this line because the diagonal of dists_rescaled_A was nan already
+        )  
 
         # compute c_ij matrix
         c_matrix = (
             exp_matrix / np.sum(exp_matrix, axis=1)[:, np.newaxis]
-        )  ###CHANGE: before nansum
+        ) 
 
         def alphagamma_gradientterm(alpha_gamma):
             if gammas[alpha_gamma] == 0:
@@ -301,38 +299,26 @@ def _return_kernel_imbalance_gradient(
                     )
                 else:
                     # periodcorrection according to the rescaling factors of the inputs
-                    # start=time.time()
-                    if cythond:  # TODO: @wildromi this case will now never be reached.
-                        # @wildromi I cannot get this to work anymore, but it could be removed anyhow
-                        raise NotImplementedError("This function is deprecated.")
-                        periodalpha = period[alpha_gamma, np.newaxis]
-                        dists_squared_A = c_dii.compute_dist_PBC_cython_parallel(
+                    periodalpha = period[alpha_gamma]
+                    dists_squared_A = np.square(
+                        _compute_dist_PBC(
                             data_A[:, alpha_gamma, np.newaxis],
-                            periodalpha,  # box size
-                            njobs,  # njobs
-                            squared=True,
+                            maxk=data_A.shape[0],
+                            box_size=[periodalpha],
+                            p=2,
                         )
-                    else:
-                        periodalpha = period[alpha_gamma]
-                        dists_squared_A = np.square(
-                            _compute_dist_PBC(
-                                data_A[:, alpha_gamma, np.newaxis],
-                                maxk=data_A.shape[0],
-                                box_size=[periodalpha],
-                                p=2,
-                            )
-                        )
+                    )
                 first_term = -dists_squared_A / dists_rescaled_A
                 second_term = np.sum(
                     dists_squared_A / dists_rescaled_A * c_matrix, axis=1
                 )[
                     :, np.newaxis
-                ]  ###CHAGNE, before nansum
+                ] 
                 product_matrix = c_matrix * rank_matrix_B * (first_term + second_term)
-                gradient_alphagamma = np.sum(product_matrix)  ###CHANGE, before nansum
+                gradient_alphagamma = np.sum(product_matrix) 
             return gradient_alphagamma
 
-        # compute the gradient term for each gamma (parallelization is faster than the loop below):
+        # compute the gradient term for each gamma (parallelization is faster):
         gradient_parallel = np.array(
             Parallel(n_jobs=njobs, prefer="threads")(
                 delayed(alphagamma_gradientterm)(alpha_gamma)
@@ -354,17 +340,17 @@ class GradientFuncs: # TODO: Remove or fix this
         truth_ranks: np.ndarray,
         input_data: np.ndarray,
         lambda_: float = 1.0,
-        kernel_cutoff=1e-6,
+        softmax_cutoff=1e-6,
     ):
         self.truth_ranks = truth_ranks
         self.input_data = input_data
         self.n_data = self.truth_ranks.shape[0]
         self.n_dim = self.input_data.shape[-1]
         self.lambda_ = lambda_
-        self.cutoff_d = -np.log(kernel_cutoff) * self.lambda_
+        self.cutoff_d = -np.log(softmax_cutoff) * self.lambda_
 
     @staticmethod
-    def _kernel_func(distance_matrix, lambda_):
+    def _softmax_func(distance_matrix, lambda_):
         exp = np.exp(-distance_matrix / lambda_)
         np.fill_diagonal(exp, 0.0)
         return exp / np.sum(exp, axis=-1)[:, np.newaxis]
@@ -381,27 +367,27 @@ class GradientFuncs: # TODO: Remove or fix this
         gradient = np.zeros_like(gammas)
 
         distance_matrix = self._get_distance_matrix(gammas)  # distance matrix
-        kernel = self._kernel_func(
+        softmax = self._softmax_func(
             distance_matrix=distance_matrix, lambda_=self.lambda_
-        )  # kernel with 0 diag
+        )  # softmax matrix with 0 diag
         np.fill_diagonal(distance_matrix, 1.0)  # fill for division
         for dim in range(self.n_dim):
             distance_matrix[:, :] = (
                 self._get_dim_distance_sq(dim) / distance_matrix
             )  # fraction, re-using memory
             distance_matrix[:, :] = (
-                np.sum(distance_matrix * kernel, axis=-1)[:, np.newaxis]
+                np.sum(distance_matrix * softmax, axis=-1)[:, np.newaxis]
                 - distance_matrix
             )  # (\sum_m c_im fraction_im - fraction_ij)
 
             gradient[dim] = (2 * gammas[dim]) / (self.lambda_ * (self.n_data**2))
-            gradient[dim] *= np.sum(kernel * distance_matrix * self.truth_ranks)
+            gradient[dim] *= np.sum(softmax * distance_matrix * self.truth_ranks)
 
         return gradient
 
 
 @cast_ndarrays
-def _optimize_kernel_imbalance(
+def _optimize_dii(
     groundtruth_data: np.ndarray,
     data: np.ndarray,
     njobs: int,
@@ -416,7 +402,7 @@ def _optimize_kernel_imbalance(
     groundtruthperiod: np.ndarray = None,
     cythond: bool = True,
 ):
-    """Optimize the differentiable information imbalance using gradient descent of the kernel imbalance between input data matrix A and groundtruth data matrix B.
+    """Optimize the differentiable information imbalance using gradient descent of the DII between input data matrix A and groundtruth data matrix B.
 
     Args:
         groundtruth_data : numpy.ndarray, shape (N, Dg)
@@ -450,9 +436,9 @@ def _optimize_kernel_imbalance(
             Whether to use Cython implementation for computing distances. Default is True.
 
     Returns:
-        gammas_list, kernel_imbalances,l1_penalties
+        gammas_list, diis,l1_penalties
         gammas_list: np.ndarray, shape (n_epochs, D). List of lists of all weights for each feature for each step in the optimization
-        kernel_imbalances: np.ndarray, shape (n_epochs, ). List of the differentiable information imbalances during the optimization
+        diis: np.ndarray, shape (n_epochs, ). List of the differentiable information imbalances during the optimization
         l1_penalties: np.ndarray, shape (n_epochs, ). List of the l1_penaltie terms that were added to the imbalances in the loss function
 
     """
@@ -462,7 +448,7 @@ def _optimize_kernel_imbalance(
     N = data.shape[0]
     D = data.shape[1]
 
-    kernel_imbalances = np.ones(n_epochs + 1)  # +1: to include initial value
+    diis = np.ones(n_epochs + 1)  # +1: to include initial value
     l1_penalties = np.zeros(n_epochs + 1)
     gammas_list = np.zeros((n_epochs + 1, D))
     scaling = 1  # if there is no constraint on rescaling of gammas
@@ -500,17 +486,17 @@ def _optimize_kernel_imbalance(
         adaptive_lambd = True
         lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
-    kernel_imbalances[0] = _return_kernel_imbalance(
+    diis[0] = _return_dii(
         dists_rescaled_A, rank_matrix_B, lambd
     )
     l1_penalties[0] = l1_penalty * np.sum(np.abs(gammas))
     lrate = l_rate  # for not expon. decaying learning rates
 
     for i_epoch in range(n_epochs):
-        # compute gradient * SCALING!!!! to be scale invariant
+        # compute gradient * SCALING!!!! to be scale invariant in case of no adaptive lambda
         if not cythond:
             gradient = (
-                _return_kernel_imbalance_gradient(
+                _return_dii_gradient(
                     dists_rescaled_A,
                     data,
                     rank_matrix_B,
@@ -528,9 +514,9 @@ def _optimize_kernel_imbalance(
                 myperiod = period
             else:
                 periodic = False
-                myperiod = gammas * 0.0  # dummy array, not used in cython:
+                myperiod = gammas * 0.0  # dummy array, but necessary for cython. 0-periods are not used in the cython function.
             gradient = (
-                c_dii.return_kernel_imbalance_gradient_cython(
+                c_dii.return_dii_gradient_cython(
                     dists_rescaled_A,
                     data,
                     rank_matrix_B,
@@ -543,7 +529,7 @@ def _optimize_kernel_imbalance(
                 * scaling
             )
         if np.isnan(gradient).any():  # If any of the gradient elements turned to nan
-            kernel_imbalances[i_epoch + 1] = kernel_imbalances[i_epoch]
+            diis[i_epoch + 1] = diis[i_epoch]
             l1_penalties[i_epoch + 1] = l1_penalties[i_epoch]
             gammas_list[i_epoch + 1] = gammas_list[i_epoch]
             print(
@@ -568,7 +554,7 @@ def _optimize_kernel_imbalance(
             gammas = gammas_new
             # exit the loop if all weights are 0 (e.g. l1-regularization too strong)
             if gammas.any() == 0:
-                kernel_imbalances[i_epoch + 1] = kernel_imbalances[i_epoch]
+                diis[i_epoch + 1] = diis[i_epoch]
                 l1_penalties[i_epoch + 1] = l1_penalties[i_epoch]
                 gammas_list[i_epoch + 1] = gammas_list[i_epoch]
                 print(
@@ -596,8 +582,8 @@ def _optimize_kernel_imbalance(
             if adaptive_lambd:
                 lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
-            # compute kernel imbalance
-            kernel_imbalances[i_epoch + 1] = _return_kernel_imbalance(
+            # compute DII
+            diis[i_epoch + 1] = _return_dii(
                 dists_rescaled_A, rank_matrix_B, lambd
             )
             l1_penalties[i_epoch + 1] = l1_penalty * np.sum(np.abs(gammas))
@@ -605,13 +591,13 @@ def _optimize_kernel_imbalance(
     #  if gammacheck == 1:
     #      print("The l1-regularization of ",l1_penalty," is too high. All features set to 0. No optimization possible")
     if l1_penalty == 0.0:
-        return gammas_list, kernel_imbalances, kernel_imbalances * 0
+        return gammas_list, diis, diis * 0
     else:
-        return gammas_list, kernel_imbalances, l1_penalties
+        return gammas_list, diis, l1_penalties
 
 
 @cast_ndarrays
-def _optimize_kernel_imbalance_static_zeros(
+def _optimize_dii_static_zeros(
     groundtruth_data: np.ndarray,
     data: np.ndarray,
     gammas_0: np.ndarray,
@@ -641,14 +627,14 @@ def _optimize_kernel_imbalance_static_zeros(
                                                       If not a list, the same period is assumed for all D(groundtruth) features
     Returns:
         gammas:
-        kernel_imbalances:
+        diis:
     """
-    # batch GD optimization with zeroes staying zeros - needed for eliminate_backward_greedy_kernel_imbalance
+    # batch GD optimization with zeroes staying zeros - needed for eliminate_backward_greedy_dii
 
     N = data.shape[0]
     D = data.shape[1]
 
-    kernel_imbalances = np.ones(n_epochs + 1)  # +1: to include initial value
+    diis = np.ones(n_epochs + 1)  # +1: to include initial value
     gammas_list = np.zeros((n_epochs + 1, D))
     scaling = 1  # if there is no constraint on rescaling of gammas
     rank_matrix_B = _return_full_rank_matrix(
@@ -664,7 +650,6 @@ def _optimize_kernel_imbalance_static_zeros(
     # rescale input data with the weights
     rescaled_data_A = gammas * data
 
-    # for adaptive lambda: calculate distance matrix in rescaled input
     # for adaptive lambda: calculate distance matrix in rescaled input
     if period is not None:
         dists_rescaled_A = _return_full_dist_matrix(
@@ -684,7 +669,7 @@ def _optimize_kernel_imbalance_static_zeros(
         adaptive_lambd = True
         lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
-    kernel_imbalances[0] = _return_kernel_imbalance(
+    diis[0] = _return_dii(
         dists_rescaled_A, rank_matrix_B, lambd
     )
     lrate = l_rate  # for not expon. decaying learning rates
@@ -694,7 +679,7 @@ def _optimize_kernel_imbalance_static_zeros(
         # compute gradient * SCALING!!!! to be scale invariant
         if cythond == False:
             gradient = (
-                _return_kernel_imbalance_gradient(
+                _return_dii_gradient(
                     dists_rescaled_A,
                     data,
                     rank_matrix_B,
@@ -713,7 +698,7 @@ def _optimize_kernel_imbalance_static_zeros(
                 periodic = False
                 myperiod = gammas * 0
             gradient = (
-                c_dii.return_kernel_imbalance_gradient_cython(
+                c_dii.return_dii_gradient_cython(
                     dists_rescaled_A,
                     data,
                     rank_matrix_B,
@@ -726,7 +711,7 @@ def _optimize_kernel_imbalance_static_zeros(
                 * scaling
             )
         if np.isnan(gradient).any():  # If any of the gradient elements turned to nan
-            kernel_imbalances[i_epoch + 1] = kernel_imbalances[i_epoch]
+            diis[i_epoch + 1] = diis[i_epoch]
             gammas_list[i_epoch + 1] = gammas_list[i_epoch]
             print(
                 "At least one gradient element turned to Nan, no optimization possible."
@@ -750,9 +735,6 @@ def _optimize_kernel_imbalance_static_zeros(
                     gammas_new[i] = max(0.0, gam)
                 elif gam < 0:
                     gammas_new[i] = np.abs(min(0.0, gam))
-            ## don't use this line: it makes the performance also without lasso worse:
-            # gammas[gammas_new < gammas] = gammas_new[gammas_new < gammas] #only accept steps that actually make the current weight smaller
-            ## use instead:
             gammas = gammas_new
 
             # apply constrain on the weights
@@ -780,13 +762,13 @@ def _optimize_kernel_imbalance_static_zeros(
             if adaptive_lambd:
                 lambd = _return_optimal_lambda_from_distances(dists_rescaled_A)
 
-            # compute kernel imbalance
-            kernel_imbalances[i_epoch + 1] = _return_kernel_imbalance(
+            # compute DII
+            diis[i_epoch + 1] = _return_dii(
                 dists_rescaled_A, rank_matrix_B, lambd
             )
             gammas_list[i_epoch + 1] = gammas
 
-    return gammas_list, kernel_imbalances
+    return gammas_list, diis
 
 
 def _refine_lasso_optimization(
@@ -807,7 +789,8 @@ def _refine_lasso_optimization(
     groundtruthperiod=None,
     cythond=True,
 ):
-    """Genereate more lasso runs in between lasso strengths that produced non-consecutive numbers of non-zero weights
+    """Generate more lasso runs in between lasso strengths that produced non-consecutive numbers of non-zero weights
+    
     Args:
         gs (np.ndarray): n_lassos x n_epochs x D array containing the weights during the optimization for each lasso strength in the previous optimization
         ks (np.ndarray): n_lassos x n_epochs array containing the information imbalance term of the loss in the previous optimization
@@ -823,11 +806,12 @@ def _refine_lasso_optimization(
         decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
         period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
         groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
+    
     Returns:
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
-        kernel_imbalances_list: values of the kernel imbalance during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
+        diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
     """
-    # TODO: @wildromi cleanup, or maybe let's just think on it a little bit
+    # TODO: @wildromi cleanup
     # TODO: @wildromi typehints
     # Find where to refine the lasso and decide on new l1 penalties
     gs[np.isnan(gs)] = 0
@@ -858,7 +842,7 @@ def _refine_lasso_optimization(
             )
         )
 
-    # Optimimize the kernel imbalance for lassos that were missing, intercollate with the old data
+    # Optimimize the DII for lassos that were missing, intercollate with the old data
 
     all_l1s = l1_penalties[
         0 : refinement_needed[0][0] + 1
@@ -874,7 +858,7 @@ def _refine_lasso_optimization(
         # do the new optimizations
         for j in range(len(newl1)):
             start = time.time()
-            gs_new[j], ks_new[j], ls_new[j] = _optimize_kernel_imbalance(
+            gs_new[j], ks_new[j], ls_new[j] = _optimize_dii(
                 groundtruth_data=groundtruth_data,
                 data=data,
                 gammas_0=gammas_0,
@@ -932,3 +916,74 @@ def _refine_lasso_optimization(
             all_ks = all_ks + list(ks[refinement_needed[i][1] :])
             all_ls = all_ls + list(ls[refinement_needed[i][1] :])
     return np.array(all_gs), np.array(all_ks), np.array(all_ls), all_l1s
+
+def _extract_min_diis_lasso_optimization(
+        weights, 
+        diis, 
+        l1_penalties
+):
+    # Which run had which number of non-zero features.
+    # If the same number of non-zero features appeared in several runs, chose the lowest dii
+    total_number_of_features = len(weights[0][0])
+    final_weights =  weights[:,-1,:]
+    final_n_nonzero_features = np.linalg.norm(final_weights,0,axis=1)
+    final_diis = diis[:,-1]
+    num_feats = []
+    for i in range(total_number_of_features,0,-1):
+        num_feats.append(np.where(final_n_nonzero_features==i))
+
+    min_dii_per_nfeatures=[]
+    for i in num_feats:
+        if len(i[0]) > 0:
+            minimum_imb=np.argmin(final_diis[i[0]])
+            min_dii_per_nfeatures.append(i[0][minimum_imb])
+        else:
+            min_dii_per_nfeatures.append(np.nan)
+
+    # Now select of the penalties, imbalances and weights by index 
+    # that correspond to the lowest imbalance for a certain number of non-zero features
+    p_min = np.ones(len(min_dii_per_nfeatures)) * np.nan #penalties
+    dii_min = np.ones(len(min_dii_per_nfeatures)) * np.nan #differentiable imbalances
+    weights_min = np.ones((len(min_dii_per_nfeatures), final_weights.shape[1])) * np.nan #weights
+    for i, indexx in enumerate(min_dii_per_nfeatures):
+        if np.isnan(indexx):
+            pass 
+        else:
+            p_min[i] = l1_penalties[indexx]
+            dii_min[i] = final_diis[indexx]
+            weights_min[i] = final_weights[indexx]
+    num_nonzero_features = np.count_nonzero(np.nan_to_num(weights_min*1,0),axis=1)
+    num_nonzero_features = np.where(num_nonzero_features==0, np.nan, num_nonzero_features)
+    return num_nonzero_features, p_min, dii_min, weights_min
+
+def _plot_min_lasso_results(
+        dii_min,
+        num_nonzero_features,
+        p_min
+):
+    fig = plt.figure(figsize=(8,5))
+    ax = fig.add_subplot(1, 1, 1)
+    dii_minmask = np.isfinite(dii_min)
+    ax.plot(num_nonzero_features[dii_minmask], dii_min[dii_minmask],"-o", label='$L_1$-reg. search', zorder=7)
+    sc = ax.scatter(num_nonzero_features, dii_min, s=50,c=np.log(p_min), zorder=8)
+    cb = fig.colorbar(sc, ax=ax, orientation='vertical')
+    cb.set_label(label='ln($L_1$-strength)', size='large')
+    cb.ax.tick_params(labelsize='large')
+
+    ax.set_title("Best resulting DIIs in $L_1$-regulated search", fontsize=14)
+    ax.set_xlabel("Number of non-zero features", fontsize=14)
+    ax.set_ylabel("DII", fontsize=14)
+    ax.legend(fontsize=14)
+    ax.grid(visible=True, which='major', axis='both')
+    major_xticks = range(0,len(num_nonzero_features)+1, len(num_nonzero_features)//5)
+    ax.set_xticks(major_xticks)
+    ax.set_xticklabels(major_xticks, fontsize=11)
+    minor_xticks = np.arange(0, len(num_nonzero_features), 1)
+    ax.set_xticks(minor_xticks, minor=True)
+    maxy = np.maximum(0.2, np.nanmax(dii_min))
+    ax.set_ylim(0,maxy)
+    major_yticks = np.around(np.arange(0,maxy+0.01, maxy/5),2)
+    ax.set_yticks(major_yticks)
+    ax.set_yticklabels(major_yticks, fontsize=11)
+    ax.grid(visible=True, which='minor', axis='x', linestyle=':', linewidth=0.5)
+    plt.show()

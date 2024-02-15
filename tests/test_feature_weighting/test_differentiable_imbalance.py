@@ -114,7 +114,7 @@ def test_py_kernel_gradient():
                 cythond=False,
             )
 
-            py_grad = dii._return_kernel_imbalance_gradient(
+            py_grad = dii._return_dii_gradient(
                 dists_rescaled_A=dist_mat,
                 data_A=data * gammas,
                 rank_matrix_B=ranks,
@@ -125,7 +125,7 @@ def test_py_kernel_gradient():
                 cythond=False,
             )
 
-            cython_grad = c_dii.return_kernel_imbalance_gradient_cython(
+            cython_grad = c_dii.return_dii_gradient_cython(
                 dist_mat,
                 data * gammas,
                 ranks,

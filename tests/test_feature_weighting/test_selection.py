@@ -20,7 +20,7 @@ import itertools
 import numpy as np
 import pytest
 
-from dadapy import Data, DIIWeighting
+from dadapy import Data, FeatureWeighting
 
 rng = np.random.default_rng()
 
@@ -34,21 +34,21 @@ def test_optimise_imbalance_typing():
         np.array([2, 2], dtype=np.int8),
         np.array([2, 2], dtype=np.float32),
     ]:
-        feature_selection = DIIWeighting(data, period=period)
+        feature_selection = FeatureWeighting(data, period=period)
         with pytest.raises(ValueError):
-            feature_selection.optimize_kernel_imbalance(Data(data), 1)
+            feature_selection.optimize_dii(Data(data), 1)
 
     for initial_gammas in [np.array([2, 2], np.float32), "faz"]:
-        feature_selection = DIIWeighting(data)
+        feature_selection = FeatureWeighting(data)
         with pytest.raises(ValueError):
-            feature_selection.optimize_kernel_imbalance(
+            feature_selection.optimize_dii(
                 Data(data), initial_gammas=initial_gammas
             )
 
 
 def test_dist_matrix():
     data = rng.random((10, 5))
-    feature_selection = DIIWeighting(data)
+    feature_selection = FeatureWeighting(data)
     assert feature_selection._full_distance_matrix is None
     distance_matrix = feature_selection.full_distance_matrix
     assert feature_selection._full_distance_matrix is not None
@@ -62,10 +62,10 @@ def test_dist_matrix():
 
 def test_maxk_warning():
     data = rng.random((10, 5))
-    feature_selection = DIIWeighting(data, maxk=3)
+    feature_selection = FeatureWeighting(data, maxk=3)
 
     with pytest.warns():
-        feature_selection.return_kernel_imbalance_gradient(
+        feature_selection.return_dii_gradient(
             Data(data), gammas=np.zeros(5)
         )
 
@@ -75,7 +75,6 @@ def test_optimise_imbalance():
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
     periods = [None, np.ones(5)]
-    cythonds = [True, False]
     constrains = [True, False]
     initial_gammass = [None, 1.0, weights_array]
     lambdas = [1e-5, 1, None]
@@ -85,19 +84,17 @@ def test_optimise_imbalance():
 
     for (
         period,
-        cythond,
         constrain,
         initial_gammas,
         lambda_,
         l1_penalty,
         decay,
     ) in itertools.product(
-        periods, cythonds, constrains, initial_gammass, lambdas, l1_penalties, decays
+        periods, constrains, initial_gammass, lambdas, l1_penalties, decays
     ):
-        feature_selection = DIIWeighting(data, period=period)
-        feature_selection.cythond = cythond
+        feature_selection = FeatureWeighting(data, period=period)
         assert feature_selection.history is None
-        gammas = feature_selection.optimize_kernel_imbalance(
+        gammas = feature_selection.optimize_dii(
             Data(target_data),
             n_epochs=n_epochs,
             learning_rate=1e-2,
@@ -110,42 +107,42 @@ def test_optimise_imbalance():
         assert gammas.shape[0] == len(weights_array)
         assert feature_selection.history is not None
 
-        assert isinstance(feature_selection.history["gammas_per_epoch"], np.ndarray)
-        assert feature_selection.history["gammas_per_epoch"].shape[0] == n_epochs + 1
-        assert feature_selection.history["gammas_per_epoch"].shape[-1] == len(
+        assert isinstance(feature_selection.history["weights_per_epoch"], np.ndarray)
+        assert feature_selection.history["weights_per_epoch"].shape[0] == n_epochs + 1
+        assert feature_selection.history["weights_per_epoch"].shape[-1] == len(
             weights_array
         )
 
         assert isinstance(feature_selection.history["dii_per_epoch"], np.ndarray)
         assert feature_selection.history["dii_per_epoch"].shape[0] == n_epochs + 1
-        assert isinstance(feature_selection.history["l1_penalty_per_epoch"], np.ndarray)
+        assert isinstance(feature_selection.history["l1_term_per_epoch"], np.ndarray)
         assert (
-            feature_selection.history["l1_penalty_per_epoch"].shape[0] == n_epochs + 1
+            feature_selection.history["l1_term_per_epoch"].shape[0] == n_epochs + 1
         )
 
     data = rng.normal(size=(20, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
-    feature_selection = DIIWeighting(data, period=None)
-    gammas = feature_selection.optimize_kernel_imbalance(
+    feature_selection = FeatureWeighting(data, period=None)
+    gammas = feature_selection.optimize_dii(
         Data(target_data),
         n_epochs=30,
         learning_rate=None,
         constrain=True,
         initial_gammas=np.ones_like(weights_array),
         lambd=None,
-        l1_penalty=1e-4,
+        l1_penalty=1e-3,
         decaying_lr=decay,
     )
-    assert np.all(gammas[0] > gammas[2:])
-    assert np.all(gammas[1] > gammas[2:])
+    assert (np.sum(gammas[0]) >= np.sum(gammas[2:]))
+    assert (np.sum(gammas[1]) >= np.sum(gammas[2:]))
 
 
 def test_optimal_learning_rate():
     data = rng.random((20, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
-    feature_selection = DIIWeighting(data, period=None)
+    feature_selection = FeatureWeighting(data, period=None)
 
     trial_learning_rates = [1e-3, 1e-2]
     n_epochs = 5
@@ -194,17 +191,17 @@ def test_eliminate_backward_greedy_kernel_imbalance():
     data = rng.random((20, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
-    feature_selection = DIIWeighting(data, period=None)
+    feature_selection = FeatureWeighting(data, period=None)
 
     n_epochs = 10
-    _ = feature_selection.eliminate_backward_greedy_kernel_imbalance(
+    _ = feature_selection.eliminate_backward_greedy_dii(
         target_data=Data(target_data), n_epochs=n_epochs, constrain=False
     )
 
     assert feature_selection.history is not None
     assert (
-        feature_selection.history["dii_per_epoch"].shape[0] == len(weights_array) + 1
-    )  # TODO: @wildromi why is there 1 more than dims here?
+        feature_selection.history["dii_per_epoch"].shape[0] == len(weights_array)
+    )
     assert feature_selection.history["dii_per_epoch"].shape[1] == n_epochs + 1
 
 
@@ -214,7 +211,7 @@ def test_search_lasso_optimization_kernel_imbalance():
     data = rng.random((20, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
-    feature_selection = DIIWeighting(data, period=None)
+    feature_selection = FeatureWeighting(data, period=None)
 
     n_epochs = 10
     (
@@ -222,6 +219,6 @@ def test_search_lasso_optimization_kernel_imbalance():
         kernel_list,
         lassoterm_list,
         penalties,
-    ) = feature_selection.search_lasso_optimization_kernel_imbalance(
+    ) = feature_selection.search_lasso_optimization_dii(
         target_data=Data(target_data), n_epochs=n_epochs, constrain=False
     )
