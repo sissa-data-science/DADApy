@@ -87,9 +87,6 @@ class FeatureWeighting(Base):
 
     @property
     def full_distance_matrix(self):
-        # TODO: should this be moved to Base?
-        # Because sometimes this is needed maybe elsewhere and using kdtree for high maxk
-        # Seems bad
         if self._full_distance_matrix is None:
             self._full_distance_matrix = _return_full_dist_matrix(
                 data=self.X,
@@ -114,7 +111,7 @@ class FeatureWeighting(Base):
 
     @staticmethod
     def _parse_period_for_dii(in_period, in_dims):
-        # TODO: Remove when part of Base
+        # TODO: remove when part of Base
         if in_period is None:
             return None
 
@@ -305,7 +302,6 @@ class FeatureWeighting(Base):
         Returns:
             dii_weight_gradient (np.ndarray): The computed gradient of DII with respect to the weights. Depends on the softmax scale lambda.
         """
-        # TODO: this should call the cython implementation
         if lambd is None:
             lambd = self.return_optimal_lambda()
 

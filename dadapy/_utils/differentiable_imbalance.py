@@ -20,8 +20,8 @@ from functools import wraps
 
 import numpy as np
 import matplotlib.pyplot as plt
-from joblib import Parallel, delayed  # TODO: might not be necessary
-from scipy.spatial import cKDTree  # TODO: remove with compute_dist_PBC
+from joblib import Parallel, delayed
+from scipy.spatial import cKDTree  # TODO: remove if removing compute_dist_PBC
 from scipy.stats import rankdata
 from sklearn.metrics.pairwise import euclidean_distances
 
@@ -67,7 +67,7 @@ def _return_dist_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
     Returns:
         distmatrix (np.ndarray(float)): N x maxk (maxk=usually N) array containing the distances from each point to the first maxk nn
     """
-    # TODO: This should not be here, find out where in dadapy this is
+    # TODO: @wildromi is there a reason we don't use dadapy._utils.compute_NN_PBC here?
     box_size_copy = [
         i != 0.0 for i in box_size
     ]  # get a mask for potential 0-period variables
@@ -115,7 +115,6 @@ def _return_full_dist_matrix(
         - The diagonal elements of the distance matrix are filled with a value greater than the maximum distance encountered in the matrix,
             which is necessary for several other functions, including ranking
     """
-    # TODO: add the faster python implementation of this (probably sklearn)
     # Make matrix of distances
     if period is None:
         dist_matrix = euclidean_distances(data)
@@ -124,7 +123,6 @@ def _return_full_dist_matrix(
             # print(data, njobs, period, cythond)
             dist_matrix = c_dii.compute_dist_PBC_cython_parallel(data, period, njobs)
         else:
-            # TODO: fix this, either something from dadapy, or for full matrix prob. something else
             dist_matrix = _return_dist_PBC(
                 data, maxk=data.shape[0], box_size=period, p=2
             )
@@ -153,7 +151,6 @@ def _return_full_rank_matrix(
     Returns:
         numpy.ndarray: N x N rank matrix, where N is the number of datapoints in the input data.
     """
-    # TODO: build better method here, or at least have this only build from ranks
 
     dist_matrix = _return_full_dist_matrix(
         data=data, period=period, cythond=cythond, njobs=njobs
@@ -215,8 +212,7 @@ def _return_dii(dist_matrix_A, rank_matrix_B, lambd):
     return dii
 
 
-@cast_ndarrays
-def _return_dii_gradient(
+def _return_dii_gradient_python(
     dists_rescaled_A: np.ndarray,
     data_A: np.ndarray,
     rank_matrix_B: np.ndarray,
@@ -224,7 +220,6 @@ def _return_dii_gradient(
     lambd: float,
     njobs: int,
     period: np.ndarray = None,
-    cythond: bool = True,
 ):
     """Compute the gradient of DII between input data matrix A and groundtruth data matrix B.
 
@@ -245,14 +240,10 @@ def _return_dii_gradient(
             Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period: np.ndarray=None set those to 0.
         njobs : int, optional
             The number of threads to use for parallel processing. Default is None, which uses the maximum number of available CPUs.
-        cythond : bool, optional
-            Whether to use Cython implementation for computing distances. Default is True.
 
     Returns:
         gradient: numpy.ndarray, shape (D,). The gradient of the DII for each variable (dimension).
     """
-    # TODO: Add faster function for python side of this, or remove python entirely.
-    # TODO: move typechecks to parent
 
     N = data_A.shape[0]
     D = data_A.shape[1]
@@ -331,6 +322,71 @@ def _return_dii_gradient(
 
 
 @cast_ndarrays
+def _return_dii_gradient(
+    dists_rescaled_A: np.ndarray,
+    data_A: np.ndarray,
+    rank_matrix_B: np.ndarray,
+    gammas,
+    lambd: float,
+    njobs: int,
+    period: np.ndarray = None,
+    cythond: bool = True
+):
+    """Compute the gradient of DII between input data matrix A and groundtruth data matrix B.
+
+    Args:
+        dists_rescaled_A : numpy.ndarray, shape (N, N)
+            The rescaled distances between points in input array A, where N is the number of points.
+        data_A : numpy.ndarray, shape (N, D)
+            The input array A, where N is the number of points and D is the number of dimensions.
+        rank_matrix_B : numpy.ndarray, shape (N, N)
+            The rank matrix for groundtruth data array B, where N is the number of points.
+        gammas : numpy.ndarray, shape (D,)
+            The array of weight values for the input values, where D is the number of gammas.
+            This cannot be initialized to 0's. It can be initialized to all 1 or the inverse of the standard deviation
+        lambd : float, optional
+            The lambda scaling parameter of the softmax. If None, it is calculated automatically. Default is None.
+        period : float or numpy.ndarray/list, optional
+            D(input) periods (input formatted to be periodic starting at 0). If not a list, the same period is assumed for all D features
+            Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period: np.ndarray=None set those to 0.
+        njobs : int, optional
+            The number of threads to use for parallel processing. Default is None, which uses the maximum number of available CPUs.
+        cythond : bool, optional
+            Whether to use Cython implementation for computing distances. Default is True.
+
+    Returns:
+        gradient: numpy.ndarray, shape (D,). The gradient of the DII for each variable (dimension).
+    """
+    if not cythond:
+        return _return_dii_gradient_python(
+            dists_rescaled_A = dists_rescaled_A,
+            data_A = data_A,
+            rank_matrix_B = rank_matrix_B,
+            gammas = gammas,
+            lambd = lambd,
+            njobs = njobs,
+            period = period,
+        )
+    else:
+        if period is not None:
+            periodic = True
+            myperiod = period
+        else:
+            periodic = False
+            myperiod = gammas * 0.0  # dummy array, but necessary for cython. 0-periods are not used in the cython function.
+        
+        return c_dii.return_dii_gradient_cython(
+            dists_rescaled_A,
+            data_A,
+            rank_matrix_B,
+            gammas,
+            lambd,
+            myperiod,
+            njobs,
+            periodic,
+        )
+
+@cast_ndarrays
 def _optimize_dii(
     groundtruth_data: np.ndarray,
     data: np.ndarray,
@@ -386,8 +442,6 @@ def _optimize_dii(
         l1_penalties: np.ndarray, shape (n_epochs, ). List of the l1_penaltie terms that were added to the imbalances in the loss function
 
     """
-    # TODO: This function is quite complicated with handling stuff like the period and the learning rate
-    # Discuss with @wildromi and move typechecks and such to class object
     #  gammacheck = 0
     N = data.shape[0]
     D = data.shape[1]
@@ -438,40 +492,19 @@ def _optimize_dii(
 
     for i_epoch in range(n_epochs):
         # compute gradient * SCALING!!!! to be scale invariant in case of no adaptive lambda
-        if not cythond:
-            gradient = (
-                _return_dii_gradient(
-                    dists_rescaled_A,
-                    data,
-                    rank_matrix_B,
-                    gammas,
-                    lambd,
-                    period=period,
-                    njobs=njobs,
-                    cythond=cythond,
-                )
-                * scaling
+        gradient = (
+            _return_dii_gradient(
+                dists_rescaled_A,
+                data,
+                rank_matrix_B,
+                gammas,
+                lambd,
+                period=period,
+                njobs=njobs,
+                cythond=cythond,
             )
-        else:
-            if period is not None:
-                periodic = True
-                myperiod = period
-            else:
-                periodic = False
-                myperiod = gammas * 0.0  # dummy array, but necessary for cython. 0-periods are not used in the cython function.
-            gradient = (
-                c_dii.return_dii_gradient_cython(
-                    dists_rescaled_A,
-                    data,
-                    rank_matrix_B,
-                    gammas,
-                    lambd,
-                    myperiod,
-                    njobs,
-                    periodic,
-                )
-                * scaling
-            )
+            * scaling
+        )
         if np.isnan(gradient).any():  # If any of the gradient elements turned to nan
             diis[i_epoch + 1] = diis[i_epoch]
             l1_penalties[i_epoch + 1] = l1_penalties[i_epoch]
@@ -620,40 +653,19 @@ def _optimize_dii_static_zeros(
 
     for i_epoch in range(n_epochs):
         # compute gradient * SCALING!!!! to be scale invariant
-        # compute gradient * SCALING!!!! to be scale invariant
-        if cythond == False:
-            gradient = (
-                _return_dii_gradient(
-                    dists_rescaled_A,
-                    data,
-                    rank_matrix_B,
-                    gammas,
-                    lambd,
-                    period=period,
-                    cythond=False,
-                )
-                * scaling
+        gradient = (
+            _return_dii_gradient(
+                dists_rescaled_A,
+                data,
+                rank_matrix_B,
+                gammas,
+                lambd,
+                njobs,
+                period=period,
+                cythond=cythond,
             )
-        else:
-            if period is not None:
-                periodic = True
-                myperiod = period
-            else:
-                periodic = False
-                myperiod = gammas * 0
-            gradient = (
-                c_dii.return_dii_gradient_cython(
-                    dists_rescaled_A,
-                    data,
-                    rank_matrix_B,
-                    gammas,
-                    lambd,
-                    myperiod,
-                    njobs,
-                    periodic,
-                )
-                * scaling
-            )
+            * scaling
+        )
         if np.isnan(gradient).any():  # If any of the gradient elements turned to nan
             diis[i_epoch + 1] = diis[i_epoch]
             gammas_list[i_epoch + 1] = gammas_list[i_epoch]
@@ -755,7 +767,6 @@ def _refine_lasso_optimization(
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
         diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
     """
-    # TODO: @wildromi cleanup
     # TODO: @wildromi typehints
     # Find where to refine the lasso and decide on new l1 penalties
     gs[np.isnan(gs)] = 0

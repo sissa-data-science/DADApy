@@ -114,7 +114,7 @@ def test_py_kernel_gradient():
                 cythond=False,
             )
 
-            py_grad = dii._return_dii_gradient(
+            py_grad = dii._return_dii_gradient_python(
                 dists_rescaled_A=dist_mat,
                 data_A=data * gammas,
                 rank_matrix_B=ranks,
@@ -122,7 +122,6 @@ def test_py_kernel_gradient():
                 lambd=1.0,
                 period=np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
                 njobs=njobs,
-                cythond=False,
             )
 
             cython_grad = c_dii.return_dii_gradient_cython(
@@ -135,7 +134,6 @@ def test_py_kernel_gradient():
                 njobs,
                 False,
             )
-            # fast_pygrad = dii.GradientFuncs(ranks, data).gradient(gammas)
 
             # TODO: Is it okay for these to be so "far apart".
             assert cython_grad.shape[0] == n_dim
