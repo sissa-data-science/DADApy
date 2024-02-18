@@ -784,6 +784,7 @@ def _refine_lasso_optimization(
                 highest = l0
     else:
         print("starting lasso too big")
+        # TODO: @wildromi, if this is the case, shouldn't we return? I think this is what causes the error below
 
     newpenalties = []
     for i in range(len(refinement_needed)):

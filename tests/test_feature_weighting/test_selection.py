@@ -203,22 +203,41 @@ def test_eliminate_backward_greedy_kernel_imbalance():
         feature_selection.history["dii_per_epoch"].shape[0] == len(weights_array)
     )
     assert feature_selection.history["dii_per_epoch"].shape[1] == n_epochs + 1
-
+    assert feature_selection.history["weights_per_epoch"].shape[0] == len(weights_array)
+    assert feature_selection.history["weights_per_epoch"].shape[1] == n_epochs + 1
+    assert feature_selection.history["weights_per_epoch"].shape[2] == len(weights_array)
 
 def test_search_lasso_optimization_kernel_imbalance():
     # TODO: Make this properly
 
-    data = rng.random((20, 5))
+    data = rng.random((50, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
     feature_selection = FeatureWeighting(data, period=None)
+    l1_penalties_options = [[1e-3, 1e-2, 1e-1], [1e-5], None]
 
     n_epochs = 10
-    (
-        gammas_list,
-        kernel_list,
-        lassoterm_list,
-        penalties,
-    ) = feature_selection.return_lasso_optimization_dii_search(
-        target_data=Data(target_data), n_epochs=n_epochs, constrain=False
-    )
+    for l1_penalties, cythond, constrain, decaying_lr, refine in itertools.product(l1_penalties_options, *([[True, False]]*4)):
+        print(l1_penalties, cythond, constrain, decaying_lr, refine)
+        feature_selection.cythond = cythond
+        (
+            num_nonzero_features, 
+            l1_penalties_opt_per_nfeatures, 
+            dii_opt_per_nfeatures, 
+            weights_opt_per_nfeatures
+        ) = feature_selection.return_lasso_optimization_dii_search(
+            target_data=Data(target_data), n_epochs=n_epochs,
+            l1_penalties=l1_penalties, constrain=constrain, 
+            decaying_lr=decaying_lr, refine=refine, 
+            plotlasso=False
+        )
+
+        assert feature_selection.history is not None
+        if (l1_penalties is not None) and not refine:
+            assert num_nonzero_features.shape[0] == len(l1_penalties)
+            assert dii_opt_per_nfeatures.shape[0] == len(l1_penalties)
+            assert weights_opt_per_nfeatures.shape[0] == len(l1_penalties)
+        assert num_nonzero_features.shape[0] == l1_penalties_opt_per_nfeatures.shape[0]
+        assert dii_opt_per_nfeatures.shape[0] == l1_penalties_opt_per_nfeatures.shape[0]
+        assert weights_opt_per_nfeatures.shape[0] == l1_penalties_opt_per_nfeatures.shape[0]
+        assert weights_opt_per_nfeatures.shape[1] == target_data.shape[1]
