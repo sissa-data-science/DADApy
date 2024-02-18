@@ -36,12 +36,12 @@ def test_optimise_imbalance_typing():
     ]:
         feature_selection = FeatureWeighting(data, period=period)
         with pytest.raises(ValueError):
-            feature_selection.optimize_dii(Data(data), 1)
+            feature_selection.return_weights_optimize_dii(Data(data), 1)
 
     for initial_gammas in [np.array([2, 2], np.float32), "faz"]:
         feature_selection = FeatureWeighting(data)
         with pytest.raises(ValueError):
-            feature_selection.optimize_dii(
+            feature_selection.return_weights_optimize_dii(
                 Data(data), initial_gammas=initial_gammas
             )
 
@@ -94,7 +94,7 @@ def test_optimise_imbalance():
     ):
         feature_selection = FeatureWeighting(data, period=period)
         assert feature_selection.history is None
-        gammas = feature_selection.optimize_dii(
+        gammas = feature_selection.return_weights_optimize_dii(
             Data(target_data),
             n_epochs=n_epochs,
             learning_rate=1e-2,
@@ -124,7 +124,7 @@ def test_optimise_imbalance():
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
     feature_selection = FeatureWeighting(data, period=None)
-    gammas = feature_selection.optimize_dii(
+    gammas = feature_selection.return_weights_optimize_dii(
         Data(target_data),
         n_epochs=30,
         learning_rate=None,
@@ -194,7 +194,7 @@ def test_eliminate_backward_greedy_kernel_imbalance():
     feature_selection = FeatureWeighting(data, period=None)
 
     n_epochs = 10
-    _ = feature_selection.eliminate_backward_greedy_dii(
+    _ = feature_selection.return_backward_greedy_dii_elimination(
         target_data=Data(target_data), n_epochs=n_epochs, constrain=False
     )
 
@@ -219,6 +219,6 @@ def test_search_lasso_optimization_kernel_imbalance():
         kernel_list,
         lassoterm_list,
         penalties,
-    ) = feature_selection.search_lasso_optimization_dii(
+    ) = feature_selection.return_lasso_optimization_dii_search(
         target_data=Data(target_data), n_epochs=n_epochs, constrain=False
     )

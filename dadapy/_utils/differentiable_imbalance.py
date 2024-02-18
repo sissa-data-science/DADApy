@@ -56,7 +56,7 @@ def cast_ndarrays(func):
     return cast_wrapped
 
 
-def _compute_dist_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
+def _return_dist_PBC(X, maxk, box_size=None, p=2, cutoff=np.inf):
     """Compute the neighbours of each point taking into account periodic boundaries conditions and eventual cutoff
     Args:
         X (np.ndarray): array of dimension N x D
@@ -126,7 +126,7 @@ def _return_full_dist_matrix(
         else:
             # TODO: fix this, either something from dadapy, or for full matrix prob. something else
             # TODO: @FelixWodaczek Maybe we take away the option to not do cython
-            dist_matrix = _compute_dist_PBC(
+            dist_matrix = _return_dist_PBC(
                 data, maxk=data.shape[0], box_size=period, p=2
             )
     np.fill_diagonal(
@@ -301,7 +301,7 @@ def _return_dii_gradient(
                     # periodcorrection according to the rescaling factors of the inputs
                     periodalpha = period[alpha_gamma]
                     dists_squared_A = np.square(
-                        _compute_dist_PBC(
+                        _return_dist_PBC(
                             data_A[:, alpha_gamma, np.newaxis],
                             maxk=data_A.shape[0],
                             box_size=[periodalpha],
@@ -629,7 +629,7 @@ def _optimize_dii_static_zeros(
         gammas:
         diis:
     """
-    # batch GD optimization with zeroes staying zeros - needed for eliminate_backward_greedy_dii
+    # batch GD optimization with zeroes staying zeros - needed for return_backward_greedy_dii_elimination
 
     N = data.shape[0]
     D = data.shape[1]

@@ -337,7 +337,7 @@ class FeatureWeighting(Base):
         )
 
     @check_maxk
-    def optimize_dii(
+    def return_weights_optimize_dii(
         self,
         target_data: Type[Base],
         n_epochs: int = 100,
@@ -419,7 +419,7 @@ class FeatureWeighting(Base):
         return gammas_list[-1]
 
     @check_maxk
-    def eliminate_backward_greedy_dii(
+    def return_backward_greedy_dii_elimination(
         self,
         target_data: Type[Base],
         initial_gammas: Union[np.ndarray, int, float] = None,
@@ -466,7 +466,7 @@ class FeatureWeighting(Base):
         weights_per_epoch = np.full((self.dims, n_epochs+1, self.dims), np.nan)
         imbalances_per_epoch = np.full((self.dims,n_epochs+1), np.nan)
         # for making a warm start already for the first optimization
-        end_weights = self.optimize_dii(
+        end_weights = self.return_weights_optimize_dii(
             target_data=target_data,
             n_epochs=n_epochs,
             initial_gammas=initial_gammas,
@@ -520,7 +520,7 @@ class FeatureWeighting(Base):
         return imbalances_per_epoch[:,-1], weights_per_epoch[:,-1,:]
 
     @check_maxk
-    def search_lasso_optimization_dii(
+    def return_lasso_optimization_dii_search(
         self,
         target_data: Type[Base],
         initial_gammas: Union[np.ndarray, int, float] = None,
