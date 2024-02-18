@@ -46,8 +46,7 @@ cores = multiprocessing.cpu_count()
 
 
 def check_maxk(func):
-    # TODO: remove if this works with different maxk
-    # TODO: check this is the correct values for maxk != N
+    # TODO: remove when this works with different maxk
     @wraps(func)
     def with_check(*args, **kwargs):
         feature_selector: type[FeatureWeighting] = args[0]
@@ -62,7 +61,6 @@ def check_maxk(func):
     return with_check
 
 
-# TODO: compute changes class attributes, return just returns - rename
 class FeatureWeighting(Base):
     def __init__(
         self,
@@ -116,10 +114,10 @@ class FeatureWeighting(Base):
 
     @staticmethod
     def _parse_period_for_dii(in_period, in_dims):
+        # TODO: Remove when part of Base
         if in_period is None:
             return None
 
-        # TODO: this can probably be removed if it is part of the Base
         if isinstance(in_period, np.ndarray) and in_period.shape == (in_dims,):
             period = in_period
         elif isinstance(in_period, (int, float)):
@@ -272,8 +270,8 @@ class FeatureWeighting(Base):
         Raises:
             None.
         """
-        # TODO: only accepting target data of Base (or children) is slow if base automatically calculates distances.
-        # TODO: either add lazyBase or find other way to implement things like period and metric of Base.
+        # only accepting target data of Base (or children) is slow if base automatically calculates distances.
+        # either add lazyBase or find other way to implement things like period and metric of Base.
         if lambd is None:
             lambd = self.return_optimal_lambda()
 
@@ -512,7 +510,6 @@ class FeatureWeighting(Base):
             imbalances_per_epoch[self.dims - (int(nonzeros))] = imbs
             nonzeros = norm(end_weights, 0)
 
-        # TODO: @wildromi this deletes other history anyways, no point in calling stuff <element>_greedy
         self.history = {"dii_per_epoch": imbalances_per_epoch,
                         "weights_per_epoch": weights_per_epoch}
 
@@ -640,7 +637,6 @@ class FeatureWeighting(Base):
             l1_penalties = penalties
         l1_penalties = np.array(l1_penalties)
 
-        # TODO: @wildromi this deletes other history anyways, no point in calling stuff <element>_lasso
         self.history = {
             "l1_penalties": l1_penalties,
             "weights_per_l1_per_epoch": weights,

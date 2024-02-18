@@ -125,7 +125,6 @@ def _return_full_dist_matrix(
             dist_matrix = c_dii.compute_dist_PBC_cython_parallel(data, period, njobs)
         else:
             # TODO: fix this, either something from dadapy, or for full matrix prob. something else
-            # TODO: @FelixWodaczek Maybe we take away the option to not do cython
             dist_matrix = _return_dist_PBC(
                 data, maxk=data.shape[0], box_size=period, p=2
             )
@@ -218,14 +217,14 @@ def _return_dii(dist_matrix_A, rank_matrix_B, lambd):
 
 @cast_ndarrays
 def _return_dii_gradient(
-    dists_rescaled_A,
-    data_A,
-    rank_matrix_B,
+    dists_rescaled_A: np.ndarray,
+    data_A: np.ndarray,
+    rank_matrix_B: np.ndarray,
     gammas,
-    lambd,
-    njobs,
+    lambd: float,
+    njobs: int,
     period: np.ndarray = None,
-    cythond=True,
+    cythond: bool = True,
 ):
     """Compute the gradient of DII between input data matrix A and groundtruth data matrix B.
 
@@ -329,61 +328,6 @@ def _return_dii_gradient(
     gradient = (gradient_parallel * gammas) / (lambd * N**2)
 
     return gradient
-
-
-from sklearn.metrics import pairwise_distances
-
-
-class GradientFuncs: # TODO: Remove or fix this
-    def __init__(
-        self,
-        truth_ranks: np.ndarray,
-        input_data: np.ndarray,
-        lambda_: float = 1.0,
-        softmax_cutoff=1e-6,
-    ):
-        self.truth_ranks = truth_ranks
-        self.input_data = input_data
-        self.n_data = self.truth_ranks.shape[0]
-        self.n_dim = self.input_data.shape[-1]
-        self.lambda_ = lambda_
-        self.cutoff_d = -np.log(softmax_cutoff) * self.lambda_
-
-    @staticmethod
-    def _softmax_func(distance_matrix, lambda_):
-        exp = np.exp(-distance_matrix / lambda_)
-        np.fill_diagonal(exp, 0.0)
-        return exp / np.sum(exp, axis=-1)[:, np.newaxis]
-
-    def _get_distance_matrix(self, gammas: np.ndarray):
-        return pairwise_distances(self.input_data * gammas)
-
-    def _get_dim_distance_sq(self, dim):
-        return np.square(
-            self.input_data[:, np.newaxis, dim] - self.input_data[np.newaxis, :, dim]
-        )
-
-    def gradient(self, gammas: np.ndarray):
-        gradient = np.zeros_like(gammas)
-
-        distance_matrix = self._get_distance_matrix(gammas)  # distance matrix
-        softmax = self._softmax_func(
-            distance_matrix=distance_matrix, lambda_=self.lambda_
-        )  # softmax matrix with 0 diag
-        np.fill_diagonal(distance_matrix, 1.0)  # fill for division
-        for dim in range(self.n_dim):
-            distance_matrix[:, :] = (
-                self._get_dim_distance_sq(dim) / distance_matrix
-            )  # fraction, re-using memory
-            distance_matrix[:, :] = (
-                np.sum(distance_matrix * softmax, axis=-1)[:, np.newaxis]
-                - distance_matrix
-            )  # (\sum_m c_im fraction_im - fraction_ij)
-
-            gradient[dim] = (2 * gammas[dim]) / (self.lambda_ * (self.n_data**2))
-            gradient[dim] *= np.sum(softmax * distance_matrix * self.truth_ranks)
-
-        return gradient
 
 
 @cast_ndarrays
