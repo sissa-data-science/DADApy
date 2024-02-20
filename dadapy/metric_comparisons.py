@@ -20,6 +20,8 @@ Algorithms for comparing different spaces are implemented as methods of this cla
 """
 
 import multiprocessing
+import warnings
+from collections import Counter
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -47,7 +49,7 @@ class MetricComparisons(Base):
         maxk=None,
         period=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
     ):
         """Class containing several methods to compare metric spaces obtained using subsets of the data features.
 
@@ -60,7 +62,7 @@ class MetricComparisons(Base):
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
             verbose (bool): whether you want the code to speak or shut up
-            njobs (int): number of cores to be used
+            n_jobs (int): number of cores to be used
         """
         super().__init__(
             coordinates=coordinates,
@@ -68,7 +70,7 @@ class MetricComparisons(Base):
             maxk=maxk,
             period=period,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
     def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1):
@@ -92,8 +94,8 @@ class MetricComparisons(Base):
             X_, self.maxk, self.metric, self.period
         )
 
-        imb_ij = _return_imbalance(dist_indices_i, dist_indices_j, k=k)
-        imb_ji = _return_imbalance(dist_indices_j, dist_indices_i, k=k)
+        imb_ij = _return_imbalance(dist_indices_i, dist_indices_j, self.rng, k=k)
+        imb_ji = _return_imbalance(dist_indices_j, dist_indices_i, self.rng, k=k)
 
         return imb_ij, imb_ji
 
@@ -115,11 +117,11 @@ class MetricComparisons(Base):
         if self.verb:
             print(
                 "computing imbalances with coord number on {} processors".format(
-                    self.njobs
+                    self.n_jobs
                 )
             )
 
-        nmats = Parallel(n_jobs=self.njobs)(
+        nmats = Parallel(n_jobs=self.n_jobs)(
             delayed(self.return_inf_imb_two_selected_coords)([i], [j], k)
             for i in range(ncoords)
             for j in range(i)
@@ -225,10 +227,10 @@ class MetricComparisons(Base):
 
         if self.verb:
             print(
-                "computing loss with coord number on {} processors".format(self.njobs)
+                "computing loss with coord number on {} processors".format(self.n_jobs)
             )
 
-        n1s_n2s = Parallel(n_jobs=self.njobs)(
+        n1s_n2s = Parallel(n_jobs=self.n_jobs)(
             delayed(self._return_imb_with_coords)(self.X, coords, target_ranks, k)
             for coords in coord_list
         )
@@ -265,11 +267,15 @@ class MetricComparisons(Base):
             period_ = self.period
 
         _, dist_indices_coords = compute_nn_distances(
-            X_, self.maxk, self.metric, period_
+            X_, self.maxk, self.metric, period_, n_jobs=self.n_jobs
         )
 
-        imb_coords_full = _return_imbalance(dist_indices_coords, dist_indices, k=k)
-        imb_full_coords = _return_imbalance(dist_indices, dist_indices_coords, k=k)
+        imb_coords_full = _return_imbalance(
+            dist_indices_coords, dist_indices, self.rng, k=k
+        )
+        imb_full_coords = _return_imbalance(
+            dist_indices, dist_indices_coords, self.rng, k=k
+        )
 
         return imb_full_coords, imb_coords_full
 
@@ -463,61 +469,137 @@ class MetricComparisons(Base):
 
         return np.array(coord_list), np.array(imbalances)
 
-    def return_label_overlap(self, labels, k=30, avg=True, point_adaptive=False):
+    def _get_nn_indices(self, coordinates, distances, dist_indices, k, coords=None):
+        if coords is not None:
+            assert (
+                coordinates is not None
+            ), "when coords is not None the coordinate matrix \
+                coordinates must be defined."
+            X_ = coordinates[:, coords]
+            _, dist_indices = compute_nn_distances(X_, k)
+            return dist_indices, k
+
+        if k > self.maxk:
+            if dist_indices is None and distances is not None:
+                # if we are given only a distance matrix without indices we expect it to be in square form
+                assert distances.shape[0] == distances.shape[1]
+                _, dist_indices, _, _ = self._init_distances(distances, k)
+                return dist_indices, k
+            elif coordinates is not None:
+                # if coordinates are available and k > maxk distances should be recomputed
+                # and nearest neighbors idenitified up to k.
+                _, dist_indices = compute_nn_distances(
+                    coordinates, k, self.metric, self.period
+                )
+                return dist_indices, k
+            else:
+                # we must set k=self.maxk and continue the compuation
+                warnings.warn(
+                    f"Chosen k = {k} is greater than max available number of\
+                    nearest neighbors = {self.maxk}. Setting k = {self.maxk}",
+                    stacklevel=2,
+                )
+                k = self.maxk
+
+        if dist_indices is not None:
+            # if nearest neighbors are available (up to maxk) return them
+            return dist_indices, k
+
+        elif distances is not None:
+            # otherwise if distance matrix in square form is available find the first k nearest neighbors
+            _, dist_indices, _, _ = self._init_distances(distances, k)
+            return dist_indices, k
+        else:
+            # otherwise compute distances and nearest neighbors up to k.
+            _, dist_indices = compute_nn_distances(
+                coordinates, k, self.metric, self.period
+            )
+            return dist_indices, k
+
+    def _label_imbalance_helper(self, labels, k, class_fraction):
+        if k is not None:
+            max_k = k
+            k_per_sample = np.array([k for _ in range(len(labels))])
+
+        k_per_class = {}
+        class_count = Counter(labels)
+        # potentially overwrites k_per_sample
+        if class_fraction is not None:
+            for label, count in class_count.items():
+                class_k = int(count * class_fraction)
+                k_per_class[label] = class_k
+                if class_k == 0:
+                    k_per_class[label] = 1
+                    warnings.warn(
+                        f" max_k < 1 for label {label}. max_k set to 1.\
+                        Consider increasing class_fraction.",
+                        stacklevel=2,
+                    )
+            max_k = max([k for k in k_per_class.values()])
+            k_per_sample = np.array([k_per_class[label] for label in labels])
+
+        class_weights = {label: 1 / count for label, count in class_count.items()}
+        sample_weights = np.array([class_weights[label] for label in labels])
+
+        return k_per_sample, sample_weights, max_k
+
+    def return_label_overlap(
+        self, labels, k=None, avg=True, coords=None, class_fraction=None, weighted=True
+    ):
         """Return the neighbour overlap between the full space and a set of labels.
 
         An overlap of 1 means that all neighbours of a point have the same label as the central point.
 
         Args:
-            labels (list): the labels with respect to which the overlap is computed
-            k (int): the number of neighbours considered for the overlap
+            labels (list): the labels with respect to which the overlap is computed.
+            k (int): the number of neighbours considered for the overlap.
+            coords (array): subset of indices on which the overlap is computed.
+            class_fraction (float): number of nearest neighbor considered expressed \
+                as a fraction of the total number of class samples. \
+                Useful when classes are imbalanced.
+            weighted (bool): if True the overlap is weighted \
+                inversely proportional to the class population.
 
         Returns:
-            (float): the neighbour overlap of the points
+            (float): the neighbour overlap with the class labels.
         """
-        if self.distances is None:
-            assert self.X is not None
-            self.compute_distances()
+        assert (
+            k is not None or class_fraction is not None
+        ), "k and class fraction are None. set al least one of them."
+        labels = labels.astype(int)
+        k_per_sample, sample_weights, max_k = self._label_imbalance_helper(
+            labels, k, class_fraction
+        )
 
-        assert len(labels) == self.dist_indices.shape[0]
-        if self.maxk < k:
-            k = self.maxk
+        dist_indices, max_k = self._get_nn_indices(
+            self.X, self.distances, self.dist_indices, max_k, coords
+        )
+        assert len(labels) == dist_indices.shape[0]
 
-        if point_adaptive:
-            self.compute_kstar()
-
-        neighbor_index = self.dist_indices[:, 1 : k + 1]
-        ground_truth_labels = np.repeat(np.array([labels]).T, repeats=k, axis=1)
+        neighbor_index = dist_indices[:, 1 : max_k + 1]
+        ground_truth_labels = np.repeat(np.array([labels]).T, repeats=max_k, axis=1)
         overlaps = np.equal(np.array(labels)[neighbor_index], ground_truth_labels)
 
-        overlaps = np.mean(overlaps, axis=1)
-        if avg:
+        if class_fraction is not None:
+            nearest_neighbor_rank = np.arange(max_k)[np.newaxis, :]
+            # should this overlap entry be discarded?
+            mask = nearest_neighbor_rank >= k_per_sample[:, np.newaxis]
+            # mask out the entries to be discarded
+            overlaps[mask] = False
+
+        overlaps = overlaps.sum(axis=1) / k_per_sample
+        if avg and weighted:
+            overlaps = np.average(overlaps, weights=sample_weights)
+        elif avg:
             overlaps = np.mean(overlaps)
 
         return overlaps
-
-    def _get_nn_indices(self, coordinates, distances, dist_indices):
-        if dist_indices is not None:
-            return dist_indices
-
-        elif distances is not None:
-            _, dist_indices, _, _ = self._init_distances(distances, self.maxk)
-
-        else:
-            _, dist_indices = compute_nn_distances(
-                coordinates, self.maxk, self.metric, self.period
-            )
-
-        return dist_indices
 
     def return_data_overlap(
         self,
         coordinates=None,
         distances=None,
         dist_indices=None,
-        coordinates2=None,
-        distances2=None,
-        dist_indices2=None,
         k=30,
         avg=True,
         use_cython=True,
@@ -536,27 +618,29 @@ class MetricComparisons(Base):
             (float): the neighbour overlap of the points
         """
         assert any(
+            var is not None for var in [self.X, self.distances, self.dist_indices]
+        ), "MetricComparisons should be initialized with a dataset."
+
+        assert any(
             var is not None for var in [coordinates, distances, dist_indices]
-        ), "provide at least one of coordinates, distances, dist_indices"
+        ), "The overlap with data requires a second dataset. \
+            Provide at least one of coordinates, distances, dist_indices."
 
-        dist_indices1 = self._get_nn_indices(coordinates, distances, dist_indices)
+        dist_indices_base, k_base = self._get_nn_indices(
+            self.X, self.distances, self.dist_indices, k
+        )
 
-        if any(var is not None for var in [coordinates2, distances2, dist_indices2]):
-            dist_indices2 = self._get_nn_indices(
-                coordinates2, distances2, dist_indices2
-            )
+        dist_indices_other, k_other = self._get_nn_indices(
+            coordinates, distances, dist_indices, k
+        )
 
-        else:
-            dist_indices2 = self._get_nn_indices(self.X, None, self.dist_indices)
-
-        assert dist_indices1.shape[0] == dist_indices2.shape[0]
-
-        ndata = dist_indices1.shape[0]
-        k = min(k, dist_indices.shape[1] - 1)
+        assert dist_indices_base.shape[0] == dist_indices_other.shape[0]
+        k = min(k_base, k_other)
+        ndata = self.N
 
         if use_cython:
             overlaps = c_ov._compute_data_overlap(
-                ndata, k, dist_indices1.astype(int), dist_indices2.astype(int)
+                ndata, k, dist_indices_base.astype(int), dist_indices_other.astype(int)
             )
         else:
             overlaps = -np.ones(ndata)
@@ -564,7 +648,8 @@ class MetricComparisons(Base):
                 overlaps[i] = (
                     len(
                         np.intersect1d(
-                            dist_indices1[i, 1 : k + 1], dist_indices2[i, 1 : k + 1]
+                            dist_indices_base[i, 1 : k + 1],
+                            dist_indices_other[i, 1 : k + 1],
                         )
                     )
                     / k
@@ -588,20 +673,10 @@ class MetricComparisons(Base):
         Returns:
             (float): the neighbour overlap of the points
         """
-        assert self.X is not None
-
-        X_ = self.X[:, coords]
-
-        _, dist_indices_ = compute_nn_distances(X_, self.maxk, self.metric, self.period)
-
-        overlaps = []
-        for i in range(self.N):
-            neigh_idx_i = dist_indices_[i, 1 : k + 1]
-            overlaps.append(sum(labels[neigh_idx_i] == labels[i]) / k)
-
-        overlap = np.mean(overlaps)
-
-        return overlap
+        raise AssertionError(
+            """This function is outdated and will be removed in a future version of the package. \
+        Use "return_label_overlap" instead."""
+        )
 
     def return_overlap_coords(self, coords1, coords2, k=30):
         """Return the neighbour overlap between two subspaces defined by two sets of coordinates.
@@ -616,17 +691,11 @@ class MetricComparisons(Base):
         Returns:
             (float): the neighbour overlap of the two subspaces
         """
-        assert self.X is not None
-
-        X1_ = self.X[:, coords1]
-        X2_ = self.X[:, coords2]
-
-        _, dist_indices1_ = compute_nn_distances(X1_, k + 2, self.metric, self.period)
-        _, dist_indices2_ = compute_nn_distances(X2_, k + 2, self.metric, self.period)
-
-        overlap = np.mean(dist_indices1_[:, 1 : k + 1] == dist_indices2_[:, 1 : k + 1])
-
-        return overlap
+        raise AssertionError(
+            """This function is a wrong implementation of the overlap between two \
+            sets of coordinates and will be removed in a future version of the package. \
+            Use "return_data_overlap" instead."""
+        )
 
     def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
         """Return a list of neighbour overlaps computed on a list of selected coordinates.
@@ -641,17 +710,10 @@ class MetricComparisons(Base):
         Returns:
             (list(float)): a list of neighbour overlaps of the points
         """
-        assert self.X is not None
-
-        overlaps = []
-        for coords in coord_list:
-            if self.verb:
-                print("computing overlap for coord selection")
-
-            overlap = self.return_label_overlap_coords(labels, coords, k)
-            overlaps.append(overlap)
-
-        return overlaps
+        raise AssertionError(
+            """This function is outdated and will be removed in a future version of the package. \
+        Use "return_label_overlap" instead."""
+        )
 
     def return_inf_imb_causality(
         self,
@@ -722,7 +784,7 @@ class MetricComparisons(Base):
             effect_future, self.maxk, self.metric, period_effect
         )
 
-        imbalances = Parallel(n_jobs=self.njobs)(
+        imbalances = Parallel(n_jobs=self.n_jobs)(
             delayed(self._return_inf_imb_causality_target_rank)(
                 cause_present,
                 effect_present,
@@ -782,7 +844,7 @@ class MetricComparisons(Base):
             period_present,
         )
 
-        imb = _return_imbalance(ranks_present, ranks_effect_future, k=k)
+        imb = _return_imbalance(ranks_present, ranks_effect_future, self.rng, k=k)
 
         return imb
 
@@ -822,7 +884,7 @@ class MetricComparisons(Base):
         """
         weights_grid = _compute_2d_grid(weights_cause, weights_conditioning)
 
-        d = MetricComparisons(maxk=cause_present.shape[0] - 1, njobs=self.njobs)
+        d = MetricComparisons(maxk=cause_present.shape[0] - 1, n_jobs=self.n_jobs)
 
         imbs_no_cause = d.return_inf_imb_causality(
             cause_present=conditioning_present,
@@ -883,7 +945,7 @@ class MetricComparisons(Base):
             period_cause, period_effect, dim_cause, dim_effect
         )
 
-        ranks_present = Parallel(n_jobs=self.njobs)(
+        ranks_present = Parallel(n_jobs=self.n_jobs)(
             delayed(compute_nn_distances)(
                 np.column_stack((weight * cause_present, effect_present)),
                 self.maxk,
@@ -927,9 +989,9 @@ class MetricComparisons(Base):
             effect_future, self.maxk, self.metric, period_effect
         )
 
-        imbalances = Parallel(n_jobs=self.njobs)(
+        imbalances = Parallel(n_jobs=self.n_jobs)(
             delayed(_return_imbalance)(
-                ranks_present[i_weight], ranks_effect_future, k=k
+                ranks_present[i_weight], ranks_effect_future, self.rng, k=k
             )
             for i_weight in range(ranks_present.shape[0])
         )

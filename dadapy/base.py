@@ -27,7 +27,6 @@ import numpy as np
 from dadapy._utils.utils import compute_nn_distances, from_all_distances_to_nndistances
 
 cores = multiprocessing.cpu_count()
-rng = np.random.default_rng()
 
 
 class Base:
@@ -40,7 +39,8 @@ class Base:
         maxk=None,
         period=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
+        rng_seed=42,
     ):
         """Containing coordinates and/or distances and some basic methods.
 
@@ -56,19 +56,22 @@ class Base:
         self.X = coordinates
         self.maxk = maxk
         self.verb = verbose
-        self.njobs = njobs
+        self.n_jobs = n_jobs
         self.dims = None
         self.N = None
         self.metric = "euclidean"
         self.period = period
+        self.rng = np.random.default_rng(rng_seed)
 
         if self.X is not None:
             assert isinstance(
                 self.X, np.ndarray
             ), "Coordinates must be in numpy ndarray format"
-            if self.X.dtype == np.float64:
-                pass
-            elif self.X.dtype == np.float32 or self.X.dtype == np.float16:
+            if (
+                self.X.dtype == np.float32
+                or self.X.dtype == np.float16
+                or self.X.dtype == np.float64
+            ):
                 self.X = self.X.astype(np.float64, casting="safe")
             else:
                 warnings.warn(
@@ -79,6 +82,7 @@ class Base:
             self.N = self.X.shape[0]
             self.dims = coordinates.shape[1]
             self.distances = None
+            self.dist_indices = None
             if self.maxk is None:
                 self.maxk = min(100, self.N - 1)
 
@@ -147,7 +151,9 @@ class Base:
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_distances(self, maxk=None, metric="euclidean", period=None):
+    def compute_distances(
+        self, maxk=None, metric="euclidean", period=None, n_jobs=None
+    ):
         """Compute distaces between points up to the maxk nearest neighbour.
 
         Args:
@@ -185,11 +191,14 @@ class Base:
                 "The coordinates are assumed to be in the range [0, period]",
             )
 
+        if n_jobs is not None:
+            self.n_jobs = n_jobs
+
         if self.verb:
             print(f"Computation of the distances up to {self.maxk} NNs started")
 
         self.distances, self.dist_indices = compute_nn_distances(
-            self.X, self.maxk, self.metric, self.period
+            self.X, self.maxk, self.metric, self.period, self.n_jobs
         )
 
         sec2 = time.time()
@@ -226,18 +235,18 @@ class Base:
             )
 
         # removal of overlapping data points
-        X_unique = np.unique(self.X, axis=0)
+        x_unique = np.unique(self.X, axis=0)
 
-        N_unique = X_unique.shape[0]
+        n_unique = x_unique.shape[0]
 
-        if N_unique < self.N:
+        if n_unique < self.N:
             print(
-                f"{self.N - N_unique} overlapping datapoints found: keeping {N_unique} unique elements",
+                f"{self.N - n_unique} overlapping datapoints found: keeping {n_unique} unique elements",
                 "WARNING: the order of points has been changed!",
             )
 
-            self.X = X_unique
-            self.N = N_unique
+            self.X = x_unique
+            self.N = n_unique
             self.maxk = min(self.maxk, self.N - 1)
 
             if self.distances is not None:

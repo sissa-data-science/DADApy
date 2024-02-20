@@ -7,7 +7,7 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sissa-data-science/dadapy/lint.yml?label=lint)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sissa-data-science/dadapy/lint.yml?label=docs)
 
-DADApy is a Python package for the characterisation of manifolds in high dimensional spaces.
+DADApy is a Python package for the characterization of manifolds in high-dimensional spaces.
 
 
 # Homepage
@@ -23,20 +23,32 @@ from dadapy.data import Data
 # Generate a simple 3D gaussian dataset
 X = np.random.normal(0, 1, (1000, 3))
 
-# initialise the "Data" class with the set of coordinates
+# initialize the "Data" class with the set of coordinates
 data = Data(X)
 
-# compute distances up to the 100th nearest neighbour
+# compute distances up to the 100th nearest neighbor
 data.compute_distances(maxk=100)
 
 # compute the intrinsic dimension using 2nn estimator
-data.compute_id_2NN()
+id, id_error, id_scale = data.compute_id_2NN()
+
+# compute the intrinsic dimension up to the 64th nearest neighbors using Gride
+id_list, id_error_list, id_rank_list = data.return_id_scaling_gride(range_max=64)
 
 # compute the density using PAk, a point adaptive kNN estimator
-data.compute_density_PAk()
+log_den, log_den_error = data.compute_density_PAk()
 
 # find the peaks of the density profile through the ADP algorithm
-data.compute_clustering_ADP()
+cluster_assignment = data.compute_clustering_ADP()
+
+# compute the neighborhood overlap with another dataset
+X2 = np.random.normal(0, 1, (1000, 5))
+overlap_x2 = data.return_data_overlap(X2)
+
+# compute the neighborhood overlap with a set of labels
+labels = np.repeat(np.arange(10), 100)
+overlap_labels = data.return_label_overlap(labels)
+
 ```
 
 # Currently implemented algorithms
@@ -52,7 +64,7 @@ data.compute_clustering_ADP()
 - Density estimators
     - 
 - kNN estimator
-- k*NN estimator (kNN with adaptive choice of k)
+- k*NN estimator (kNN with an adaptive choice of k)
 - PAk estimator
   > Rodriguez et al., *JCTC* (2018)
 
@@ -74,21 +86,21 @@ data.compute_clustering_ADP()
 
 
 # Installation
-The package is compatible with Python >= 3.7 (tested on 3.7, 3.8 and 3.9). We currently only support Unix-based systems, including Linux and macOS. 
-For Windows-machines we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
+The package is compatible with the Python versions 3.7, 3.8, 3.9, 3.10, 3.11, and 3.12. We currently only support Unix-based systems, including Linux and macOS. 
+For Windows machines, we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
 
-The package requires `numpy`, `scipy` and `scikit-learn`, and `matplotlib` for the visualisations.
+The package requires `numpy`, `scipy` and `scikit-learn`, and `matplotlib` for the visualizations.
 
-The package contains Cython-generated C extensions that are automatically compiled during install. 
+The package contains Cython-generated C extensions that are automatically compiled during installation. 
 
-The latest release is available through pip
+The latest release is available through pip:
 
 ```sh
 pip install dadapy
 ```
 
-To install the latest development version, clone the source code from github
-and install it with pip as follows
+To install the latest development version, clone the source code from GitHub
+and install it with pip as follows:
 
 ```sh
 git clone https://github.com/sissa-data-science/DADApy.git
@@ -100,7 +112,7 @@ pip install .
 
 A description of the package is available [here](https://www.sciencedirect.com/science/article/pii/S2666389922002070).
 
-Please consider citing it if you found this package useful for your research
+Please consider citing it if you found this package useful for your research:
 
 ```bib
 @article{dadapy,
