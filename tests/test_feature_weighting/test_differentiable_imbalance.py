@@ -138,4 +138,3 @@ def test_py_kernel_gradient():
             # TODO: Is it okay for these to be so "far apart".
             assert cython_grad.shape[0] == n_dim
             assert np.allclose(cython_grad, py_grad, atol=1e-1, rtol=1e-2)
-            # assert np.allclose(cython_grad, fast_pygrad, atol=1e-1, rtol=1e-2)

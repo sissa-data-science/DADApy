@@ -65,13 +65,23 @@ def test_maxk_warning():
     feature_selection = FeatureWeighting(data, maxk=3)
 
     with pytest.warns():
-        feature_selection.return_dii_gradient(
-            Data(data), gammas=np.zeros(5)
-        )
+        feature_selection.return_dii_gradient(Data(data), gammas=np.zeros(5))
+
+
+def test_dii_gradient():
+    data = rng.random((10, 5))
+    feature_selection = FeatureWeighting(data, maxk=3)
+
+    cython_grad = feature_selection.return_dii_gradient(
+        Data(data * rng.random(size=(5,))), gammas=np.zeros(5)
+    )
+    feature_selection._cythond = False
+    np_grad = feature_selection.return_dii_gradient(Data(data), gammas=np.zeros(5))
+    assert np.allclose(cython_grad, np_grad)
 
 
 def test_optimise_imbalance():
-    data = rng.random((3, 5))
+    data = rng.random((50, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
     periods = [None, np.ones(5)]
@@ -80,7 +90,7 @@ def test_optimise_imbalance():
     lambdas = [1e-5, 1, None]
     l1_penalties = [1.0, 10, 0.0]
     decays = [True, False]
-    n_epochs = 2
+    n_epochs = 5
 
     for (
         period,
@@ -116,9 +126,7 @@ def test_optimise_imbalance():
         assert isinstance(feature_selection.history["dii_per_epoch"], np.ndarray)
         assert feature_selection.history["dii_per_epoch"].shape[0] == n_epochs + 1
         assert isinstance(feature_selection.history["l1_term_per_epoch"], np.ndarray)
-        assert (
-            feature_selection.history["l1_term_per_epoch"].shape[0] == n_epochs + 1
-        )
+        assert feature_selection.history["l1_term_per_epoch"].shape[0] == n_epochs + 1
 
     data = rng.normal(size=(20, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
@@ -134,8 +142,8 @@ def test_optimise_imbalance():
         l1_penalty=1e-3,
         decaying_lr=decay,
     )
-    assert (np.sum(gammas[0]) >= np.sum(gammas[2:]))
-    assert (np.sum(gammas[1]) >= np.sum(gammas[2:]))
+    assert np.sum(gammas[0]) >= np.sum(gammas[2:])
+    assert np.sum(gammas[1]) >= np.sum(gammas[2:])
 
 
 def test_optimal_learning_rate():
@@ -199,17 +207,14 @@ def test_eliminate_backward_greedy_kernel_imbalance():
     )
 
     assert feature_selection.history is not None
-    assert (
-        feature_selection.history["dii_per_epoch"].shape[0] == len(weights_array)
-    )
+    assert feature_selection.history["dii_per_epoch"].shape[0] == len(weights_array)
     assert feature_selection.history["dii_per_epoch"].shape[1] == n_epochs + 1
     assert feature_selection.history["weights_per_epoch"].shape[0] == len(weights_array)
     assert feature_selection.history["weights_per_epoch"].shape[1] == n_epochs + 1
     assert feature_selection.history["weights_per_epoch"].shape[2] == len(weights_array)
 
-def test_search_lasso_optimization_kernel_imbalance():
-    # TODO: Make this properly
 
+def test_search_lasso_optimization_kernel_imbalance():
     data = rng.random((50, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
@@ -217,18 +222,22 @@ def test_search_lasso_optimization_kernel_imbalance():
     l1_penalties_options = [[1e-3, 1e-2, 1e-1], np.array([1e-5]), 1e-5, None]
 
     n_epochs = 10
-    for l1_penalties, cythond, constrain, decaying_lr, refine in itertools.product(l1_penalties_options, *([[True, False]]*4)):
-        feature_selection.cythond = cythond
+    for l1_penalties, constrain, decaying_lr, refine in itertools.product(
+        l1_penalties_options, *([[True, False]] * 3)
+    ):
         (
-            num_nonzero_features, 
-            l1_penalties_opt_per_nfeatures, 
-            dii_opt_per_nfeatures, 
-            weights_opt_per_nfeatures
+            num_nonzero_features,
+            l1_penalties_opt_per_nfeatures,
+            dii_opt_per_nfeatures,
+            weights_opt_per_nfeatures,
         ) = feature_selection.return_lasso_optimization_dii_search(
-            target_data=Data(target_data), n_epochs=n_epochs,
-            l1_penalties=l1_penalties, constrain=constrain, 
-            decaying_lr=decaying_lr, refine=refine, 
-            plotlasso=False
+            target_data=Data(target_data),
+            n_epochs=n_epochs,
+            l1_penalties=l1_penalties,
+            constrain=constrain,
+            decaying_lr=decaying_lr,
+            refine=refine,
+            plotlasso=False,
         )
 
         assert feature_selection.history is not None
@@ -237,5 +246,8 @@ def test_search_lasso_optimization_kernel_imbalance():
         assert weights_opt_per_nfeatures.shape[0] == data.shape[1]
         assert num_nonzero_features.shape[0] == l1_penalties_opt_per_nfeatures.shape[0]
         assert dii_opt_per_nfeatures.shape[0] == l1_penalties_opt_per_nfeatures.shape[0]
-        assert weights_opt_per_nfeatures.shape[0] == l1_penalties_opt_per_nfeatures.shape[0]
+        assert (
+            weights_opt_per_nfeatures.shape[0]
+            == l1_penalties_opt_per_nfeatures.shape[0]
+        )
         assert weights_opt_per_nfeatures.shape[1] == target_data.shape[1]
