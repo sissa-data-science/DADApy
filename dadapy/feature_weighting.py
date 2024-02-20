@@ -572,6 +572,10 @@ class FeatureWeighting(Base):
         if l1_penalties is None:
             l1_penalties = [0] + list(
                 np.logspace(np.floor(np.log10((1/learning_rate)/1000)),  np.ceil(np.log10((1/learning_rate)*1.5)), 9))  # test l1's depending on the learning rate
+        elif isinstance(l1_penalties, (int, float)):
+            l1_penalties = [l1_penalties]
+        elif isinstance(l1_penalties, np.ndarray):
+            l1_penalties = list(l1_penalties)
 
         weights = np.zeros((len(l1_penalties), n_epochs + 1, self.dims))
         diis = np.zeros((len(l1_penalties), n_epochs + 1))

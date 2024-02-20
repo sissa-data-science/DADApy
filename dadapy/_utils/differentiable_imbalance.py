@@ -17,6 +17,7 @@
 
 import time
 from functools import wraps
+from warnings import warn
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -731,7 +732,7 @@ def _refine_lasso_optimization(
     gs,
     ks,
     ls,
-    l1_penalties,
+    l1_penalties: list,
     groundtruth_data,
     data,
     gammas_0,
@@ -784,7 +785,12 @@ def _refine_lasso_optimization(
                 highest = l0
     else:
         print("starting lasso too big")
-        # TODO: @wildromi, if this is the case, shouldn't we return? I think this is what causes the error below
+        
+
+    if not refinement_needed:
+        # TODO: @wildromi, this fixes the error below, if ok, delete both TODOs
+        warn("No refinement needed. Returning regular lasso optimization results.")
+        return gs, ks, ls, l1_penalties
 
     newpenalties = []
     for i in range(len(refinement_needed)):
@@ -802,7 +808,7 @@ def _refine_lasso_optimization(
 
     all_l1s = l1_penalties[
         0 : refinement_needed[0][0] + 1
-    ]  # add old l1's until the first refinement # TODO: @wildromi, this throws an error sometimes?
+    ]  # add old l1's until the first refinement # TODO: @wildromi, this throws an error sometimes?, see fix above
     all_gs = list(gs[0 : refinement_needed[0][0] + 1])
     all_ks = list(ks[0 : refinement_needed[0][0] + 1])
     all_ls = list(ls[0 : refinement_needed[0][0] + 1])
