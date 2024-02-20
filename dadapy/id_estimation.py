@@ -269,7 +269,7 @@ class IdEstimation(Base):
         Returns:
             ids_scaling (np.ndarray(float)): array of intrinsic dimensions;
             ids_scaling_err (np.ndarray(float)): array of error estimates;
-            rs_scaling (np.ndarray(float)): array of average distances of the neighbors involved in the estimates.
+            scales (np.ndarray(int)): array of maximum nearest neighbor rank included in the estimate
 
         Quick Start:
         ===========
@@ -293,8 +293,8 @@ class IdEstimation(Base):
                 ids_scaling_err:
                 array([0.   0.02 0.05 0.04 0.04 0.03 0.04 0.04])
 
-                rs_scaling:
-                array([0.52 0.66 0.88 1.18 1.65 2.3  3.23 4.54])
+                scales:
+                array([2  4  8  16  32  64  128  256])
         """
         max_ndec = int(math.log(self.N, 2)) - 1
         num_subsets = np.round(self.N / np.array([2**i for i in range(max_ndec)]))
