@@ -91,6 +91,8 @@ class IdEstimation(Base):
                 return m * x
 
             intrinsic_dim, _ = curve_fit(func, log_mus_reduced, y)
+            # curve_fit returns a 1-element array
+            intrinsic_dim = intrinsic_dim[0]
 
         else:
             raise ValueError("Please select a valid algorithm type")
@@ -258,7 +260,7 @@ class IdEstimation(Base):
     ):
         """Compute the id with the 2NN algorithm at different scales.
 
-        The different scales are obtained by sampling subsets of [N, N/2, N/4, N/8, ..., N_min] data points.
+        The different scales are obtained by sampling subsets of [N, N/2, N/4, N/8, ..., n_min] data points.
 
         Args:
             n_min (int): minimum number of points considered when decimating the dataset,
@@ -285,7 +287,7 @@ class IdEstimation(Base):
                 X, _ = make_swiss_roll(n_samples, noise=0.3)
 
                 ie = Data(coordinates=X)
-                ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(N_min = 20)
+                ids_scaling, ids_scaling_err, rs_scaling = ie.return_id_scaling_2NN(n_min = 20)
 
                 ids_scaling:
                 array([2.88 2.77 2.65 2.42 2.22 2.2  2.1  2.23])
