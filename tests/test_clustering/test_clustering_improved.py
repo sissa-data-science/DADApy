@@ -20,6 +20,7 @@ import numpy as np
 
 from dadapy import data
 
+
 # ground_truths computed with 5000k datapoints of dataset ../../examples/datasets/Fig1.dat
 def test_clustering_all_to_all_methods():
     path = os.path.join(os.path.split(__file__)[0], "./ground_truths")
@@ -31,12 +32,11 @@ def test_clustering_all_to_all_methods():
     saddle_density_gt = np.load(f"{path}/saddle_density5k.npy")
     saddle_err_gt = np.load(f"{path}/saddle_err5k.npy")
 
-
     path = os.path.join(os.path.split(__file__)[0], "../../examples/datasets")
     X = np.genfromtxt(f"{path}/Fig1.dat")
     X = X[:5000]
     cl = data.Data(coordinates=X)
-    _ = cl.compute_clustering_ADP(impl="py",v2=False)
+    _ = cl.compute_clustering_ADP(impl="py", v2=False)
     nclusters_adp = cl.N_clusters
     assignment_adp = cl.cluster_assignment
     centers_adp = np.array(cl.cluster_centers)
@@ -47,7 +47,7 @@ def test_clustering_all_to_all_methods():
     X = np.genfromtxt(f"{path}/Fig1.dat")
     X = X[:5000]
     cl = data.Data(coordinates=X)
-    _ = cl.compute_clustering_ADP(impl="py",v2=True)
+    _ = cl.compute_clustering_ADP(impl="py", v2=True)
     nclusters_adp_v2 = cl.N_clusters
     assignment_adp_v2 = cl.cluster_assignment
     centers_adp_v2 = np.array(cl.cluster_centers)
@@ -58,14 +58,13 @@ def test_clustering_all_to_all_methods():
     X = np.genfromtxt(f"{path}/Fig1.dat")
     X = X[:5000]
     cl = data.Data(coordinates=X)
-    _ = cl.compute_clustering_ADP(impl="c",v2=True)
+    _ = cl.compute_clustering_ADP(impl="c", v2=True)
     nclusters_adp_c = cl.N_clusters
     assignment_adp_c = cl.cluster_assignment
     centers_adp_c = np.array(cl.cluster_centers)
     saddle_density_adp_c = cl.log_den_bord
     saddle_err_adp_c = cl.log_den_bord_err
     bord_indices_adp_c = cl.bord_indices
-
 
     X = np.genfromtxt(f"{path}/Fig1.dat")
     X = X[:5000]
@@ -77,7 +76,6 @@ def test_clustering_all_to_all_methods():
     saddle_density_pp = cl.log_den_bord
     saddle_err_pp = cl.log_den_bord_err
     bord_indices_pp = cl.bord_indices
-
 
     X = np.genfromtxt(f"{path}/Fig1.dat")
     X = X[:5000]
@@ -115,7 +113,6 @@ def test_clustering_all_to_all_methods():
     assert np.all(bord_indices_adp == bord_indices_adp_c)
     assert np.allclose(saddle_density_adp, saddle_density_adp_c)
     assert np.allclose(saddle_err_adp, saddle_err_adp_c)
-
 
     # pure python consistent with ADP
     assert nclusters_adp == nclusters_pp
