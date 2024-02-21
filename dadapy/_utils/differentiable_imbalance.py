@@ -501,7 +501,7 @@ def _optimize_dii(
             diis[i_epoch + 1] = diis[i_epoch]
             l1_penalties[i_epoch + 1] = l1_penalties[i_epoch]
             gammas_list[i_epoch + 1] = gammas_list[i_epoch]
-            print(
+            warn(
                 "At least one gradient element turned to Nan, no optimization possible."
             )
             break
@@ -526,10 +526,10 @@ def _optimize_dii(
                 diis[i_epoch + 1] = diis[i_epoch]
                 l1_penalties[i_epoch + 1] = l1_penalties[i_epoch]
                 gammas_list[i_epoch + 1] = gammas_list[i_epoch]
-                print(
-                    "The l1-regularization of ",
-                    l1_penalty,
-                    " is too high. All features would be set to 0. No full optimization possible",
+                warn(
+                    f"The l1-regularization of "
+                    + str(l1_penalty)
+                    + " is too high. All features would be set to 0. No full optimization possible",
                 )
                 break
 
@@ -657,7 +657,7 @@ def _optimize_dii_static_zeros(
         if np.isnan(gradient).any():  # If any of the gradient elements turned to nan
             diis[i_epoch + 1] = diis[i_epoch]
             gammas_list[i_epoch + 1] = gammas_list[i_epoch]
-            print(
+            warn(
                 "At least one gradient element turned to Nan, no optimization possible."
             )
             break
@@ -730,6 +730,7 @@ def _refine_lasso_optimization(
     period=None,
     groundtruthperiod=None,
     cythond=True,
+    verbose=False,
 ):
     """Generate more lasso runs in between lasso strengths that produced non-consecutive numbers of non-zero weights
 
@@ -748,6 +749,9 @@ def _refine_lasso_optimization(
         decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
         period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
         groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
+        cythond (bool): Flag indicating whether to use Cython-based distance computation methods.
+            Should be True (default) unless you want to test the Python-based methods.
+        verbose (bool): Default: False. If True, print the time it took to optimize each lasso strength.
 
     Returns:
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
@@ -768,7 +772,7 @@ def _refine_lasso_optimization(
                 )  # lower and upper limit of refinement and how many points to add
             if l0 < highest:
                 highest = l0
-    else:
+    elif verbose:
         print("starting lasso too big")
 
     if not refinement_needed:
@@ -803,7 +807,9 @@ def _refine_lasso_optimization(
         ls_new = np.zeros((len(newl1), n_epochs + 1))
         # do the new optimizations
         for j in range(len(newl1)):
-            start = time.time()
+            if verbose:
+                start = time.time()
+
             gs_new[j], ks_new[j], ls_new[j] = _optimize_dii(
                 groundtruth_data=groundtruth_data,
                 data=data,
@@ -819,19 +825,21 @@ def _refine_lasso_optimization(
                 n_jobs=n_jobs,
                 cythond=cythond,
             )
-            end = time.time()
-            print(
-                "in intercollation ",
-                i + 1,
-                " of ",
-                len(newpenalties),
-                "for test l1 ",
-                j + 1,
-                " of ",
-                len(newl1),
-                ", the time was: ",
-                end - start,
-            )
+
+            if verbose:
+                end = time.time()
+                print(
+                    "in intercollation ",
+                    i + 1,
+                    " of ",
+                    len(newpenalties),
+                    "for test l1 ",
+                    j + 1,
+                    " of ",
+                    len(newl1),
+                    ", the time was: ",
+                    end - start,
+                )
 
         # make the intercollated list of penalties
         all_l1s = all_l1s + newpenalties[i]  # add refinement

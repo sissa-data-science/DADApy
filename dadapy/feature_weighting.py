@@ -530,7 +530,8 @@ class FeatureWeighting(Base):
 
             end = time.time()
             timing = end - start
-            print("number of nonzero weights= ", nonzeros, ", time: ", timing)
+            if self.verb:
+                print("number of nonzero weights= ", nonzeros, ", time: ", timing)
             end_weights = gs[-1].copy()
             arr = end_weights.copy()
             arr[arr == 0] = np.nan
@@ -662,9 +663,12 @@ class FeatureWeighting(Base):
         diis = np.zeros((len(l1_penalties), n_epochs + 1))
         l1_loss_contributions = np.zeros((len(l1_penalties), n_epochs + 1))
 
-        print(len(l1_penalties), "l1-penalties to test:")
+        if self.verb:
+            print(len(l1_penalties), "l1-penalties to test:")
+
         for i in range(len(l1_penalties)):
             start = time.time()
+
             weights[i], diis[i], l1_loss_contributions[i] = _optimize_dii(
                 groundtruth_data=target_data.X,
                 data=self.X,
@@ -682,16 +686,18 @@ class FeatureWeighting(Base):
                 n_jobs=self.n_jobs,
                 cythond=self._cythond,
             )
+
             end = time.time()
-            print(
-                "optimization with l1-penalty",
-                i + 1,
-                "of strength ",
-                np.around(l1_penalties[i], 4),
-                "took:",
-                end - start,
-                "s in total.",
-            )
+            if self.verb:
+                print(
+                    "optimization with l1-penalty",
+                    i + 1,
+                    "of strength ",
+                    np.around(l1_penalties[i], 4),
+                    "took:",
+                    end - start,
+                    "s in total.",
+                )
 
         # Refine l1 search
         if refine:
@@ -719,6 +725,7 @@ class FeatureWeighting(Base):
                 ),
                 n_jobs=self.n_jobs,
                 cythond=self._cythond,
+                verbose=self.verb,
             )
             weights = gammas_list
             diis = dii_list
