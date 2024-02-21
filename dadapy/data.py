@@ -27,6 +27,7 @@ import numpy as np
 
 from dadapy._utils import utils as ut
 from dadapy.clustering import Clustering
+from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons
 
 cores = multiprocessing.cpu_count()
@@ -34,7 +35,7 @@ np.set_printoptions(precision=2)
 os.getcwd()
 
 
-class Data(Clustering, MetricComparisons):
+class Data(Clustering, MetricComparisons, FeatureWeighting):
     """Data class."""
 
     def __init__(
