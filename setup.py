@@ -71,14 +71,20 @@ ext_modules += [
     )
 ]
 
-
-ext_parallel = Extension(
-    "dadapy._cython.cython_distances",
-    sources=["dadapy/_cython/cython_distances.c"],
-    include_dirs=[get_numpy_include()],
-    define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-)
-
+exts_parallel = [
+    Extension(
+        "dadapy._cython.cython_distances",
+        sources=["dadapy/_cython/cython_distances.c"],
+        include_dirs=[get_numpy_include()],
+        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+    ),
+    Extension(
+        "dadapy._cython.cython_differentiable_imbalance",
+        sources=["dadapy/_cython/cython_differentiable_imbalance.c"],
+        include_dirs=[get_numpy_include()],
+        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+    )
+]
 
 extra_compile_args = (["-fopenmp"],)
 extra_link_args = (["-fopenmp"],)
