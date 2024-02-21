@@ -1484,7 +1484,7 @@ static const char *__pyx_filename;
 /* #### Code section: filename_table ### */
 
 static const char *__pyx_f[] = {
-  "cython_differentiable_imbalance.pyx",
+  "dadapy/_cython/cython_differentiable_imbalance.pyx",
   "<stringsource>",
   "__init__.cython-30.pxd",
   "type.pxd",
@@ -1633,7 +1633,7 @@ typedef struct {
 
 /* #### Code section: numeric_typedefs ### */
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":730
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":730
  * # in Cython to enable them only on the right systems.
  * 
  * ctypedef npy_int8       int8_t             # <<<<<<<<<<<<<<
@@ -1642,7 +1642,7 @@ typedef struct {
  */
 typedef npy_int8 __pyx_t_5numpy_int8_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":731
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":731
  * 
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t             # <<<<<<<<<<<<<<
@@ -1651,7 +1651,7 @@ typedef npy_int8 __pyx_t_5numpy_int8_t;
  */
 typedef npy_int16 __pyx_t_5numpy_int16_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":732
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":732
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t             # <<<<<<<<<<<<<<
@@ -1660,7 +1660,7 @@ typedef npy_int16 __pyx_t_5numpy_int16_t;
  */
 typedef npy_int32 __pyx_t_5numpy_int32_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":733
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":733
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t
  * ctypedef npy_int64      int64_t             # <<<<<<<<<<<<<<
@@ -1669,7 +1669,7 @@ typedef npy_int32 __pyx_t_5numpy_int32_t;
  */
 typedef npy_int64 __pyx_t_5numpy_int64_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":737
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":737
  * #ctypedef npy_int128     int128_t
  * 
  * ctypedef npy_uint8      uint8_t             # <<<<<<<<<<<<<<
@@ -1678,7 +1678,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
  */
 typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":738
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":738
  * 
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t             # <<<<<<<<<<<<<<
@@ -1687,7 +1687,7 @@ typedef npy_uint8 __pyx_t_5numpy_uint8_t;
  */
 typedef npy_uint16 __pyx_t_5numpy_uint16_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":739
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":739
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t             # <<<<<<<<<<<<<<
@@ -1696,7 +1696,7 @@ typedef npy_uint16 __pyx_t_5numpy_uint16_t;
  */
 typedef npy_uint32 __pyx_t_5numpy_uint32_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":740
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":740
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t
  * ctypedef npy_uint64     uint64_t             # <<<<<<<<<<<<<<
@@ -1705,7 +1705,7 @@ typedef npy_uint32 __pyx_t_5numpy_uint32_t;
  */
 typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":744
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":744
  * #ctypedef npy_uint128    uint128_t
  * 
  * ctypedef npy_float32    float32_t             # <<<<<<<<<<<<<<
@@ -1714,7 +1714,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
  */
 typedef npy_float32 __pyx_t_5numpy_float32_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":745
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":745
  * 
  * ctypedef npy_float32    float32_t
  * ctypedef npy_float64    float64_t             # <<<<<<<<<<<<<<
@@ -1723,7 +1723,7 @@ typedef npy_float32 __pyx_t_5numpy_float32_t;
  */
 typedef npy_float64 __pyx_t_5numpy_float64_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":754
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":754
  * # The int types are mapped a bit surprising --
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t             # <<<<<<<<<<<<<<
@@ -1732,7 +1732,7 @@ typedef npy_float64 __pyx_t_5numpy_float64_t;
  */
 typedef npy_long __pyx_t_5numpy_int_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":755
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":755
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   longlong_t             # <<<<<<<<<<<<<<
@@ -1741,7 +1741,7 @@ typedef npy_long __pyx_t_5numpy_int_t;
  */
 typedef npy_longlong __pyx_t_5numpy_longlong_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":757
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":757
  * ctypedef npy_longlong   longlong_t
  * 
  * ctypedef npy_ulong      uint_t             # <<<<<<<<<<<<<<
@@ -1750,7 +1750,7 @@ typedef npy_longlong __pyx_t_5numpy_longlong_t;
  */
 typedef npy_ulong __pyx_t_5numpy_uint_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":758
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":758
  * 
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulonglong_t             # <<<<<<<<<<<<<<
@@ -1759,7 +1759,7 @@ typedef npy_ulong __pyx_t_5numpy_uint_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":760
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":760
  * ctypedef npy_ulonglong  ulonglong_t
  * 
  * ctypedef npy_intp       intp_t             # <<<<<<<<<<<<<<
@@ -1768,7 +1768,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
  */
 typedef npy_intp __pyx_t_5numpy_intp_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":761
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":761
  * 
  * ctypedef npy_intp       intp_t
  * ctypedef npy_uintp      uintp_t             # <<<<<<<<<<<<<<
@@ -1777,7 +1777,7 @@ typedef npy_intp __pyx_t_5numpy_intp_t;
  */
 typedef npy_uintp __pyx_t_5numpy_uintp_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":763
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":763
  * ctypedef npy_uintp      uintp_t
  * 
  * ctypedef npy_double     float_t             # <<<<<<<<<<<<<<
@@ -1786,7 +1786,7 @@ typedef npy_uintp __pyx_t_5numpy_uintp_t;
  */
 typedef npy_double __pyx_t_5numpy_float_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":764
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":764
  * 
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t             # <<<<<<<<<<<<<<
@@ -1795,7 +1795,7 @@ typedef npy_double __pyx_t_5numpy_float_t;
  */
 typedef npy_double __pyx_t_5numpy_double_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":765
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":765
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t             # <<<<<<<<<<<<<<
@@ -1836,7 +1836,7 @@ struct __pyx_MemviewEnum_obj;
 struct __pyx_memoryview_obj;
 struct __pyx_memoryviewslice_obj;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":767
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":767
  * ctypedef npy_longdouble longdouble_t
  * 
  * ctypedef npy_cfloat      cfloat_t             # <<<<<<<<<<<<<<
@@ -1845,7 +1845,7 @@ struct __pyx_memoryviewslice_obj;
  */
 typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":768
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":768
  * 
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t             # <<<<<<<<<<<<<<
@@ -1854,7 +1854,7 @@ typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":769
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":769
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t
  * ctypedef npy_clongdouble clongdouble_t             # <<<<<<<<<<<<<<
@@ -1863,7 +1863,7 @@ typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
  */
 typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":771
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":771
  * ctypedef npy_clongdouble clongdouble_t
  * 
  * ctypedef npy_cdouble     complex_t             # <<<<<<<<<<<<<<
@@ -3234,7 +3234,6 @@ static const char __pyx_k_flags[] = "flags";
 static const char __pyx_k_index[] = "index";
 static const char __pyx_k_lambd[] = "lambd";
 static const char __pyx_k_min_d[] = "min_d";
-static const char __pyx_k_njobs[] = "njobs";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_order[] = "order";
 static const char __pyx_k_range[] = "range";
@@ -3248,6 +3247,7 @@ static const char __pyx_k_encode[] = "encode";
 static const char __pyx_k_format[] = "format";
 static const char __pyx_k_gammas[] = "gammas";
 static const char __pyx_k_import[] = "__import__";
+static const char __pyx_k_n_jobs[] = "n_jobs";
 static const char __pyx_k_name_2[] = "__name__";
 static const char __pyx_k_period[] = "period";
 static const char __pyx_k_pickle[] = "pickle";
@@ -3327,7 +3327,6 @@ static const char __pyx_k_itemsize_0_for_cython_array[] = "itemsize <= 0 for cyt
 static const char __pyx_k_compute_dist_cython_parallel[] = "compute_dist_cython_parallel";
 static const char __pyx_k_unable_to_allocate_array_data[] = "unable to allocate array data.";
 static const char __pyx_k_strided_and_direct_or_indirect[] = "<strided and direct or indirect>";
-static const char __pyx_k_cython_differentiable_imbalance[] = "cython_differentiable_imbalance.pyx";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
 static const char __pyx_k_All_dimensions_preceding_dimensi[] = "All dimensions preceding dimension %d must be indexed and not sliced";
 static const char __pyx_k_Buffer_view_does_not_expose_stri[] = "Buffer view does not expose strides";
@@ -3344,11 +3343,12 @@ static const char __pyx_k_Unable_to_convert_item_to_object[] = "Unable to conver
 static const char __pyx_k_alphagamma_gradientterm_cython_P[] = "alphagamma_gradientterm_cython_PBC_parallel";
 static const char __pyx_k_alphagamma_gradientterm_cython_p[] = "alphagamma_gradientterm_cython_parallel";
 static const char __pyx_k_compute_dist_PBC_cython_parallel[] = "compute_dist_PBC_cython_parallel";
-static const char __pyx_k_dadapy__cython_cython_differenti[] = "dadapy._cython.cython_differentiable_imbalance";
+static const char __pyx_k_dadapy__cython_cython_differenti[] = "dadapy/_cython/cython_differentiable_imbalance.pyx";
 static const char __pyx_k_got_differing_extents_in_dimensi[] = "got differing extents in dimension ";
 static const char __pyx_k_no_default___reduce___due_to_non[] = "no default __reduce__ due to non-trivial __cinit__";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
 static const char __pyx_k_unable_to_allocate_shape_and_str[] = "unable to allocate shape and strides.";
+static const char __pyx_k_dadapy__cython_cython_differenti_2[] = "dadapy._cython.cython_differentiable_imbalance";
 /* #### Code section: decls ### */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array_2__getbuffer__(struct __pyx_array_obj *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
@@ -3391,11 +3391,11 @@ static void __pyx_memoryviewslice___pyx_pf_15View_dot_MemoryView_16_memoryviewsl
 static PyObject *__pyx_pf___pyx_memoryviewslice___reduce_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf___pyx_memoryviewslice_2__setstate_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_15View_dot_MemoryView___pyx_unpickle_Enum(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, __Pyx_memviewslice __pyx_v_box_size, int __pyx_v_njobs, int __pyx_v_squared); /* proto */
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, int __pyx_v_njobs, int __pyx_v_squared); /* proto */
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_data_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_gammas, double __pyx_v_lambd, __Pyx_memviewslice __pyx_v_period, int __pyx_v_njobs, int __pyx_v_periodic); /* proto */
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6alphagamma_gradientterm_cython_PBC_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_period, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_njobs); /* proto */
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_8alphagamma_gradientterm_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_njobs); /* proto */
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, __Pyx_memviewslice __pyx_v_box_size, int __pyx_v_n_jobs, int __pyx_v_squared); /* proto */
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, int __pyx_v_n_jobs, int __pyx_v_squared); /* proto */
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_data_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_gammas, double __pyx_v_lambd, __Pyx_memviewslice __pyx_v_period, int __pyx_v_n_jobs, int __pyx_v_periodic); /* proto */
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6alphagamma_gradientterm_cython_PBC_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_period, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_n_jobs); /* proto */
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_8alphagamma_gradientterm_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_n_jobs); /* proto */
 static PyObject *__pyx_tp_new_array(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_Enum(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_memoryview(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -3548,8 +3548,8 @@ typedef struct {
   PyObject *__pyx_kp_s_contiguous_and_direct;
   PyObject *__pyx_kp_s_contiguous_and_indirect;
   PyObject *__pyx_n_s_count;
-  PyObject *__pyx_kp_s_cython_differentiable_imbalance;
-  PyObject *__pyx_n_s_dadapy__cython_cython_differenti;
+  PyObject *__pyx_kp_s_dadapy__cython_cython_differenti;
+  PyObject *__pyx_n_s_dadapy__cython_cython_differenti_2;
   PyObject *__pyx_n_s_data_A;
   PyObject *__pyx_n_s_dict;
   PyObject *__pyx_n_s_diff;
@@ -3594,11 +3594,11 @@ typedef struct {
   PyObject *__pyx_n_s_min_dists;
   PyObject *__pyx_n_s_mod;
   PyObject *__pyx_n_s_mode;
+  PyObject *__pyx_n_s_n_jobs;
   PyObject *__pyx_n_s_name;
   PyObject *__pyx_n_s_name_2;
   PyObject *__pyx_n_s_ndim;
   PyObject *__pyx_n_s_new;
-  PyObject *__pyx_n_s_njobs;
   PyObject *__pyx_kp_s_no_default___reduce___due_to_non;
   PyObject *__pyx_n_s_np;
   PyObject *__pyx_n_s_numpy;
@@ -3817,8 +3817,8 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_kp_s_contiguous_and_direct);
   Py_CLEAR(clear_module_state->__pyx_kp_s_contiguous_and_indirect);
   Py_CLEAR(clear_module_state->__pyx_n_s_count);
-  Py_CLEAR(clear_module_state->__pyx_kp_s_cython_differentiable_imbalance);
-  Py_CLEAR(clear_module_state->__pyx_n_s_dadapy__cython_cython_differenti);
+  Py_CLEAR(clear_module_state->__pyx_kp_s_dadapy__cython_cython_differenti);
+  Py_CLEAR(clear_module_state->__pyx_n_s_dadapy__cython_cython_differenti_2);
   Py_CLEAR(clear_module_state->__pyx_n_s_data_A);
   Py_CLEAR(clear_module_state->__pyx_n_s_dict);
   Py_CLEAR(clear_module_state->__pyx_n_s_diff);
@@ -3863,11 +3863,11 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_min_dists);
   Py_CLEAR(clear_module_state->__pyx_n_s_mod);
   Py_CLEAR(clear_module_state->__pyx_n_s_mode);
+  Py_CLEAR(clear_module_state->__pyx_n_s_n_jobs);
   Py_CLEAR(clear_module_state->__pyx_n_s_name);
   Py_CLEAR(clear_module_state->__pyx_n_s_name_2);
   Py_CLEAR(clear_module_state->__pyx_n_s_ndim);
   Py_CLEAR(clear_module_state->__pyx_n_s_new);
-  Py_CLEAR(clear_module_state->__pyx_n_s_njobs);
   Py_CLEAR(clear_module_state->__pyx_kp_s_no_default___reduce___due_to_non);
   Py_CLEAR(clear_module_state->__pyx_n_s_np);
   Py_CLEAR(clear_module_state->__pyx_n_s_numpy);
@@ -4064,8 +4064,8 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_kp_s_contiguous_and_direct);
   Py_VISIT(traverse_module_state->__pyx_kp_s_contiguous_and_indirect);
   Py_VISIT(traverse_module_state->__pyx_n_s_count);
-  Py_VISIT(traverse_module_state->__pyx_kp_s_cython_differentiable_imbalance);
-  Py_VISIT(traverse_module_state->__pyx_n_s_dadapy__cython_cython_differenti);
+  Py_VISIT(traverse_module_state->__pyx_kp_s_dadapy__cython_cython_differenti);
+  Py_VISIT(traverse_module_state->__pyx_n_s_dadapy__cython_cython_differenti_2);
   Py_VISIT(traverse_module_state->__pyx_n_s_data_A);
   Py_VISIT(traverse_module_state->__pyx_n_s_dict);
   Py_VISIT(traverse_module_state->__pyx_n_s_diff);
@@ -4110,11 +4110,11 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_min_dists);
   Py_VISIT(traverse_module_state->__pyx_n_s_mod);
   Py_VISIT(traverse_module_state->__pyx_n_s_mode);
+  Py_VISIT(traverse_module_state->__pyx_n_s_n_jobs);
   Py_VISIT(traverse_module_state->__pyx_n_s_name);
   Py_VISIT(traverse_module_state->__pyx_n_s_name_2);
   Py_VISIT(traverse_module_state->__pyx_n_s_ndim);
   Py_VISIT(traverse_module_state->__pyx_n_s_new);
-  Py_VISIT(traverse_module_state->__pyx_n_s_njobs);
   Py_VISIT(traverse_module_state->__pyx_kp_s_no_default___reduce___due_to_non);
   Py_VISIT(traverse_module_state->__pyx_n_s_np);
   Py_VISIT(traverse_module_state->__pyx_n_s_numpy);
@@ -4347,8 +4347,8 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_kp_s_contiguous_and_direct __pyx_mstate_global->__pyx_kp_s_contiguous_and_direct
 #define __pyx_kp_s_contiguous_and_indirect __pyx_mstate_global->__pyx_kp_s_contiguous_and_indirect
 #define __pyx_n_s_count __pyx_mstate_global->__pyx_n_s_count
-#define __pyx_kp_s_cython_differentiable_imbalance __pyx_mstate_global->__pyx_kp_s_cython_differentiable_imbalance
-#define __pyx_n_s_dadapy__cython_cython_differenti __pyx_mstate_global->__pyx_n_s_dadapy__cython_cython_differenti
+#define __pyx_kp_s_dadapy__cython_cython_differenti __pyx_mstate_global->__pyx_kp_s_dadapy__cython_cython_differenti
+#define __pyx_n_s_dadapy__cython_cython_differenti_2 __pyx_mstate_global->__pyx_n_s_dadapy__cython_cython_differenti_2
 #define __pyx_n_s_data_A __pyx_mstate_global->__pyx_n_s_data_A
 #define __pyx_n_s_dict __pyx_mstate_global->__pyx_n_s_dict
 #define __pyx_n_s_diff __pyx_mstate_global->__pyx_n_s_diff
@@ -4393,11 +4393,11 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_min_dists __pyx_mstate_global->__pyx_n_s_min_dists
 #define __pyx_n_s_mod __pyx_mstate_global->__pyx_n_s_mod
 #define __pyx_n_s_mode __pyx_mstate_global->__pyx_n_s_mode
+#define __pyx_n_s_n_jobs __pyx_mstate_global->__pyx_n_s_n_jobs
 #define __pyx_n_s_name __pyx_mstate_global->__pyx_n_s_name
 #define __pyx_n_s_name_2 __pyx_mstate_global->__pyx_n_s_name_2
 #define __pyx_n_s_ndim __pyx_mstate_global->__pyx_n_s_ndim
 #define __pyx_n_s_new __pyx_mstate_global->__pyx_n_s_new
-#define __pyx_n_s_njobs __pyx_mstate_global->__pyx_n_s_njobs
 #define __pyx_kp_s_no_default___reduce___due_to_non __pyx_mstate_global->__pyx_kp_s_no_default___reduce___due_to_non
 #define __pyx_n_s_np __pyx_mstate_global->__pyx_n_s_np
 #define __pyx_n_s_numpy __pyx_mstate_global->__pyx_n_s_numpy
@@ -18109,7 +18109,7 @@ static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *__
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":245
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":245
  * 
  *         @property
  *         cdef inline PyObject* base(self) nogil:             # <<<<<<<<<<<<<<
@@ -18120,7 +18120,7 @@ static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *__
 static CYTHON_INLINE PyObject *__pyx_f_5numpy_7ndarray_4base_base(PyArrayObject *__pyx_v_self) {
   PyObject *__pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":248
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":248
  *             """Returns a borrowed reference to the object owning the data/memory.
  *             """
  *             return PyArray_BASE(self)             # <<<<<<<<<<<<<<
@@ -18130,7 +18130,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_7ndarray_4base_base(PyArrayObject 
   __pyx_r = PyArray_BASE(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":245
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":245
  * 
  *         @property
  *         cdef inline PyObject* base(self) nogil:             # <<<<<<<<<<<<<<
@@ -18143,7 +18143,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_7ndarray_4base_base(PyArrayObject 
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":251
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":251
  * 
  *         @property
  *         cdef inline dtype descr(self):             # <<<<<<<<<<<<<<
@@ -18157,7 +18157,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
   PyArray_Descr *__pyx_t_1;
   __Pyx_RefNannySetupContext("descr", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":254
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":254
  *             """Returns an owned reference to the dtype of the array.
  *             """
  *             return <dtype>PyArray_DESCR(self)             # <<<<<<<<<<<<<<
@@ -18170,7 +18170,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
   __pyx_r = ((PyArray_Descr *)__pyx_t_1);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":251
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":251
  * 
  *         @property
  *         cdef inline dtype descr(self):             # <<<<<<<<<<<<<<
@@ -18185,7 +18185,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":257
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":257
  * 
  *         @property
  *         cdef inline int ndim(self) nogil:             # <<<<<<<<<<<<<<
@@ -18196,7 +18196,7 @@ static CYTHON_INLINE PyArray_Descr *__pyx_f_5numpy_7ndarray_5descr_descr(PyArray
 static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx_v_self) {
   int __pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":260
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":260
  *             """Returns the number of dimensions in the array.
  *             """
  *             return PyArray_NDIM(self)             # <<<<<<<<<<<<<<
@@ -18206,7 +18206,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx
   __pyx_r = PyArray_NDIM(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":257
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":257
  * 
  *         @property
  *         cdef inline int ndim(self) nogil:             # <<<<<<<<<<<<<<
@@ -18219,7 +18219,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":263
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":263
  * 
  *         @property
  *         cdef inline npy_intp *shape(self) nogil:             # <<<<<<<<<<<<<<
@@ -18230,7 +18230,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_7ndarray_4ndim_ndim(PyArrayObject *__pyx
 static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObject *__pyx_v_self) {
   npy_intp *__pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":268
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":268
  *             Can return NULL for 0-dimensional arrays.
  *             """
  *             return PyArray_DIMS(self)             # <<<<<<<<<<<<<<
@@ -18240,7 +18240,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObjec
   __pyx_r = PyArray_DIMS(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":263
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":263
  * 
  *         @property
  *         cdef inline npy_intp *shape(self) nogil:             # <<<<<<<<<<<<<<
@@ -18253,7 +18253,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObjec
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":271
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":271
  * 
  *         @property
  *         cdef inline npy_intp *strides(self) nogil:             # <<<<<<<<<<<<<<
@@ -18264,7 +18264,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_5shape_shape(PyArrayObjec
 static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayObject *__pyx_v_self) {
   npy_intp *__pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":275
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":275
  *             The number of elements matches the number of dimensions of the array (ndim).
  *             """
  *             return PyArray_STRIDES(self)             # <<<<<<<<<<<<<<
@@ -18274,7 +18274,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayO
   __pyx_r = PyArray_STRIDES(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":271
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":271
  * 
  *         @property
  *         cdef inline npy_intp *strides(self) nogil:             # <<<<<<<<<<<<<<
@@ -18287,7 +18287,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayO
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":278
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":278
  * 
  *         @property
  *         cdef inline npy_intp size(self) nogil:             # <<<<<<<<<<<<<<
@@ -18298,7 +18298,7 @@ static CYTHON_INLINE npy_intp *__pyx_f_5numpy_7ndarray_7strides_strides(PyArrayO
 static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *__pyx_v_self) {
   npy_intp __pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":281
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":281
  *             """Returns the total size (in number of elements) of the array.
  *             """
  *             return PyArray_SIZE(self)             # <<<<<<<<<<<<<<
@@ -18308,7 +18308,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *
   __pyx_r = PyArray_SIZE(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":278
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":278
  * 
  *         @property
  *         cdef inline npy_intp size(self) nogil:             # <<<<<<<<<<<<<<
@@ -18321,7 +18321,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":284
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":284
  * 
  *         @property
  *         cdef inline char* data(self) nogil:             # <<<<<<<<<<<<<<
@@ -18332,7 +18332,7 @@ static CYTHON_INLINE npy_intp __pyx_f_5numpy_7ndarray_4size_size(PyArrayObject *
 static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__pyx_v_self) {
   char *__pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":290
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":290
  *             of `PyArray_DATA()` instead, which returns a 'void*'.
  *             """
  *             return PyArray_BYTES(self)             # <<<<<<<<<<<<<<
@@ -18342,7 +18342,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__p
   __pyx_r = PyArray_BYTES(__pyx_v_self);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":284
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":284
  * 
  *         @property
  *         cdef inline char* data(self) nogil:             # <<<<<<<<<<<<<<
@@ -18355,7 +18355,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__p
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":773
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":773
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -18372,7 +18372,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew1", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":774
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":774
  * 
  * cdef inline object PyArray_MultiIterNew1(a):
  *     return PyArray_MultiIterNew(1, <void*>a)             # <<<<<<<<<<<<<<
@@ -18386,7 +18386,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":773
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":773
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -18405,7 +18405,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":776
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":776
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -18422,7 +18422,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew2", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":777
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":777
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)             # <<<<<<<<<<<<<<
@@ -18436,7 +18436,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":776
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":776
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -18455,7 +18455,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":779
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":779
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -18472,7 +18472,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew3", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":780
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":780
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)             # <<<<<<<<<<<<<<
@@ -18486,7 +18486,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":779
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":779
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -18505,7 +18505,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":782
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":782
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -18522,7 +18522,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew4", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":783
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":783
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)             # <<<<<<<<<<<<<<
@@ -18536,7 +18536,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":782
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":782
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -18555,7 +18555,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":785
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":785
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -18572,7 +18572,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew5", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":786
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":786
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)             # <<<<<<<<<<<<<<
@@ -18586,7 +18586,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":785
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":785
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -18605,7 +18605,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":788
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":788
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -18619,7 +18619,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("PyDataType_SHAPE", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":789
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":789
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -18629,7 +18629,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   __pyx_t_1 = PyDataType_HASSUBARRAY(__pyx_v_d);
   if (__pyx_t_1) {
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":790
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":790
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):
  *         return <tuple>d.subarray.shape             # <<<<<<<<<<<<<<
@@ -18641,7 +18641,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     __pyx_r = ((PyObject*)__pyx_v_d->subarray->shape);
     goto __pyx_L0;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":789
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":789
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -18650,7 +18650,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
  */
   }
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":792
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":792
  *         return <tuple>d.subarray.shape
  *     else:
  *         return ()             # <<<<<<<<<<<<<<
@@ -18664,7 +18664,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     goto __pyx_L0;
   }
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":788
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":788
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -18679,7 +18679,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":968
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":968
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -18693,7 +18693,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":969
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":969
  * 
  * cdef inline void set_array_base(ndarray arr, object base):
  *     Py_INCREF(base) # important to do this before stealing the reference below!             # <<<<<<<<<<<<<<
@@ -18702,7 +18702,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   Py_INCREF(__pyx_v_base);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":970
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":970
  * cdef inline void set_array_base(ndarray arr, object base):
  *     Py_INCREF(base) # important to do this before stealing the reference below!
  *     PyArray_SetBaseObject(arr, base)             # <<<<<<<<<<<<<<
@@ -18711,7 +18711,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   __pyx_t_1 = PyArray_SetBaseObject(__pyx_v_arr, __pyx_v_base); if (unlikely(__pyx_t_1 == ((int)-1))) __PYX_ERR(2, 970, __pyx_L1_error)
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":968
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":968
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -18726,7 +18726,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __pyx_L0:;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":972
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":972
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -18741,7 +18741,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("get_array_base", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":973
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":973
  * 
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)             # <<<<<<<<<<<<<<
@@ -18750,7 +18750,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
  */
   __pyx_v_base = PyArray_BASE(__pyx_v_arr);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":974
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":974
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -18760,7 +18760,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_t_1 = (__pyx_v_base == NULL);
   if (__pyx_t_1) {
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":975
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":975
  *     base = PyArray_BASE(arr)
  *     if base is NULL:
  *         return None             # <<<<<<<<<<<<<<
@@ -18771,7 +18771,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     __pyx_r = Py_None; __Pyx_INCREF(Py_None);
     goto __pyx_L0;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":974
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":974
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -18780,7 +18780,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
  */
   }
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":976
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":976
  *     if base is NULL:
  *         return None
  *     return <object>base             # <<<<<<<<<<<<<<
@@ -18792,7 +18792,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_r = ((PyObject *)__pyx_v_base);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":972
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":972
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -18807,7 +18807,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":980
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":980
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -18831,7 +18831,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_array", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":981
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":981
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -18847,7 +18847,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":982
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":982
  * cdef inline int import_array() except -1:
  *     try:
  *         __pyx_import_array()             # <<<<<<<<<<<<<<
@@ -18856,7 +18856,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
  */
       __pyx_t_4 = _import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 982, __pyx_L3_error)
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":981
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":981
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -18870,7 +18870,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":983
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":983
  *     try:
  *         __pyx_import_array()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -18885,7 +18885,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
       __Pyx_XGOTREF(__pyx_t_6);
       __Pyx_XGOTREF(__pyx_t_7);
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":984
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":984
  *         __pyx_import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
@@ -18900,7 +18900,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     }
     goto __pyx_L5_except_error;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":981
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":981
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -18916,7 +18916,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":980
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":980
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -18939,7 +18939,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":986
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":986
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -18963,7 +18963,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_umath", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":987
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":987
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -18979,7 +18979,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":988
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":988
  * cdef inline int import_umath() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
@@ -18988,7 +18988,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
  */
       __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 988, __pyx_L3_error)
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":987
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":987
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19002,7 +19002,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":989
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":989
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -19017,7 +19017,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
       __Pyx_XGOTREF(__pyx_t_6);
       __Pyx_XGOTREF(__pyx_t_7);
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":990
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":990
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -19032,7 +19032,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     }
     goto __pyx_L5_except_error;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":987
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":987
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19048,7 +19048,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":986
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":986
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -19071,7 +19071,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":992
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":992
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -19095,7 +19095,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_ufunc", 1);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":993
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":993
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19111,7 +19111,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":994
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":994
  * cdef inline int import_ufunc() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
@@ -19120,7 +19120,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
  */
       __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(2, 994, __pyx_L3_error)
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":993
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":993
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19134,7 +19134,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":995
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":995
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -19149,7 +19149,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
       __Pyx_XGOTREF(__pyx_t_6);
       __Pyx_XGOTREF(__pyx_t_7);
 
-      /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":996
+      /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":996
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -19164,7 +19164,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     }
     goto __pyx_L5_except_error;
 
-    /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":993
+    /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":993
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -19180,7 +19180,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":992
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":992
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -19203,7 +19203,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":999
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":999
  * 
  * 
  * cdef inline bint is_timedelta64_object(object obj):             # <<<<<<<<<<<<<<
@@ -19214,7 +19214,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
 static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_obj) {
   int __pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1011
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1011
  *     bool
  *     """
  *     return PyObject_TypeCheck(obj, &PyTimedeltaArrType_Type)             # <<<<<<<<<<<<<<
@@ -19224,7 +19224,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
   __pyx_r = PyObject_TypeCheck(__pyx_v_obj, (&PyTimedeltaArrType_Type));
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":999
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":999
  * 
  * 
  * cdef inline bint is_timedelta64_object(object obj):             # <<<<<<<<<<<<<<
@@ -19237,7 +19237,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1014
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1014
  * 
  * 
  * cdef inline bint is_datetime64_object(object obj):             # <<<<<<<<<<<<<<
@@ -19248,7 +19248,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
 static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_obj) {
   int __pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1026
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1026
  *     bool
  *     """
  *     return PyObject_TypeCheck(obj, &PyDatetimeArrType_Type)             # <<<<<<<<<<<<<<
@@ -19258,7 +19258,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
   __pyx_r = PyObject_TypeCheck(__pyx_v_obj, (&PyDatetimeArrType_Type));
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1014
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1014
  * 
  * 
  * cdef inline bint is_datetime64_object(object obj):             # <<<<<<<<<<<<<<
@@ -19271,7 +19271,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1029
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1029
  * 
  * 
  * cdef inline npy_datetime get_datetime64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -19282,7 +19282,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
 static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *__pyx_v_obj) {
   npy_datetime __pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1036
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1036
  *     also needed.  That can be found using `get_datetime64_unit`.
  *     """
  *     return (<PyDatetimeScalarObject*>obj).obval             # <<<<<<<<<<<<<<
@@ -19292,7 +19292,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
   __pyx_r = ((PyDatetimeScalarObject *)__pyx_v_obj)->obval;
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1029
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1029
  * 
  * 
  * cdef inline npy_datetime get_datetime64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -19305,7 +19305,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1039
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1039
  * 
  * 
  * cdef inline npy_timedelta get_timedelta64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -19316,7 +19316,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
 static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject *__pyx_v_obj) {
   npy_timedelta __pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1043
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1043
  *     returns the int64 value underlying scalar numpy timedelta64 object
  *     """
  *     return (<PyTimedeltaScalarObject*>obj).obval             # <<<<<<<<<<<<<<
@@ -19326,7 +19326,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
   __pyx_r = ((PyTimedeltaScalarObject *)__pyx_v_obj)->obval;
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1039
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1039
  * 
  * 
  * cdef inline npy_timedelta get_timedelta64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -19339,7 +19339,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
   return __pyx_r;
 }
 
-/* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1046
+/* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1046
  * 
  * 
  * cdef inline NPY_DATETIMEUNIT get_datetime64_unit(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -19350,7 +19350,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
 static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObject *__pyx_v_obj) {
   NPY_DATETIMEUNIT __pyx_r;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1050
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1050
  *     returns the unit part of the dtype for a numpy datetime64 object.
  *     """
  *     return <NPY_DATETIMEUNIT>(<PyDatetimeScalarObject*>obj).obmeta.base             # <<<<<<<<<<<<<<
@@ -19358,7 +19358,7 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
   __pyx_r = ((NPY_DATETIMEUNIT)((PyDatetimeScalarObject *)__pyx_v_obj)->obmeta.base);
   goto __pyx_L0;
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1046
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":1046
  * 
  * 
  * cdef inline NPY_DATETIMEUNIT get_datetime64_unit(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -19371,7 +19371,7 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_differentiable_imbalance.pyx":18
+/* "dadapy/_cython/cython_differentiable_imbalance.pyx":20
  * # TODO: @wildromi clean up
  * # TODO: @wildromi why does this not accept var=var assignments anymore
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -19387,7 +19387,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel, "Compute pairwise euclidean distances between points in a periodic boundary condition (PBC) system using Cython with parallel processing.\n\n    Args:\n        X : (numpy.ndarray): shape (N, D) of type 'float' (python) a.k.a. 'double' (C).\n            The input array of points in a PBC system, where N is the number of points and D is the number of dimensions.\n        box_size (numpy.ndarray): shape (D,) of type 'float' (python) a.k.a. 'double' (C)\n            The periodicity (size of the PBC box) in each dimension.\n        njobs (int): The number of threads to use for parallel processing.\n        squared (bool, optional): Whether to return squared distances or regular euclidean distances. Default is False.\n\n    Returns:\n        distmatrix: numpy.ndarray, shape (N, N)\n            The pairwise distance matrix between points, considering PBC of type 'float' (python) a.k.a. 'double' (C).\n\n    Notes:\n        - This function assumes that the input arrays have already been validated for type.\n        - The function uses Cython with parallel processing for performance optimization.\n    ");
+PyDoc_STRVAR(__pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel, "Compute pairwise euclidean distances between points in a periodic boundary condition (PBC) system using Cython with parallel processing.\n\n    Args:\n        X : (numpy.ndarray): shape (N, D) of type 'float' (python) a.k.a. 'double' (C).\n            The input array of points in a PBC system, where N is the number of points and D is the number of dimensions.\n        box_size (numpy.ndarray): shape (D,) of type 'float' (python) a.k.a. 'double' (C)\n            The periodicity (size of the PBC box) in each dimension.\n        n_jobs (int): The number of threads to use for parallel processing.\n        squared (bool, optional): Whether to return squared distances or regular euclidean distances. Default is False.\n\n    Returns:\n        distmatrix: numpy.ndarray, shape (N, N)\n            The pairwise distance matrix between points, considering PBC of type 'float' (python) a.k.a. 'double' (C).\n\n    Notes:\n        - This function assumes that the input arrays have already been validated for type.\n        - The function uses Cython with parallel processing for performance optimization.\n    ");
 static PyMethodDef __pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_1compute_dist_PBC_cython_parallel = {"compute_dist_PBC_cython_parallel", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_6dadapy_7_cython_31cython_differentiable_imbalance_1compute_dist_PBC_cython_parallel, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel};
 static PyObject *__pyx_pw_6dadapy_7_cython_31cython_differentiable_imbalance_1compute_dist_PBC_cython_parallel(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
@@ -19398,7 +19398,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
 ) {
   __Pyx_memviewslice __pyx_v_X = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_box_size = { 0, 0, { 0 }, { 0 }, { 0 } };
-  int __pyx_v_njobs;
+  int __pyx_v_n_jobs;
   int __pyx_v_squared;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
@@ -19420,7 +19420,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_X,&__pyx_n_s_box_size,&__pyx_n_s_njobs,&__pyx_n_s_squared,0};
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_X,&__pyx_n_s_box_size,&__pyx_n_s_n_jobs,&__pyx_n_s_squared,0};
     if (__pyx_kwds) {
       Py_ssize_t kw_args;
       switch (__pyx_nargs) {
@@ -19442,7 +19442,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 18, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -19450,31 +19450,31 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 18, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_dist_PBC_cython_parallel", 0, 3, 4, 1); __PYX_ERR(0, 18, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_dist_PBC_cython_parallel", 0, 3, 4, 1); __PYX_ERR(0, 20, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
-        if (likely((values[2] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_njobs)) != 0)) {
+        if (likely((values[2] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_n_jobs)) != 0)) {
           (void)__Pyx_Arg_NewRef_FASTCALL(values[2]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 18, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_dist_PBC_cython_parallel", 0, 3, 4, 2); __PYX_ERR(0, 18, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_dist_PBC_cython_parallel", 0, 3, 4, 2); __PYX_ERR(0, 20, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_squared);
           if (value) { values[3] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 18, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 20, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "compute_dist_PBC_cython_parallel") < 0)) __PYX_ERR(0, 18, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "compute_dist_PBC_cython_parallel") < 0)) __PYX_ERR(0, 20, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -19487,17 +19487,17 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_X = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_X.memview)) __PYX_ERR(0, 21, __pyx_L3_error)
-    __pyx_v_box_size = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_box_size.memview)) __PYX_ERR(0, 21, __pyx_L3_error)
-    __pyx_v_njobs = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_njobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 21, __pyx_L3_error)
+    __pyx_v_X = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_X.memview)) __PYX_ERR(0, 23, __pyx_L3_error)
+    __pyx_v_box_size = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_box_size.memview)) __PYX_ERR(0, 23, __pyx_L3_error)
+    __pyx_v_n_jobs = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_n_jobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 23, __pyx_L3_error)
     if (values[3]) {
-      __pyx_v_squared = __Pyx_PyObject_IsTrue(values[3]); if (unlikely((__pyx_v_squared == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 21, __pyx_L3_error)
+      __pyx_v_squared = __Pyx_PyObject_IsTrue(values[3]); if (unlikely((__pyx_v_squared == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 23, __pyx_L3_error)
     } else {
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":21
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":23
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int njobs, bint squared=False):             # <<<<<<<<<<<<<<
+ * def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_jobs, bint squared=False):             # <<<<<<<<<<<<<<
  *     """Compute pairwise euclidean distances between points in a periodic boundary condition (PBC) system using Cython with parallel processing.
  * 
  */
@@ -19506,7 +19506,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_dist_PBC_cython_parallel", 0, 3, 4, __pyx_nargs); __PYX_ERR(0, 18, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_dist_PBC_cython_parallel", 0, 3, 4, __pyx_nargs); __PYX_ERR(0, 20, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -19522,9 +19522,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel(__pyx_self, __pyx_v_X, __pyx_v_box_size, __pyx_v_njobs, __pyx_v_squared);
+  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel(__pyx_self, __pyx_v_X, __pyx_v_box_size, __pyx_v_n_jobs, __pyx_v_squared);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":18
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":20
  * # TODO: @wildromi clean up
  * # TODO: @wildromi why does this not accept var=var assignments anymore
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -19545,7 +19545,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, __Pyx_memviewslice __pyx_v_box_size, int __pyx_v_njobs, int __pyx_v_squared) {
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_compute_dist_PBC_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, __Pyx_memviewslice __pyx_v_box_size, int __pyx_v_n_jobs, int __pyx_v_squared) {
   int __pyx_v_N;
   int __pyx_v_D;
   int __pyx_v_i;
@@ -19592,7 +19592,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
   __Pyx_RefNannySetupContext("compute_dist_PBC_cython_parallel", 1);
   __PYX_INC_MEMVIEW(&__pyx_v_X, 1);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":40
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":42
  *         - The function uses Cython with parallel processing for performance optimization.
  *     """
  *     cdef int N = X.shape[0]             # <<<<<<<<<<<<<<
@@ -19601,7 +19601,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
  */
   __pyx_v_N = (__pyx_v_X.shape[0]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":41
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":43
  *     """
  *     cdef int N = X.shape[0]
  *     cdef int D = X.shape[1]             # <<<<<<<<<<<<<<
@@ -19610,40 +19610,40 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
  */
   __pyx_v_D = (__pyx_v_X.shape[1]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":45
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":47
  *     cdef double diff, b
  *     cdef double dist
  *     distmatrix = np.zeros((N, N), dtype=float, order='C')             # <<<<<<<<<<<<<<
  *     cdef double[:,::1] distmatrix_view = distmatrix
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 47, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 45, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 47, __pyx_L1_error);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 45, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 47, __pyx_L1_error);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 45, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 45, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_order, __pyx_n_s_C) < 0) __PYX_ERR(0, 45, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 45, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 47, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_order, __pyx_n_s_C) < 0) __PYX_ERR(0, 47, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 47, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -19651,19 +19651,19 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
   __pyx_v_distmatrix = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":46
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":48
  *     cdef double dist
  *     distmatrix = np.zeros((N, N), dtype=float, order='C')
  *     cdef double[:,::1] distmatrix_view = distmatrix             # <<<<<<<<<<<<<<
  * 
  *     # Apply periodic boundary conditions to the features of X
  */
-  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_distmatrix, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_distmatrix, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 48, __pyx_L1_error)
   __pyx_v_distmatrix_view = __pyx_t_5;
   __pyx_t_5.memview = NULL;
   __pyx_t_5.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":56
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":58
  *     #     if box_size[i] == 0:
  *     #         box_size_copy[i] = 0
  *     box_size_copy = [b!=0. for b in box_size]             # <<<<<<<<<<<<<<
@@ -19671,11 +19671,11 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
  * 
  */
   { /* enter inner scope */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 56, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 58, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (unlikely(((PyObject *) __pyx_v_box_size.memview) == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' is not iterable");
-      __PYX_ERR(0, 56, __pyx_L1_error)
+      __PYX_ERR(0, 58, __pyx_L1_error)
     }
     __PYX_INC_MEMVIEW(&__pyx_v_box_size, 1);
     __pyx_t_6 = __pyx_v_box_size;
@@ -19684,9 +19684,9 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
       __pyx_t_8 = __pyx_t_9;
       __pyx_t_10 = __pyx_t_8;
       __pyx_7genexpr__pyx_v_b = (*((double *) ( /* dim=0 */ (__pyx_t_6.data + __pyx_t_10 * __pyx_t_6.strides[0]) )));
-      __pyx_t_4 = __Pyx_PyBool_FromLong((__pyx_7genexpr__pyx_v_b != 0.)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 56, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyBool_FromLong((__pyx_7genexpr__pyx_v_b != 0.)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 58, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) __PYX_ERR(0, 56, __pyx_L1_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_4))) __PYX_ERR(0, 58, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     }
     __PYX_XCLEAR_MEMVIEW(&__pyx_t_6, 1);
@@ -19695,38 +19695,38 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
   __pyx_v_box_size_copy = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":57
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":59
  *     #         box_size_copy[i] = 0
  *     box_size_copy = [b!=0. for b in box_size]
  *     X = np.mod(X, box_size, out=np.asarray(X), where=box_size_copy)             # <<<<<<<<<<<<<<
  * 
  *     if squared:
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_mod); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_mod); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_X, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_X, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_box_size, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_box_size, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1)) __PYX_ERR(0, 59, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_t_3)) __PYX_ERR(0, 57, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_t_3)) __PYX_ERR(0, 59, __pyx_L1_error);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_np); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_np); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
-  __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_asarray); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_11, __pyx_n_s_asarray); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_12);
   __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-  __pyx_t_11 = __pyx_memoryview_fromslice(__pyx_v_X, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_11 = __pyx_memoryview_fromslice(__pyx_v_X, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
   __pyx_t_13 = NULL;
   __pyx_t_14 = 0;
@@ -19747,38 +19747,38 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
     __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_12, __pyx_callargs+1-__pyx_t_14, 1+__pyx_t_14);
     __Pyx_XDECREF(__pyx_t_13); __pyx_t_13 = 0;
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 59, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
   }
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_out, __pyx_t_1) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_out, __pyx_t_1) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_where, __pyx_v_box_size_copy) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_where, __pyx_v_box_size_copy) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_15 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_t_1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_15.memview)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_15 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_t_1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_15.memview)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __PYX_XCLEAR_MEMVIEW(&__pyx_v_X, 1);
   __pyx_v_X = __pyx_t_15;
   __pyx_t_15.memview = NULL;
   __pyx_t_15.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":59
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":61
  *     X = np.mod(X, box_size, out=np.asarray(X), where=box_size_copy)
  * 
  *     if squared:             # <<<<<<<<<<<<<<
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  */
   if (__pyx_v_squared) {
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":60
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":62
  * 
  *     if squared:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -19798,13 +19798,13 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                   #define unlikely(x) (x)
               #endif
               #ifdef _OPENMP
-              #pragma omp parallel  private(__pyx_t_10, __pyx_t_14, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27) num_threads(__pyx_v_njobs)
+              #pragma omp parallel  private(__pyx_t_10, __pyx_t_14, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27) num_threads(__pyx_v_n_jobs)
               #endif /* _OPENMP */
               {
 
-                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":61
+                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":63
  *     if squared:
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):             # <<<<<<<<<<<<<<
  *                 for j in range(N):
  *                     dist = 0.0
@@ -19826,8 +19826,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                   __pyx_v_j = ((int)0xbad0bad0);
                                   __pyx_v_k = ((int)0xbad0bad0);
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":62
- *         with nogil, parallel(num_threads=njobs):
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":64
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):             # <<<<<<<<<<<<<<
  *                     dist = 0.0
@@ -19838,7 +19838,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                   for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
                                     __pyx_v_j = __pyx_t_20;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":63
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":65
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  *                     dist = 0.0             # <<<<<<<<<<<<<<
@@ -19847,7 +19847,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
  */
                                     __pyx_v_dist = 0.0;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":64
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":66
  *                 for j in range(N):
  *                     dist = 0.0
  *                     for k in range(D):             # <<<<<<<<<<<<<<
@@ -19859,7 +19859,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                     for (__pyx_t_23 = 0; __pyx_t_23 < __pyx_t_22; __pyx_t_23+=1) {
                                       __pyx_v_k = __pyx_t_23;
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":65
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":67
  *                     dist = 0.0
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]             # <<<<<<<<<<<<<<
@@ -19872,7 +19872,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                       __pyx_t_26 = __pyx_v_k;
                                       __pyx_v_diff = ((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_10 * __pyx_v_X.strides[0]) ) + __pyx_t_24 * __pyx_v_X.strides[1]) ))) - (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_25 * __pyx_v_X.strides[0]) ) + __pyx_t_26 * __pyx_v_X.strides[1]) ))));
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":66
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":68
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]
  *                         if box_size[k] != 0.:             # <<<<<<<<<<<<<<
@@ -19883,7 +19883,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                       __pyx_t_27 = ((*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_26 * __pyx_v_box_size.strides[0]) ))) != 0.);
                                       if (__pyx_t_27) {
 
-                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":70
+                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":72
  *                             # diff=diff-nearbyint(diff)
  *                             # diff=diff*box_size[k]
  *                             if diff > 0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -19894,7 +19894,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                         __pyx_t_27 = (__pyx_v_diff > (0.5 * (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_26 * __pyx_v_box_size.strides[0]) )))));
                                         if (__pyx_t_27) {
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":71
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":73
  *                             # diff=diff*box_size[k]
  *                             if diff > 0.5*box_size[k]:
  *                                 diff = diff - box_size[k]             # <<<<<<<<<<<<<<
@@ -19904,7 +19904,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                           __pyx_t_26 = __pyx_v_k;
                                           __pyx_v_diff = (__pyx_v_diff - (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_26 * __pyx_v_box_size.strides[0]) ))));
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":70
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":72
  *                             # diff=diff-nearbyint(diff)
  *                             # diff=diff*box_size[k]
  *                             if diff > 0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -19914,7 +19914,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                           goto __pyx_L22;
                                         }
 
-                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":72
+                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":74
  *                             if diff > 0.5*box_size[k]:
  *                                 diff = diff - box_size[k]
  *                             elif diff < -0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -19925,7 +19925,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                         __pyx_t_27 = (__pyx_v_diff < (-0.5 * (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_26 * __pyx_v_box_size.strides[0]) )))));
                                         if (__pyx_t_27) {
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":73
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":75
  *                                 diff = diff - box_size[k]
  *                             elif diff < -0.5*box_size[k]:
  *                                 diff = diff + box_size[k]             # <<<<<<<<<<<<<<
@@ -19935,7 +19935,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                           __pyx_t_26 = __pyx_v_k;
                                           __pyx_v_diff = (__pyx_v_diff + (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_26 * __pyx_v_box_size.strides[0]) ))));
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":72
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":74
  *                             if diff > 0.5*box_size[k]:
  *                                 diff = diff - box_size[k]
  *                             elif diff < -0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -19945,7 +19945,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                         }
                                         __pyx_L22:;
 
-                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":66
+                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":68
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]
  *                         if box_size[k] != 0.:             # <<<<<<<<<<<<<<
@@ -19954,7 +19954,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
  */
                                       }
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":74
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":76
  *                             elif diff < -0.5*box_size[k]:
  *                                 diff = diff + box_size[k]
  *                         dist = dist + diff*diff             # <<<<<<<<<<<<<<
@@ -19964,12 +19964,12 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                       __pyx_v_dist = (__pyx_v_dist + (__pyx_v_diff * __pyx_v_diff));
                                     }
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":76
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":78
  *                         dist = dist + diff*diff
  *                     # Compute pairwise distances
  *                     distmatrix_view[i, j] = dist             # <<<<<<<<<<<<<<
  *     else:
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  */
                                     __pyx_t_26 = __pyx_v_i;
                                     __pyx_t_25 = __pyx_v_j;
@@ -19989,10 +19989,10 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
           #endif
         }
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":60
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":62
  * 
  *     if squared:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -20008,20 +20008,20 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
         }
     }
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":59
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":61
  *     X = np.mod(X, box_size, out=np.asarray(X), where=box_size_copy)
  * 
  *     if squared:             # <<<<<<<<<<<<<<
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  */
     goto __pyx_L5;
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":78
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":80
  *                     distmatrix_view[i, j] = dist
  *     else:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -20042,13 +20042,13 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                   #define unlikely(x) (x)
               #endif
               #ifdef _OPENMP
-              #pragma omp parallel  private(__pyx_t_10, __pyx_t_14, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27) num_threads(__pyx_v_njobs)
+              #pragma omp parallel  private(__pyx_t_10, __pyx_t_14, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_21, __pyx_t_22, __pyx_t_23, __pyx_t_24, __pyx_t_25, __pyx_t_26, __pyx_t_27) num_threads(__pyx_v_n_jobs)
               #endif /* _OPENMP */
               {
 
-                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":79
+                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":81
  *     else:
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):             # <<<<<<<<<<<<<<
  *                 for j in range(N):
  *                     dist = 0.0
@@ -20070,8 +20070,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                   __pyx_v_j = ((int)0xbad0bad0);
                                   __pyx_v_k = ((int)0xbad0bad0);
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":80
- *         with nogil, parallel(num_threads=njobs):
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":82
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):             # <<<<<<<<<<<<<<
  *                     dist = 0.0
@@ -20082,7 +20082,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                   for (__pyx_t_20 = 0; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
                                     __pyx_v_j = __pyx_t_20;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":81
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":83
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  *                     dist = 0.0             # <<<<<<<<<<<<<<
@@ -20091,7 +20091,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
  */
                                     __pyx_v_dist = 0.0;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":82
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":84
  *                 for j in range(N):
  *                     dist = 0.0
  *                     for k in range(D):             # <<<<<<<<<<<<<<
@@ -20103,7 +20103,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                     for (__pyx_t_23 = 0; __pyx_t_23 < __pyx_t_22; __pyx_t_23+=1) {
                                       __pyx_v_k = __pyx_t_23;
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":83
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":85
  *                     dist = 0.0
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]             # <<<<<<<<<<<<<<
@@ -20116,7 +20116,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                       __pyx_t_10 = __pyx_v_k;
                                       __pyx_v_diff = ((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_25 * __pyx_v_X.strides[0]) ) + __pyx_t_26 * __pyx_v_X.strides[1]) ))) - (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_24 * __pyx_v_X.strides[0]) ) + __pyx_t_10 * __pyx_v_X.strides[1]) ))));
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":84
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":86
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]
  *                         if box_size[k] != 0.:             # <<<<<<<<<<<<<<
@@ -20127,7 +20127,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                       __pyx_t_27 = ((*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_10 * __pyx_v_box_size.strides[0]) ))) != 0.);
                                       if (__pyx_t_27) {
 
-                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":88
+                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":90
  *                             # diff=diff-nearbyint(diff)
  *                             # diff=diff*box_size[k]
  *                             if diff > 0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -20138,7 +20138,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                         __pyx_t_27 = (__pyx_v_diff > (0.5 * (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_10 * __pyx_v_box_size.strides[0]) )))));
                                         if (__pyx_t_27) {
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":89
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":91
  *                             # diff=diff*box_size[k]
  *                             if diff > 0.5*box_size[k]:
  *                                 diff = diff - box_size[k]             # <<<<<<<<<<<<<<
@@ -20148,7 +20148,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                           __pyx_t_10 = __pyx_v_k;
                                           __pyx_v_diff = (__pyx_v_diff - (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_10 * __pyx_v_box_size.strides[0]) ))));
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":88
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":90
  *                             # diff=diff-nearbyint(diff)
  *                             # diff=diff*box_size[k]
  *                             if diff > 0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -20158,7 +20158,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                           goto __pyx_L43;
                                         }
 
-                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":90
+                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":92
  *                             if diff > 0.5*box_size[k]:
  *                                 diff = diff - box_size[k]
  *                             elif diff < -0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -20169,7 +20169,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                         __pyx_t_27 = (__pyx_v_diff < (-0.5 * (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_10 * __pyx_v_box_size.strides[0]) )))));
                                         if (__pyx_t_27) {
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":91
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":93
  *                                 diff = diff - box_size[k]
  *                             elif diff < -0.5*box_size[k]:
  *                                 diff = diff + box_size[k]             # <<<<<<<<<<<<<<
@@ -20179,7 +20179,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                           __pyx_t_10 = __pyx_v_k;
                                           __pyx_v_diff = (__pyx_v_diff + (*((double *) ( /* dim=0 */ (__pyx_v_box_size.data + __pyx_t_10 * __pyx_v_box_size.strides[0]) ))));
 
-                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":90
+                                          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":92
  *                             if diff > 0.5*box_size[k]:
  *                                 diff = diff - box_size[k]
  *                             elif diff < -0.5*box_size[k]:             # <<<<<<<<<<<<<<
@@ -20189,7 +20189,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                         }
                                         __pyx_L43:;
 
-                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":84
+                                        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":86
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]
  *                         if box_size[k] != 0.:             # <<<<<<<<<<<<<<
@@ -20198,7 +20198,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
  */
                                       }
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":92
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":94
  *                             elif diff < -0.5*box_size[k]:
  *                                 diff = diff + box_size[k]
  *                         dist = dist + diff*diff             # <<<<<<<<<<<<<<
@@ -20208,7 +20208,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
                                       __pyx_v_dist = (__pyx_v_dist + (__pyx_v_diff * __pyx_v_diff));
                                     }
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":94
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":96
  *                         dist = dist + diff*diff
  *                     # Compute pairwise distances
  *                     distmatrix_view[i, j] = sqrt(dist)             # <<<<<<<<<<<<<<
@@ -20233,10 +20233,10 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
           #endif
         }
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":78
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":80
  *                     distmatrix_view[i, j] = dist
  *     else:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -20254,7 +20254,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
   }
   __pyx_L5:;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":96
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":98
  *                     distmatrix_view[i, j] = sqrt(dist)
  * 
  *     return distmatrix             # <<<<<<<<<<<<<<
@@ -20266,7 +20266,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
   __pyx_r = __pyx_v_distmatrix;
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":18
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":20
  * # TODO: @wildromi clean up
  * # TODO: @wildromi why does this not accept var=var assignments anymore
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -20298,7 +20298,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_com
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_differentiable_imbalance.pyx":99
+/* "dadapy/_cython/cython_differentiable_imbalance.pyx":101
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -20314,7 +20314,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel, "Compute pairwise euclidean distances between points using Cython with parallel processing.\n\n    Args:\n        X : (numpy.ndarray): shape (N, D) of type 'float' (python) a.k.a. 'double' (C).\n            The input array of points, where N is the number of points and D is the number of dimensions.\n        njobs (int): The number of threads to use for parallel processing.\n        squared (bool, optional): Whether to return squared distances or regular euclidean distances. Default is False.\n\n    Returns:\n        distmatrix: numpy.ndarray, shape (N, N)\n            The pairwise distance matrix between points.\n\n    Notes:\n        - This function assumes that the input arrays have already been validated for type.\n        - The function uses Cython with parallel processing for performance optimization.\n    ");
+PyDoc_STRVAR(__pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel, "Compute pairwise euclidean distances between points using Cython with parallel processing.\n\n    Args:\n        X : (numpy.ndarray): shape (N, D) of type 'float' (python) a.k.a. 'double' (C).\n            The input array of points, where N is the number of points and D is the number of dimensions.\n        n_jobs (int): The number of threads to use for parallel processing.\n        squared (bool, optional): Whether to return squared distances or regular euclidean distances. Default is False.\n\n    Returns:\n        distmatrix: numpy.ndarray, shape (N, N)\n            The pairwise distance matrix between points.\n\n    Notes:\n        - This function assumes that the input arrays have already been validated for type.\n        - The function uses Cython with parallel processing for performance optimization.\n    ");
 static PyMethodDef __pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_3compute_dist_cython_parallel = {"compute_dist_cython_parallel", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_6dadapy_7_cython_31cython_differentiable_imbalance_3compute_dist_cython_parallel, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel};
 static PyObject *__pyx_pw_6dadapy_7_cython_31cython_differentiable_imbalance_3compute_dist_cython_parallel(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
@@ -20324,7 +20324,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ) {
   __Pyx_memviewslice __pyx_v_X = { 0, 0, { 0 }, { 0 }, { 0 } };
-  int __pyx_v_njobs;
+  int __pyx_v_n_jobs;
   int __pyx_v_squared;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
@@ -20346,7 +20346,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_X,&__pyx_n_s_njobs,&__pyx_n_s_squared,0};
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_X,&__pyx_n_s_n_jobs,&__pyx_n_s_squared,0};
     if (__pyx_kwds) {
       Py_ssize_t kw_args;
       switch (__pyx_nargs) {
@@ -20366,29 +20366,29 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 99, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 101, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_njobs)) != 0)) {
+        if (likely((values[1] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_n_jobs)) != 0)) {
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 99, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 101, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_dist_cython_parallel", 0, 2, 3, 1); __PYX_ERR(0, 99, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_dist_cython_parallel", 0, 2, 3, 1); __PYX_ERR(0, 101, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_squared);
           if (value) { values[2] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 99, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 101, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "compute_dist_cython_parallel") < 0)) __PYX_ERR(0, 99, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "compute_dist_cython_parallel") < 0)) __PYX_ERR(0, 101, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -20400,16 +20400,16 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_X = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_X.memview)) __PYX_ERR(0, 102, __pyx_L3_error)
-    __pyx_v_njobs = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_njobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L3_error)
+    __pyx_v_X = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_X.memview)) __PYX_ERR(0, 104, __pyx_L3_error)
+    __pyx_v_n_jobs = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_n_jobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 104, __pyx_L3_error)
     if (values[2]) {
-      __pyx_v_squared = __Pyx_PyObject_IsTrue(values[2]); if (unlikely((__pyx_v_squared == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L3_error)
+      __pyx_v_squared = __Pyx_PyObject_IsTrue(values[2]); if (unlikely((__pyx_v_squared == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 104, __pyx_L3_error)
     } else {
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":102
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":104
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * def compute_dist_cython_parallel(double[:, :] X, int njobs, bint squared=False):             # <<<<<<<<<<<<<<
+ * def compute_dist_cython_parallel(double[:, :] X, int n_jobs, bint squared=False):             # <<<<<<<<<<<<<<
  *     """Compute pairwise euclidean distances between points using Cython with parallel processing.
  * 
  */
@@ -20418,7 +20418,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_dist_cython_parallel", 0, 2, 3, __pyx_nargs); __PYX_ERR(0, 99, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_dist_cython_parallel", 0, 2, 3, __pyx_nargs); __PYX_ERR(0, 101, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -20433,9 +20433,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel(__pyx_self, __pyx_v_X, __pyx_v_njobs, __pyx_v_squared);
+  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel(__pyx_self, __pyx_v_X, __pyx_v_n_jobs, __pyx_v_squared);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":99
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":101
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -20455,7 +20455,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, int __pyx_v_njobs, int __pyx_v_squared) {
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2compute_dist_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_X, int __pyx_v_n_jobs, int __pyx_v_squared) {
   int __pyx_v_N;
   int __pyx_v_D;
   int __pyx_v_i;
@@ -20490,7 +20490,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("compute_dist_cython_parallel", 1);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":120
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":122
  *     """
  * 
  *     cdef int N = X.shape[0]             # <<<<<<<<<<<<<<
@@ -20499,7 +20499,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
  */
   __pyx_v_N = (__pyx_v_X.shape[0]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":121
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":123
  * 
  *     cdef int N = X.shape[0]
  *     cdef int D = X.shape[1]             # <<<<<<<<<<<<<<
@@ -20508,40 +20508,40 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
  */
   __pyx_v_D = (__pyx_v_X.shape[1]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":125
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":127
  *     cdef double diff
  *     cdef double dist
  *     distmatrix = np.zeros((N, N), dtype=float, order='C')             # <<<<<<<<<<<<<<
  *     cdef double[:,::1] distmatrix_view = distmatrix
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 127, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 127, __pyx_L1_error);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 125, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 127, __pyx_L1_error);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 125, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 125, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_order, __pyx_n_s_C) < 0) __PYX_ERR(0, 125, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 127, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_order, __pyx_n_s_C) < 0) __PYX_ERR(0, 127, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 127, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -20549,31 +20549,31 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
   __pyx_v_distmatrix = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":126
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":128
  *     cdef double dist
  *     distmatrix = np.zeros((N, N), dtype=float, order='C')
  *     cdef double[:,::1] distmatrix_view = distmatrix             # <<<<<<<<<<<<<<
  * 
  *     if squared:
  */
-  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_distmatrix, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_distmatrix, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 128, __pyx_L1_error)
   __pyx_v_distmatrix_view = __pyx_t_5;
   __pyx_t_5.memview = NULL;
   __pyx_t_5.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":128
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":130
  *     cdef double[:,::1] distmatrix_view = distmatrix
  * 
  *     if squared:             # <<<<<<<<<<<<<<
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  */
   if (__pyx_v_squared) {
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":129
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":131
  * 
  *     if squared:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -20593,13 +20593,13 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                   #define unlikely(x) (x)
               #endif
               #ifdef _OPENMP
-              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_njobs)
+              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_n_jobs)
               #endif /* _OPENMP */
               {
 
-                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":130
+                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":132
  *     if squared:
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):             # <<<<<<<<<<<<<<
  *                 for j in range(N):
  *                     dist = 0.0
@@ -20621,8 +20621,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                   __pyx_v_j = ((int)0xbad0bad0);
                                   __pyx_v_k = ((int)0xbad0bad0);
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":131
- *         with nogil, parallel(num_threads=njobs):
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":133
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):             # <<<<<<<<<<<<<<
  *                     dist = 0.0
@@ -20633,7 +20633,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                   for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
                                     __pyx_v_j = __pyx_t_11;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":132
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":134
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  *                     dist = 0.0             # <<<<<<<<<<<<<<
@@ -20642,7 +20642,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
  */
                                     __pyx_v_dist = 0.0;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":133
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":135
  *                 for j in range(N):
  *                     dist = 0.0
  *                     for k in range(D):             # <<<<<<<<<<<<<<
@@ -20654,7 +20654,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                     for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_13; __pyx_t_14+=1) {
                                       __pyx_v_k = __pyx_t_14;
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":134
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":136
  *                     dist = 0.0
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]             # <<<<<<<<<<<<<<
@@ -20667,7 +20667,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                       __pyx_t_18 = __pyx_v_k;
                                       __pyx_v_diff = ((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_15 * __pyx_v_X.strides[0]) ) + __pyx_t_16 * __pyx_v_X.strides[1]) ))) - (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_17 * __pyx_v_X.strides[0]) ) + __pyx_t_18 * __pyx_v_X.strides[1]) ))));
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":135
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":137
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]
  *                         dist = dist + diff*diff             # <<<<<<<<<<<<<<
@@ -20677,12 +20677,12 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                       __pyx_v_dist = (__pyx_v_dist + (__pyx_v_diff * __pyx_v_diff));
                                     }
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":137
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":139
  *                         dist = dist + diff*diff
  *                     # Compute pairwise distances
  *                     distmatrix_view[i, j] = dist             # <<<<<<<<<<<<<<
  *     else:
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  */
                                     __pyx_t_18 = __pyx_v_i;
                                     __pyx_t_17 = __pyx_v_j;
@@ -20702,10 +20702,10 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
           #endif
         }
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":129
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":131
  * 
  *     if squared:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -20721,20 +20721,20 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
         }
     }
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":128
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":130
  *     cdef double[:,::1] distmatrix_view = distmatrix
  * 
  *     if squared:             # <<<<<<<<<<<<<<
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  */
     goto __pyx_L3;
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":139
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":141
  *                     distmatrix_view[i, j] = dist
  *     else:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -20755,13 +20755,13 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                   #define unlikely(x) (x)
               #endif
               #ifdef _OPENMP
-              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_njobs)
+              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_n_jobs)
               #endif /* _OPENMP */
               {
 
-                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":140
+                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":142
  *     else:
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):             # <<<<<<<<<<<<<<
  *                 for j in range(N):
  *                     dist = 0.0
@@ -20783,8 +20783,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                   __pyx_v_j = ((int)0xbad0bad0);
                                   __pyx_v_k = ((int)0xbad0bad0);
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":141
- *         with nogil, parallel(num_threads=njobs):
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":143
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):             # <<<<<<<<<<<<<<
  *                     dist = 0.0
@@ -20795,7 +20795,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                   for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
                                     __pyx_v_j = __pyx_t_11;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":142
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":144
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  *                     dist = 0.0             # <<<<<<<<<<<<<<
@@ -20804,7 +20804,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
  */
                                     __pyx_v_dist = 0.0;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":143
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":145
  *                 for j in range(N):
  *                     dist = 0.0
  *                     for k in range(D):             # <<<<<<<<<<<<<<
@@ -20816,7 +20816,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                     for (__pyx_t_14 = 0; __pyx_t_14 < __pyx_t_13; __pyx_t_14+=1) {
                                       __pyx_v_k = __pyx_t_14;
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":144
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":146
  *                     dist = 0.0
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]             # <<<<<<<<<<<<<<
@@ -20829,7 +20829,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                       __pyx_t_15 = __pyx_v_k;
                                       __pyx_v_diff = ((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_17 * __pyx_v_X.strides[0]) ) + __pyx_t_18 * __pyx_v_X.strides[1]) ))) - (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_X.data + __pyx_t_16 * __pyx_v_X.strides[0]) ) + __pyx_t_15 * __pyx_v_X.strides[1]) ))));
 
-                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":145
+                                      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":147
  *                     for k in range(D):
  *                         diff = X[i, k] - X[j, k]
  *                         dist = dist + diff*diff             # <<<<<<<<<<<<<<
@@ -20839,7 +20839,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
                                       __pyx_v_dist = (__pyx_v_dist + (__pyx_v_diff * __pyx_v_diff));
                                     }
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":147
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":149
  *                         dist = dist + diff*diff
  *                     # Compute pairwise distances
  *                     distmatrix_view[i, j] = sqrt(dist)             # <<<<<<<<<<<<<<
@@ -20864,10 +20864,10 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
           #endif
         }
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":139
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":141
  *                     distmatrix_view[i, j] = dist
  *     else:
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 for j in range(N):
  */
@@ -20885,7 +20885,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
   }
   __pyx_L3:;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":149
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":151
  *                     distmatrix_view[i, j] = sqrt(dist)
  * 
  *     return distmatrix             # <<<<<<<<<<<<<<
@@ -20897,7 +20897,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
   __pyx_r = __pyx_v_distmatrix;
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":99
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":101
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -20922,7 +20922,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_2co
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_differentiable_imbalance.pyx":152
+/* "dadapy/_cython/cython_differentiable_imbalance.pyx":154
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -20938,7 +20938,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython, "Compute the gradient of DII between input data matrix A and groundtruth data matrix B; Cython implementation.\n\n    Args:\n        dists_rescaled_A : numpy.ndarray, shape (N, N), of type 'float' (python) a.k.a. 'double' (C).\n            The rescaled distances between points in input array A, where N is the number of points.\n        data_A : numpy.ndarray, shape (N, D), of type 'float' (python) a.k.a. 'double' (C).\n            The input array A, where N is the number of points and D is the number of dimensions.\n        rank_matrix_B : numpy.ndarray, shape (N, N), of type 'int' (python) a.k.a. 'long' (C).\n            The rank matrix for groundtruth data array B, where N is the number of points.\n        gammas : numpy.ndarray, shape (D,), of type 'float' (python) a.k.a. 'double' (C).\n            The array of weight values for the input values, where D is the number of gammas.\n            This cannot be initialized to 0's. It can be initialized to all 1 or the inverse of the standard deviation\n        lambd : float\n            The lambda scaling parameter of the softmax. This can be calculated automatically with python function 'return_optimal_lambda'.\n        period : numpy.ndarray\n            D(input) periods (input formatted to be periodic starting at 0). If some of the input feature do not have a a period, set those to 0.\n            In this cython implementation this must be given, if there is no period read any dummy array of size D.\n        njobs : int\n            The number of threads to use for parallel processing. \n        periodic : bool\n            Whether to use Cython implementation for computing distances. Default is True.\n\n    Returns:\n        gradient: numpy.ndarray, shape (D,). The gradient of the DII for each variable (dimension).\n    ");
+PyDoc_STRVAR(__pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython, "Compute the gradient of DII between input data matrix A and groundtruth data matrix B; Cython implementation.\n\n    Args:\n        dists_rescaled_A : numpy.ndarray, shape (N, N), of type 'float' (python) a.k.a. 'double' (C).\n            The rescaled distances between points in input array A, where N is the number of points.\n        data_A : numpy.ndarray, shape (N, D), of type 'float' (python) a.k.a. 'double' (C).\n            The input array A, where N is the number of points and D is the number of dimensions.\n        rank_matrix_B : numpy.ndarray, shape (N, N), of type 'int' (python) a.k.a. 'long' (C).\n            The rank matrix for groundtruth data array B, where N is the number of points.\n        gammas : numpy.ndarray, shape (D,), of type 'float' (python) a.k.a. 'double' (C).\n            The array of weight values for the input values, where D is the number of gammas.\n            This cannot be initialized to 0's. It can be initialized to all 1 or the inverse of the standard deviation\n        lambd : float\n            The lambda scaling parameter of the softmax. This can be calculated automatically with python function 'return_optimal_lambda'.\n        period : numpy.ndarray\n            D(input) periods (input formatted to be periodic starting at 0). If some of the input feature do not have a a period, set those to 0.\n            In this cython implementation this must be given, if there is no period read any dummy array of size D.\n        n_jobs : int\n            The number of threads to use for parallel processing. \n        periodic : bool\n            Whether to use Cython implementation for computing distances. Default is True.\n\n    Returns:\n        gradient: numpy.ndarray, shape (D,). The gradient of the DII for each variable (dimension).\n    ");
 static PyMethodDef __pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_5return_dii_gradient_cython = {"return_dii_gradient_cython", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_6dadapy_7_cython_31cython_differentiable_imbalance_5return_dii_gradient_cython, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython};
 static PyObject *__pyx_pw_6dadapy_7_cython_31cython_differentiable_imbalance_5return_dii_gradient_cython(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
@@ -20953,7 +20953,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_memviewslice __pyx_v_gammas = { 0, 0, { 0 }, { 0 }, { 0 } };
   double __pyx_v_lambd;
   __Pyx_memviewslice __pyx_v_period = { 0, 0, { 0 }, { 0 }, { 0 } };
-  int __pyx_v_njobs;
+  int __pyx_v_n_jobs;
   int __pyx_v_periodic;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
@@ -20975,7 +20975,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_dists_rescaled_A,&__pyx_n_s_data_A,&__pyx_n_s_rank_matrix_B,&__pyx_n_s_gammas,&__pyx_n_s_lambd,&__pyx_n_s_period,&__pyx_n_s_njobs,&__pyx_n_s_periodic,0};
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_dists_rescaled_A,&__pyx_n_s_data_A,&__pyx_n_s_rank_matrix_B,&__pyx_n_s_gammas,&__pyx_n_s_lambd,&__pyx_n_s_period,&__pyx_n_s_n_jobs,&__pyx_n_s_periodic,0};
     if (__pyx_kwds) {
       Py_ssize_t kw_args;
       switch (__pyx_nargs) {
@@ -21005,7 +21005,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -21013,9 +21013,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 1); __PYX_ERR(0, 152, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 1); __PYX_ERR(0, 154, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -21023,9 +21023,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[2]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 2); __PYX_ERR(0, 152, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 2); __PYX_ERR(0, 154, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
@@ -21033,9 +21033,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[3]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 3); __PYX_ERR(0, 152, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 3); __PYX_ERR(0, 154, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
@@ -21043,9 +21043,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[4]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 4); __PYX_ERR(0, 152, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 4); __PYX_ERR(0, 154, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
@@ -21053,31 +21053,31 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[5]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 5); __PYX_ERR(0, 152, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 5); __PYX_ERR(0, 154, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
-        if (likely((values[6] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_njobs)) != 0)) {
+        if (likely((values[6] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_n_jobs)) != 0)) {
           (void)__Pyx_Arg_NewRef_FASTCALL(values[6]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 6); __PYX_ERR(0, 152, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, 6); __PYX_ERR(0, 154, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_periodic);
           if (value) { values[7] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 154, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "return_dii_gradient_cython") < 0)) __PYX_ERR(0, 152, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "return_dii_gradient_cython") < 0)) __PYX_ERR(0, 154, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -21094,21 +21094,21 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_dists_rescaled_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dists_rescaled_A.memview)) __PYX_ERR(0, 155, __pyx_L3_error)
-    __pyx_v_data_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_data_A.memview)) __PYX_ERR(0, 155, __pyx_L3_error)
-    __pyx_v_rank_matrix_B = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_rank_matrix_B.memview)) __PYX_ERR(0, 155, __pyx_L3_error)
-    __pyx_v_gammas = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3], PyBUF_WRITABLE); if (unlikely(!__pyx_v_gammas.memview)) __PYX_ERR(0, 155, __pyx_L3_error)
-    __pyx_v_lambd = __pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_lambd == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 155, __pyx_L3_error)
-    __pyx_v_period = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_period.memview)) __PYX_ERR(0, 155, __pyx_L3_error)
-    __pyx_v_njobs = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_njobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 155, __pyx_L3_error)
+    __pyx_v_dists_rescaled_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dists_rescaled_A.memview)) __PYX_ERR(0, 157, __pyx_L3_error)
+    __pyx_v_data_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_data_A.memview)) __PYX_ERR(0, 157, __pyx_L3_error)
+    __pyx_v_rank_matrix_B = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_rank_matrix_B.memview)) __PYX_ERR(0, 157, __pyx_L3_error)
+    __pyx_v_gammas = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3], PyBUF_WRITABLE); if (unlikely(!__pyx_v_gammas.memview)) __PYX_ERR(0, 157, __pyx_L3_error)
+    __pyx_v_lambd = __pyx_PyFloat_AsDouble(values[4]); if (unlikely((__pyx_v_lambd == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 157, __pyx_L3_error)
+    __pyx_v_period = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_period.memview)) __PYX_ERR(0, 157, __pyx_L3_error)
+    __pyx_v_n_jobs = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_n_jobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 157, __pyx_L3_error)
     if (values[7]) {
-      __pyx_v_periodic = __Pyx_PyObject_IsTrue(values[7]); if (unlikely((__pyx_v_periodic == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 155, __pyx_L3_error)
+      __pyx_v_periodic = __Pyx_PyObject_IsTrue(values[7]); if (unlikely((__pyx_v_periodic == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 157, __pyx_L3_error)
     } else {
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":155
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":157
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int njobs, bint periodic = False):             # <<<<<<<<<<<<<<
+ * def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int n_jobs, bint periodic = False):             # <<<<<<<<<<<<<<
  *     """Compute the gradient of DII between input data matrix A and groundtruth data matrix B; Cython implementation.
  * 
  */
@@ -21117,7 +21117,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, __pyx_nargs); __PYX_ERR(0, 152, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("return_dii_gradient_cython", 0, 7, 8, __pyx_nargs); __PYX_ERR(0, 154, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -21137,23 +21137,23 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(((PyObject *)__pyx_v_dists_rescaled_A.memview) == Py_None)) {
-    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "dists_rescaled_A"); __PYX_ERR(0, 155, __pyx_L1_error)
+    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "dists_rescaled_A"); __PYX_ERR(0, 157, __pyx_L1_error)
   }
   if (unlikely(((PyObject *)__pyx_v_data_A.memview) == Py_None)) {
-    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "data_A"); __PYX_ERR(0, 155, __pyx_L1_error)
+    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "data_A"); __PYX_ERR(0, 157, __pyx_L1_error)
   }
   if (unlikely(((PyObject *)__pyx_v_rank_matrix_B.memview) == Py_None)) {
-    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "rank_matrix_B"); __PYX_ERR(0, 155, __pyx_L1_error)
+    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "rank_matrix_B"); __PYX_ERR(0, 157, __pyx_L1_error)
   }
   if (unlikely(((PyObject *)__pyx_v_gammas.memview) == Py_None)) {
-    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "gammas"); __PYX_ERR(0, 155, __pyx_L1_error)
+    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "gammas"); __PYX_ERR(0, 157, __pyx_L1_error)
   }
   if (unlikely(((PyObject *)__pyx_v_period.memview) == Py_None)) {
-    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "period"); __PYX_ERR(0, 155, __pyx_L1_error)
+    PyErr_Format(PyExc_TypeError, "Argument '%.200s' must not be None", "period"); __PYX_ERR(0, 157, __pyx_L1_error)
   }
-  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython(__pyx_self, __pyx_v_dists_rescaled_A, __pyx_v_data_A, __pyx_v_rank_matrix_B, __pyx_v_gammas, __pyx_v_lambd, __pyx_v_period, __pyx_v_njobs, __pyx_v_periodic);
+  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython(__pyx_self, __pyx_v_dists_rescaled_A, __pyx_v_data_A, __pyx_v_rank_matrix_B, __pyx_v_gammas, __pyx_v_lambd, __pyx_v_period, __pyx_v_n_jobs, __pyx_v_periodic);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":152
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":154
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -21181,7 +21181,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_data_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_gammas, double __pyx_v_lambd, __Pyx_memviewslice __pyx_v_period, int __pyx_v_njobs, int __pyx_v_periodic) {
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4return_dii_gradient_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_data_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_gammas, double __pyx_v_lambd, __Pyx_memviewslice __pyx_v_period, int __pyx_v_n_jobs, int __pyx_v_periodic) {
   int __pyx_v_N;
   int __pyx_v_D;
   int __pyx_v_i;
@@ -21222,7 +21222,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("return_dii_gradient_cython", 1);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":184
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":186
  * 
  *     cdef int N, D, i, j, k
  *     N = data_A.shape[0]             # <<<<<<<<<<<<<<
@@ -21231,7 +21231,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
  */
   __pyx_v_N = (__pyx_v_data_A.shape[0]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":185
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":187
  *     cdef int N, D, i, j, k
  *     N = data_A.shape[0]
  *     D = data_A.shape[1]             # <<<<<<<<<<<<<<
@@ -21240,29 +21240,29 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
  */
   __pyx_v_D = (__pyx_v_data_A.shape[1]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":189
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":191
  * 
  * #     # Create memview for the resulting gradient to access it in C-speed (and of other matrices)
  *     gradient = np.zeros(D, dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:] gradient_view = gradient
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 189, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 191, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 189, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 191, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_D); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 189, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_D); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 191, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 189, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 191, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 189, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 191, __pyx_L1_error);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 189, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 191, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 189, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 189, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 191, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 191, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -21270,41 +21270,41 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
   __pyx_v_gradient = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":190
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":192
  * #     # Create memview for the resulting gradient to access it in C-speed (and of other matrices)
  *     gradient = np.zeros(D, dtype=float)
  *     cdef double[:] gradient_view = gradient             # <<<<<<<<<<<<<<
  * 
  *     min_d = np.empty(N, dtype=float)
  */
-  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_gradient, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 190, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_gradient, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 192, __pyx_L1_error)
   __pyx_v_gradient_view = __pyx_t_5;
   __pyx_t_5.memview = NULL;
   __pyx_t_5.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":192
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":194
  *     cdef double[:] gradient_view = gradient
  * 
  *     min_d = np.empty(N, dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:] min_dists = min_d
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_empty); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_empty); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 192, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 194, __pyx_L1_error);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 192, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 192, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 194, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 194, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -21312,51 +21312,51 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
   __pyx_v_min_d = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":193
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":195
  * 
  *     min_d = np.empty(N, dtype=float)
  *     cdef double[:] min_dists = min_d             # <<<<<<<<<<<<<<
  * 
  *     c_m = np.empty((N,N), dtype=float)
  */
-  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_min_d, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 193, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_min_d, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 195, __pyx_L1_error)
   __pyx_v_min_dists = __pyx_t_5;
   __pyx_t_5.memview = NULL;
   __pyx_t_5.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":195
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":197
  *     cdef double[:] min_dists = min_d
  * 
  *     c_m = np.empty((N,N), dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:,::1] c_matrix = c_m
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 195, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 195, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 195, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 195, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_2);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_2)) __PYX_ERR(0, 195, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_2)) __PYX_ERR(0, 197, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_t_3)) __PYX_ERR(0, 197, __pyx_L1_error);
   __pyx_t_2 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 195, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 197, __pyx_L1_error);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 195, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 195, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 195, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 197, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 197, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -21364,49 +21364,49 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
   __pyx_v_c_m = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":196
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":198
  * 
  *     c_m = np.empty((N,N), dtype=float)
  *     cdef double[:,::1] c_matrix = c_m             # <<<<<<<<<<<<<<
  * 
  *     alphacol = np.empty((N,1), dtype=float)
  */
-  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_c_m, PyBUF_WRITABLE); if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 196, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_c_m, PyBUF_WRITABLE); if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 198, __pyx_L1_error)
   __pyx_v_c_matrix = __pyx_t_6;
   __pyx_t_6.memview = NULL;
   __pyx_t_6.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":198
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":200
  *     cdef double[:,::1] c_matrix = c_m
  * 
  *     alphacol = np.empty((N,1), dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:,:] alphacolumn = alphacol
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 198, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 198, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 198, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 198, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_2);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2)) __PYX_ERR(0, 198, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error);
   __Pyx_INCREF(__pyx_int_1);
   __Pyx_GIVEREF(__pyx_int_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_int_1)) __PYX_ERR(0, 198, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_int_1)) __PYX_ERR(0, 200, __pyx_L1_error);
   __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 198, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_3)) __PYX_ERR(0, 198, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_3)) __PYX_ERR(0, 200, __pyx_L1_error);
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 198, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 198, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 198, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 200, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -21414,20 +21414,20 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
   __pyx_v_alphacol = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":199
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":201
  * 
  *     alphacol = np.empty((N,1), dtype=float)
  *     cdef double[:,:] alphacolumn = alphacol             # <<<<<<<<<<<<<<
  * 
- * #    if njobs is 0:
+ * #    if n_jobs is 0:
  */
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_v_alphacol, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 199, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_v_alphacol, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 201, __pyx_L1_error)
   __pyx_v_alphacolumn = __pyx_t_7;
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":204
- * #        njobs = multiprocessing.cpu_count()
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":206
+ * #        n_jobs = multiprocessing.cpu_count()
  * 
  *     if lambd == 0:             # <<<<<<<<<<<<<<
  *         #gradient = np.nan * gradient #why was this set to nan? Does 0 also work? was it to break the program when devide by 0 occured by 0 lambda?
@@ -21436,7 +21436,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
   __pyx_t_8 = (__pyx_v_lambd == 0.0);
   if (__pyx_t_8) {
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":206
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":208
  *     if lambd == 0:
  *         #gradient = np.nan * gradient #why was this set to nan? Does 0 also work? was it to break the program when devide by 0 occured by 0 lambda?
  *         gradient_view[:] = 0. #!!!!!!!!!!!!!!!!! check that this is indeed ok             # <<<<<<<<<<<<<<
@@ -21458,8 +21458,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
         }
     }
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":204
- * #        njobs = multiprocessing.cpu_count()
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":206
+ * #        n_jobs = multiprocessing.cpu_count()
  * 
  *     if lambd == 0:             # <<<<<<<<<<<<<<
  *         #gradient = np.nan * gradient #why was this set to nan? Does 0 also work? was it to break the program when devide by 0 occured by 0 lambda?
@@ -21468,10 +21468,10 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
     goto __pyx_L3;
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":211
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":213
  * #         #min_dists = np.nanmin(dists_rescaled_A, axis=1)[:,np.newaxis]
  *         #for i in range(N):
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 min_dists[i] = cmin(dists_rescaled_A[i])
  */
@@ -21496,7 +21496,7 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
                   #define unlikely(x) (x)
               #endif
               #ifdef _OPENMP
-              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_9) firstprivate(__pyx_t_5) private(__pyx_filename, __pyx_lineno, __pyx_clineno) shared(__pyx_parallel_why, __pyx_parallel_exc_type, __pyx_parallel_exc_value, __pyx_parallel_exc_tb) num_threads(__pyx_v_njobs)
+              #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_9) firstprivate(__pyx_t_5) private(__pyx_filename, __pyx_lineno, __pyx_clineno) shared(__pyx_parallel_why, __pyx_parallel_exc_type, __pyx_parallel_exc_value, __pyx_parallel_exc_tb) num_threads(__pyx_v_n_jobs)
               #endif /* _OPENMP */
               {
                   #ifdef _OPENMP
@@ -21506,9 +21506,9 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
                   Py_BEGIN_ALLOW_THREADS
                   #endif /* _OPENMP */
 
-                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":212
+                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":214
  *         #for i in range(N):
- *         with nogil, parallel(num_threads=njobs):
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):             # <<<<<<<<<<<<<<
  *                 min_dists[i] = cmin(dists_rescaled_A[i])
  * 
@@ -21536,8 +21536,8 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_4re
                                   __pyx_v_j = ((int)0xbad0bad0);
                                   __pyx_v_summ = ((double)__PYX_NAN());
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":213
- *         with nogil, parallel(num_threads=njobs):
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":215
+ *         with nogil, parallel(num_threads=n_jobs):
  *             for i in prange(N, schedule='static'):
  *                 min_dists[i] = cmin(dists_rescaled_A[i])             # <<<<<<<<<<<<<<
  * 
@@ -21556,13 +21556,13 @@ __pyx_t_5.shape[0] = __pyx_v_dists_rescaled_A.shape[1];
 __pyx_t_5.strides[0] = __pyx_v_dists_rescaled_A.strides[1];
     __pyx_t_5.suboffsets[0] = -1;
 
-__pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__pyx_t_5); if (unlikely(__pyx_t_12 == ((double)-1) && __Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 213, __pyx_L13_error)
+__pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__pyx_t_5); if (unlikely(__pyx_t_12 == ((double)-1) && __Pyx_ErrOccurredWithGIL())) __PYX_ERR(0, 215, __pyx_L13_error)
                                   __PYX_XCLEAR_MEMVIEW(&__pyx_t_5, 0);
                                   __pyx_t_5.memview = NULL; __pyx_t_5.data = NULL;
                                   __pyx_t_13 = __pyx_v_i;
                                   *((double *) ( /* dim=0 */ (__pyx_v_min_dists.data + __pyx_t_13 * __pyx_v_min_dists.strides[0]) )) = __pyx_t_12;
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":218
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":220
  *     #         # subtraction of minimum distance to avoid overflow problems
  *     #         # (notice that diagonal elements are already np.nan);
  *                 summ = 0             # <<<<<<<<<<<<<<
@@ -21571,7 +21571,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
  */
                                   __pyx_v_summ = 0.0;
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":219
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":221
  *     #         # (notice that diagonal elements are already np.nan);
  *                 summ = 0
  *                 for j in range(N):             # <<<<<<<<<<<<<<
@@ -21583,7 +21583,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
                                   for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
                                     __pyx_v_j = __pyx_t_16;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":220
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":222
  *                 summ = 0
  *                 for j in range(N):
  *                     c_matrix[i,j] = exp(-(dists_rescaled_A[i,j] - min_dists[i])/ lambd)             # <<<<<<<<<<<<<<
@@ -21597,7 +21597,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
                                     __pyx_t_20 = __pyx_v_j;
                                     *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_19 * __pyx_v_c_matrix.strides[0]) )) + __pyx_t_20)) )) = exp(((-((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dists_rescaled_A.data + __pyx_t_13 * __pyx_v_dists_rescaled_A.strides[0]) ) + __pyx_t_17 * __pyx_v_dists_rescaled_A.strides[1]) ))) - (*((double *) ( /* dim=0 */ (__pyx_v_min_dists.data + __pyx_t_18 * __pyx_v_min_dists.strides[0]) ))))) / __pyx_v_lambd));
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":221
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":223
  *                 for j in range(N):
  *                     c_matrix[i,j] = exp(-(dists_rescaled_A[i,j] - min_dists[i])/ lambd)
  *                     summ = summ + c_matrix[i,j]             # <<<<<<<<<<<<<<
@@ -21609,7 +21609,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
                                     __pyx_v_summ = (__pyx_v_summ + (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_18 * __pyx_v_c_matrix.strides[0]) )) + __pyx_t_17)) ))));
                                   }
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":224
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":226
  *     #         # compute c_ij matrix
  *     #      #   c_matrix = exp_matrix / np.nansum(exp_matrix, axis=1)[:,np.newaxis]
  *                 for j in range(N):             # <<<<<<<<<<<<<<
@@ -21621,7 +21621,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
                                   for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
                                     __pyx_v_j = __pyx_t_16;
 
-                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":225
+                                    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":227
  *     #      #   c_matrix = exp_matrix / np.nansum(exp_matrix, axis=1)[:,np.newaxis]
  *                 for j in range(N):
  *                     c_matrix[i,j] = c_matrix[i,j] / summ             # <<<<<<<<<<<<<<
@@ -21635,7 +21635,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
                                     *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_13 * __pyx_v_c_matrix.strides[0]) )) + __pyx_t_20)) )) = ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_17 * __pyx_v_c_matrix.strides[0]) )) + __pyx_t_18)) ))) / __pyx_v_summ);
                                   }
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":226
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":228
  *                 for j in range(N):
  *                     c_matrix[i,j] = c_matrix[i,j] / summ
  *                 c_matrix[i,i] = 0 # set diagonale to 0             # <<<<<<<<<<<<<<
@@ -21775,10 +21775,10 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
           #endif
         }
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":211
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":213
  * #         #min_dists = np.nanmin(dists_rescaled_A, axis=1)[:,np.newaxis]
  *         #for i in range(N):
- *         with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *         with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *             for i in prange(N, schedule='static'):
  *                 min_dists[i] = cmin(dists_rescaled_A[i])
  */
@@ -21801,7 +21801,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
         }
     }
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":229
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":231
  * 
  *         # compute the gradient term for each gamma (parallelization is faster than the loop below):
  *         if periodic == True:             # <<<<<<<<<<<<<<
@@ -21811,7 +21811,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
     __pyx_t_8 = (__pyx_v_periodic == 1);
     if (__pyx_t_8) {
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":230
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":232
  *         # compute the gradient term for each gamma (parallelization is faster than the loop below):
  *         if periodic == True:
  *             for i in range(D):             # <<<<<<<<<<<<<<
@@ -21823,7 +21823,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
       for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_10; __pyx_t_9+=1) {
         __pyx_v_i = __pyx_t_9;
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":231
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":233
  *         if periodic == True:
  *             for i in range(D):
  *                 if gammas[i] == 0:             # <<<<<<<<<<<<<<
@@ -21834,7 +21834,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
         __pyx_t_8 = ((*((double *) ( /* dim=0 */ (__pyx_v_gammas.data + __pyx_t_17 * __pyx_v_gammas.strides[0]) ))) == 0.0);
         if (__pyx_t_8) {
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":232
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":234
  *             for i in range(D):
  *                 if gammas[i] == 0:
  *                     gradient_view[i] = 0.             # <<<<<<<<<<<<<<
@@ -21844,7 +21844,7 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
           __pyx_t_17 = __pyx_v_i;
           *((double *) ( /* dim=0 */ (__pyx_v_gradient_view.data + __pyx_t_17 * __pyx_v_gradient_view.strides[0]) )) = 0.;
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":231
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":233
  *         if periodic == True:
  *             for i in range(D):
  *                 if gammas[i] == 0:             # <<<<<<<<<<<<<<
@@ -21854,11 +21854,11 @@ __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__p
           goto __pyx_L26;
         }
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":234
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":236
  *                     gradient_view[i] = 0.
  *                 else:
  *                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension             # <<<<<<<<<<<<<<
- *                     gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)
+ *                     gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
  */
         /*else*/ {
@@ -21883,20 +21883,20 @@ __pyx_t_7.shape[1] = 1;
           __pyx_t_7.memview = NULL;
           __pyx_t_7.data = NULL;
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":235
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":237
  *                 else:
  *                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
- *                     gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)             # <<<<<<<<<<<<<<
+ *                     gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)             # <<<<<<<<<<<<<<
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
  *         else:
  */
-          __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_PBC_parallel(__pyx_v_i, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_period, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_njobs, 0); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 235, __pyx_L1_error)
+          __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_PBC_parallel(__pyx_v_i, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_period, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_n_jobs, 0); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 237, __pyx_L1_error)
           __pyx_t_17 = __pyx_v_i;
           *((double *) ( /* dim=0 */ (__pyx_v_gradient_view.data + __pyx_t_17 * __pyx_v_gradient_view.strides[0]) )) = __pyx_t_12;
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":236
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":238
  *                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
- *                     gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)
+ *                     gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)             # <<<<<<<<<<<<<<
  *         else:
  *             for i in range(D):
@@ -21909,7 +21909,7 @@ __pyx_t_7.shape[1] = 1;
         __pyx_L26:;
       }
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":229
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":231
  * 
  *         # compute the gradient term for each gamma (parallelization is faster than the loop below):
  *         if periodic == True:             # <<<<<<<<<<<<<<
@@ -21919,7 +21919,7 @@ __pyx_t_7.shape[1] = 1;
       goto __pyx_L23;
     }
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":238
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":240
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
  *         else:
  *             for i in range(D):             # <<<<<<<<<<<<<<
@@ -21932,7 +21932,7 @@ __pyx_t_7.shape[1] = 1;
       for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_10; __pyx_t_9+=1) {
         __pyx_v_i = __pyx_t_9;
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":239
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":241
  *         else:
  *             for i in range(D):
  *                 if gammas[i] == 0:             # <<<<<<<<<<<<<<
@@ -21943,7 +21943,7 @@ __pyx_t_7.shape[1] = 1;
         __pyx_t_8 = ((*((double *) ( /* dim=0 */ (__pyx_v_gammas.data + __pyx_t_18 * __pyx_v_gammas.strides[0]) ))) == 0.0);
         if (__pyx_t_8) {
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":240
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":242
  *             for i in range(D):
  *                 if gammas[i] == 0:
  *                     gradient_view[i] = 0.             # <<<<<<<<<<<<<<
@@ -21953,7 +21953,7 @@ __pyx_t_7.shape[1] = 1;
           __pyx_t_18 = __pyx_v_i;
           *((double *) ( /* dim=0 */ (__pyx_v_gradient_view.data + __pyx_t_18 * __pyx_v_gradient_view.strides[0]) )) = 0.;
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":239
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":241
  *         else:
  *             for i in range(D):
  *                 if gammas[i] == 0:             # <<<<<<<<<<<<<<
@@ -21963,11 +21963,11 @@ __pyx_t_7.shape[1] = 1;
           goto __pyx_L29;
         }
 
-        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":242
+        /* "dadapy/_cython/cython_differentiable_imbalance.pyx":244
  *                     gradient_view[i] = 0.
  *                 else:
  *                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension             # <<<<<<<<<<<<<<
- *                     gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)
+ *                     gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
  */
         /*else*/ {
@@ -21992,20 +21992,20 @@ __pyx_t_7.shape[1] = 1;
           __pyx_t_7.memview = NULL;
           __pyx_t_7.data = NULL;
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":243
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":245
  *                 else:
  *                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
- *                     gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)             # <<<<<<<<<<<<<<
+ *                     gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)             # <<<<<<<<<<<<<<
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
  * 
  */
-          __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_parallel(__pyx_v_i, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_njobs, 0); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 243, __pyx_L1_error)
+          __pyx_t_12 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_parallel(__pyx_v_i, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_n_jobs, 0); if (unlikely(__pyx_t_12 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 245, __pyx_L1_error)
           __pyx_t_18 = __pyx_v_i;
           *((double *) ( /* dim=0 */ (__pyx_v_gradient_view.data + __pyx_t_18 * __pyx_v_gradient_view.strides[0]) )) = __pyx_t_12;
 
-          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":244
+          /* "dadapy/_cython/cython_differentiable_imbalance.pyx":246
  *                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
- *                     gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, njobs=njobs)
+ *                     gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)             # <<<<<<<<<<<<<<
  * 
  *     return gradient
@@ -22022,7 +22022,7 @@ __pyx_t_7.shape[1] = 1;
   }
   __pyx_L3:;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":246
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":248
  *                     gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
  * 
  *     return gradient             # <<<<<<<<<<<<<<
@@ -22034,7 +22034,7 @@ __pyx_t_7.shape[1] = 1;
   __pyx_r = __pyx_v_gradient;
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":152
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":154
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
@@ -22067,7 +22067,7 @@ __pyx_t_7.shape[1] = 1;
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_differentiable_imbalance.pyx":252
+/* "dadapy/_cython/cython_differentiable_imbalance.pyx":254
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * cdef double cmin(double[:] arr) nogil:             # <<<<<<<<<<<<<<
@@ -22085,7 +22085,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
   int __pyx_t_4;
   int __pyx_t_5;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":253
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":255
  * @cython.wraparound(False)
  * cdef double cmin(double[:] arr) nogil:
  *     cdef double min = arr[0]             # <<<<<<<<<<<<<<
@@ -22095,7 +22095,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
   __pyx_t_1 = 0;
   __pyx_v_min = (*((double *) ( /* dim=0 */ (__pyx_v_arr.data + __pyx_t_1 * __pyx_v_arr.strides[0]) )));
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":256
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":258
  *     #cdef double max = -np.inf
  *     cdef int i
  *     for i in range(arr.shape[0]):             # <<<<<<<<<<<<<<
@@ -22107,7 +22107,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":257
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":259
  *     cdef int i
  *     for i in range(arr.shape[0]):
  *         if arr[i] < min:             # <<<<<<<<<<<<<<
@@ -22118,7 +22118,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
     __pyx_t_5 = ((*((double *) ( /* dim=0 */ (__pyx_v_arr.data + __pyx_t_1 * __pyx_v_arr.strides[0]) ))) < __pyx_v_min);
     if (__pyx_t_5) {
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":258
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":260
  *     for i in range(arr.shape[0]):
  *         if arr[i] < min:
  *             min = arr[i]             # <<<<<<<<<<<<<<
@@ -22128,7 +22128,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
       __pyx_t_1 = __pyx_v_i;
       __pyx_v_min = (*((double *) ( /* dim=0 */ (__pyx_v_arr.data + __pyx_t_1 * __pyx_v_arr.strides[0]) )));
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":257
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":259
  *     cdef int i
  *     for i in range(arr.shape[0]):
  *         if arr[i] < min:             # <<<<<<<<<<<<<<
@@ -22138,7 +22138,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
     }
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":261
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":263
  *     #    if arr[i] > max
  *     #        max = arr[i]
  *     return min #, max             # <<<<<<<<<<<<<<
@@ -22148,7 +22148,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
   __pyx_r = __pyx_v_min;
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":252
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":254
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  * cdef double cmin(double[:] arr) nogil:             # <<<<<<<<<<<<<<
@@ -22161,10 +22161,10 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_cmin(__
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_differentiable_imbalance.pyx":267
+/* "dadapy/_cython/cython_differentiable_imbalance.pyx":269
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
@@ -22176,7 +22176,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_PBC_parallel(int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_period, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_njobs, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_PBC_parallel(int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_period, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_n_jobs, CYTHON_UNUSED int __pyx_skip_dispatch) {
   CYTHON_UNUSED int __pyx_v_D;
   int __pyx_v_N;
   int __pyx_v_i;
@@ -22217,7 +22217,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("alphagamma_gradientterm_cython_PBC_parallel", 1);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":270
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":272
  * 
  *     cdef int D,N,i,j
  *     D = gammas.shape[0]             # <<<<<<<<<<<<<<
@@ -22226,7 +22226,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
   __pyx_v_D = (__pyx_v_gammas.shape[0]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":271
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":273
  *     cdef int D,N,i,j
  *     D = gammas.shape[0]
  *     N = alphacolumn.shape[0]             # <<<<<<<<<<<<<<
@@ -22235,7 +22235,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
   __pyx_v_N = (__pyx_v_alphacolumn.shape[0]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":273
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":275
  *     N = alphacolumn.shape[0]
  *     cdef double summ, gradient_alphagamma
  *     gradient_alphagamma = 0.             # <<<<<<<<<<<<<<
@@ -22244,39 +22244,39 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
   __pyx_v_gradient_alphagamma = 0.;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":275
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":277
  *     gradient_alphagamma = 0.
  * 
  *     t1 = np.empty((N,N), dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:,::1] first_term = t1
  *     t2 = np.empty(N, dtype=float)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 275, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 277, __pyx_L1_error);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 275, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 277, __pyx_L1_error);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 275, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 277, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -22284,41 +22284,41 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   __pyx_v_t1 = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":276
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":278
  * 
  *     t1 = np.empty((N,N), dtype=float)
  *     cdef double[:,::1] first_term = t1             # <<<<<<<<<<<<<<
  *     t2 = np.empty(N, dtype=float)
  *     cdef double[:] second_term = t2
  */
-  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_t1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 276, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_t1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 278, __pyx_L1_error)
   __pyx_v_first_term = __pyx_t_5;
   __pyx_t_5.memview = NULL;
   __pyx_t_5.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":277
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":279
  *     t1 = np.empty((N,N), dtype=float)
  *     cdef double[:,::1] first_term = t1
  *     t2 = np.empty(N, dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:] second_term = t2
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 277, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 277, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 277, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 277, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 279, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 279, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -22326,23 +22326,23 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   __pyx_v_t2 = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":278
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":280
  *     cdef double[:,::1] first_term = t1
  *     t2 = np.empty(N, dtype=float)
  *     cdef double[:] second_term = t2             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_t2, PyBUF_WRITABLE); if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 278, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_t2, PyBUF_WRITABLE); if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 280, __pyx_L1_error)
   __pyx_v_second_term = __pyx_t_6;
   __pyx_t_6.memview = NULL;
   __pyx_t_6.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":283
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":285
  *     #periodcorrection according to the rescaling factors of the inputs
  *     cdef double[:] periodalpha
  *     periodalpha=period[alpha_gamma,None] #this creates a 1D array with just my 1 period number I need             # <<<<<<<<<<<<<<
- *     dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, njobs=njobs, squared=True)
+ *     dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, n_jobs=n_jobs, squared=True)
  *     cdef double [:,:] d_s_A_view = dists_squared_A
  */
   __pyx_t_6.data = __pyx_v_period.data;
@@ -22361,34 +22361,34 @@ __pyx_t_6.shape[0] = 1;
   __pyx_t_6.memview = NULL;
   __pyx_t_6.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":284
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":286
  *     cdef double[:] periodalpha
  *     periodalpha=period[alpha_gamma,None] #this creates a 1D array with just my 1 period number I need
- *     dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, njobs=njobs, squared=True)             # <<<<<<<<<<<<<<
+ *     dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, n_jobs=n_jobs, squared=True)             # <<<<<<<<<<<<<<
  *     cdef double [:,:] d_s_A_view = dists_squared_A
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_dist_PBC_cython_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 284, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_dist_PBC_cython_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_alphacolumn, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 284, __pyx_L1_error)
+  __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_alphacolumn, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 284, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 284, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 286, __pyx_L1_error);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 284, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_v_periodalpha, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 284, __pyx_L1_error)
+  __pyx_t_4 = __pyx_memoryview_fromslice(__pyx_v_periodalpha, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_box_size, __pyx_t_4) < 0) __PYX_ERR(0, 284, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_box_size, __pyx_t_4) < 0) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_njobs); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 284, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_n_jobs); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_njobs, __pyx_t_4) < 0) __PYX_ERR(0, 284, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_n_jobs, __pyx_t_4) < 0) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_squared, Py_True) < 0) __PYX_ERR(0, 284, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 284, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_squared, Py_True) < 0) __PYX_ERR(0, 286, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 286, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -22396,22 +22396,22 @@ __pyx_t_6.shape[0] = 1;
   __pyx_v_dists_squared_A = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":285
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":287
  *     periodalpha=period[alpha_gamma,None] #this creates a 1D array with just my 1 period number I need
- *     dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, njobs=njobs, squared=True)
+ *     dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, n_jobs=n_jobs, squared=True)
  *     cdef double [:,:] d_s_A_view = dists_squared_A             # <<<<<<<<<<<<<<
  * 
  *     #for i in range(N):
  */
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_v_dists_squared_A, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 285, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_v_dists_squared_A, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 287, __pyx_L1_error)
   __pyx_v_d_s_A_view = __pyx_t_7;
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":288
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":290
  * 
  *     #for i in range(N):
- *     with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *     with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *         for i in prange(N, schedule='static'):
  *             summ = 0.
  */
@@ -22431,13 +22431,13 @@ __pyx_t_6.shape[0] = 1;
                 #define unlikely(x) (x)
             #endif
             #ifdef _OPENMP
-            #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_njobs)
+            #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_n_jobs)
             #endif /* _OPENMP */
             {
 
-                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":289
+                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":291
  *     #for i in range(N):
- *     with nogil, parallel(num_threads=njobs):
+ *     with nogil, parallel(num_threads=n_jobs):
  *         for i in prange(N, schedule='static'):             # <<<<<<<<<<<<<<
  *             summ = 0.
  *             for j in range(N):
@@ -22457,8 +22457,8 @@ __pyx_t_6.shape[0] = 1;
                                 __pyx_v_j = ((int)0xbad0bad0);
                                 __pyx_v_summ = ((double)__PYX_NAN());
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":290
- *     with nogil, parallel(num_threads=njobs):
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":292
+ *     with nogil, parallel(num_threads=n_jobs):
  *         for i in prange(N, schedule='static'):
  *             summ = 0.             # <<<<<<<<<<<<<<
  *             for j in range(N):
@@ -22466,7 +22466,7 @@ __pyx_t_6.shape[0] = 1;
  */
                                 __pyx_v_summ = 0.;
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":291
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":293
  *         for i in prange(N, schedule='static'):
  *             summ = 0.
  *             for j in range(N):             # <<<<<<<<<<<<<<
@@ -22478,7 +22478,7 @@ __pyx_t_6.shape[0] = 1;
                                 for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
                                   __pyx_v_j = __pyx_t_13;
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":292
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":294
  *             summ = 0.
  *             for j in range(N):
  *                 first_term[i,j] = - d_s_A_view[i,j]/dists_rescaled_A[i,j]             # <<<<<<<<<<<<<<
@@ -22493,7 +22493,7 @@ __pyx_t_6.shape[0] = 1;
                                   __pyx_t_19 = __pyx_v_j;
                                   *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_first_term.data + __pyx_t_18 * __pyx_v_first_term.strides[0]) )) + __pyx_t_19)) )) = ((-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_d_s_A_view.data + __pyx_t_14 * __pyx_v_d_s_A_view.strides[0]) ) + __pyx_t_15 * __pyx_v_d_s_A_view.strides[1]) )))) / (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dists_rescaled_A.data + __pyx_t_16 * __pyx_v_dists_rescaled_A.strides[0]) ) + __pyx_t_17 * __pyx_v_dists_rescaled_A.strides[1]) ))));
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":293
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":295
  *             for j in range(N):
  *                 first_term[i,j] = - d_s_A_view[i,j]/dists_rescaled_A[i,j]
  *                 summ = summ + (d_s_A_view[i,j] / dists_rescaled_A[i,j]) * c_matrix[i,j]             # <<<<<<<<<<<<<<
@@ -22509,7 +22509,7 @@ __pyx_t_6.shape[0] = 1;
                                   __pyx_v_summ = (__pyx_v_summ + (((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_d_s_A_view.data + __pyx_t_17 * __pyx_v_d_s_A_view.strides[0]) ) + __pyx_t_16 * __pyx_v_d_s_A_view.strides[1]) ))) / (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dists_rescaled_A.data + __pyx_t_15 * __pyx_v_dists_rescaled_A.strides[0]) ) + __pyx_t_14 * __pyx_v_dists_rescaled_A.strides[1]) )))) * (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_19 * __pyx_v_c_matrix.strides[0]) ) + __pyx_t_18 * __pyx_v_c_matrix.strides[1]) )))));
                                 }
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":294
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":296
  *                 first_term[i,j] = - d_s_A_view[i,j]/dists_rescaled_A[i,j]
  *                 summ = summ + (d_s_A_view[i,j] / dists_rescaled_A[i,j]) * c_matrix[i,j]
  *             second_term[i] = summ             # <<<<<<<<<<<<<<
@@ -22519,7 +22519,7 @@ __pyx_t_6.shape[0] = 1;
                                 __pyx_t_18 = __pyx_v_i;
                                 *((double *) ( /* dim=0 */ (__pyx_v_second_term.data + __pyx_t_18 * __pyx_v_second_term.strides[0]) )) = __pyx_v_summ;
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":302
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":304
  *             #### Instead I do the weird loop below where I read the intermediate result in the 1D array "second_term" and
  *             #### add that up outside the parallelized loop. Looks ugly but is fast ####
  *             summ=0.             # <<<<<<<<<<<<<<
@@ -22528,7 +22528,7 @@ __pyx_t_6.shape[0] = 1;
  */
                                 __pyx_v_summ = 0.;
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":303
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":305
  *             #### add that up outside the parallelized loop. Looks ugly but is fast ####
  *             summ=0.
  *             for j in range(N):             # <<<<<<<<<<<<<<
@@ -22540,7 +22540,7 @@ __pyx_t_6.shape[0] = 1;
                                 for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
                                   __pyx_v_j = __pyx_t_13;
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":304
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":306
  *             summ=0.
  *             for j in range(N):
  *                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])             # <<<<<<<<<<<<<<
@@ -22557,7 +22557,7 @@ __pyx_t_6.shape[0] = 1;
                                   __pyx_v_summ = (__pyx_v_summ + (((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_18 * __pyx_v_c_matrix.strides[0]) ) + __pyx_t_19 * __pyx_v_c_matrix.strides[1]) ))) * (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_rank_matrix_B.data + __pyx_t_14 * __pyx_v_rank_matrix_B.strides[0]) ) + __pyx_t_15 * __pyx_v_rank_matrix_B.strides[1]) )))) * ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_first_term.data + __pyx_t_16 * __pyx_v_first_term.strides[0]) )) + __pyx_t_17)) ))) + (*((double *) ( /* dim=0 */ (__pyx_v_second_term.data + __pyx_t_20 * __pyx_v_second_term.strides[0]) ))))));
                                 }
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":305
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":307
  *             for j in range(N):
  *                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])
  *             second_term[i] = summ             # <<<<<<<<<<<<<<
@@ -22580,10 +22580,10 @@ __pyx_t_6.shape[0] = 1;
         #endif
       }
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":288
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":290
  * 
  *     #for i in range(N):
- *     with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *     with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *         for i in prange(N, schedule='static'):
  *             summ = 0.
  */
@@ -22599,7 +22599,7 @@ __pyx_t_6.shape[0] = 1;
       }
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":306
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":308
  *                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])
  *             second_term[i] = summ
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -22611,7 +22611,7 @@ __pyx_t_6.shape[0] = 1;
   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_9; __pyx_t_8+=1) {
     __pyx_v_i = __pyx_t_8;
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":307
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":309
  *             second_term[i] = summ
  *     for i in range(N):
  *         gradient_alphagamma = gradient_alphagamma + second_term[i]             # <<<<<<<<<<<<<<
@@ -22622,7 +22622,7 @@ __pyx_t_6.shape[0] = 1;
     __pyx_v_gradient_alphagamma = (__pyx_v_gradient_alphagamma + (*((double *) ( /* dim=0 */ (__pyx_v_second_term.data + __pyx_t_20 * __pyx_v_second_term.strides[0]) ))));
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":309
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":311
  *         gradient_alphagamma = gradient_alphagamma + second_term[i]
  * 
  *     return gradient_alphagamma             # <<<<<<<<<<<<<<
@@ -22632,10 +22632,10 @@ __pyx_t_6.shape[0] = 1;
   __pyx_r = __pyx_v_gradient_alphagamma;
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":267
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":269
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
@@ -22686,7 +22686,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_memviewslice __pyx_v_dists_rescaled_A = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_rank_matrix_B = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_c_matrix = { 0, 0, { 0 }, { 0 }, { 0 } };
-  int __pyx_v_njobs;
+  int __pyx_v_n_jobs;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
   #endif
@@ -22707,7 +22707,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_alpha_gamma,&__pyx_n_s_alphacolumn,&__pyx_n_s_gammas,&__pyx_n_s_period,&__pyx_n_s_dists_rescaled_A,&__pyx_n_s_rank_matrix_B,&__pyx_n_s_c_matrix,&__pyx_n_s_njobs,0};
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_alpha_gamma,&__pyx_n_s_alphacolumn,&__pyx_n_s_gammas,&__pyx_n_s_period,&__pyx_n_s_dists_rescaled_A,&__pyx_n_s_rank_matrix_B,&__pyx_n_s_c_matrix,&__pyx_n_s_n_jobs,0};
     if (__pyx_kwds) {
       Py_ssize_t kw_args;
       switch (__pyx_nargs) {
@@ -22737,7 +22737,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -22745,9 +22745,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 1); __PYX_ERR(0, 267, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 1); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -22755,9 +22755,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[2]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 2); __PYX_ERR(0, 267, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 2); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
@@ -22765,9 +22765,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[3]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 3); __PYX_ERR(0, 267, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 3); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
@@ -22775,9 +22775,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[4]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 4); __PYX_ERR(0, 267, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 4); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
@@ -22785,9 +22785,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[5]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 5); __PYX_ERR(0, 267, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 5); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
@@ -22795,24 +22795,24 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[6]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 6); __PYX_ERR(0, 267, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 6); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
-        if (likely((values[7] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_njobs)) != 0)) {
+        if (likely((values[7] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_n_jobs)) != 0)) {
           (void)__Pyx_Arg_NewRef_FASTCALL(values[7]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 7); __PYX_ERR(0, 267, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, 7); __PYX_ERR(0, 269, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "alphagamma_gradientterm_cython_PBC_parallel") < 0)) __PYX_ERR(0, 267, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "alphagamma_gradientterm_cython_PBC_parallel") < 0)) __PYX_ERR(0, 269, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 8)) {
       goto __pyx_L5_argtuple_error;
@@ -22826,18 +22826,18 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
       values[6] = __Pyx_Arg_FASTCALL(__pyx_args, 6);
       values[7] = __Pyx_Arg_FASTCALL(__pyx_args, 7);
     }
-    __pyx_v_alpha_gamma = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_alpha_gamma == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
-    __pyx_v_alphacolumn = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_alphacolumn.memview)) __PYX_ERR(0, 267, __pyx_L3_error)
-    __pyx_v_gammas = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_gammas.memview)) __PYX_ERR(0, 267, __pyx_L3_error)
-    __pyx_v_period = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3], PyBUF_WRITABLE); if (unlikely(!__pyx_v_period.memview)) __PYX_ERR(0, 267, __pyx_L3_error)
-    __pyx_v_dists_rescaled_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dists_rescaled_A.memview)) __PYX_ERR(0, 267, __pyx_L3_error)
-    __pyx_v_rank_matrix_B = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_rank_matrix_B.memview)) __PYX_ERR(0, 267, __pyx_L3_error)
-    __pyx_v_c_matrix = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[6], PyBUF_WRITABLE); if (unlikely(!__pyx_v_c_matrix.memview)) __PYX_ERR(0, 267, __pyx_L3_error)
-    __pyx_v_njobs = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_njobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L3_error)
+    __pyx_v_alpha_gamma = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_alpha_gamma == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
+    __pyx_v_alphacolumn = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_alphacolumn.memview)) __PYX_ERR(0, 269, __pyx_L3_error)
+    __pyx_v_gammas = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_gammas.memview)) __PYX_ERR(0, 269, __pyx_L3_error)
+    __pyx_v_period = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3], PyBUF_WRITABLE); if (unlikely(!__pyx_v_period.memview)) __PYX_ERR(0, 269, __pyx_L3_error)
+    __pyx_v_dists_rescaled_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dists_rescaled_A.memview)) __PYX_ERR(0, 269, __pyx_L3_error)
+    __pyx_v_rank_matrix_B = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_rank_matrix_B.memview)) __PYX_ERR(0, 269, __pyx_L3_error)
+    __pyx_v_c_matrix = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[6], PyBUF_WRITABLE); if (unlikely(!__pyx_v_c_matrix.memview)) __PYX_ERR(0, 269, __pyx_L3_error)
+    __pyx_v_n_jobs = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_n_jobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, __pyx_nargs); __PYX_ERR(0, 267, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_PBC_parallel", 1, 8, 8, __pyx_nargs); __PYX_ERR(0, 269, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -22857,7 +22857,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6alphagamma_gradientterm_cython_PBC_parallel(__pyx_self, __pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_period, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_njobs);
+  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6alphagamma_gradientterm_cython_PBC_parallel(__pyx_self, __pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_period, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_n_jobs);
 
   /* function exit code */
   __PYX_XCLEAR_MEMVIEW(&__pyx_v_alphacolumn, 1);
@@ -22876,7 +22876,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6alphagamma_gradientterm_cython_PBC_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_period, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_njobs) {
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6alphagamma_gradientterm_cython_PBC_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_period, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_n_jobs) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -22886,14 +22886,14 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6al
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("alphagamma_gradientterm_cython_PBC_parallel", 1);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_alphacolumn.memview)) { __Pyx_RaiseUnboundLocalError("alphacolumn"); __PYX_ERR(0, 267, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_gammas.memview)) { __Pyx_RaiseUnboundLocalError("gammas"); __PYX_ERR(0, 267, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_period.memview)) { __Pyx_RaiseUnboundLocalError("period"); __PYX_ERR(0, 267, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_dists_rescaled_A.memview)) { __Pyx_RaiseUnboundLocalError("dists_rescaled_A"); __PYX_ERR(0, 267, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_rank_matrix_B.memview)) { __Pyx_RaiseUnboundLocalError("rank_matrix_B"); __PYX_ERR(0, 267, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_c_matrix.memview)) { __Pyx_RaiseUnboundLocalError("c_matrix"); __PYX_ERR(0, 267, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_PBC_parallel(__pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_period, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_njobs, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 267, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 267, __pyx_L1_error)
+  if (unlikely(!__pyx_v_alphacolumn.memview)) { __Pyx_RaiseUnboundLocalError("alphacolumn"); __PYX_ERR(0, 269, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_gammas.memview)) { __Pyx_RaiseUnboundLocalError("gammas"); __PYX_ERR(0, 269, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_period.memview)) { __Pyx_RaiseUnboundLocalError("period"); __PYX_ERR(0, 269, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_dists_rescaled_A.memview)) { __Pyx_RaiseUnboundLocalError("dists_rescaled_A"); __PYX_ERR(0, 269, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_rank_matrix_B.memview)) { __Pyx_RaiseUnboundLocalError("rank_matrix_B"); __PYX_ERR(0, 269, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_c_matrix.memview)) { __Pyx_RaiseUnboundLocalError("c_matrix"); __PYX_ERR(0, 269, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_PBC_parallel(__pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_period, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_n_jobs, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 269, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 269, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -22910,10 +22910,10 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_6al
   return __pyx_r;
 }
 
-/* "dadapy/_cython/cython_differentiable_imbalance.pyx":315
+/* "dadapy/_cython/cython_differentiable_imbalance.pyx":317
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
@@ -22925,7 +22925,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_parallel(CYTHON_UNUSED int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_njobs, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_parallel(CYTHON_UNUSED int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_n_jobs, CYTHON_UNUSED int __pyx_skip_dispatch) {
   CYTHON_UNUSED int __pyx_v_D;
   int __pyx_v_N;
   int __pyx_v_i;
@@ -22964,7 +22964,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("alphagamma_gradientterm_cython_parallel", 1);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":318
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":320
  * 
  *     cdef int D,N,i,j
  *     D = gammas.shape[0]             # <<<<<<<<<<<<<<
@@ -22973,7 +22973,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
   __pyx_v_D = (__pyx_v_gammas.shape[0]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":319
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":321
  *     cdef int D,N,i,j
  *     D = gammas.shape[0]
  *     N = alphacolumn.shape[0]             # <<<<<<<<<<<<<<
@@ -22982,7 +22982,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
   __pyx_v_N = (__pyx_v_alphacolumn.shape[0]);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":321
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":323
  *     N = alphacolumn.shape[0]
  *     cdef double summ, gradient_alphagamma
  *     gradient_alphagamma = 0.             # <<<<<<<<<<<<<<
@@ -22991,39 +22991,39 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
   __pyx_v_gradient_alphagamma = 0.;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":323
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":325
  *     gradient_alphagamma = 0.
  * 
  *     t1 = np.empty((N,N), dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:,::1] first_term = t1
  *     t2 = np.empty(N, dtype=float)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 323, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_3);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 323, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_3)) __PYX_ERR(0, 325, __pyx_L1_error);
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 323, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4)) __PYX_ERR(0, 325, __pyx_L1_error);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 323, __pyx_L1_error)
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 323, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 325, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -23031,41 +23031,41 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   __pyx_v_t1 = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":324
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":326
  * 
  *     t1 = np.empty((N,N), dtype=float)
  *     cdef double[:,::1] first_term = t1             # <<<<<<<<<<<<<<
  *     t2 = np.empty(N, dtype=float)
  *     cdef double[:] second_term = t2
  */
-  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_t1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 324, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(__pyx_v_t1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_5.memview)) __PYX_ERR(0, 326, __pyx_L1_error)
   __pyx_v_first_term = __pyx_t_5;
   __pyx_t_5.memview = NULL;
   __pyx_t_5.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":325
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":327
  *     t1 = np.empty((N,N), dtype=float)
  *     cdef double[:,::1] first_term = t1
  *     t2 = np.empty(N, dtype=float)             # <<<<<<<<<<<<<<
  *     cdef double[:] second_term = t2
  * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 327, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 327, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_N); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 327, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 327, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 327, __pyx_L1_error);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 327, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 325, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 325, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 327, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 327, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -23073,56 +23073,56 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   __pyx_v_t2 = __pyx_t_2;
   __pyx_t_2 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":326
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":328
  *     cdef double[:,::1] first_term = t1
  *     t2 = np.empty(N, dtype=float)
  *     cdef double[:] second_term = t2             # <<<<<<<<<<<<<<
  * 
- *     cdef double [:,:] d_s_A_view = compute_dist_cython_parallel(alphacolumn, njobs=njobs, squared=True)
+ *     cdef double [:,:] d_s_A_view = compute_dist_cython_parallel(alphacolumn, n_jobs=n_jobs, squared=True)
  */
-  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_t2, PyBUF_WRITABLE); if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 326, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_t2, PyBUF_WRITABLE); if (unlikely(!__pyx_t_6.memview)) __PYX_ERR(0, 328, __pyx_L1_error)
   __pyx_v_second_term = __pyx_t_6;
   __pyx_t_6.memview = NULL;
   __pyx_t_6.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":328
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":330
  *     cdef double[:] second_term = t2
  * 
- *     cdef double [:,:] d_s_A_view = compute_dist_cython_parallel(alphacolumn, njobs=njobs, squared=True)             # <<<<<<<<<<<<<<
+ *     cdef double [:,:] d_s_A_view = compute_dist_cython_parallel(alphacolumn, n_jobs=n_jobs, squared=True)             # <<<<<<<<<<<<<<
  * 
  *     #for i in range(N):
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_dist_cython_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 328, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_compute_dist_cython_parallel); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_alphacolumn, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 328, __pyx_L1_error)
+  __pyx_t_1 = __pyx_memoryview_fromslice(__pyx_v_alphacolumn, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 328, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 328, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 328, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_njobs); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 328, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_n_jobs); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_njobs, __pyx_t_4) < 0) __PYX_ERR(0, 328, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_n_jobs, __pyx_t_4) < 0) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_squared, Py_True) < 0) __PYX_ERR(0, 328, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 328, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_squared, Py_True) < 0) __PYX_ERR(0, 330, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_t_4, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 328, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(__pyx_t_4, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(0, 330, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_d_s_A_view = __pyx_t_7;
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":331
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":333
  * 
  *     #for i in range(N):
- *     with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *     with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *         for i in prange(N, schedule='static'):
  *             summ = 0.
  */
@@ -23142,13 +23142,13 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                 #define unlikely(x) (x)
             #endif
             #ifdef _OPENMP
-            #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_njobs)
+            #pragma omp parallel  private(__pyx_t_10, __pyx_t_11, __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15, __pyx_t_16, __pyx_t_17, __pyx_t_18, __pyx_t_19, __pyx_t_20, __pyx_t_8, __pyx_t_9) num_threads(__pyx_v_n_jobs)
             #endif /* _OPENMP */
             {
 
-                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":332
+                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":334
  *     #for i in range(N):
- *     with nogil, parallel(num_threads=njobs):
+ *     with nogil, parallel(num_threads=n_jobs):
  *         for i in prange(N, schedule='static'):             # <<<<<<<<<<<<<<
  *             summ = 0.
  *             for j in range(N):
@@ -23168,8 +23168,8 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                                 __pyx_v_j = ((int)0xbad0bad0);
                                 __pyx_v_summ = ((double)__PYX_NAN());
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":333
- *     with nogil, parallel(num_threads=njobs):
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":335
+ *     with nogil, parallel(num_threads=n_jobs):
  *         for i in prange(N, schedule='static'):
  *             summ = 0.             # <<<<<<<<<<<<<<
  *             for j in range(N):
@@ -23177,7 +23177,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
                                 __pyx_v_summ = 0.;
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":334
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":336
  *         for i in prange(N, schedule='static'):
  *             summ = 0.
  *             for j in range(N):             # <<<<<<<<<<<<<<
@@ -23189,7 +23189,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                                 for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
                                   __pyx_v_j = __pyx_t_13;
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":335
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":337
  *             summ = 0.
  *             for j in range(N):
  *                 first_term[i,j] = - d_s_A_view[i,j]/dists_rescaled_A[i,j]             # <<<<<<<<<<<<<<
@@ -23204,7 +23204,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                                   __pyx_t_19 = __pyx_v_j;
                                   *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_first_term.data + __pyx_t_18 * __pyx_v_first_term.strides[0]) )) + __pyx_t_19)) )) = ((-(*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_d_s_A_view.data + __pyx_t_14 * __pyx_v_d_s_A_view.strides[0]) ) + __pyx_t_15 * __pyx_v_d_s_A_view.strides[1]) )))) / (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dists_rescaled_A.data + __pyx_t_16 * __pyx_v_dists_rescaled_A.strides[0]) ) + __pyx_t_17 * __pyx_v_dists_rescaled_A.strides[1]) ))));
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":336
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":338
  *             for j in range(N):
  *                 first_term[i,j] = - d_s_A_view[i,j]/dists_rescaled_A[i,j]
  *                 summ = summ + (d_s_A_view[i,j] / dists_rescaled_A[i,j]) * c_matrix[i,j]             # <<<<<<<<<<<<<<
@@ -23220,7 +23220,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                                   __pyx_v_summ = (__pyx_v_summ + (((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_d_s_A_view.data + __pyx_t_17 * __pyx_v_d_s_A_view.strides[0]) ) + __pyx_t_16 * __pyx_v_d_s_A_view.strides[1]) ))) / (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dists_rescaled_A.data + __pyx_t_15 * __pyx_v_dists_rescaled_A.strides[0]) ) + __pyx_t_14 * __pyx_v_dists_rescaled_A.strides[1]) )))) * (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_19 * __pyx_v_c_matrix.strides[0]) ) + __pyx_t_18 * __pyx_v_c_matrix.strides[1]) )))));
                                 }
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":337
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":339
  *                 first_term[i,j] = - d_s_A_view[i,j]/dists_rescaled_A[i,j]
  *                 summ = summ + (d_s_A_view[i,j] / dists_rescaled_A[i,j]) * c_matrix[i,j]
  *             second_term[i] = summ             # <<<<<<<<<<<<<<
@@ -23230,7 +23230,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                                 __pyx_t_18 = __pyx_v_i;
                                 *((double *) ( /* dim=0 */ (__pyx_v_second_term.data + __pyx_t_18 * __pyx_v_second_term.strides[0]) )) = __pyx_v_summ;
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":345
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":347
  *             #### Instead I do the weird loop below where I read the intermediate result in the 1D array "second_term" and
  *             #### add that up outside the parallelized loop. Looks ugly but is fast ####
  *             summ=0.             # <<<<<<<<<<<<<<
@@ -23239,7 +23239,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
  */
                                 __pyx_v_summ = 0.;
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":346
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":348
  *             #### add that up outside the parallelized loop. Looks ugly but is fast ####
  *             summ=0.
  *             for j in range(N):             # <<<<<<<<<<<<<<
@@ -23251,7 +23251,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                                 for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
                                   __pyx_v_j = __pyx_t_13;
 
-                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":347
+                                  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":349
  *             summ=0.
  *             for j in range(N):
  *                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])             # <<<<<<<<<<<<<<
@@ -23268,7 +23268,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
                                   __pyx_v_summ = (__pyx_v_summ + (((*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_c_matrix.data + __pyx_t_18 * __pyx_v_c_matrix.strides[0]) ) + __pyx_t_19 * __pyx_v_c_matrix.strides[1]) ))) * (*((long *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_rank_matrix_B.data + __pyx_t_14 * __pyx_v_rank_matrix_B.strides[0]) ) + __pyx_t_15 * __pyx_v_rank_matrix_B.strides[1]) )))) * ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_first_term.data + __pyx_t_16 * __pyx_v_first_term.strides[0]) )) + __pyx_t_17)) ))) + (*((double *) ( /* dim=0 */ (__pyx_v_second_term.data + __pyx_t_20 * __pyx_v_second_term.strides[0]) ))))));
                                 }
 
-                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":348
+                                /* "dadapy/_cython/cython_differentiable_imbalance.pyx":350
  *             for j in range(N):
  *                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])
  *             second_term[i] = summ             # <<<<<<<<<<<<<<
@@ -23291,10 +23291,10 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
         #endif
       }
 
-      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":331
+      /* "dadapy/_cython/cython_differentiable_imbalance.pyx":333
  * 
  *     #for i in range(N):
- *     with nogil, parallel(num_threads=njobs):             # <<<<<<<<<<<<<<
+ *     with nogil, parallel(num_threads=n_jobs):             # <<<<<<<<<<<<<<
  *         for i in prange(N, schedule='static'):
  *             summ = 0.
  */
@@ -23310,7 +23310,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
       }
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":349
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":351
  *                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])
  *             second_term[i] = summ
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -23322,7 +23322,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_9; __pyx_t_8+=1) {
     __pyx_v_i = __pyx_t_8;
 
-    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":350
+    /* "dadapy/_cython/cython_differentiable_imbalance.pyx":352
  *             second_term[i] = summ
  *     for i in range(N):
  *         gradient_alphagamma = gradient_alphagamma + second_term[i]             # <<<<<<<<<<<<<<
@@ -23333,7 +23333,7 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
     __pyx_v_gradient_alphagamma = (__pyx_v_gradient_alphagamma + (*((double *) ( /* dim=0 */ (__pyx_v_second_term.data + __pyx_t_20 * __pyx_v_second_term.strides[0]) ))));
   }
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":352
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":354
  *         gradient_alphagamma = gradient_alphagamma + second_term[i]
  * 
  *     return gradient_alphagamma             # <<<<<<<<<<<<<<
@@ -23343,10 +23343,10 @@ static double __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphaga
   __pyx_r = __pyx_v_gradient_alphagamma;
   goto __pyx_L0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":315
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":317
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
@@ -23394,7 +23394,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_memviewslice __pyx_v_dists_rescaled_A = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_rank_matrix_B = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_c_matrix = { 0, 0, { 0 }, { 0 }, { 0 } };
-  int __pyx_v_njobs;
+  int __pyx_v_n_jobs;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
   #endif
@@ -23415,7 +23415,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_alpha_gamma,&__pyx_n_s_alphacolumn,&__pyx_n_s_gammas,&__pyx_n_s_dists_rescaled_A,&__pyx_n_s_rank_matrix_B,&__pyx_n_s_c_matrix,&__pyx_n_s_njobs,0};
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_alpha_gamma,&__pyx_n_s_alphacolumn,&__pyx_n_s_gammas,&__pyx_n_s_dists_rescaled_A,&__pyx_n_s_rank_matrix_B,&__pyx_n_s_c_matrix,&__pyx_n_s_n_jobs,0};
     if (__pyx_kwds) {
       Py_ssize_t kw_args;
       switch (__pyx_nargs) {
@@ -23443,7 +23443,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -23451,9 +23451,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[1]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 1); __PYX_ERR(0, 315, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 1); __PYX_ERR(0, 317, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -23461,9 +23461,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[2]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 2); __PYX_ERR(0, 315, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 2); __PYX_ERR(0, 317, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
@@ -23471,9 +23471,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[3]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 3); __PYX_ERR(0, 315, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 3); __PYX_ERR(0, 317, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
@@ -23481,9 +23481,9 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[4]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 4); __PYX_ERR(0, 315, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 4); __PYX_ERR(0, 317, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
@@ -23491,24 +23491,24 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[5]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 5); __PYX_ERR(0, 315, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 5); __PYX_ERR(0, 317, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
-        if (likely((values[6] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_njobs)) != 0)) {
+        if (likely((values[6] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_n_jobs)) != 0)) {
           (void)__Pyx_Arg_NewRef_FASTCALL(values[6]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
         else {
-          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 6); __PYX_ERR(0, 315, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, 6); __PYX_ERR(0, 317, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "alphagamma_gradientterm_cython_parallel") < 0)) __PYX_ERR(0, 315, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "alphagamma_gradientterm_cython_parallel") < 0)) __PYX_ERR(0, 317, __pyx_L3_error)
       }
     } else if (unlikely(__pyx_nargs != 7)) {
       goto __pyx_L5_argtuple_error;
@@ -23521,17 +23521,17 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
       values[5] = __Pyx_Arg_FASTCALL(__pyx_args, 5);
       values[6] = __Pyx_Arg_FASTCALL(__pyx_args, 6);
     }
-    __pyx_v_alpha_gamma = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_alpha_gamma == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
-    __pyx_v_alphacolumn = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_alphacolumn.memview)) __PYX_ERR(0, 315, __pyx_L3_error)
-    __pyx_v_gammas = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_gammas.memview)) __PYX_ERR(0, 315, __pyx_L3_error)
-    __pyx_v_dists_rescaled_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[3], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dists_rescaled_A.memview)) __PYX_ERR(0, 315, __pyx_L3_error)
-    __pyx_v_rank_matrix_B = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_rank_matrix_B.memview)) __PYX_ERR(0, 315, __pyx_L3_error)
-    __pyx_v_c_matrix = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_c_matrix.memview)) __PYX_ERR(0, 315, __pyx_L3_error)
-    __pyx_v_njobs = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_njobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L3_error)
+    __pyx_v_alpha_gamma = __Pyx_PyInt_As_int(values[0]); if (unlikely((__pyx_v_alpha_gamma == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
+    __pyx_v_alphacolumn = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_alphacolumn.memview)) __PYX_ERR(0, 317, __pyx_L3_error)
+    __pyx_v_gammas = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_gammas.memview)) __PYX_ERR(0, 317, __pyx_L3_error)
+    __pyx_v_dists_rescaled_A = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[3], PyBUF_WRITABLE); if (unlikely(!__pyx_v_dists_rescaled_A.memview)) __PYX_ERR(0, 317, __pyx_L3_error)
+    __pyx_v_rank_matrix_B = __Pyx_PyObject_to_MemoryviewSlice_dsds_long(values[4], PyBUF_WRITABLE); if (unlikely(!__pyx_v_rank_matrix_B.memview)) __PYX_ERR(0, 317, __pyx_L3_error)
+    __pyx_v_c_matrix = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[5], PyBUF_WRITABLE); if (unlikely(!__pyx_v_c_matrix.memview)) __PYX_ERR(0, 317, __pyx_L3_error)
+    __pyx_v_n_jobs = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_n_jobs == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, __pyx_nargs); __PYX_ERR(0, 315, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("alphagamma_gradientterm_cython_parallel", 1, 7, 7, __pyx_nargs); __PYX_ERR(0, 317, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -23550,7 +23550,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_8alphagamma_gradientterm_cython_parallel(__pyx_self, __pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_njobs);
+  __pyx_r = __pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_8alphagamma_gradientterm_cython_parallel(__pyx_self, __pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_n_jobs);
 
   /* function exit code */
   __PYX_XCLEAR_MEMVIEW(&__pyx_v_alphacolumn, 1);
@@ -23568,7 +23568,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_8alphagamma_gradientterm_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_njobs) {
+static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_8alphagamma_gradientterm_cython_parallel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_alpha_gamma, __Pyx_memviewslice __pyx_v_alphacolumn, __Pyx_memviewslice __pyx_v_gammas, __Pyx_memviewslice __pyx_v_dists_rescaled_A, __Pyx_memviewslice __pyx_v_rank_matrix_B, __Pyx_memviewslice __pyx_v_c_matrix, int __pyx_v_n_jobs) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -23578,13 +23578,13 @@ static PyObject *__pyx_pf_6dadapy_7_cython_31cython_differentiable_imbalance_8al
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("alphagamma_gradientterm_cython_parallel", 1);
   __Pyx_XDECREF(__pyx_r);
-  if (unlikely(!__pyx_v_alphacolumn.memview)) { __Pyx_RaiseUnboundLocalError("alphacolumn"); __PYX_ERR(0, 315, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_gammas.memview)) { __Pyx_RaiseUnboundLocalError("gammas"); __PYX_ERR(0, 315, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_dists_rescaled_A.memview)) { __Pyx_RaiseUnboundLocalError("dists_rescaled_A"); __PYX_ERR(0, 315, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_rank_matrix_B.memview)) { __Pyx_RaiseUnboundLocalError("rank_matrix_B"); __PYX_ERR(0, 315, __pyx_L1_error) }
-  if (unlikely(!__pyx_v_c_matrix.memview)) { __Pyx_RaiseUnboundLocalError("c_matrix"); __PYX_ERR(0, 315, __pyx_L1_error) }
-  __pyx_t_1 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_parallel(__pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_njobs, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 315, __pyx_L1_error)
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 315, __pyx_L1_error)
+  if (unlikely(!__pyx_v_alphacolumn.memview)) { __Pyx_RaiseUnboundLocalError("alphacolumn"); __PYX_ERR(0, 317, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_gammas.memview)) { __Pyx_RaiseUnboundLocalError("gammas"); __PYX_ERR(0, 317, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_dists_rescaled_A.memview)) { __Pyx_RaiseUnboundLocalError("dists_rescaled_A"); __PYX_ERR(0, 317, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_rank_matrix_B.memview)) { __Pyx_RaiseUnboundLocalError("rank_matrix_B"); __PYX_ERR(0, 317, __pyx_L1_error) }
+  if (unlikely(!__pyx_v_c_matrix.memview)) { __Pyx_RaiseUnboundLocalError("c_matrix"); __PYX_ERR(0, 317, __pyx_L1_error) }
+  __pyx_t_1 = __pyx_f_6dadapy_7_cython_31cython_differentiable_imbalance_alphagamma_gradientterm_cython_parallel(__pyx_v_alpha_gamma, __pyx_v_alphacolumn, __pyx_v_gammas, __pyx_v_dists_rescaled_A, __pyx_v_rank_matrix_B, __pyx_v_c_matrix, __pyx_v_n_jobs, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 317, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 317, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -24632,8 +24632,8 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_kp_s_contiguous_and_direct, __pyx_k_contiguous_and_direct, sizeof(__pyx_k_contiguous_and_direct), 0, 0, 1, 0},
     {&__pyx_kp_s_contiguous_and_indirect, __pyx_k_contiguous_and_indirect, sizeof(__pyx_k_contiguous_and_indirect), 0, 0, 1, 0},
     {&__pyx_n_s_count, __pyx_k_count, sizeof(__pyx_k_count), 0, 0, 1, 1},
-    {&__pyx_kp_s_cython_differentiable_imbalance, __pyx_k_cython_differentiable_imbalance, sizeof(__pyx_k_cython_differentiable_imbalance), 0, 0, 1, 0},
-    {&__pyx_n_s_dadapy__cython_cython_differenti, __pyx_k_dadapy__cython_cython_differenti, sizeof(__pyx_k_dadapy__cython_cython_differenti), 0, 0, 1, 1},
+    {&__pyx_kp_s_dadapy__cython_cython_differenti, __pyx_k_dadapy__cython_cython_differenti, sizeof(__pyx_k_dadapy__cython_cython_differenti), 0, 0, 1, 0},
+    {&__pyx_n_s_dadapy__cython_cython_differenti_2, __pyx_k_dadapy__cython_cython_differenti_2, sizeof(__pyx_k_dadapy__cython_cython_differenti_2), 0, 0, 1, 1},
     {&__pyx_n_s_data_A, __pyx_k_data_A, sizeof(__pyx_k_data_A), 0, 0, 1, 1},
     {&__pyx_n_s_dict, __pyx_k_dict, sizeof(__pyx_k_dict), 0, 0, 1, 1},
     {&__pyx_n_s_diff, __pyx_k_diff, sizeof(__pyx_k_diff), 0, 0, 1, 1},
@@ -24678,11 +24678,11 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_min_dists, __pyx_k_min_dists, sizeof(__pyx_k_min_dists), 0, 0, 1, 1},
     {&__pyx_n_s_mod, __pyx_k_mod, sizeof(__pyx_k_mod), 0, 0, 1, 1},
     {&__pyx_n_s_mode, __pyx_k_mode, sizeof(__pyx_k_mode), 0, 0, 1, 1},
+    {&__pyx_n_s_n_jobs, __pyx_k_n_jobs, sizeof(__pyx_k_n_jobs), 0, 0, 1, 1},
     {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
     {&__pyx_n_s_name_2, __pyx_k_name_2, sizeof(__pyx_k_name_2), 0, 0, 1, 1},
     {&__pyx_n_s_ndim, __pyx_k_ndim, sizeof(__pyx_k_ndim), 0, 0, 1, 1},
     {&__pyx_n_s_new, __pyx_k_new, sizeof(__pyx_k_new), 0, 0, 1, 1},
-    {&__pyx_n_s_njobs, __pyx_k_njobs, sizeof(__pyx_k_njobs), 0, 0, 1, 1},
     {&__pyx_kp_s_no_default___reduce___due_to_non, __pyx_k_no_default___reduce___due_to_non, sizeof(__pyx_k_no_default___reduce___due_to_non), 0, 0, 1, 0},
     {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
     {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
@@ -24739,7 +24739,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 }
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 62, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 64, __pyx_L1_error)
   __pyx_builtin___import__ = __Pyx_GetBuiltinName(__pyx_n_s_import); if (!__pyx_builtin___import__) __PYX_ERR(1, 100, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 141, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(1, 156, __pyx_L1_error)
@@ -24796,7 +24796,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__8);
   __Pyx_GIVEREF(__pyx_tuple__8);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":984
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":984
  *         __pyx_import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
@@ -24807,7 +24807,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "../../../../anaconda3/envs/diidada3/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":990
+  /* "../../anaconda3/envs/dadapy/lib/python3.9/site-packages/numpy/__init__.cython-30.pxd":990
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
@@ -24919,65 +24919,65 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__20);
   __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_pyx_unpickle_Enum, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(1, 1, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":18
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":20
  * # TODO: @wildromi clean up
  * # TODO: @wildromi why does this not accept var=var assignments anymore
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  */
-  __pyx_tuple__22 = PyTuple_Pack(16, __pyx_n_s_X, __pyx_n_s_box_size, __pyx_n_s_njobs, __pyx_n_s_squared, __pyx_n_s_N, __pyx_n_s_D, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_diff, __pyx_n_s_b, __pyx_n_s_dist, __pyx_n_s_distmatrix, __pyx_n_s_distmatrix_view, __pyx_n_s_box_size_copy, __pyx_n_s_b); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_tuple__22 = PyTuple_Pack(16, __pyx_n_s_X, __pyx_n_s_box_size, __pyx_n_s_n_jobs, __pyx_n_s_squared, __pyx_n_s_N, __pyx_n_s_D, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_diff, __pyx_n_s_b, __pyx_n_s_dist, __pyx_n_s_distmatrix, __pyx_n_s_distmatrix_view, __pyx_n_s_box_size_copy, __pyx_n_s_b); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(0, 20, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__22);
   __Pyx_GIVEREF(__pyx_tuple__22);
-  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 16, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__22, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_differentiable_imbalance, __pyx_n_s_compute_dist_PBC_cython_parallel, 18, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 16, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__22, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dadapy__cython_cython_differenti, __pyx_n_s_compute_dist_PBC_cython_parallel, 20, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(0, 20, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":99
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":101
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  */
-  __pyx_tuple__24 = PyTuple_Pack(12, __pyx_n_s_X, __pyx_n_s_njobs, __pyx_n_s_squared, __pyx_n_s_N, __pyx_n_s_D, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_diff, __pyx_n_s_dist, __pyx_n_s_distmatrix, __pyx_n_s_distmatrix_view); if (unlikely(!__pyx_tuple__24)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_tuple__24 = PyTuple_Pack(12, __pyx_n_s_X, __pyx_n_s_n_jobs, __pyx_n_s_squared, __pyx_n_s_N, __pyx_n_s_D, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_diff, __pyx_n_s_dist, __pyx_n_s_distmatrix, __pyx_n_s_distmatrix_view); if (unlikely(!__pyx_tuple__24)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__24);
   __Pyx_GIVEREF(__pyx_tuple__24);
-  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_differentiable_imbalance, __pyx_n_s_compute_dist_cython_parallel, 99, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(3, 0, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dadapy__cython_cython_differenti, __pyx_n_s_compute_dist_cython_parallel, 101, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 101, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":152
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":154
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  */
-  __pyx_tuple__26 = PyTuple_Pack(22, __pyx_n_s_dists_rescaled_A, __pyx_n_s_data_A, __pyx_n_s_rank_matrix_B, __pyx_n_s_gammas, __pyx_n_s_lambd, __pyx_n_s_period, __pyx_n_s_njobs, __pyx_n_s_periodic, __pyx_n_s_N, __pyx_n_s_D, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_summ, __pyx_n_s_gradient, __pyx_n_s_gradient_view, __pyx_n_s_min_d, __pyx_n_s_min_dists, __pyx_n_s_c_m, __pyx_n_s_c_matrix, __pyx_n_s_alphacol, __pyx_n_s_alphacolumn); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_tuple__26 = PyTuple_Pack(22, __pyx_n_s_dists_rescaled_A, __pyx_n_s_data_A, __pyx_n_s_rank_matrix_B, __pyx_n_s_gammas, __pyx_n_s_lambd, __pyx_n_s_period, __pyx_n_s_n_jobs, __pyx_n_s_periodic, __pyx_n_s_N, __pyx_n_s_D, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_summ, __pyx_n_s_gradient, __pyx_n_s_gradient_view, __pyx_n_s_min_d, __pyx_n_s_min_dists, __pyx_n_s_c_m, __pyx_n_s_c_matrix, __pyx_n_s_alphacol, __pyx_n_s_alphacolumn); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 154, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__26);
   __Pyx_GIVEREF(__pyx_tuple__26);
-  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(8, 0, 0, 22, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_differentiable_imbalance, __pyx_n_s_return_dii_gradient_cython, 152, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(8, 0, 0, 22, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dadapy__cython_cython_differenti, __pyx_n_s_return_dii_gradient_cython, 154, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 154, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":267
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":269
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
-  __pyx_tuple__28 = PyTuple_Pack(8, __pyx_n_s_alpha_gamma, __pyx_n_s_alphacolumn, __pyx_n_s_gammas, __pyx_n_s_period, __pyx_n_s_dists_rescaled_A, __pyx_n_s_rank_matrix_B, __pyx_n_s_c_matrix, __pyx_n_s_njobs); if (unlikely(!__pyx_tuple__28)) __PYX_ERR(0, 267, __pyx_L1_error)
+  __pyx_tuple__28 = PyTuple_Pack(8, __pyx_n_s_alpha_gamma, __pyx_n_s_alphacolumn, __pyx_n_s_gammas, __pyx_n_s_period, __pyx_n_s_dists_rescaled_A, __pyx_n_s_rank_matrix_B, __pyx_n_s_c_matrix, __pyx_n_s_n_jobs); if (unlikely(!__pyx_tuple__28)) __PYX_ERR(0, 269, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__28);
   __Pyx_GIVEREF(__pyx_tuple__28);
-  __pyx_codeobj__29 = (PyObject*)__Pyx_PyCode_New(8, 0, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__28, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_differentiable_imbalance, __pyx_n_s_alphagamma_gradientterm_cython_P, 267, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__29)) __PYX_ERR(0, 267, __pyx_L1_error)
+  __pyx_codeobj__29 = (PyObject*)__Pyx_PyCode_New(8, 0, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__28, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dadapy__cython_cython_differenti, __pyx_n_s_alphagamma_gradientterm_cython_P, 269, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__29)) __PYX_ERR(0, 269, __pyx_L1_error)
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":315
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":317
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
-  __pyx_tuple__30 = PyTuple_Pack(7, __pyx_n_s_alpha_gamma, __pyx_n_s_alphacolumn, __pyx_n_s_gammas, __pyx_n_s_dists_rescaled_A, __pyx_n_s_rank_matrix_B, __pyx_n_s_c_matrix, __pyx_n_s_njobs); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_tuple__30 = PyTuple_Pack(7, __pyx_n_s_alpha_gamma, __pyx_n_s_alphacolumn, __pyx_n_s_gammas, __pyx_n_s_dists_rescaled_A, __pyx_n_s_rank_matrix_B, __pyx_n_s_c_matrix, __pyx_n_s_n_jobs); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 317, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__30);
   __Pyx_GIVEREF(__pyx_tuple__30);
-  __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(7, 0, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_cython_differentiable_imbalance, __pyx_n_s_alphagamma_gradientterm_cython_p, 315, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(7, 0, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_dadapy__cython_cython_differenti, __pyx_n_s_alphagamma_gradientterm_cython_p, 317, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 317, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -26085,131 +26085,133 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle_Enum, __pyx_t_7) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":1
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":3
+ * # distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
+ * 
  * import numpy as np             # <<<<<<<<<<<<<<
  * 
  * cimport numpy as np
  */
-  __pyx_t_7 = __Pyx_ImportDottedModule(__pyx_n_s_numpy, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_ImportDottedModule(__pyx_n_s_numpy, NULL); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 3, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_7) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_7) < 0) __PYX_ERR(0, 3, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":21
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":23
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int njobs, bint squared=False):             # <<<<<<<<<<<<<<
+ * def compute_dist_PBC_cython_parallel(double[:, :] X, double[:] box_size, int n_jobs, bint squared=False):             # <<<<<<<<<<<<<<
  *     """Compute pairwise euclidean distances between points in a periodic boundary condition (PBC) system using Cython with parallel processing.
  * 
  */
-  __pyx_t_7 = __Pyx_PyBool_FromLong(((int)0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 21, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyBool_FromLong(((int)0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 23, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":18
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":20
  * # TODO: @wildromi clean up
  * # TODO: @wildromi why does this not accept var=var assignments anymore
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 20, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_7);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_7)) __PYX_ERR(0, 18, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_7)) __PYX_ERR(0, 20, __pyx_L1_error);
   __pyx_t_7 = 0;
-  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_1compute_dist_PBC_cython_parallel, 0, __pyx_n_s_compute_dist_PBC_cython_parallel, NULL, __pyx_n_s_dadapy__cython_cython_differenti, __pyx_d, ((PyObject *)__pyx_codeobj__23)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_1compute_dist_PBC_cython_parallel, 0, __pyx_n_s_compute_dist_PBC_cython_parallel, NULL, __pyx_n_s_dadapy__cython_cython_differenti_2, __pyx_d, ((PyObject *)__pyx_codeobj__23)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 20, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_7, __pyx_t_4);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_dist_PBC_cython_parallel, __pyx_t_7) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_dist_PBC_cython_parallel, __pyx_t_7) < 0) __PYX_ERR(0, 20, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":102
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":104
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * def compute_dist_cython_parallel(double[:, :] X, int njobs, bint squared=False):             # <<<<<<<<<<<<<<
+ * def compute_dist_cython_parallel(double[:, :] X, int n_jobs, bint squared=False):             # <<<<<<<<<<<<<<
  *     """Compute pairwise euclidean distances between points using Cython with parallel processing.
  * 
  */
-  __pyx_t_7 = __Pyx_PyBool_FromLong(((int)0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyBool_FromLong(((int)0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 104, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":99
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":101
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_7);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_7)) __PYX_ERR(0, 99, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_7)) __PYX_ERR(0, 101, __pyx_L1_error);
   __pyx_t_7 = 0;
-  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_3compute_dist_cython_parallel, 0, __pyx_n_s_compute_dist_cython_parallel, NULL, __pyx_n_s_dadapy__cython_cython_differenti, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_3compute_dist_cython_parallel, 0, __pyx_n_s_compute_dist_cython_parallel, NULL, __pyx_n_s_dadapy__cython_cython_differenti_2, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_7, __pyx_t_4);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_dist_cython_parallel, __pyx_t_7) < 0) __PYX_ERR(0, 99, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_compute_dist_cython_parallel, __pyx_t_7) < 0) __PYX_ERR(0, 101, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":155
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":157
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int njobs, bint periodic = False):             # <<<<<<<<<<<<<<
+ * def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int n_jobs, bint periodic = False):             # <<<<<<<<<<<<<<
  *     """Compute the gradient of DII between input data matrix A and groundtruth data matrix B; Cython implementation.
  * 
  */
-  __pyx_t_7 = __Pyx_PyBool_FromLong(((int)0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 155, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyBool_FromLong(((int)0)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 157, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":152
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":154
  * 
  * 
  * @cython.boundscheck(False)             # <<<<<<<<<<<<<<
  * @cython.cdivision(True)
  * @cython.wraparound(False)
  */
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 154, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_7);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_7)) __PYX_ERR(0, 152, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_7)) __PYX_ERR(0, 154, __pyx_L1_error);
   __pyx_t_7 = 0;
-  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_5return_dii_gradient_cython, 0, __pyx_n_s_return_dii_gradient_cython, NULL, __pyx_n_s_dadapy__cython_cython_differenti, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_5return_dii_gradient_cython, 0, __pyx_n_s_return_dii_gradient_cython, NULL, __pyx_n_s_dadapy__cython_cython_differenti_2, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 154, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_7, __pyx_t_4);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_dii_gradient_cython, __pyx_t_7) < 0) __PYX_ERR(0, 152, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_return_dii_gradient_cython, __pyx_t_7) < 0) __PYX_ERR(0, 154, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":267
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":269
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
-  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_7alphagamma_gradientterm_cython_PBC_parallel, 0, __pyx_n_s_alphagamma_gradientterm_cython_P, NULL, __pyx_n_s_dadapy__cython_cython_differenti, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 267, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_7alphagamma_gradientterm_cython_PBC_parallel, 0, __pyx_n_s_alphagamma_gradientterm_cython_P, NULL, __pyx_n_s_dadapy__cython_cython_differenti_2, __pyx_d, ((PyObject *)__pyx_codeobj__29)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 269, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_alphagamma_gradientterm_cython_P, __pyx_t_7) < 0) __PYX_ERR(0, 267, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_alphagamma_gradientterm_cython_P, __pyx_t_7) < 0) __PYX_ERR(0, 269, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":315
+  /* "dadapy/_cython/cython_differentiable_imbalance.pyx":317
  * @cython.cdivision(True)
  * @cython.wraparound(False)
- * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int njobs):             # <<<<<<<<<<<<<<
+ * cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):             # <<<<<<<<<<<<<<
  * 
  *     cdef int D,N,i,j
  */
-  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_9alphagamma_gradientterm_cython_parallel, 0, __pyx_n_s_alphagamma_gradientterm_cython_p, NULL, __pyx_n_s_dadapy__cython_cython_differenti, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_CyFunction_New(&__pyx_mdef_6dadapy_7_cython_31cython_differentiable_imbalance_9alphagamma_gradientterm_cython_parallel, 0, __pyx_n_s_alphagamma_gradientterm_cython_p, NULL, __pyx_n_s_dadapy__cython_cython_differenti_2, __pyx_d, ((PyObject *)__pyx_codeobj__31)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 317, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_alphagamma_gradientterm_cython_p, __pyx_t_7) < 0) __PYX_ERR(0, 315, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_alphagamma_gradientterm_cython_p, __pyx_t_7) < 0) __PYX_ERR(0, 317, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
   /* "dadapy/_cython/cython_differentiable_imbalance.pyx":1
- * import numpy as np             # <<<<<<<<<<<<<<
+ * # distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION             # <<<<<<<<<<<<<<
  * 
- * cimport numpy as np
+ * import numpy as np
  */
   __pyx_t_7 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);

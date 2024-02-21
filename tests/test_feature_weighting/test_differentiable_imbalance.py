@@ -31,7 +31,7 @@ def test_typing():
     for dtype in [np.float16, np.float32, np.double, np.float64, np.float128]:
         # This should run with only floats as input arrays
         dist_mat = dii._return_full_dist_matrix(
-            data.astype(dtype), period=np.zeros(5, dtype=dtype), njobs=1, cythond=True
+            data.astype(dtype), period=np.zeros(5, dtype=dtype), n_jobs=1, cythond=True
         )
         assert dist_mat.dtype == dii.CYTHON_DTYPE
 
@@ -64,7 +64,7 @@ def test_dist_matrix():
                 [None, np.ones(n_dim)], [False, True]
             ):  # TODO: should int, float also be accepted for period?
                 dist_mat = dii._return_full_dist_matrix(
-                    data=data, period=period, cythond=cythond, njobs=1
+                    data=data, period=period, cythond=cythond, n_jobs=1
                 )
                 assert dist_mat.shape[0] == n_data
                 assert dist_mat.shape[1] == n_data
@@ -85,7 +85,7 @@ def test_rank_matrix():
                     data=data,
                     period=np.zeros((data.shape[-1]), dtype=np.double),
                     cythond=cythond,
-                    njobs=1,
+                    n_jobs=1,
                 )
                 assert ranks.shape[0] == n_data
                 assert ranks.shape[1] == n_data
@@ -98,19 +98,19 @@ def test_rank_matrix():
 def test_py_kernel_gradient():
     for n_data in np.logspace(1, 2, 10, dtype=np.int16):
         for n_dim in np.logspace(1, 2, 10, dtype=np.int16):
-            njobs = 4
+            n_jobs = 4
             gammas = rng.random((n_dim,), dtype=dii.CYTHON_DTYPE)
             data = rng.random((n_data, n_dim), dtype=dii.CYTHON_DTYPE)
             dist_mat = dii._return_full_dist_matrix(
                 data * gammas,
                 period=np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
-                njobs=njobs,
+                n_jobs=n_jobs,
                 cythond=False,
             )
             ranks = dii._return_full_rank_matrix(
                 data,
                 period=np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
-                njobs=njobs,
+                n_jobs=n_jobs,
                 cythond=False,
             )
 
@@ -121,7 +121,7 @@ def test_py_kernel_gradient():
                 gammas=gammas,
                 lambd=1.0,
                 period=np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
-                njobs=njobs,
+                n_jobs=n_jobs,
             )
 
             cython_grad = c_dii.return_dii_gradient_cython(
@@ -131,7 +131,7 @@ def test_py_kernel_gradient():
                 gammas,
                 1.0,
                 np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
-                njobs,
+                n_jobs,
                 False,
             )
 

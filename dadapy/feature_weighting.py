@@ -69,7 +69,7 @@ class FeatureWeighting(Base):
         maxk=None,
         period=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
     ):
         super().__init__(
             coordinates=coordinates,
@@ -77,7 +77,7 @@ class FeatureWeighting(Base):
             maxk=maxk,
             period=period,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
         # This is quite useful for debugging
@@ -90,7 +90,7 @@ class FeatureWeighting(Base):
         if self._full_distance_matrix is None:
             self._full_distance_matrix = _return_full_dist_matrix(
                 data=self.X,
-                njobs=self.njobs,
+                n_jobs=self.n_jobs,
                 period=self._parse_own_period(),
                 cythond=self._cythond,
             )
@@ -251,7 +251,7 @@ class FeatureWeighting(Base):
                 decaying_lr=decaying_lr,
                 period=period,
                 groundtruthperiod=groundtruthperiod,
-                njobs=self.njobs,
+                n_jobs=self.n_jobs,
                 cythond=self._cythond,
             )
 
@@ -295,7 +295,7 @@ class FeatureWeighting(Base):
         rank_matrix_j = _return_full_rank_matrix(
             target_data.X,
             period=self._parse_period_for_dii(target_data.period, target_data.dims),
-            njobs=self.njobs,
+            n_jobs=self.n_jobs,
         )
 
         return _return_dii(
@@ -334,10 +334,10 @@ class FeatureWeighting(Base):
         )
 
         rescaled_distances_i = _return_full_dist_matrix(
-            self.X * gammas, period=period, njobs=self.njobs
+            self.X * gammas, period=period, n_jobs=self.n_jobs
         )
         rank_matrix_j = _return_full_rank_matrix(
-            target_data.X, period=target_period, njobs=self.njobs
+            target_data.X, period=target_period, n_jobs=self.n_jobs
         )
 
         return _return_dii_gradient(
@@ -347,7 +347,7 @@ class FeatureWeighting(Base):
             gammas=self._parse_initial_gammas(gammas),
             lambd=lambd,
             period=period,
-            njobs=self.njobs,
+            n_jobs=self.n_jobs,
             cythond=self._cythond,
         )
 
@@ -429,7 +429,7 @@ class FeatureWeighting(Base):
             n_epochs=n_epochs,
             l_rate=learning_rate,
             decaying_lr=decaying_lr,
-            njobs=self.njobs,
+            n_jobs=self.n_jobs,
             cythond=self._cythond,
         )
         # TODO: include a function that gives at least a reasonable estimate for the l1 penalty when wanting x features
@@ -524,7 +524,7 @@ class FeatureWeighting(Base):
                 groundtruthperiod=self._parse_period_for_dii(
                     target_data.period, target_data.dims
                 ),
-                njobs=self.njobs,
+                n_jobs=self.n_jobs,
                 cythond=self._cythond,
             )
 
@@ -679,7 +679,7 @@ class FeatureWeighting(Base):
                 groundtruthperiod=self._parse_period_for_dii(
                     target_data.period, target_data.dims
                 ),
-                njobs=self.njobs,
+                n_jobs=self.n_jobs,
                 cythond=self._cythond,
             )
             end = time.time()
@@ -717,7 +717,7 @@ class FeatureWeighting(Base):
                 groundtruthperiod=self._parse_period_for_dii(
                     target_data.period, target_data.dims
                 ),
-                njobs=self.njobs,
+                n_jobs=self.n_jobs,
                 cythond=self._cythond,
             )
             weights = gammas_list

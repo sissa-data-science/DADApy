@@ -93,7 +93,7 @@ def _return_optimal_lambda_from_distances(distance_matrix, fraction=1.0):
 
 @cast_ndarrays
 def _return_full_dist_matrix(
-    data: np.ndarray, njobs: int, period: np.ndarray = None, cythond=True
+    data: np.ndarray, n_jobs: int, period: np.ndarray = None, cythond=True
 ):
     """Computes the distance matrix based on input data points and optionally a period array.
 
@@ -105,7 +105,7 @@ def _return_full_dist_matrix(
         cythond (bool, optional): Flag indicating whether to use Cython-based distance computation methods.
             If True (default), Cython-based methods are used if period is not None (otherwise sklearn Euclidean distance).
             If False, Python-based methods are used.
-        njobs (int, optional): Number of parallel jobs to use for Cython-based distance computation.
+        n_jobs (int, optional): Number of parallel jobs to use for Cython-based distance computation.
             Default is 8.
 
     Returns:
@@ -123,8 +123,8 @@ def _return_full_dist_matrix(
         dist_matrix = euclidean_distances(data)
     else:
         if cythond:
-            # print(data, njobs, period, cythond)
-            dist_matrix = c_dii.compute_dist_PBC_cython_parallel(data, period, njobs)
+            # print(data, n_jobs, period, cythond)
+            dist_matrix = c_dii.compute_dist_PBC_cython_parallel(data, period, n_jobs)
         else:
             dist_matrix = _return_dist_PBC(
                 data, maxk=data.shape[0], box_size=period, p=2
@@ -137,7 +137,7 @@ def _return_full_dist_matrix(
 
 
 def _return_full_rank_matrix(
-    data, njobs, period: np.ndarray = None, distances=False, cythond=True
+    data, n_jobs, period: np.ndarray = None, distances=False, cythond=True
 ):
     """Computes the rank matrix based on input data points and optionally a period array, using the 'compute_dist_matrix' function.
 
@@ -156,7 +156,7 @@ def _return_full_rank_matrix(
     """
 
     dist_matrix = _return_full_dist_matrix(
-        data=data, period=period, cythond=cythond, njobs=njobs
+        data=data, period=period, cythond=cythond, n_jobs=n_jobs
     )
     # np.fill_diagonal(dist_matrix, np.nan)  ### To give last rank to diag. The distance function already sets diagonal to max, so unnecessary
     # Make rank matrix, notice that ranks go from 1 to N and np.nan elements are ranked N
@@ -217,7 +217,7 @@ def _return_dii_gradient_python(
     rank_matrix_B: np.ndarray,
     gammas,
     lambd: float,
-    njobs: int,
+    n_jobs: int,
     period: np.ndarray = None,
 ):
     """Compute the gradient of DII between input data matrix A and groundtruth data matrix B.
@@ -237,7 +237,7 @@ def _return_dii_gradient_python(
         period : float or numpy.ndarray/list, optional
             D(input) periods (input formatted to be periodic starting at 0). If not a list, the same period is assumed for all D features
             Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period: np.ndarray=None set those to 0.
-        njobs : int, optional
+        n_jobs : int, optional
             The number of threads to use for parallel processing. Default is None, which uses the maximum number of available CPUs.
 
     Returns:
@@ -301,7 +301,7 @@ def _return_dii_gradient_python(
 
         # compute the gradient term for each gamma (parallelization is faster):
         gradient_parallel = np.array(
-            Parallel(n_jobs=njobs, prefer="threads")(
+            Parallel(n_jobs=n_jobs, prefer="threads")(
                 delayed(alphagamma_gradientterm)(alpha_gamma)
                 for alpha_gamma in range(len(gammas))
             )
@@ -319,7 +319,7 @@ def _return_dii_gradient(
     rank_matrix_B: np.ndarray,
     gammas,
     lambd: float,
-    njobs: int,
+    n_jobs: int,
     period: np.ndarray = None,
     cythond: bool = True,
 ):
@@ -340,7 +340,7 @@ def _return_dii_gradient(
         period : float or numpy.ndarray/list, optional
             D(input) periods (input formatted to be periodic starting at 0). If not a list, the same period is assumed for all D features
             Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period: np.ndarray=None set those to 0.
-        njobs : int, optional
+        n_jobs : int, optional
             The number of threads to use for parallel processing. Default is None, which uses the maximum number of available CPUs.
         cythond : bool, optional
             Whether to use Cython implementation for computing distances. Default is True.
@@ -355,7 +355,7 @@ def _return_dii_gradient(
             rank_matrix_B=rank_matrix_B,
             gammas=gammas,
             lambd=lambd,
-            njobs=njobs,
+            n_jobs=n_jobs,
             period=period,
         )
     else:
@@ -375,7 +375,7 @@ def _return_dii_gradient(
             gammas,
             lambd,
             myperiod,
-            njobs,
+            n_jobs,
             periodic,
         )
 
@@ -384,7 +384,7 @@ def _return_dii_gradient(
 def _optimize_dii(
     groundtruth_data: np.ndarray,
     data: np.ndarray,
-    njobs: int,
+    n_jobs: int,
     gammas_0: np.ndarray = None,
     lambd: float = None,
     n_epochs: int = 100,
@@ -424,7 +424,7 @@ def _optimize_dii(
         groudntruthperiod : float or numpy.ndarray/list, optional
             Dg(groundtruth_data) periods (groundtruth_data should be formatted to be periodic starting at 0). If not a list, the same period is assumed for all Dg features
             Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period, set those to 0.
-        njobs : int, optional
+        n_jobs : int, optional
             The number of threads to use for parallel processing. Default is None, which uses the maximum number of available CPUs.
         cythond : bool, optional
             Whether to use Cython implementation for computing distances. Default is True.
@@ -446,7 +446,7 @@ def _optimize_dii(
     scaling = 1  # if there is no constraint on rescaling of gammas
 
     rank_matrix_B = _return_full_rank_matrix(
-        groundtruth_data, njobs=njobs, period=groundtruthperiod, cythond=cythond
+        groundtruth_data, n_jobs=n_jobs, period=groundtruthperiod, cythond=cythond
     )
     # initializations
     if constrain:
@@ -461,12 +461,12 @@ def _optimize_dii(
     if period is not None:
         # Removed period typecheck here, this should be handled somewhere else
         dists_rescaled_A = _return_full_dist_matrix(
-            data=rescaled_data_A, period=gammas * period, cythond=cythond, njobs=njobs
+            data=rescaled_data_A, period=gammas * period, cythond=cythond, n_jobs=n_jobs
         )
     else:
         periodarray = None
         dists_rescaled_A = _return_full_dist_matrix(
-            data=rescaled_data_A, period=None, cythond=cythond, njobs=njobs
+            data=rescaled_data_A, period=None, cythond=cythond, n_jobs=n_jobs
         )
 
     if lambd is not None:
@@ -492,7 +492,7 @@ def _optimize_dii(
                 gammas,
                 lambd,
                 period=period,
-                njobs=njobs,
+                n_jobs=n_jobs,
                 cythond=cythond,
             )
             * scaling
@@ -543,7 +543,7 @@ def _optimize_dii(
             if period is not None:
                 periodarray = gammas * period
             dists_rescaled_A = _return_full_dist_matrix(
-                rescaled_data_A, period=periodarray, cythond=cythond, njobs=njobs
+                rescaled_data_A, period=periodarray, cythond=cythond, n_jobs=n_jobs
             )
             lambd = (
                 scaling * lambd
@@ -568,7 +568,7 @@ def _optimize_dii_static_zeros(
     groundtruth_data: np.ndarray,
     data: np.ndarray,
     gammas_0: np.ndarray,
-    njobs: int,
+    n_jobs: int,
     lambd: float = None,
     n_epochs: int = 100,
     l_rate: float = 0.1,
@@ -605,7 +605,7 @@ def _optimize_dii_static_zeros(
     gammas_list = np.zeros((n_epochs + 1, D))
     scaling = 1  # if there is no constraint on rescaling of gammas
     rank_matrix_B = _return_full_rank_matrix(
-        groundtruth_data, period=groundtruthperiod, cythond=cythond, njobs=njobs
+        groundtruth_data, period=groundtruthperiod, cythond=cythond, n_jobs=n_jobs
     )
 
     # initializations
@@ -620,11 +620,11 @@ def _optimize_dii_static_zeros(
     # for adaptive lambda: calculate distance matrix in rescaled input
     if period is not None:
         dists_rescaled_A = _return_full_dist_matrix(
-            data=rescaled_data_A, period=gammas * period, cythond=cythond, njobs=njobs
+            data=rescaled_data_A, period=gammas * period, cythond=cythond, n_jobs=n_jobs
         )
     else:
         dists_rescaled_A = _return_full_dist_matrix(
-            data=rescaled_data_A, period=period, cythond=cythond, njobs=njobs
+            data=rescaled_data_A, period=period, cythond=cythond, n_jobs=n_jobs
         )
 
     if lambd is not None:
@@ -648,7 +648,7 @@ def _optimize_dii_static_zeros(
                 rank_matrix_B,
                 gammas,
                 lambd,
-                njobs,
+                n_jobs,
                 period=period,
                 cythond=cythond,
             )
@@ -693,11 +693,11 @@ def _optimize_dii_static_zeros(
                     rescaled_data_A,
                     period=period * gammas,
                     cythond=cythond,
-                    njobs=njobs,
+                    n_jobs=n_jobs,
                 )
             else:
                 dists_rescaled_A = _return_full_dist_matrix(
-                    rescaled_data_A, period=period, cythond=cythond, njobs=njobs
+                    rescaled_data_A, period=period, cythond=cythond, n_jobs=n_jobs
                 )
 
             lambd = (
@@ -721,7 +721,7 @@ def _refine_lasso_optimization(
     groundtruth_data,
     data,
     gammas_0,
-    njobs,
+    n_jobs,
     lambd=None,
     n_epochs=50,
     l_rate=None,
@@ -816,7 +816,7 @@ def _refine_lasso_optimization(
                 decaying_lr=decaying_lr,
                 period=period,
                 groundtruthperiod=groundtruthperiod,
-                njobs=njobs,
+                n_jobs=n_jobs,
                 cythond=cythond,
             )
             end = time.time()
