@@ -26,6 +26,7 @@ rng = np.random.default_rng()
 
 
 def test_optimise_imbalance_typing():
+    """Test whether FeatureWeighting class methods throw errors for wrong input types."""
     data = rng.random((10, 5))
 
     for period in [
@@ -47,6 +48,11 @@ def test_optimise_imbalance_typing():
 
 
 def test_dist_matrix():
+    """Test proper handling of class attribute full_distance_matrix.
+
+    Attribute is set on first call and afterwards is not recalculated.
+    Also should not accept wrongly shaped arrays.
+    """
     data = rng.random((10, 5))
     feature_selection = FeatureWeighting(data)
     assert feature_selection._full_distance_matrix is None
@@ -61,6 +67,7 @@ def test_dist_matrix():
 
 
 def test_maxk_warning():
+    """Make sure FeatureWeighting properly warns when using maxk."""
     data = rng.random((10, 5))
     feature_selection = FeatureWeighting(data, maxk=3)
 
@@ -69,6 +76,7 @@ def test_maxk_warning():
 
 
 def test_dii_gradient():
+    """Test whether cython gradient matches much slower numpy gradient."""
     data = rng.random((10, 5))
     feature_selection = FeatureWeighting(data, maxk=3)
 
@@ -81,6 +89,10 @@ def test_dii_gradient():
 
 
 def test_optimise_imbalance():
+    """Test dii optimisation on scaled random data.
+
+    This should somewhat recapture the scaling values, or at least the relative importance.
+    """
     data = rng.random((50, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
@@ -147,6 +159,7 @@ def test_optimise_imbalance():
 
 
 def test_optimal_learning_rate():
+    """Test optimal learning rate and its dictionary history."""
     data = rng.random((20, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
@@ -196,6 +209,7 @@ def test_optimal_learning_rate():
 
 
 def test_eliminate_backward_greedy_kernel_imbalance():
+    """Test backward greedy and dictionary entries."""
     data = rng.random((20, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array
@@ -215,6 +229,11 @@ def test_eliminate_backward_greedy_kernel_imbalance():
 
 
 def test_search_lasso_optimization_kernel_imbalance():
+    """Test lasso optimization and dictionary entries.
+
+    Here all available options are tested except for non-cythonized code,
+    which works, but is too slow to be part of unittests.
+    """
     data = rng.random((50, 5))
     weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
     target_data = data * weights_array

@@ -26,7 +26,7 @@ rng = np.random.default_rng()
 
 
 def test_typing():
-    """Test typing decorator function"""
+    """Test typing decorator function."""
     data = rng.random((10, 5))
     for dtype in [np.float16, np.float32, np.double, np.float64, np.float128]:
         # This should run with only floats as input arrays
@@ -56,7 +56,7 @@ def test_typing():
 
 
 def test_dist_matrix():
-    """Test proper return shape of full distance matrix for all cases"""
+    """Test proper return shape of full distance matrix for all cases."""
     for n_data in np.logspace(1, 2, 10, dtype=np.int16):
         for n_dim in np.logspace(1, 2, 10, dtype=np.int16):
             data = rng.random((n_data, n_dim))
@@ -72,6 +72,7 @@ def test_dist_matrix():
 
 def test_rank_matrix():
     """Test full rank matrix shaping and make a simple test for quadratic data.
+
     Nearest neighbor should always be previous data point here.
     """
     for n_data in np.logspace(1, 2, 10, dtype=np.int16):
@@ -96,6 +97,7 @@ def test_rank_matrix():
 
 
 def test_py_kernel_gradient():
+    """Test python kernel gradient function."""
     for n_data in np.logspace(1, 2, 10, dtype=np.int16):
         for n_dim in np.logspace(1, 2, 10, dtype=np.int16):
             n_jobs = 4
