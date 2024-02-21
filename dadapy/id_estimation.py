@@ -70,7 +70,7 @@ class IdEstimation(Base):
 
         Args:
             mus (np.ndarray(float)): ratio of the distances of first- and second-nearest neighbours
-            fraction (float): fraction of mus to take into account, discard the highest values
+            mu_fraction (float): fraction of mus to take into account, discard the highest values
             algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
 
         Returns:
@@ -110,7 +110,7 @@ class IdEstimation(Base):
 
         Args:
             algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood
-            fraction (float): fraction of mus that will be considered for the estimate (discard highest mus)
+            mu_fraction (float): fraction of mus that will be considered for the estimate (discard highest mus)
             data_fraction (float): fraction of randomly sampled points used to compute the id
             n_iter (int): number of times the ID is computed on data subsets (useful when decimation < 1)
             set_attr (bool): whether to change the class attributes as a result of the computation
@@ -261,10 +261,10 @@ class IdEstimation(Base):
         The different scales are obtained by sampling subsets of [N, N/2, N/4, N/8, ..., N_min] data points.
 
         Args:
-            N_min (int): minimum number of points considered when decimating the dataset,
-                        N_min effectively sets the largest 'scale';
+            n_min (int): minimum number of points considered when decimating the dataset,
+                        n_min effectively sets the largest 'scale';
             algorithm (str): 'base' to perform the linear fit, 'ml' to perform maximum likelihood;
-            fraction (float): fraction of mus that will be considered for the estimate (discard highest mus).
+            mu_fraction (float): fraction of mus that will be considered for the estimate (discard highest mus).
 
         Returns:
             ids_scaling (np.ndarray(float)): array of intrinsic dimensions;
