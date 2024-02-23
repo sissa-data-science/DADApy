@@ -31,10 +31,11 @@ from dadapy._cython import cython_clustering_v2 as cf2
 
 try:
     from dadac import Data as c_data
-except:
+except ModuleNotFoundError:
     warnings.warn(
-        """C accelerated implementation is not provided, 
-                     something went wrong when installing dadac dependency"""
+        """C accelerated implementation is not provided,
+        something went wrong when installing dadac dependency""",
+        stacklevel=2
     )
 
 
@@ -97,7 +98,8 @@ class Clustering(DensityEstimation):
         Args:
             Z(float): merging parameter
             halo (bool): compute (or not) the halo points
-            impl (str): default "c", implementation type "c" uses optimized implementation written in pure C, "py" uses original dadapy implementation
+            impl (str): default "c", implementation type "c" uses optimized implementation written in pure C,
+            "py" uses original dadapy implementation
 
         Returns:
             cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
@@ -107,16 +109,14 @@ class Clustering(DensityEstimation):
                 non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
 
         """
-
         try:
             # try to generate the dadac handler, if it fails print a warning and then
             # fall back to default
             dadac_handler = c_data(self.X, verbose=self.verb)
-        except:
+        except NameError:
             warnings.warn(
-                """
-                          Cannot load dadac.Data, falling back to python/cython implementation
-                          """
+                """Cannot load dadac.Data, falling back to python/cython implementation""",
+                stacklevel=2
             )
             impl = "py"
 
@@ -193,7 +193,6 @@ class Clustering(DensityEstimation):
                 print(f"total time is, {secf - seci}")
         else:
             # handle with dadaC
-            # dadac_handler = c_data(self.X, verbose=self.verb)
             if self.log_den is None:
                 self.compute_density_PAk()
             log_den_min = np.min(self.log_den - Z * self.log_den_err)

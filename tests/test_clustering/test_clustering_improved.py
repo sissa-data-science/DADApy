@@ -23,6 +23,7 @@ from dadapy import data
 
 # ground_truths computed with 5000k datapoints of dataset ../../examples/datasets/Fig1.dat
 def test_clustering_all_to_all_methods():
+    """Testing clustering methods ADP (original/v2), pure python (original/v2)."""
     path = os.path.join(os.path.split(__file__)[0], "./ground_truths")
 
     nclusters_gt = np.load(f"{path}/nclusters5k.npy")
