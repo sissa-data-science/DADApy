@@ -32,11 +32,12 @@ from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
 from dadapy.neigh_graph import NeighGraph
+from dadapy.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()
 
 
-class DensityAdvanced(NeighGraph):
+class DensityAdvanced(DensityEstimation, NeighGraph):
     """Computes the log-density and (where implemented) its error at each point and other properties.
 
     Inherits from class NeighGraph.
@@ -252,10 +253,9 @@ class DensityAdvanced(NeighGraph):
 
     def compute_density_BMTI(
         self,
-        inv_cov_method="uncorr",
-        comp_err=False,
+        delta_F_err="uncorr",
+        comp_log_den_err=False,
         mem_efficient=False,
-        use_variance=True,
     ):
         # inv_cov_method    = uncorr assumes the cross-covariance matrix is diagonal with diagonal = Fij_var_array;
         #           = LSDI (Least Squares with respect to a Diagonal Inverse) inverts the cross-covariance C
@@ -273,8 +273,8 @@ class DensityAdvanced(NeighGraph):
             alpha=1.0,
             log_den=np.ones(self.N),
             log_den_err=np.ones(self.N),
-            delta_F_err=inv_cov_method,
-            comp_log_den_err=comp_err,
+            delta_F_err=delta_F_err,
+            comp_log_den_err=comp_log_den_err,
             mem_efficient=mem_efficient,
         )
 
@@ -290,18 +290,20 @@ class DensityAdvanced(NeighGraph):
         comp_log_den_err=False,
         mem_efficient=False,
     ):
+        # compute changes in free energy
+        if self.Fij_array is None:
+            self.compute_deltaFs()
+
+        # note: this should be called after the computation of the deltaFs
+        # since otherwhise self.log_den and self.log_den_err are redefined to None via set kstar
         if log_den is not None and log_den_err is not None:
             self.log_den = log_den
             self.log_den_err = log_den_err
         else:
             self.compute_density_kstarNN()
 
-        # compute changes in free energy
-        if self.Fij_array is None:
-            self.compute_deltaFs()
-
         # add a warnings.warning if self.N > 10000 and mem_efficient is False
-        if self.N > 10000 and mem_efficient is False:
+        if self.N > 15000 and mem_efficient is False:
             warnings.warn(
                 "The number of points is large and the memory efficient option is not selected. \
                 If you run into memory issues, consider using the slower memory efficient option."

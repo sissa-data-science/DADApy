@@ -29,13 +29,14 @@ from dadapy._utils import utils as ut
 from dadapy.clustering import Clustering
 from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons
+from dadapy.density_advanced import DensityAdvanced
 
 cores = multiprocessing.cpu_count()
 np.set_printoptions(precision=2)
 os.getcwd()
 
 
-class Data(Clustering, MetricComparisons, FeatureWeighting):
+class Data(Clustering, MetricComparisons, FeatureWeighting, DensityAdvanced):
     """Data class."""
 
     def __init__(
