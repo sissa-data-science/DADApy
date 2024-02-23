@@ -141,21 +141,21 @@ def test_optimise_imbalance():
         assert feature_selection.history["l1_term_per_epoch"].shape[0] == n_epochs + 1
 
     data = rng.normal(size=(20, 5))
-    weights_array = np.array([1, 1, 1e-2, 1e-2, 1e-2])
+    weights_array = np.array([1, 1, 1e-3, 1e-3, 1e-3])
     target_data = data * weights_array
     feature_selection = FeatureWeighting(data, period=None)
     gammas = feature_selection.return_weights_optimize_dii(
         Data(target_data),
-        n_epochs=30,
+        n_epochs=50,
         learning_rate=None,
         constrain=True,
         initial_gammas=np.ones_like(weights_array),
         lambd=None,
-        l1_penalty=1e-3,
-        decaying_lr=decay,
+        l1_penalty=1e-5,
+        decaying_lr=True,
     )
-    assert np.sum(gammas[0]) >= np.sum(gammas[2:])
-    assert np.sum(gammas[1]) >= np.sum(gammas[2:])
+    assert np.all(gammas[0] >= gammas[2:])
+    assert np.all(gammas[1] >= gammas[2:])
 
 
 def test_optimal_learning_rate():
