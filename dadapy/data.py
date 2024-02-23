@@ -27,6 +27,7 @@ import numpy as np
 
 from dadapy._utils import utils as ut
 from dadapy.clustering import Clustering
+from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons
 
 cores = multiprocessing.cpu_count()
@@ -34,7 +35,7 @@ np.set_printoptions(precision=2)
 os.getcwd()
 
 
-class Data(Clustering, MetricComparisons):
+class Data(Clustering, MetricComparisons, FeatureWeighting):
     """Data class."""
 
     def __init__(
@@ -43,7 +44,7 @@ class Data(Clustering, MetricComparisons):
         distances=None,
         maxk=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
         working_memory=1024,
     ):
         """Initialise a Data object, container of all DADApy methods.
@@ -56,7 +57,7 @@ class Data(Clustering, MetricComparisons):
             distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             verbose (bool): whether you want the code to speak or shut up
-            njobs (int): number of cores to be used
+            n_jobs (int): number of cores to be used
             working_memory (int): working memory (TODO: currently unused)
         """
         super().__init__(
@@ -64,7 +65,7 @@ class Data(Clustering, MetricComparisons):
             distances=distances,
             maxk=maxk,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
     def return_ids_kstar_gride(

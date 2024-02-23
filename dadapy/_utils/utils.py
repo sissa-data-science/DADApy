@@ -13,13 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 import multiprocessing
-import re
 import warnings
 
 import numpy as np
 import scipy.special as sp
 from scipy.spatial import cKDTree
 from scipy.special import binom
+from scipy.stats import beta as beta_d
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
@@ -128,7 +128,7 @@ def compute_cross_nn_distances(
     return distances, dist_indices
 
 
-def compute_nn_distances(X, maxk, metric="euclidean", period=None):
+def compute_nn_distances(X, maxk, metric="euclidean", period=None, n_jobs=None):
     """For each point, compute the distances from its first maxk nearest neighbours
 
     Args:
@@ -144,17 +144,17 @@ def compute_nn_distances(X, maxk, metric="euclidean", period=None):
     """
 
     distances, dist_indices = compute_cross_nn_distances(
-        X, X, maxk + 1, metric=metric, period=period
+        X, X, maxk + 1, metric=metric, period=period, n_jobs=n_jobs
     )
 
     zero_dists = np.sum(distances[:, 1:] <= 1.01 * np.finfo(np.float32).eps)
     if zero_dists > 0:
         warnings.warn(
-            f"There are points with neighbours at 0 distance, meaning the dataset probably has identical points.\n"
-            f"This can cause problems in various routines.\nWe suggest to either perform smearing of distances using\n"
-            f"remove_zero_dists()\n"
-            f"or remove identical points using\n"
-            f"remove_identical_points())."
+            "There are points with neighbours at 0 distance, meaning the dataset probably has identical points.\n"
+            "This can cause problems in various routines.\nWe suggest to either perform smearing of distances using\n"
+            "remove_zero_dists()\n"
+            "or remove identical points using\n"
+            "remove_identical_points())."
         )
 
     return distances, dist_indices
@@ -187,8 +187,9 @@ def _neg_dloglik_did(d, mus, n1, n2, N, eps):
     one_m_mus_d = 1.0 - mus ** (-d)
     "regularize small numbers"
     one_m_mus_d[one_m_mus_d < 2 * eps] = 2 * eps
-    sum = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.0) * np.log(mus))
-    return sum - (N - 1) / d
+
+    summation = np.sum(((1 - n2 + n1) / one_m_mus_d + n2 - 1.0) * np.log(mus))
+    return summation - (N - 1) / d
 
 
 def _filter_mus(dtype, mus, n1, n2):
@@ -379,9 +380,6 @@ def _beta_prior(k, n, r, a0=1, b0=1, posterior_profile=False):
         d_range (np.ndarray(float), optional): domain of the posterior (if plot==True)
         P (np.ndarray(float), optional): values of the posterior on the domain d_range (if plot==True)
     """
-    from scipy.special import beta as beta_f
-    from scipy.stats import beta as beta_d
-
     D_MAX = 100.0
     D_MIN = 0.0001
 
@@ -405,7 +403,6 @@ def _beta_prior(k, n, r, a0=1, b0=1, posterior_profile=False):
         P = np.array([p_d(di) for di in d_range]) * dx
         mask = P != 0
         elements = mask.sum()
-        counter = 0
         # if less than 3 points !=0 are found, reduce the interval
         while elements < 3:
             dx /= 10
@@ -413,7 +410,6 @@ def _beta_prior(k, n, r, a0=1, b0=1, posterior_profile=False):
             P = np.array([p_d(di) for di in d_range]) * dx
             mask = P != 0
             elements = mask.sum()
-            counter += 1
 
         # with more than 3 points !=0 we can restrict the domain and have a smooth distribution
         # I choose 1000 points but such quantity can be varied according to necessity

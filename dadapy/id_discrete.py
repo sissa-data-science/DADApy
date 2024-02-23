@@ -32,7 +32,6 @@ from dadapy import plot as ddp
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
-rng = np.random.default_rng()
 
 
 class IdDiscrete(Base):
@@ -65,14 +64,14 @@ class IdDiscrete(Base):
         condensed=None,
         weights=None,
         verbose=False,
-        njobs=cores,
+        n_jobs=cores,
     ):
         super().__init__(
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
         self.central_point = 0 if is_network else 1
@@ -146,7 +145,11 @@ class IdDiscrete(Base):
                 )
 
             self.distances, self.dist_indices = df.return_condensed_distances(
-                np.array(self.X, dtype=int), self.metric, d_max, self.period, self.njobs
+                np.array(self.X, dtype=int),
+                self.metric,
+                d_max,
+                self.period,
+                self.n_jobs,
             )
 
         else:
@@ -1039,7 +1042,7 @@ class IdDiscrete(Base):
                 self.ln, self.intrinsic_dim
             ) / df.compute_discrete_volume(self.lk, self.intrinsic_dim)
 
-        n_model = rng.binomial(k_eff, p, size=mask.sum())
+        n_model = self.rng.binomial(k_eff, p, size=mask.sum())
 
         s, pv = KS(n_eff, n_model)
 
@@ -1120,7 +1123,7 @@ class IdDiscrete(Base):
             )
 
             # extract the artificial n
-            n_mod = rng.binomial(ki, p)
+            n_mod = self.rng.binomial(ki, p)
 
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
@@ -1254,7 +1257,7 @@ class IdDiscrete(Base):
                 lki, id_i
             )
             # extract the artificial n
-            n_mod = rng.binomial(ki, p)  # size=mask_i.sum())
+            n_mod = self.rng.binomial(ki, p)  # size=mask_i.sum())
 
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
@@ -1422,7 +1425,7 @@ class IdDiscrete(Base):
             else:
                 my_mask = np.zeros(self._mask.shape[0], dtype=bool)
                 idx = np.sort(
-                    rng.choice(
+                    self.rng.choice(
                         np.where(self._mask)[0],
                         subset,
                         replace=False,

@@ -14,10 +14,9 @@
 # ==============================================================================
 
 import numpy as np
-from sklearn.neighbors import NearestNeighbors
 
 
-def _return_ranks(dist_indices_1, dist_indices_2, k=1):
+def _return_ranks(dist_indices_1, dist_indices_2, rng, k=1):
     """Finds all the ranks according to distance 2 of the neighbours according to distance 1.
        Neighbours in distance 1 are considered up to order k.
 
@@ -47,14 +46,14 @@ def _return_ranks(dist_indices_1, dist_indices_2, k=1):
 
         for k_neighbor in range(k):
             if len(wr[k_neighbor]) == 0:
-                conditional_ranks[i, k_neighbor] = np.random.randint(maxk_2, N)
+                conditional_ranks[i, k_neighbor] = rng.randint(maxk_2, N)
             else:
                 conditional_ranks[i, k_neighbor] = wr[k_neighbor][0]
 
     return conditional_ranks
 
 
-def _return_imbalance(dist_indices_1, dist_indices_2, k=1):
+def _return_imbalance(dist_indices_1, dist_indices_2, rng, k=1):
     """Compute the information imbalance between two precomputed distance measures.
 
     Args:
@@ -70,7 +69,7 @@ def _return_imbalance(dist_indices_1, dist_indices_2, k=1):
 
     N = dist_indices_1.shape[0]
 
-    ranks = _return_ranks(dist_indices_1, dist_indices_2, k=k)
+    ranks = _return_ranks(dist_indices_1, dist_indices_2, rng=rng, k=k)
 
     imb = np.mean(ranks) / (N / 2.0)
 
@@ -173,7 +172,7 @@ def _compute_2d_grid(points_x, points_y):
         not isinstance(points_y, (list, np.ndarray))
     ):
         raise ValueError(
-            f"'alphas1' and 'alphas2' must be one-dimensional lists or np.ndarrays"
+            "'alphas1' and 'alphas2' must be one-dimensional lists or np.ndarrays"
         )
 
     X, Y = np.meshgrid(points_x, points_y)
