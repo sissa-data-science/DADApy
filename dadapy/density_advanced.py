@@ -31,8 +31,8 @@ from scipy import linalg as slin
 from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
-from dadapy.neigh_graph import NeighGraph
 from dadapy.density_estimation import DensityEstimation
+from dadapy.neigh_graph import NeighGraph
 
 cores = multiprocessing.cpu_count()
 
