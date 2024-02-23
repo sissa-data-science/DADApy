@@ -35,7 +35,7 @@ except ModuleNotFoundError:
     warnings.warn(
         """C accelerated implementation is not provided,
         something went wrong when installing dadac dependency""",
-        stacklevel=2
+        stacklevel=2,
     )
 
 
@@ -116,7 +116,7 @@ class Clustering(DensityEstimation):
         except NameError:
             warnings.warn(
                 """Cannot load dadac.Data, falling back to python/cython implementation""",
-                stacklevel=2
+                stacklevel=2,
             )
             impl = "py"
 
