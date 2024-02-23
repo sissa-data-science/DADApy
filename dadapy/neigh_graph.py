@@ -65,7 +65,7 @@ class NeighGraph(KStar):
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+        self, coordinates=None, distances=None, maxk=None, verbose=False, n_jobs=cores
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -73,7 +73,7 @@ class NeighGraph(KStar):
             distances=distances,
             maxk=maxk,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
         self.nspar = None
