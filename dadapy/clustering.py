@@ -20,6 +20,7 @@ Density-based clustering algorithms are implemented as methods of this class.
 """
 
 import multiprocessing
+import platform
 import time
 import warnings
 
@@ -115,7 +116,10 @@ class Clustering(DensityEstimation):
             dadac_handler = c_data(self.X, verbose=self.verb)
         except NameError:
             warnings.warn(
-                """Cannot load dadac.Data, falling back to python/cython implementation""",
+                f"""Cannot load dadac.Data, falling back to python/cython implementation.
+                This is can be caused from the fact that you are running from a non Linux system.
+                Your platform, is {platform.platform()}, please refer to dadaC docs to manually install
+                the package""",
                 stacklevel=2,
             )
             impl = "py"
