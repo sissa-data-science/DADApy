@@ -22,6 +22,7 @@ In particular, differently from the methods implemented in the DensityEstimation
 
 import multiprocessing
 import time
+import warnings
 
 import numpy as np
 from scipy import linalg as slin
@@ -68,11 +69,12 @@ class DensityAdvanced(NeighGraph):
 
         self.grads = None
         self.grads_var = None
+        self.grads_covmat = None
         self.check_grads_covmat = False
         self.Fij_array = None
         self.Fij_var_array = None
         self.Fij_var_array = None
-        inv_deltaFs_cov = None
+        self.inv_deltaFs_cov = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -114,20 +116,24 @@ class DensityAdvanced(NeighGraph):
 
         else:
             # self.grads, self.grads_var = cgr.return_grads_and_covmat_from_coords(self.X, self.dist_indices, self.kstar, self.intrinsic_dim)
-            self.grads, self.grads_var = cgr.return_grads_and_covmat_from_nnvecdiffs(
+            self.grads, self.grads_covmat = cgr.return_grads_and_covmat_from_nnvecdiffs(
                 self.neigh_vector_diffs,
                 self.nind_list,
                 self.nind_iptr,
                 self.kstar,
                 self.intrinsic_dim,
             )
-            self.check_grads_covmat = (
-                True  # TODO: Matteo, is this useful or should we remove it?
-            )
 
-            self.grads_var = np.einsum(
-                "ijk, i -> ijk", self.grads_var, self.kstar / (self.kstar - 1)
-            )  # Bessel's correction for the unbiased sample variance estimator
+            # Bessel's correction for the unbiased sample variance estimator
+            self.grads_covmat = np.einsum(
+                "ijk, i -> ijk", self.grads_covmat, self.kstar / (self.kstar - 1)
+            ) 
+
+            # get diagonal elements of the covariance matrix
+            self.grads_var = np.zeros((self.N, self.dims))
+            for i in range(self.N):
+                self.grads_var[i, :] = np.diag(self.grads_covmat[i, :, :])
+
 
         sec2 = time.time()
         if self.verb:
@@ -149,13 +155,7 @@ class DensityAdvanced(NeighGraph):
 
         """
 
-        # check or compute gradients and their covariance matrices
-        # if self.grads is None:                 #TODO: Matteo, this seems a double computation. Is it?
-        #     self.compute_grads(comp_covmat=True)
-
-        if (
-            self.grads or self.check_grads_covmat is False
-        ):  # TODO: Matteo, this seems a double computation. Is it?
+        if self.grads_covmat is None:
             self.compute_grads(comp_covmat=True)
 
         if self.verb:
@@ -169,8 +169,8 @@ class DensityAdvanced(NeighGraph):
 
         g1 = self.grads[self.nind_list[:, 0]]
         g2 = self.grads[self.nind_list[:, 1]]
-        g_var1 = self.grads_var[self.nind_list[:, 0]]
-        g_var2 = self.grads_var[self.nind_list[:, 1]]
+        g_var1 = self.grads_covmat[self.nind_list[:, 0]]
+        g_var2 = self.grads_covmat[self.nind_list[:, 1]]
 
         # check or compute common_neighs
         if self.pearson_mat is None:
@@ -227,7 +227,7 @@ class DensityAdvanced(NeighGraph):
         if self.verb:
             print("Estimation of the deltaFs cross-covariance started")
         sec = time.time()
-        self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
+        self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance( # TODO: this is a diagonal approximation of the inverse
             self.grads_var,
             self.neigh_vector_diffs,
             self.nind_list,
@@ -247,13 +247,12 @@ class DensityAdvanced(NeighGraph):
 
     def compute_density_BMTI(
         self,
-        method="uncorr",
-        use_variance=True,
-        redundancy_factor=None,
+        inv_cov_method = "uncorr",
         comp_err=False,
-        mem_efficient=True,
-    ):
-        # method    = uncorr assumes the cross-covariance matrix is diagonal with diagonal = Fij_var_array;
+        mem_efficient=False,
+        use_variance=True,
+    ):  
+        # inv_cov_method    = uncorr assumes the cross-covariance matrix is diagonal with diagonal = Fij_var_array;
         #           = LSDI (Least Squares with respect to a Diagonal Inverse) inverts the cross-covariance C
         #             by finding the approximate diagonal inverse which multiplied by C gives the least-squared
         #             closest matrix to the identity in the Frobenius norm
@@ -264,128 +263,31 @@ class DensityAdvanced(NeighGraph):
         # mem_efficient = True uses sparse matrices;
         #               = False uses dense NxN matrices
 
-        # compute changes in free energy
-        if self.Fij_array is None:
-            self.compute_deltaFs()
-
-        if self.verb:
-            print("BMTI density estimation started")
-            sec = time.time()
-
-        # define redundancy factor (equals 1 in all cases in which method != uncorr)
-        if redundancy_factor is None:
-            redundancy = np.ones(self.nspar, dtype=np.float_)
-
-        elif redundancy_factor == "geometric_mean":
-            assert (
-                method == "uncorr"
-            ), "redundancy_factor can be defined only for 'uncorr' method"
-            # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
-            k1 = self.kstar[self.nind_list[:, 0]]
-            k2 = self.kstar[self.nind_list[:, 1]]
-            redundancy = np.sqrt(k1 * k2)
-
-        elif np.size(redundancy_factor) == self.nspar:
-            assert (
-                method == "uncorr"
-            ), "redundancy_factor can be defined only for 'uncorr' method"
-            # redundancy vector
-            redundancy = redundancy_factor
-
-        else:
-            raise ValueError("Invalid 'redundancy_factor' value")
-
-        # define the likelihood covarince matrix
-        if use_variance:
-            if method == "uncorr":
-                tmpvec = (
-                    np.ones(self.nspar, dtype=np.float_)
-                    / self.Fij_var_array
-                    / redundancy
-                )
-            elif method is "LSDI":
-                self.compute_deltaFs_inv_cross_covariance()
-                tmpvec = self.inv_deltaFs_cov
-        else:
-            tmpvec = np.ones(self.nspar, dtype=np.float_) / redundancy
-
-        sec2 = time.time()
-
-        # compute adjacency matrix and coefficients vector
-        A = sparse.csr_matrix(
-            (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
-            shape=(self.N, self.N),
-            dtype=np.float_,
+        # call compute_density_BMTI_reg with alpha=1 and log_den and log_den_err as arrays of ones
+        self.compute_density_BMTI_reg(
+            alpha=1.0,
+            log_den=np.ones(self.N),
+            log_den_err=np.ones(self.N),
+            delta_F_err = inv_cov_method,
+            comp_log_den_err=comp_err,
+            mem_efficient=mem_efficient,
         )
-
-        supp_deltaF = sparse.csr_matrix(
-            (self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
-            shape=(self.N, self.N),
-            dtype=np.float_,
-        )
-
-        A = sparse.lil_matrix(A + A.transpose())
-        diag = np.array(-A.sum(axis=1)).reshape((self.N,))
-        A.setdiag(diag)
-
-        deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(
-            supp_deltaF.sum(axis=1)
-        ).reshape((self.N,))
-
-        if self.verb:
-            print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec2))
-
-        # solve linear system
-        sec2 = time.time()
-        if mem_efficient == False:
-            log_den = np.linalg.solve(A.todense(), deltaFcum)
-
-        else:
-            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
-
-        self.log_den = log_den
-
-        if self.verb:
-            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
-
-        sec2 = time.time()
-
-        # compute error
-        if comp_err is True:
-            self.A = A.todense()
-            self.B = slin.pinvh(self.A)
-            # self.B = slin.inv(self.A)
-            self.log_den_err = np.sqrt(np.diag(self.B))
-
-            if self.verb:
-                print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
-            sec2 = time.time()
-
-        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
-        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
-
-        sec2 = time.time()
-        if self.verb:
-            print("{0:0.2f} seconds for BMTI density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kstarNN_gCorr(  # TODO: Matteo, should we remove this method?
+    def compute_density_BMTI_reg( 
         self,
-        use_variance=True,
-        gauss_approx=True,  # see Jan 2022 version compute_density_PAk_gCorr
-        alpha=1.0,
-        log_den_kstarNN=None,
-        log_den_err_kstarNN=None,
-        comp_err=False,
-        redundancy_factor=None,
-        mem_efficient=True,
+        alpha=0.1,
+        log_den=None,
+        log_den_err=None,
+        delta_F_err = "uncorr",
+        comp_log_den_err=False,
+        mem_efficient=False,
     ):
-        if log_den_kstarNN is not None and log_den_err_kstarNN is not None:
-            self.log_den = log_den_kstarNN
-            self.log_den_err = log_den_err_kstarNN
-
+        if log_den is not None and log_den_err is not None:
+            self.log_den = log_den
+            self.log_den_err = log_den_err
         else:
             self.compute_density_kstarNN()
 
@@ -393,45 +295,53 @@ class DensityAdvanced(NeighGraph):
         if self.Fij_array is None:
             self.compute_deltaFs()
 
+        # add a warnings.warning if self.N > 10000 and mem_efficient is False
+        if self.N > 10000 and mem_efficient is False:
+            warnings.warn(
+                "The number of points is large and the memory efficient option is not selected. If you run into memory issues, consider using the slower memory efficient option."
+            )
+
         if self.verb:
-            print("kastarNN+gCorr density estimation started")
+            print("BMTI density estimation started")
             sec = time.time()
 
-        if redundancy_factor is None:
-            redundancy = np.ones(self.nspar, dtype=np.float_)
-
-        elif redundancy_factor == "geometric_mean":
+        # define the likelihood covarince matrix
+        if delta_F_err == "uncorr":
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
             k1 = self.kstar[self.nind_list[:, 0]]
             k2 = self.kstar[self.nind_list[:, 1]]
             redundancy = np.sqrt(k1 * k2)
 
-        elif np.size(redundancy_factor) == self.nspar:
-            # redundancy vector
-            redundancy = redundancy_factor
-
-        # compute non-zero A-matrix elements
-        if use_variance:
             tmpvec = (
-                np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
+                np.ones(self.nspar, dtype=np.float_)
+                / self.Fij_var_array
+                / redundancy
             )
-        else:
-            tmpvec = np.ones(self.nspar, dtype=np.float_) / redundancy
+        elif delta_F_err == "LSDI":
+            self.compute_deltaFs_inv_cross_covariance()
+            tmpvec = self.inv_deltaFs_cov
 
-        # initialise sparse adjacency matrix
+        elif delta_F_err == "none":
+            tmpvec = np.ones(self.nspar, dtype=np.float_)
+
+        else:
+            raise ValueError("The delta_F_err parameter is not valid, choose 'uncorr', 'LSDI' or 'none'")
+            
+        # compute adjacency matrix
         A = sparse.csr_matrix(
             (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
             shape=(self.N, self.N),
             dtype=np.float_,
         )
 
-        # initialise coefficients vector
+        # compute coefficients vector
         supp_deltaF = sparse.csr_matrix(
             (self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
             shape=(self.N, self.N),
             dtype=np.float_,
         )
 
+        # make A symmetric
         A = alpha * sparse.lil_matrix(A + A.transpose())
 
         # insert kstarNN with factor 1-alpha in the Gaussian approximation
@@ -453,10 +363,12 @@ class DensityAdvanced(NeighGraph):
         )
 
         sec2 = time.time()
+
         if self.verb:
             print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
 
-        if mem_efficient == False:
+        # solve linear system
+        if mem_efficient is False:
             log_den = np.linalg.solve(A.todense(), deltaFcum)
 
         else:
@@ -464,20 +376,21 @@ class DensityAdvanced(NeighGraph):
 
         if self.verb:
             print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        
         sec2 = time.time()
 
         self.log_den = log_den
-        # self.log_den_err = np.sqrt((sparse.linalg.inv(A.tocsc())).diagonal())
 
-        if comp_err is True:
-            self.A = A.todense()
-            self.B = slin.pinvh(self.A)
-            # self.B = slin.inv(self.A)
-            self.log_den_err = np.sqrt(np.diag(self.B))
+        # compute error
+        if comp_log_den_err is True:
+            A = A.todense()
+            B = slin.pinvh(A)
+            self.log_den_err = np.sqrt(np.diag(B))
 
-        if self.verb:
-            print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
-        sec2 = time.time()
+            if self.verb:
+                print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+
+            sec2 = time.time()
 
         # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
         # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
@@ -485,7 +398,7 @@ class DensityAdvanced(NeighGraph):
         sec2 = time.time()
         if self.verb:
             print(
-                "{0:0.2f} seconds for kastarNN+gCorr density estimation".format(
+                "{0:0.2f} seconds for BMTI density estimation".format(
                     sec2 - sec
                 )
             )
