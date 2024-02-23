@@ -16,8 +16,10 @@
 """
 The *density_advanced* module contains the *DensityEstimation* class.
 
-Different algorithms to estimate the logdensity, the logdensity gradientest and the logdensity differences are implemented as methods of this class.
-In particular, differently from the methods implemented in the DensityEstimation, the methods in the DensityEstimation class are based on the sparse neighbourhood graph structure which is implemented in the NeighGraph class.
+Different algorithms to estimate the logdensity, the logdensity gradientest and the logdensity differences are
+implemented as methods of this class. In particular, differently from the methods implemented in the DensityEstimation,
+the methods in the DensityEstimation class are based on the sparse neighbourhood graph structure which is implemented
+in the NeighGraph class.
 """
 
 import multiprocessing
@@ -28,7 +30,6 @@ import numpy as np
 from scipy import linalg as slin
 from scipy import sparse
 
-from dadapy._cython import cython_density as cd
 from dadapy._cython import cython_grads as cgr
 from dadapy.neigh_graph import NeighGraph
 
@@ -40,23 +41,28 @@ class DensityAdvanced(NeighGraph):
 
     Inherits from class NeighGraph.
     AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each component using an improved version of the mean-shift gradient algorithm [Fukunaga1975][Carli2023]
+    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each
+    component using an improved version of the mean-shift gradient algorithm [Fukunaga1975][Carli2023]
     Can return an estimate of log-density differences and their error each point based on the gradient estimates.
     Can compute the log-density and its error at each using BMTI.
 
 
     Attributes:
-        grads (np.ndarray(float), optional): for each line i contains the gradient components estimated from from point i
-        grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient components at point i
-        check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance matrices of the gradients
-        Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j
-        Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared errors on the values in Fij_array
+        grads (np.ndarray(float), optional): the gradient components estimated from from each point i
+        grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient
+            components at point i
+        check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance
+            matrices of the gradients
+        Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij
+            computed from point i as semisum of the gradients in i and minus the gradient in j
+        Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared
+            errors on the values in Fij_array
         inv_deltaFs_cov
 
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, njobs=cores
+        self, coordinates=None, distances=None, maxk=None, verbose=False, n_jobs=cores
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -64,7 +70,7 @@ class DensityAdvanced(NeighGraph):
             distances=distances,
             maxk=maxk,
             verbose=verbose,
-            njobs=njobs,
+            n_jobs=n_jobs,
         )
 
         self.grads = None
@@ -102,7 +108,6 @@ class DensityAdvanced(NeighGraph):
 
         sec = time.time()
         if comp_covmat is False:
-            # self.grads, self.grads_var = cgr.return_grads_and_var_from_coords(self.X, self.dist_indices, self.kstar, self.intrinsic_dim)
             self.grads, self.grads_var = cgr.return_grads_and_var_from_nnvecdiffs(
                 self.neigh_vector_diffs,
                 self.nind_list,
@@ -115,7 +120,6 @@ class DensityAdvanced(NeighGraph):
             )  # Bessel's correction for the unbiased sample variance estimator
 
         else:
-            # self.grads, self.grads_var = cgr.return_grads_and_covmat_from_coords(self.X, self.dist_indices, self.kstar, self.intrinsic_dim)
             self.grads, self.grads_covmat = cgr.return_grads_and_covmat_from_nnvecdiffs(
                 self.neigh_vector_diffs,
                 self.nind_list,
@@ -127,13 +131,12 @@ class DensityAdvanced(NeighGraph):
             # Bessel's correction for the unbiased sample variance estimator
             self.grads_covmat = np.einsum(
                 "ijk, i -> ijk", self.grads_covmat, self.kstar / (self.kstar - 1)
-            ) 
+            )
 
             # get diagonal elements of the covariance matrix
             self.grads_var = np.zeros((self.N, self.dims))
             for i in range(self.N):
                 self.grads_var[i, :] = np.diag(self.grads_covmat[i, :, :])
-
 
         sec2 = time.time()
         if self.verb:
@@ -142,14 +145,15 @@ class DensityAdvanced(NeighGraph):
     # ----------------------------------------------------------------------------------------------
 
     def compute_deltaFs(self, pearson_method="jaccard", comp_p_mat=False):
-        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using\
-            a linear expansion with as slope the semisum of the average gradient of the log-density over the neighbourhood of points i and j. \
-            The parameter chi is used in the estimation of the squared error of the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), \
-            where E_i is the error on the estimate of grad_i*DeltaX_ij.
+        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
+            a linear expansion with as slope the semisum of the average gradient of the log-density over
+            the neighbourhood of points i and j. The parameter chi is used in the estimation of the squared error of
+            the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where E_i is the error on the estimate of grad_i*DeltaX_ij.
 
         Args:
-            pearson_method: the Pearson correlation coefficient between the estimates of the gradient in i and j. Can take a numerical value between 0 and 1.\
-                The option 'auto' takes a geometrical estimate of chi based on AAAAAAAAA
+            pearson_method: the Pearson correlation coefficient between the estimates of the gradient in i and j.
+                Can take a numerical value between 0 and 1. The option 'auto' takes a geometrical estimate of chi based
+                on AAAAAAAAA
 
         Returns:
 
@@ -197,14 +201,14 @@ class DensityAdvanced(NeighGraph):
 
         self.Fij_array = Fij_array
         self.Fij_var_array = self.Fij_var_array
-        # self.Fij_var_array = self.Fij_var_array*k1/(k1-1) #Bessel's correction for the unbiased sample variance estimator
+        # self.Fij_var_array = self.Fij_var_array*k1/(k1-1) #Bessel's correction?
 
     # ----------------------------------------------------------------------------------------------
 
     def compute_deltaFs_inv_cross_covariance(self, pearson_method="jaccard"):
         """Compute the cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using cython.
-
-            AAAAAAAAAAAAAAAA possibile spostarlo in utils al momento. Peraltro qui bisogna trovare un modo per farlo funzionare
+            AAAAAAAAAAAAAAAA possibile spostarlo in utils al momento.
+            Peraltro qui bisogna trovare un modo per farlo funzionare
 
         Args: AAAAAAAAAAAAAAAAA
 
@@ -227,7 +231,8 @@ class DensityAdvanced(NeighGraph):
         if self.verb:
             print("Estimation of the deltaFs cross-covariance started")
         sec = time.time()
-        self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance( # TODO: this is a diagonal approximation of the inverse
+        # compute a diagonal approximation of the inverse of the cross-covariance matrix
+        self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
             self.grads_var,
             self.neigh_vector_diffs,
             self.nind_list,
@@ -247,11 +252,11 @@ class DensityAdvanced(NeighGraph):
 
     def compute_density_BMTI(
         self,
-        inv_cov_method = "uncorr",
+        inv_cov_method="uncorr",
         comp_err=False,
         mem_efficient=False,
         use_variance=True,
-    ):  
+    ):
         # inv_cov_method    = uncorr assumes the cross-covariance matrix is diagonal with diagonal = Fij_var_array;
         #           = LSDI (Least Squares with respect to a Diagonal Inverse) inverts the cross-covariance C
         #             by finding the approximate diagonal inverse which multiplied by C gives the least-squared
@@ -268,7 +273,7 @@ class DensityAdvanced(NeighGraph):
             alpha=1.0,
             log_den=np.ones(self.N),
             log_den_err=np.ones(self.N),
-            delta_F_err = inv_cov_method,
+            delta_F_err=inv_cov_method,
             comp_log_den_err=comp_err,
             mem_efficient=mem_efficient,
         )
@@ -276,12 +281,12 @@ class DensityAdvanced(NeighGraph):
     # ----------------------------------------------------------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_BMTI_reg( 
+    def compute_density_BMTI_reg(
         self,
         alpha=0.1,
         log_den=None,
         log_den_err=None,
-        delta_F_err = "uncorr",
+        delta_F_err="uncorr",
         comp_log_den_err=False,
         mem_efficient=False,
     ):
@@ -298,7 +303,8 @@ class DensityAdvanced(NeighGraph):
         # add a warnings.warning if self.N > 10000 and mem_efficient is False
         if self.N > 10000 and mem_efficient is False:
             warnings.warn(
-                "The number of points is large and the memory efficient option is not selected. If you run into memory issues, consider using the slower memory efficient option."
+                "The number of points is large and the memory efficient option is not selected. \
+                If you run into memory issues, consider using the slower memory efficient option."
             )
 
         if self.verb:
@@ -306,6 +312,42 @@ class DensityAdvanced(NeighGraph):
             sec = time.time()
 
         # define the likelihood covarince matrix
+        A, deltaFcum = self._get_BMTI_reg_linear_system(delta_F_err, alpha)
+
+        sec2 = time.time()
+
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
+
+        # solve linear system
+        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, mem_efficient)
+        self.log_den = log_den
+
+        if self.verb:
+            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
+        sec2 = time.time()
+
+        # compute error
+        if comp_log_den_err is True:
+            A = A.todense()
+            B = slin.pinvh(A)
+            self.log_den_err = np.sqrt(np.diag(B))
+
+            if self.verb:
+                print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
+
+            sec2 = time.time()
+
+        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
+        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
+
+        sec2 = time.time()
+        if self.verb:
+            print("{0:0.2f} seconds for BMTI density estimation".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _get_BMTI_reg_linear_system(self, delta_F_err, alpha):
         if delta_F_err == "uncorr":
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
             k1 = self.kstar[self.nind_list[:, 0]]
@@ -313,9 +355,7 @@ class DensityAdvanced(NeighGraph):
             redundancy = np.sqrt(k1 * k2)
 
             tmpvec = (
-                np.ones(self.nspar, dtype=np.float_)
-                / self.Fij_var_array
-                / redundancy
+                np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
             )
         elif delta_F_err == "LSDI":
             self.compute_deltaFs_inv_cross_covariance()
@@ -325,8 +365,10 @@ class DensityAdvanced(NeighGraph):
             tmpvec = np.ones(self.nspar, dtype=np.float_)
 
         else:
-            raise ValueError("The delta_F_err parameter is not valid, choose 'uncorr', 'LSDI' or 'none'")
-            
+            raise ValueError(
+                "The delta_F_err parameter is not valid, choose 'uncorr', 'LSDI' or 'none'"
+            )
+
         # compute adjacency matrix
         A = sparse.csr_matrix(
             (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
@@ -362,45 +404,12 @@ class DensityAdvanced(NeighGraph):
             + (1.0 - alpha) * self.log_den / self.log_den_err**2
         )
 
-        sec2 = time.time()
+        return A, deltaFcum
 
-        if self.verb:
-            print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
-
-        # solve linear system
+    def _solve_BMTI_reg_linar_system(self, A, deltaFcum, mem_efficient):
         if mem_efficient is False:
             log_den = np.linalg.solve(A.todense(), deltaFcum)
-
         else:
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
-        if self.verb:
-            print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
-        
-        sec2 = time.time()
-
-        self.log_den = log_den
-
-        # compute error
-        if comp_log_den_err is True:
-            A = A.todense()
-            B = slin.pinvh(A)
-            self.log_den_err = np.sqrt(np.diag(B))
-
-            if self.verb:
-                print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
-
-            sec2 = time.time()
-
-        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
-        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
-
-        sec2 = time.time()
-        if self.verb:
-            print(
-                "{0:0.2f} seconds for BMTI density estimation".format(
-                    sec2 - sec
-                )
-            )
-
-    # ----------------------------------------------------------------------------------------------
+        return log_den
