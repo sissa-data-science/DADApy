@@ -88,7 +88,6 @@ class Data(Clustering, MetricComparisons, FeatureWeighting):
         # start with an initial estimate of the ID
         if initial_id is None:
             id, _, _ = self.compute_id_2NN()
-            id = id[0] # TODO: change self.compute_id_2NN() to return a scalar!
         else:
             self.compute_distances()
             self.set_id(initial_id)
@@ -183,7 +182,7 @@ class Data(Clustering, MetricComparisons, FeatureWeighting):
         for i in range(max_iter):
             # compute kstar
             if adaptive_r:
-                r = 0.2302 ** (1 / id)
+                r = 0.2032 ** (1 / id)
 
             self.compute_kstar(Dthr)
             rk = np.array([dd[self.kstar[j]] for j, dd in enumerate(self.distances)])
