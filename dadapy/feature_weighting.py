@@ -52,7 +52,7 @@ def check_maxk(func):
         feature_selector: type[FeatureWeighting] = args[0]
         if feature_selector.maxk != feature_selector.N - 1:
             warnings.warn(
-                f"""maxk neighbors is not available for this functionality.\
+                f"""maxk neighbors is not available for this functionality.\n
                 It will be ignored and treated as the number of data-1, {feature_selector.N}""",
                 stacklevel=2,
             )
@@ -447,18 +447,18 @@ class FeatureWeighting(Base):
         initial_gammas: Union[np.ndarray, int, float] = None,
         lambd: float = None,
         n_epochs: int = 100,
-        learning_rate: float = 0.1,
+        learning_rate: float = None,
         constrain: bool = False,
         decaying_lr: bool = True,
     ):
-        """Do a stepwise backward eliminitaion of feature weights, always eleminiating the lowest weight,
-            and after each elimination GD otpmize the DII
+        """Do a stepwise backward elimination of feature weights, always eliminating the lowest weight;
+            after each elimination the DII is optimized by gradient descent using the remaining features
 
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
                 (D_groundtruth x N array, period (optional)) to be compared to.
             initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
-            lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimial_lambda
+            lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimal_lambda
             n_epochs (int): number of epochs in each optimization cycle
             learning_rate (float): learning rate.
                 Has to be tuned, especially if constrain=True (otherwise optmization could fail)
@@ -468,8 +468,8 @@ class FeatureWeighting(Base):
                 - every 10 epochs the learning rate will be halfed
 
         Returns:
-            final_weights: np.ndarray, shape (D x D). Array of the optmized weights for each number of non-zero weights.
             final_diis: np.ndarray, shape (D). Array of the optmized DII for each of the according weights.
+            final_weights: np.ndarray, shape (D x D). Array of the optmized weights for each number of non-zero weights.
 
         History entries added to FeatureWeighting object:
             dii_per_epoch: np.ndarray, shape (D, n_epochs+1, D).
