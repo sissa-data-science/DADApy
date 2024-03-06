@@ -32,18 +32,10 @@ cores = multiprocessing.cpu_count()
 
 
 class KStar(IdEstimation):
-    """AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-       Computes the log-density and its error at each point and other properties.
-
+    """Computes for each point an optimal choice - kstar - of the neighbourhood size.
+    
     Inherits from class IdEstimation.
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    Can estimate the optimal number k* of neighbors for each points.
-    Can compute the log-density and its error at each point choosing among various kNN-based methods.
-    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each
-        component.
-    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on
-        each component.
-
+    Can assign to the data a user-defined neighbourhood size.
 
     Attributes:
         kstar (np.array(float)): array containing the chosen number k* in the neighbourhood of each of the N points
@@ -67,18 +59,26 @@ class KStar(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def set_kstar(self, k=0):
-        """Set all elements of kstar to a fixed value k.
+    def reset_kstar(self):
+        """Set kstar and dc to None.
+        """
+        self.kstar = None
+        self.dc = None
 
-        Reset all other class attributes (all depending on kstar).
+    # ----------------------------------------------------------------------------------------------
+
+    def set_kstar(self, k=0):
+        """Set all elements of kstar to a specified value k.
 
         Args:
             k: number of neighbours used to compute the density it can be an iteger or an array of integers
         """
+        self.reset_kstar()
+
         # raise warning if self.intrinsic_dim is None using the warning module
         if self.intrinsic_dim is None:
             warnings.warn(
-                "Setting the k value but the intrinsic dimension is not defined!"
+                "Setting the k value but, be careful: the intrinsic dimension is not defined!"
             )
 
         if isinstance(k, np.ndarray):
@@ -86,10 +86,10 @@ class KStar(IdEstimation):
         else:
             self.kstar = np.full(self.N, k, dtype=int)
 
-        self.dc = None
+    # ----------------------------------------------------------------------------------------------
 
     def compute_kstar(self, Dthr=23.92812698):
-        """Compute an optimal choice of k for each point.
+        """Compute an optimal choice of the neighbourhood size k for each point.
 
         Args:
             Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
@@ -97,6 +97,9 @@ class KStar(IdEstimation):
 
         """
         if self.intrinsic_dim is None:
+            warnings.warn(
+                "Careful! The intrinsic dimension is not defined. Computing it unsupervisedly with 'compute_id_2NN()' method"
+            )
             _ = self.compute_id_2NN()
 
         if self.verb:
