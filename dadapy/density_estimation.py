@@ -69,7 +69,7 @@ class DensityEstimation(KStar):
     def set_kstar(self, k=0):
         """Set all elements of kstar to a fixed value k.
 
-        Reset all other class attributes (all depending on kstar).
+        Also resets all other class attributes depending on kstar.
 
         Args:
             k: number of neighbours used to compute the density it can be an iteger or an array of integers
@@ -118,39 +118,6 @@ class DensityEstimation(KStar):
             print("k-NN density estimation finished")
 
         return self.log_den, self.log_den_err
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_kstar(self, Dthr=23.92812698):
-        """Compute an optimal choice of k for each point.
-
-        Args:
-            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-                to a p-value of 1e-6.
-
-        """
-        if self.intrinsic_dim is None:
-            _ = self.compute_id_2NN()
-
-        if self.verb:
-            print(f"kstar estimation started, Dthr = {Dthr}")
-
-        sec = time.time()
-
-        kstar = cd._compute_kstar(
-            self.intrinsic_dim,
-            self.N,
-            self.maxk,
-            Dthr,
-            self.dist_indices.astype("int64"),
-            self.distances.astype("float64"),
-        )
-
-        self.set_kstar(kstar)
-
-        sec2 = time.time()
-        if self.verb:
-            print("{0:0.2f} seconds computing kstar".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 
@@ -305,12 +272,12 @@ class DensityEstimation(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def return_entropy(self):
-        """Compute a very rough estimate of the entropy of the data distribution.
+        """Compute a very rough estimate of the sample Shannon entropy of the data distribution.
 
-        The cimputation simply returns the average negative log probability estimates.
+        The computation simply returns the average negative log probability estimates.
 
         Returns:
-            H (float): the estimate entropy of the distribution
+            H (float): the estimated entropy of the distribution
 
         """
         assert self.log_den is not None

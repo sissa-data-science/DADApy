@@ -45,15 +45,17 @@ class NeighGraph(KStar):
         each component.
 
     Attributes:
-        nspar (int): total number of edges in the directed graph defined by kstar (sum over all points of kstar minus N)
-        nind_list (np.ndarray(int), optional): size nspar x 2. Each row is a couple of indices of the connected graph
-            stored in order of increasing point index and increasing neighbour length (E.g.: in the first row (0,j), j
-            is the nearest neighbour of the first point. In the second row (0,l), l is the second-nearest neighbour of
+        nspar (int): total number of edges in the directed graph defined by kstar i.e. the sum over all points of (kstar -1)
+        nind_list (np.ndarray(int), optional): size nspar x 2. Each row is a couple of indices of edges connected in the directed graph
+            stored in order of increasing point index and increasing neighbour rank. E.g.: in the first row (0,j), j
+            is the nearest neighbour of the first point (which has point index 0). In the second row (0,l), l is the second-nearest neighbour of
             the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.)
-            nind_iptr (np.array(int), optional): size N+1. For each elemen i stores the 0-th index in nind_list at which
+        nind_iptr (np.array(int), optional): size N+1. For each element i, it stores the 0-th index in nind_list at which
             the edges starting from point i start. The last entry is set to nind_list.shape[0]
-        common_neighs_array
-        common_neighs_mat
+        common_neighs_array (np.array(int), optional): size nspar. The total number of points in common between the
+        common_neighs_mat (np.ndarray(float), optional): stored as a matrix of size NxN
+        
+        
         AAAAA (scipy.sparse.csr_matrix(float), optional): stored as a sparse symmetric matrix of size N x N. Entry (i,j)
             gives the common number of neighbours between points i and j. Such value is reliable only if j is in the
             neighbourhood of i or vice versa

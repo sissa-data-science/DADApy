@@ -18,7 +18,7 @@ The *density_advanced* module contains the *DensityEstimation* class.
 
 Different algorithms to estimate the logdensity, the logdensity gradientest and the logdensity differences are
 implemented as methods of this class. In particular, differently from the methods implemented in the DensityEstimation,
-the methods in the DensityEstimation class are based on the sparse neighbourhood graph structure which is implemented
+the methods in the DensityAdvanced class are based on the sparse neighbourhood graph structure which is implemented
 in the NeighGraph class.
 """
 
