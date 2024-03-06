@@ -256,7 +256,7 @@ class IdEstimation(Base):
         algorithm="base",
         mu_fraction=0.9,
         set_attr=False,
-        return_sizes=True,
+        return_sizes=False,
     ):
         """Compute the id with the 2NN algorithm at different scales.
 
@@ -339,7 +339,7 @@ class IdEstimation(Base):
         d1=1000,
         eps=1e-7,
         set_attr=False,
-        return_ranks=True,
+        return_ranks=False,
     ):
         """Compute the id at different scales using the Gride algorithm.
 
