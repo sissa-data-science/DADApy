@@ -31,6 +31,7 @@ from scipy import linalg as slin
 from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
+from dadapy._utils.density_estimation import return_not_normalised_density_kstarNN
 from dadapy.density_estimation import DensityEstimation
 from dadapy.neigh_graph import NeighGraph
 
@@ -46,10 +47,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     component using an improved version of the mean-shift gradient algorithm [Fukunaga1975][Carli2023]
     Can return an estimate of log-density differences and their error each point based on the gradient estimates.
     Can compute the log-density and its error at each using BMTI.
-        Can return an estimate of the gradient of the log-density at each point and an estimate of the error on
-        each component.
+    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on
+    each component.
     Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on
-        each component.
+    each component.
 
 
 
@@ -82,7 +83,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads = None
         self.grads_var = None
         self.grads_covmat = None
-        self.check_grads_covmat = AAAAAAAAAAAAAAAAAAAAAAAA
         self.Fij_array = None
         self.Fij_var_array = None
         self.Fij_var_array = None
@@ -327,7 +327,17 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             self.log_den = log_den
             self.log_den_err = log_den_err
         else:
-            self.compute_density_kstarNN()
+            log_den, log_den_err, _ = return_not_normalised_density_kstarNN(
+                self.distances,
+                self.intrinsic_dim,
+                self.kstar,
+                interpolation=False,
+                bias=False,
+            )
+            # Normalise density
+            log_den -= np.log(self.N)
+            self.log_den = log_den
+            self.log_den_err = log_den_err
 
         # add a warnings.warning if self.N > 10000 and mem_efficient is False
         if self.N > 15000 and mem_efficient is False:
