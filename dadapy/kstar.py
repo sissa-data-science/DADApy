@@ -70,6 +70,8 @@ class KStar(IdEstimation):
     def set_kstar(self, k=0):
         """Set all elements of kstar to a specified value k.
 
+        Invokes reset_kstar.
+
         Args:
             k: number of neighbours used to compute the density it can be an iteger or an array of integers
         """
