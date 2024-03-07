@@ -46,6 +46,11 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     component using an improved version of the mean-shift gradient algorithm [Fukunaga1975][Carli2023]
     Can return an estimate of log-density differences and their error each point based on the gradient estimates.
     Can compute the log-density and its error at each using BMTI.
+        Can return an estimate of the gradient of the log-density at each point and an estimate of the error on
+        each component.
+    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on
+        each component.
+
 
 
     Attributes:
@@ -77,7 +82,29 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads = None
         self.grads_var = None
         self.grads_covmat = None
-        self.check_grads_covmat = False
+        self.check_grads_covmat = AAAAAAAAAAAAAAAAAAAAAAAA
+        self.Fij_array = None
+        self.Fij_var_array = None
+        self.Fij_var_array = None
+        self.inv_deltaFs_cov = None
+
+    # ----------------------------------------------------------------------------------------------
+
+    def set_kstar(self, k=0):
+        """Set all elements of kstar to a fixed value k.
+
+        Overload the set_kstar method from the superior classes.
+        First, call the set_kstar from the superior classes.
+        Then also reset all other AdvanceDensity attributes depending on kstar to None.
+
+        Args:
+            k: number of neighbours used to compute the density. It can be an iteger or an array of integers
+        """
+        super().set_kstar(k)
+
+        self.grads = None
+        self.grads_var = None
+        self.grads_covmat = None
         self.Fij_array = None
         self.Fij_var_array = None
         self.Fij_var_array = None

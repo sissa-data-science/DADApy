@@ -65,14 +65,15 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    # define set kstar method by calling the one from the KStar class
     def set_kstar(self, k=0):
         """Set all elements of kstar to a fixed value k.
 
-        Also resets all other class attributes depending on kstar.
+        Overload the set_kstar method from the superior class.
+        First, call the set_kstar from the superior class.
+        Then also reset all other DensityEstimation attributes depending on kstar to None.
 
         Args:
-            k: number of neighbours used to compute the density it can be an iteger or an array of integers
+            k: number of neighbours used to compute the density. It can be an iteger or an array of integers
         """
         super().set_kstar(k)
 
