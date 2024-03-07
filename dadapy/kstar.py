@@ -33,7 +33,7 @@ cores = multiprocessing.cpu_count()
 
 class KStar(IdEstimation):
     """Computes for each point an optimal choice - kstar - of the neighbourhood size.
-    
+
     Inherits from class IdEstimation.
     Can assign to the data a user-defined neighbourhood size.
 
@@ -60,8 +60,7 @@ class KStar(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def reset_kstar(self):
-        """Set kstar and dc to None.
-        """
+        """Set kstar and dc to None."""
         self.kstar = None
         self.dc = None
 
@@ -100,7 +99,8 @@ class KStar(IdEstimation):
         """
         if self.intrinsic_dim is None:
             warnings.warn(
-                "Careful! The intrinsic dimension is not defined. Computing it unsupervisedly with 'compute_id_2NN()' method"
+                "Careful! The intrinsic dimension is not defined. "
+                "Computing it unsupervisedly with 'compute_id_2NN()' method"
             )
             _ = self.compute_id_2NN()
 

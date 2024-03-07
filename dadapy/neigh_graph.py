@@ -32,49 +32,38 @@ cores = multiprocessing.cpu_count()
 
 
 class NeighGraph(KStar):
-    """Computes the directed neighbourhood graph (DNG) based on the kstar optimal neighbourhood selection and other DNG-based quantities.
-
-    Inherits from class KStar.
-    The DNG is stored in nind_list and can be retrieved using the kstar (inherited from Kstar class) and nind_iptr attributes.
-    Can compute and store distances and vector differences between nodes connected on the DNG.
-    Can compute and store the number of points in common in the neighbourhoods of couples of nodes connected on the DNG.
-    Can use the common neighbours to give a geometric estimate of the overlap between neighbourhoods (various methods implemented).
+    """
+    Computes the directed neighbourhood graph (DNG) based on the kstar optimal neighbourhood selection and
+    other DNG-based quantities. Inherits from class KStar. The DNG is stored in nind_list and can be
+    retrieved using the kstar (inherited from Kstar class) and nind_iptr attributes. Can compute and store
+    distances and vector differences between nodes connected on the DNG. Can compute and store the number
+    of points in common in the neighbourhoods of couples of nodes connected on the DNG. Can use the common
+    neighbours to give a geometric estimate of the overlap between neighbourhoods (various methods
+    implemented).
 
     Attributes:
-        nspar (int): total number of edges in the (sparse) directed graph defined by kstar i.e. the sum over all points of (kstar -1).
-        nind_list (np.ndarray(int), optional): size nspar x 2. Each row contains a couple of indices of edges connected in the DNG
-            stored in order of increasing point index and increasing neighbour rank. Therefore, nind_list assigns a unique index from
-            0 to nspar-1 to all the edges in the DNG. The edge associated to the i-th edge index can be read off as the i-th line of nind_list
-            Example: in the first row (0,j), j is the nearest neighbour of the first point (which has point index 0). In the second row, (0,l), l
-            is the second-nearest neighbour of the first point. In the last row (N-1,m) m is the kstar-1-th neighbour of the last point.
-        nind_iptr (np.array(int), optional): size N+1. For each element i, it stores the 0-th index in nind_list at which
-            all the edges of the form [i,.] (i.e. the ones connecting point i to its neighbours) start. The last entry is set to nind_list.shape[0].
-            One can use nind_iptr[i] together with kstar to retrieve the nind_list index at which the nind_list-submatrix containing all lines of
-            the form [i,.] starts. It is not exactly the inverse map of nind_list from couples (i,j) to the nind_list index, but rather an inverse
-            map from couples of the form (i,kstar[rank_of_the_k-th_neighbour_of_i]).
-        common_neighs_array (np.array(int), optional): size nspar. At position  p, it contains the total number of points in common between
-            the neighbourhoods of the two points forming the p-th directed edge of the neighbourhood graph, i.e. the neighbourhood of points
-            i=nind_list[p,0] and j=nind_list[p,1]. The minimum value its entries can take is 1 if two nodes are connected only by a one-directional
-            edge, 2 if they are connected in both directions (i.e. for a given p, (nind_list[p,1],nind_list[p,0]) is also an edge). 
-        common_neighs_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains the total number of points in common between
-            the neighbourhoods of points i and j. If nodes i and j are disconnected, i.e. if neither the edge (i,j) nor (j,i) exist, the
-            corresponding entry is 0. Notice: since the common number of points between two neighbours is a symmetric property, common_neighs_mat
-            is intentionally built as a symmetric matrix, so it will not have the same connectivity as the adjacency matrix if the graph
-            is not symmetric).
-        pearson_array (np.ndarray(float), optional): size nspar. At position p, it contains an estimate of the overlap between the neighbourhoods
-            of the two points forming the p-th directed edge of the neighbourhood graph, expressed as a value between 0 and 1 (although it will
-            never reach 0 by construction). This overlap can be interpreted as a proxy estimate of correlation between sample estimators defined
-            on the two neighbours. These overlaps are somewhat improperly called Pearson coefficients.
-            This attribute is computed by the compute_pearson routine choosing among different methods.
-        pearson_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains an estimate of the overlap between the neighbourhoods
-            of the two points i and j, expressed as a value between 0 and 1 (although,by construction, it will always be greater than 0 
-            except if points i and j are disconnected, in which case it is identically 0). See also pearson_array for a more detailed documentation.
-            This attribute is computed by the compute_pearson routine choosing among different methods.
-        neigh_vector_diffs (np.ndarray(float), optional): size nspar x dims. At position p, it stores the vector difference from point
-            nind_list[p,0] to point nind_list[p,1]. This attribute is used especially in the gradient and density estimation methods contained
-            in the DensityAdvanced class.
-        neigh_dists (np.array(float), optional): size nspar. Stores the distances from each point to its k*-1 nearest neighbors in the
-            order defined by nind_list.
+        nspar (int): total number of edges in the (sparse) directed graph defined by kstar i.e. the sum
+            over all points of (kstar -1).
+        nind_list (np.ndarray(int), optional): size nspar x 2. Each row contains a couple of indices of
+            edges connected in the DNG stored in order of increasing point index and increasing neighbour
+            rank. Therefore, nind_list assigns a unique index from 0 to nspar-1 to all the edges in the DNG.
+        nind_iptr (np.array(int), optional): size N+1. For each element i, it stores the 0-th index in
+            nind_list at which all the edges of the form [i,.] (i.e. the ones connecting point i to its
+            neighbours) start. The last entry is set to nind_list.shape[0].
+        common_neighs_array (np.array(int), optional): size nspar. At position  p, it contains the total
+            number of points in common between the neighbourhoods of the two points forming the p-th
+            directed edge of the neighbourhood graph.
+        common_neighs_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains the total number
+            of points in common between the neighbourhoods of points i and j.
+        pearson_array (np.ndarray(float), optional): size nspar. At position p, it contains an estimate of
+            the overlap between the neighbourhoods of the two points forming the p-th directed edge of the
+            neighbourhood graph.
+        pearson_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains an estimate of the
+            overlap between the neighbourhoods of the two points i and j.
+        neigh_vector_diffs (np.ndarray(float), optional): size nspar x dims. At position p, it stores the
+            vector difference from point nind_list[p,0] to point nind_list[p,1].
+        neigh_dists (np.array(float), optional): size nspar. Stores the distances from each point to its
+            k*-1 nearest neighbors in the order defined by nind_list.
     """
 
     def __init__(
@@ -126,11 +115,10 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_neigh_indices(self):
-        """Compute the indices of all the couples [i,j] such that j is a neighbour of i up to the k*-th nearest (excluded).
-
+        """
+        Compute indices of all couples [i,j] where j is a neighbour of i up to k*-th nearest (excluded).
         The couples of indices are stored in nind_list.
-        Also compute and fills the attributes nspar (the 0-th shape of nind_list) nind_iptr.
-
+        Also compute and fill the attributes nspar (the 0-th shape of nind_list) nind_iptr.
         """
 
         if self.kstar is None:
@@ -183,7 +171,7 @@ class NeighGraph(KStar):
 
     def return_sparse_distance_graph(self):
         """Return the (directed) neighbour distances graph as a N x N scipy sparse csr_matrix form.
-        
+
         If the attribute neigh_dists is not assigned, invokes method compute_neigh_dists.
 
         """
@@ -267,22 +255,22 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_pearson(self, comp_p_mat=False, method="jaccard"):
-        """Compute an estimate of the overlaps between the neighbourhoods of the points connected by edges on the DNG with values
-
-        from 0 to 1 and stores them in the pearson_array attribute.                
-        See also the documentation for the pearson_array attribute for completeness.
+        """
+        Compute an estimate of the overlaps between the neighbourhoods of the points connected by edges on the DNG
+        values from 0 to 1 and stores them in the pearson_array attribute. See also the documentation for the
+        pearson_array attribute for completeness.
 
         Args:
             comp_p_mat (bool): if True, also computes the pearson_mat attribute.
-            method (str): currently implemented "jaccard", "geometric", "squared_geometric". Let us denote the neighbourhoods
-                of points 1 and 2 respectively by the sets Ω_1 and Ω_2. Then k_1 = #Ω_1 and k_2 = #Ω_2 are the neighbourhood
-                sizes and k_1,2 = Ω_1 ∩ Ω_2 the number of points in common between the two neighbourhoods (which can be read off 
-                at common_neighs_mat[1,2] if common_neighs_mat has been computed). The methods to compute the Pearson coefficients are:
+            method (str): currently implemented "jaccard", "geometric", "squared_geometric".
+            Let us denote the neighbourhoods of points 1 and 2 respectively by the sets Ω_1 and Ω_2.
+            Then k_1 = #Ω_1 and k_2 = #Ω_2 are the neighbourhood sizes and k_1,2 = Ω_1 ∩ Ω_2 the number of points
+            in common between the two neighbourhoods (which can be read off at common_neighs_mat[1,2]
+            if common_neighs_mat has been computed). The methods to compute the Pearson coefficients are:
 
-                "jaccard":              p_1,2 = k_1,2 / (k_1 + k_2 - k_1,2) = #(Ω_1 ∩ Ω_2) / #(Ω_1 ∪ Ω_2), i.e. the Jaccard index between Ω_1 and Ω_2
-                "geometric":            p_1,2 = k_1,2 / sqrt(k_1 * k_2), i.e. the number of common points divided by the geometric mean of the neighbourhood sizes
-                "squared geometric":    p_1,2 = (k_1,2)^2 / (k_1 * k_2), i.e. the square of the "geometric" version
-
+            "jaccard": p_1,2 = k_1,2 / (k_1 + k_2 - k_1,2) = #(Ω_1 ∩ Ω_2) / #(Ω_1 ∪ Ω_2), i.e. the Jaccard index
+            "geometric": p_1,2 = k_1,2 / sqrt(k_1 * k_2), i.e. the number of common points divided by the geometric mean
+            "squared geometric": p_1,2 = (k_1,2)^2 / (k_1 * k_2), i.e. the square of the "geometric" version
         """
 
         # check or compute common_neighs
