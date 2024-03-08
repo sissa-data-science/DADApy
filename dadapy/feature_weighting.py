@@ -235,11 +235,7 @@ class FeatureWeighting(Base):
 
         # optmizations for different learning rates
         for i, lrate in enumerate(lrates):
-            (
-                gammas_per_epoch_per_lr[i],
-                dii_per_epoch_per_lr[i],
-                _,
-            ) = _optimize_dii(
+            (gammas_per_epoch_per_lr[i], dii_per_epoch_per_lr[i], _,) = _optimize_dii(
                 groundtruth_data=groundtruth,
                 data=in_data,
                 gammas_0=initial_gammas,

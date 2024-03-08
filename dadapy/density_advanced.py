@@ -39,32 +39,26 @@ cores = multiprocessing.cpu_count()
 
 
 class DensityAdvanced(DensityEstimation, NeighGraph):
-    """Computes the log-density and (where implemented) its error at each point and other properties.
+    """Computes the log-density gradient and its covariance at each point and other log-density-related properties.
 
-    Inherits from class NeighGraph.
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     Can return an estimate of the gradient of the log-density at each point and an estimate of the error on each
-    component using an improved version of the mean-shift gradient algorithm [Fukunaga1975][Carli2023]
+    component.
     Can return an estimate of log-density differences and their error each point based on the gradient estimates.
-    Can compute the log-density and its error at each using BMTI.
-    Can return an estimate of the gradient of the log-density at each point and an estimate of the error on
-    each component.
-    Can return an estimate of the linear deviation from constant density at each point and an estimate of the error on
-    each component.
-
-
+    Can compute the log-density and its error at each point using BMTI, i.e. integrating the log-density differences
+    on the neighbourhood graph
 
     Attributes:
-        grads (np.ndarray(float), optional): the gradient components estimated from from each point i
-        grads_var (np.ndarray(float), optional): for each line i contains the estimated variance of the gradient
-            components at point i
-        check_grads_covmat (bool, optional): it is flagged "True" when grads_var contains the variance-covariance
-            matrices of the gradients
-        Fij_array (list(np.array(float)), optional): stores for each couple in nind_list the estimates of deltaF_ij
-            computed from point i as semisum of the gradients in i and minus the gradient in j
-        Fij_var_array (np.array(float), optional): stores for each couple in nind_list the estimates of the squared
-            errors on the values in Fij_array
-        inv_deltaFs_cov
+        grads (np.ndarray(float), optional): size N. Contains the gradient components estimated at each point i
+        grads_var (np.ndarray(float), optional): size N x dims. For each line i contains the estimated variance of the
+            gradient components at point i
+        grads_covmat (np.ndarray(float), optional): size N x dims x dims. For each line i contains the estimated
+            covariance matrix of the gradient components at point i
+        Fij_array (list(np.array(float)), optional): size nspar. Stores for each couple in nind_list the estimates of
+            deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j
+        Fij_var_array (np.array(float), optional): size nspar. Stores for each couple in nind_list the estimates of the
+            squared errors on the values in Fij_array
+        inv_deltaFs_cov (np.array(float), optional): size nspar. Stores for each couple in nind_list the estimates of
+            the inverse cross-covariance of the deltaFs, that is: cov [ deltaFij , deltaFlm ] .
 
     """
 
@@ -84,7 +78,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads_var = None
         self.grads_covmat = None
         self.Fij_array = None
-        self.Fij_var_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
 
@@ -107,20 +100,22 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads_covmat = None
         self.Fij_array = None
         self.Fij_var_array = None
-        self.Fij_var_array = None
         self.inv_deltaFs_cov = None
 
     # ----------------------------------------------------------------------------------------------
 
     def compute_grads(self, comp_covmat=False):
-        """Compute the gradient of the log density each point using k* nearest neighbors.
-        The gradient is estimated via a linear expansion of the density propagated to the log-density.
+        """Compute the gradient of the log density each point using kstar nearest neighbors and store
+
+        Estimate the gradient using an improved version of the mean-shift gradient algorithm [Fukunaga1975] as
+        presented in [Carli2024].
+        Store the computed gradients in grads.
+        Also compute the variance of the gradient and store it in grads_var.
+        Optionally, the whole covariance matrix can be estimated for gradient
 
         Args:
-
-        Returns:
-
-        MODIFICARE QUI E ANCHE NEGLI ATTRIBUTI
+            comp_covmat (bool): if True, the whole covariance matrix is computed for each gradient and stored in
+            grads_covmat
 
         """
         # compute optimal k
@@ -175,15 +170,17 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     def compute_deltaFs(self, pearson_method="jaccard", comp_p_mat=False):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
             a linear expansion with as slope the semisum of the average gradient of the log-density over
-            the neighbourhood of points i and j. The parameter chi is used in the estimation of the squared error of
-            the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where E_i is the error on the estimate of grad_i*DeltaX_ij.
+            the neighbourhood of points i and j.
+
+            If not defined, compute the Pearson coefficients p (see docs for pearson_array and pearson_mat) by running
+            compute_pearson.
+            Then use these p in the estimate of the variances on the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where
+            E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2024]).
+            The log-density differences are stored Fij_array, their variances in Fij_array_var.
 
         Args:
-            pearson_method: the Pearson correlation coefficient between the estimates of the gradient in i and j.
-                Can take a numerical value between 0 and 1. The option 'auto' takes a geometrical estimate of chi based
-                on AAAAAAAAA
-
-        Returns:
+            pearson_method: see docs for compute_pearson function
+            comp_p_mat: see docs for compute_pearson function
 
         """
 
@@ -229,18 +226,15 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         self.Fij_array = Fij_array
         self.Fij_var_array = self.Fij_var_array
-        # self.Fij_var_array = self.Fij_var_array*k1/(k1-1) #Bessel's correction?
 
     # ----------------------------------------------------------------------------------------------
 
     def compute_deltaFs_inv_cross_covariance(self, pearson_method="jaccard"):
-        """Compute the cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using cython.
-            AAAAAAAAAAAAAAAA possibile spostarlo in utils al momento.
-            Peraltro qui bisogna trovare un modo per farlo funzionare
+        """Compute the appoximate inverse cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using the LSDI
+        approximation (see compute_density_BMTI_reg docs)
 
-        Args: AAAAAAAAAAAAAAAAA
-
-        Returns: AAAAAAAAAAAAAAAAA
+        Args:
+            pearson_method: see docs for compute_pearson function
 
         """
 
@@ -251,10 +245,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         # check or compute deltaFs_grads_semisum
         if self.Fij_var_array is None:
             self.compute_deltaFs()
-        # AAAAAAAAAAAAAAA controllare se serve
-        # smallnumber = 1.e-10
-        # data.grads_var += smallnumber*np.tile(np.eye(data.dims),(data.N,1,1))
-        # AAAAAAAAAAAAAAA fine controllare se serve
 
         if self.verb:
             print("Estimation of the deltaFs cross-covariance started")
@@ -280,32 +270,29 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     def compute_density_BMTI(
         self,
-        delta_F_err="uncorr",
+        delta_F_inv_cov="uncorr",
         comp_log_den_err=False,
         mem_efficient=False,
     ):
-        # inv_cov_method    = uncorr assumes the cross-covariance matrix is diagonal with diagonal = Fij_var_array;
-        #           = LSDI (Least Squares with respect to a Diagonal Inverse) inverts the cross-covariance C
-        #             by finding the approximate diagonal inverse which multiplied by C gives the least-squared
-        #             closest matrix to the identity in the Frobenius norm
-        # use_variance  = True uses the elements of the inverse cross-covariance to define the A matrix;
-        #               = False assumes the cross-covraiance matix is equal to the nspar x nspar identity
-        # redundancy_factor (used only if method=uncorr)
-        # comp_err
-        # mem_efficient = True uses sparse matrices;
-        #               = False uses dense NxN matrices
+        """Compute the log-density for each point using BMTI
+
+        Args:
+            delta_F_inv_cov (str): see compute_density_BMTI_reg docs.
+            comp_log_den_err (bool): see compute_density_BMTI_reg docs.
+            mem_efficient (bool): see compute_density_BMTI_reg docs.
+
+        """
 
         # call compute_density_BMTI_reg with alpha=1 and log_den and log_den_err as arrays of ones
         self.compute_density_BMTI_reg(
             alpha=1.0,
             log_den=np.ones(self.N),
             log_den_err=np.ones(self.N),
-            delta_F_err=delta_F_err,
+            delta_F_inv_cov=delta_F_inv_cov,
             comp_log_den_err=comp_log_den_err,
             mem_efficient=mem_efficient,
         )
 
-    # ----------------------------------------------------------------------------------------------
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_BMTI_reg(
@@ -313,10 +300,35 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         alpha=0.1,
         log_den=None,
         log_den_err=None,
-        delta_F_err="uncorr",
+        delta_F_inv_cov="uncorr",
         comp_log_den_err=False,
         mem_efficient=False,
     ):
+        """Compute the log-density for each point using BMTI plus kstarNN estimator as a regulariser.
+
+        The regulariser log-density and its errors can be passed as arguments: log_den and log_den_err. If any of these
+        two is not specified, use kstarNN estimator as a regulariser.
+
+        Args:
+            alpha (float): can take values from 0.0 to 1.0. Indicates the portion of BMTI in the sum of the likelihoods
+                alpha*L_BMTI + (1-alpha)*L_kstarNN. Setting alpha=1.0 corresponds to not reguarising BMTI.
+            log_den (np.ndarray(float)): size N. The array of the log-densities of the regulariser.
+            log_den_err (np.ndarray(float)): size N. The array of the log-density errors of the regulariser.
+            delta_F_inv_cov (str): specify the method used to invert the cross-covariance matrix C of the log-density
+                deviations cov[deltaF_ij,deltaF_kl]. Currently implemented methods:
+                    "uncorr" (default): all the deltaFs are assumed uncorrelated, i.e. C is assumed to be diagonal with
+                        diagonal = Fij_var_array
+                    "identity": C is assumed as the identity matrix, so that all terms in the BMTI likelihood are taken
+                        unweighted (variance of deltaF_ij = 1 for all (i,j) couples)
+                    "LSDI":  (Least Squares with respect to a Diagonal Inverse). Invert the cross-covariance C by
+                        finding the approximate diagonal inverse which multiplied by C gives the least-squares closest
+                        matrix to the identity in the Frobenius norm
+            comp_log_den_err (bool): if True, compute the error on the BMTI estimates. Can be highly time consuming
+            mem_efficient (bool): if True, use a sparse matrice to solve BMTI linear system (slower). If False, use a
+                dense NxN matrix; this is faster, but can require a great amount of memory if the system is large.
+
+        """
+
         # compute changes in free energy
         if self.Fij_array is None:
             self.compute_deltaFs()
@@ -351,7 +363,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             sec = time.time()
 
         # define the likelihood covarince matrix
-        A, deltaFcum = self._get_BMTI_reg_linear_system(delta_F_err, alpha)
+        A, deltaFcum = self._get_BMTI_reg_linear_system(delta_F_inv_cov, alpha)
 
         sec2 = time.time()
 
@@ -377,18 +389,15 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
             sec2 = time.time()
 
-        # self.log_den_err = np.sqrt(np.diag(slin.pinvh(A.todense())))
-        # self.log_den_err = np.sqrt(diag/np.array(np.sum(np.square(A.todense()),axis=1)).reshape(self.N,))
-
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds for BMTI density estimation".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
 
-    def _get_BMTI_reg_linear_system(self, delta_F_err, alpha):
-        if delta_F_err == "uncorr":
-            # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding k*
+    def _get_BMTI_reg_linear_system(self, delta_F_inv_cov, alpha):
+        if delta_F_inv_cov == "uncorr":
+            # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding kstar
             k1 = self.kstar[self.nind_list[:, 0]]
             k2 = self.kstar[self.nind_list[:, 1]]
             redundancy = np.sqrt(k1 * k2)
@@ -396,16 +405,16 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             tmpvec = (
                 np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
             )
-        elif delta_F_err == "LSDI":
+        elif delta_F_inv_cov == "LSDI":
             self.compute_deltaFs_inv_cross_covariance()
             tmpvec = self.inv_deltaFs_cov
 
-        elif delta_F_err == "none":
+        elif delta_F_inv_cov == "identity":
             tmpvec = np.ones(self.nspar, dtype=np.float_)
 
         else:
             raise ValueError(
-                "The delta_F_err parameter is not valid, choose 'uncorr', 'LSDI' or 'none'"
+                "The delta_F_inv_cov parameter is not valid, choose 'uncorr', 'LSDI' or 'none'"
             )
 
         # compute adjacency matrix
