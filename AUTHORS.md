@@ -4,18 +4,19 @@
 
 - [Aldo Glielmo](https://github.com/AldoGl)
 - [Alex Rodriguez](https://github.com/alexdepremia)
-- [Claudio Zeni](https://github.com/ClaudioZeni)
 - [Diego Doimo](https://github.com/diegodoimo)
 - [Iuri Macocco](https://github.com/imacocco)
-- [Maria d'Errico](https://github.com/mariaderrico)
 - [Matteo Carli](https://github.com/charliematteo)
 - [Romina Wild](https://github.com/wildromi)
 - [Vittorio Del Tatto](https://github.com/vdeltatto)
 
-## Other contributors
+## Other authors and contributors
 
 - [Alessandro Laio](https://people.sissa.it/~laio/)
+- [Claudio Zeni](https://github.com/ClaudioZeni)
+- [Felix Wodaczek](https://github.com/FelixWodaczek)
 - [Marco Favorito](https://github.com/marcofavorito)
+- [Maria d'Errico](https://github.com/mariaderrico)
 - [Martin Uhrin](https://github.com/muhrin)
 - [Olivier Languin-Cattoën](https://github.com/ollyfutur)
 
