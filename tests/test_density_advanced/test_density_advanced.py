@@ -75,39 +75,7 @@ def test_compute_deltaFs():
     assert np.allclose(da.Fij_var_array, expected_Fij_var_array)
 
 
-# define the expected density
 expected_density_BMTI = np.array(
-    [
-        0.012505854084320398,
-        -1.4989243919120265,
-        -0.8325855985351576,
-        -1.8954811470419732,
-        -0.08608518234399808,
-        -1.377358160570784,
-        -2.2853275320451556,
-        -0.08077062180341209,
-        0.03151493142829422,
-        -2.295060446120319,
-        -0.485534023025263,
-        -1.5291208381769597,
-        -2.0291222925304333,
-        -2.507439558393103,
-        0.05236125958005627,
-        -0.6844157822716908,
-        -0.205568978673708,
-        -1.3777138853748458,
-        -1.2926910126536086,
-        -1.1630749466695476,
-        -1.9641366761139865,
-        -1.421685853814561,
-        -0.4840608241935639,
-        -0.9553572813490178,
-        -0.8380943495955488,
-    ]
-)
-
-
-expected_density_BMTI_reg = np.array(
     [
         -1.698780556695925,
         -3.189031310462691,
@@ -138,7 +106,7 @@ expected_density_BMTI_reg = np.array(
 )
 
 
-def test_density_BMTI_reg():
+def test_density_BMTI():
     """Test the density_BMTI method."""
     filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 
@@ -147,6 +115,6 @@ def test_density_BMTI_reg():
     da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
     da.compute_distances()
     da.set_id(2)
-    da.compute_density_BMTI_reg(alpha=0.99)
+    da.compute_density_BMTI(alpha=0.99)
 
-    assert np.allclose(da.log_den, expected_density_BMTI_reg)
+    assert np.allclose(da.log_den, expected_density_BMTI)

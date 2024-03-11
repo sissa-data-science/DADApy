@@ -273,47 +273,17 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         delta_F_inv_cov="uncorr",
         comp_log_den_err=False,
         mem_efficient=False,
-    ):
-        """Compute the log-density for each point using BMTI
-
-        Args:
-            delta_F_inv_cov (str): see compute_density_BMTI_reg docs.
-            comp_log_den_err (bool): see compute_density_BMTI_reg docs.
-            mem_efficient (bool): see compute_density_BMTI_reg docs.
-
-        """
-
-        # call compute_density_BMTI_reg with alpha=1 and log_den and log_den_err as arrays of ones
-        self.compute_density_BMTI_reg(
-            alpha=1.0,
-            log_den=np.ones(self.N),
-            log_den_err=np.ones(self.N),
-            delta_F_inv_cov=delta_F_inv_cov,
-            comp_log_den_err=comp_log_den_err,
-            mem_efficient=mem_efficient,
-        )
-
-    # ----------------------------------------------------------------------------------------------
-
-    def compute_density_BMTI_reg(
-        self,
-        alpha=0.1,
+        alpha=1,
         log_den=None,
         log_den_err=None,
-        delta_F_inv_cov="uncorr",
-        comp_log_den_err=False,
-        mem_efficient=False,
     ):
-        """Compute the log-density for each point using BMTI plus kstarNN estimator as a regulariser.
+        """Compute the log-density for each point using BMTI.
 
-        The regulariser log-density and its errors can be passed as arguments: log_den and log_den_err. If any of these
-        two is not specified, use kstarNN estimator as a regulariser.
+        If alpha<1, the algorithm also includes a regularisatin. The regulariser log-density and its errors can be
+        passed as arguments: log_den and log_den_err. If any of these two is not specified, use kstarNN estimator
+        as a regulariser.
 
         Args:
-            alpha (float): can take values from 0.0 to 1.0. Indicates the portion of BMTI in the sum of the likelihoods
-                alpha*L_BMTI + (1-alpha)*L_kstarNN. Setting alpha=1.0 corresponds to not reguarising BMTI.
-            log_den (np.ndarray(float)): size N. The array of the log-densities of the regulariser.
-            log_den_err (np.ndarray(float)): size N. The array of the log-density errors of the regulariser.
             delta_F_inv_cov (str): specify the method used to invert the cross-covariance matrix C of the log-density
                 deviations cov[deltaF_ij,deltaF_kl]. Currently implemented methods:
                     "uncorr" (default): all the deltaFs are assumed uncorrelated, i.e. C is assumed to be diagonal with
@@ -326,6 +296,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             comp_log_den_err (bool): if True, compute the error on the BMTI estimates. Can be highly time consuming
             mem_efficient (bool): if True, use a sparse matrice to solve BMTI linear system (slower). If False, use a
                 dense NxN matrix; this is faster, but can require a great amount of memory if the system is large.
+            alpha (float): can take values from 0.0 to 1.0. Indicates the portion of BMTI in the sum of the likelihoods
+                alpha*L_BMTI + (1-alpha)*L_kstarNN. Setting alpha=1.0 corresponds to not reguarising BMTI.
+            log_den (np.ndarray(float)): size N. The array of the log-densities of the regulariser.
+            log_den_err (np.ndarray(float)): size N. The array of the log-density errors of the regulariser.
 
         """
 
