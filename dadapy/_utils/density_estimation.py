@@ -63,7 +63,7 @@ def return_not_normalised_density_kstarNN(
 
 
 def return_not_normalised_density_PAk(
-    distances, intrinsic_dim, kstar, maxk, interpolation=False, bias=False
+    distances, intrinsic_dim, kstar, interpolation=False, bias=False
 ):
     N = distances.shape[0]
 
@@ -149,7 +149,7 @@ def return_not_normalised_density_PAk(
 
 
 def return_not_normalised_density_PAk_optimized(
-    distances, intrinsic_dim, kstar, maxk, interpolation=False, bias=False
+    distances, intrinsic_dim, kstar, interpolation=False, bias=False
 ):
     N = distances.shape[0]
     if not interpolation:
