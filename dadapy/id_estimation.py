@@ -758,9 +758,10 @@ class IdEstimation(Base):
             print("Select a proper method for id computation")
             return 0
 
-        ts, pv = bmv(k_eff, n_eff, r**self.intrinsic_dim)
+        # ts, pv = bmv(k_eff, n_eff, r**self.intrinsic_dim)
+        ks,es, ks_med, es_med = bmv(k_eff, n_eff, r**self.intrinsic_dim)
 
-        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ts, pv
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ks, es, ks_med, es_med
 
     # ----------------------------------------------------------------------------------------------
 
@@ -859,10 +860,10 @@ class IdEstimation(Base):
             print("select a proper method for id computation")
             return 0
 
-        print( r, self.intrinsic_dim)
-        ts, pv = bmv(k, n, r ** self.intrinsic_dim)
+        #ts, pv = bmv(k, n, r ** self.intrinsic_dim)
+        ks, es,aa,bb = bmv(k, n, r**self.intrinsic_dim)
 
-        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ts, pv
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ks, es,aa,bb
 
     # ----------------------------------------------------------------------------------------------
 

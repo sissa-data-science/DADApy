@@ -1042,7 +1042,9 @@ class IdDiscrete(Base):
                 self.ln, self.intrinsic_dim
             ) / df.compute_discrete_volume(self.lk, self.intrinsic_dim)
 
-        n_model = self.rng.binomial(k_eff, p, size=mask.sum())
+        n_model = rng.binomial(k_eff, p, size=mask.sum())
+        if self.central_point==0:
+            n_model = n_model[n_model>0]
 
         s, pv = KS(n_eff, n_model)
 
@@ -1122,8 +1124,10 @@ class IdDiscrete(Base):
                 self.lk, id_i
             )
 
-            # extract the artificial n
-            n_mod = self.rng.binomial(ki, p)
+            # extract the artificial n (do or don't keep 0s)
+            #n_mod = rng.binomial(ki, p)
+            temp = rng.binomial(ki, p)
+            n_mod = temp[temp!=0]
 
             # perform KS test
             kstat, pvi = KS(n_mod, ni)
