@@ -19,7 +19,11 @@ rng = np.random.default_rng()
 
 from scipy.stats import epps_singleton_2samp as es2s
 from scipy.stats import ks_2samp as ks2s
+from scipy.stats import cramervonmises_2samp as cvm2s
 from scipy.stats import chisquare as x2
+from scipy.stats import binom
+from scipy.stats import kstwo
+import os
 
 def box_counting(
     data,
@@ -200,7 +204,7 @@ def correlation_integral(dists, scales, cond=False, plot=True):
 # --------------------------------------------------------------------------------------
 
 
-def _binomial_model_validation(k, n, p, artificial_samples=1000000):
+def _binomial_model_validation(k, n, p, artificial_samples=100000, k_bootstrap=100, plot=True):
     """Perform the model validation for the binomial estimator. To this aim, an artificial set of binomially distributed
     points is extracted and compared to the observed ones. The quantitative test is performed by means of the .... test.
     The associated statistics and p-value is returned
@@ -216,28 +220,101 @@ def _binomial_model_validation(k, n, p, artificial_samples=1000000):
         p_value (float): p-value obtained from the test
     """
     assert 0 < p < 1, "The binomial parameter must be in the interval (0,1)"
+    # sample an artificial ensemble of binomially distributed points to be compared with the observed ones
     if n.shape[0] < artificial_samples:
         if isinstance(k, np.ndarray):
             replicas = int(artificial_samples / n.shape[0])
-            n_theo = np.array([rng.binomial(ki, p, size=replicas) for ki in (k-1)]).reshape(-1)
+            n_samp = np.array([rng.binomial(ki, p, size=replicas) for ki in (k-1)]).reshape(-1)
         else:
-            n_theo = rng.binomial(k-1, p, size=artificial_samples)
+            n_samp = rng.binomial(k-1, p, size=artificial_samples)
     else:
         if isinstance(k, np.ndarray):
-            n_theo = rng.binomial(k-1, p)
+            n_samp = rng.binomial(k-1, p)
         else:
-            n_theo = rng.binomial(k-1, p, size=n.shape[0])
+            n_samp = rng.binomial(k-1, p, size=n.shape[0])
+                                    
+    # compute the theoretical probabilities
+#    if isinstance(k, np.ndarray):
+#        k_sup = k.max()
+#        p_k = np.array([sum(k-1 == i) for i in range(0, k_sup)]) / len(k)
+#        p_theo = np.sum([ binom.pmf(range(0, k_sup), ki, p)*p_k[ki] for ki in range(0, k_sup) ], axis=0)
+#    else:
+#        k_sup = k
+#        p_theo = binom.pmf(range(0, k), k-1, p)
 
-    # mx = max(max(n-1), max(n_theo))
-    # emp = np.array([sum(n - 1 == i) for i in range(0, mx+1)]) / len(n)
-    # theo = np.array([sum(n_theo == i) for i in range(0, mx+1)]) / len(n_theo)
+    # observed probability distribution
+    #p_obs = np.array([sum(n-1 == i) for i in range(0, k_sup)]) / len(n)
+#   commented out as it takes long time and is not needed at the moment
+#    print('computing p_samp...')
+#    p_samp = np.array([sum(n_samp == i) for i in range(0,k_sup)]) / len(n_samp)
+    
+    #if plot:
+    #    print('plotting...')
+    #    plt.figure()
+    #    plt.plot(p_theo, label='p theo | id')
+    #    plt.plot(p_samp, label='p samp | id')
+    #    plt.plot(p_obs, label='p obs')
+    #    plt.xlabel('n',fontsize=14)
+    #    plt.ylabel('p(n)',fontsize=14)
+    #plt.yscale('log')
+    #plt.show()
+    
+    #x2_d1, x2_pv1 = x2(p_obs, p_theo, ddof=4)
+    #x2_d = np.array([x2(p_obs, p_theo, ddof=ki) for ki in range(1, k_sup)])
+    
+    #x2_d, x2_pv = x2(len(n)*p_obs, len(n)*p_theo, ddof=1)
+    #f_theo = len(n)*p_theo
+    #mask = f_theo > 7
+    #chi2 = sum((p_obs-p_theo)**2/p_theo)*len(n)
+    #chi2 = sum((f_obs[mask]-f_theo[mask])**2/f_theo[mask])
+    
+    # test against sampled distribution using bootstrap (cramer von mises is left out)
+    pvs = np.zeros((k_bootstrap,2))#3
+    for ki in range(k_bootstrap):
+        n_temp = rng.choice(n,size=len(n),replace=True)
+        print(ki,end='\r')
+        #p_temp = np.array([sum(n_temp-1 == i) for i in range(0, k_sup)]) / len(n)
+        
+        #if plot:
+        #    if ki==0:
+        #        plt.plot(p_temp, color='grey',alpha=0.25,zorder=-1,label='p bootstrap')
+        #    else:
+        #        plt.plot(p_temp, color='grey',alpha=0.25,zorder=-1)
+                
+        ks_d, ks_pv = ks2s(n_samp, n_temp-1)
+        es_d, es_pv = es2s(n_samp, n_temp-1)#, t=(0.45, 0.55))
+        #appo = cvm2s(n_samp, n_temp-1)
+        #cvm_d, cvm_pv = appo.statistic,appo.pvalue
+        pvs[ki] = (ks_pv,es_pv)#,cvm_pv)
 
-    ks_d, ks_pv = ks2s(n_theo, n-1)
-    # x2_d, x2_pv = x2(emp, theo, ddof=1)
-    # es_d, es_pv = es2s(n_theo, n-1, t=(0.45, 0.55))
+    #if plot:
+    #    plt.legend()
+    #    plt.show()
+    
+    ave = np.array([pvs[:i*5].mean(axis=0) for i in range(1,k_bootstrap//5+1)])
+    median = np.array([np.median(pvs[:i*5],axis=0) for i in range(1,k_bootstrap//5+1)])
+    
+    if plot:
+        labels=['ks','es','cvm']
+        plt.figure()
+        [plt.plot(range(5,k_bootstrap+5,5),ave[:,j],label=labels[j]) for j in range(2)]
+        [plt.plot(range(5,k_bootstrap+5,5),median[:,j],label=labels[j]) for j in range(2)]
+        plt.xlabel('# of bootstrap',fontsize=14)
+        plt.ylabel('average pv',fontsize=14)
+        plt.yscale('log')
+        plt.legend()
+        plt.show()
+    
+    # test against theoretical distribution 
+    #ks_stat = max(abs(np.cumsum(p_obs)-np.cumsum(p_theo)))
+    #ks_p_value = kstwo.sf(ks_stat, len(n))
+    
 
-    # print("KS:\t", ks_d, ks_pv)
+    #print("KS\t", ks_d, ks_pv)
+    #print("KS_hm\t", ks_stat, p_value)
+    #print("X2 auto\t", x2_d, x2_pv)
+    #print("X2 hm\t", x2_d1, x2_pv1)
     # print("X2:\t", x2_d, x2_pv)
     # print("ES:\t", es_d, es_pv)
-
-    return ks_d, ks_pv
+    # return ks_d, ks_pv
+    return ave[-1,0],ave[-1,1], median[-1,0],median[-1,1]

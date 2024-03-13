@@ -161,7 +161,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         """
         # start with an initial estimate of the ID
         if initial_id is None:
-            self.compute_id_2NN(algorithm='ml')
+            self.compute_id_2NN(algorithm='base')
         else:
             self.compute_distances()
             self.set_id(initial_id)
@@ -180,7 +180,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             print("id ", self.intrinsic_dim)
 
             # set new ratio
-            r_eff = 0.2032**(1./self.intrinsic_dim) if r == 'opt' else r
+            r_eff = min(0.95,0.2032**(1./self.intrinsic_dim)) if r == 'opt' else r
             # compute neighbourhoods shells from k_star
             rk = np.array([dd[self.kstar[j]] for j, dd in enumerate(self.distances)])
             rn = rk * r_eff
@@ -201,7 +201,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             ids_err[i] = id_err
             kstars[i] = self.kstar
             log_likelihoods[i] = log_lik
-            ks_stats[i] = ks
+            #ks_stats[i] = ks
             p_values[i] = pv
 
         self.intrinsic_dim = id
@@ -211,7 +211,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         return ids, ids_err, kstars, log_likelihoods, ks_stats, p_values
 
     def return_ids_kstar_binomial_func(
-        self, initial_id=None, n_iter=5, Dthr=23.92812698, r='opt'
+        self, initial_id=None, n_iter=5, Dthr=23.92812698, r='opt', verb=True
     ):
         """Return the id estimates of the binomial algorithm coupled with the kstar estimation of the scale.
 
@@ -225,7 +225,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         """
         # start with an initial estimate of the ID
         if initial_id is None:
-            self.compute_id_2NN(algorithm='ml')
+            self.compute_id_2NN(algorithm='base')
         else:
             self.compute_distances()
             self.set_id(initial_id)
@@ -233,24 +233,35 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         ids = np.zeros(n_iter)
         ids_err = np.zeros(n_iter)
         kstars = np.zeros((n_iter, self.N), dtype=int)
-        ks_stats = np.zeros(n_iter)
-        p_values = np.zeros(n_iter)
+        ks_pv = np.zeros(n_iter)
+        es_pv = np.zeros(n_iter)
+        ks_pv1 = np.zeros(n_iter)
+        es_pv1 = np.zeros(n_iter)
+        
 
         for i in range(n_iter):
             # compute kstar
             self.compute_kstar(Dthr)
-            print("iteration ", i)
-            print("id ", self.intrinsic_dim)
+            if verb:
+                print("iteration ", i)
+                print("id ", self.intrinsic_dim)
 
             # set new ratio
-            r_eff = 0.2032**(1./self.intrinsic_dim) if r == 'opt' else r
+            r_eff = min(0.95,0.2032**(1./self.intrinsic_dim)) if r == 'opt' else r
             # compute id using the k*
-            ide, id_err, scale, ks, pv = self.compute_id_binomial_k(self.kstar, r_eff, bayes=False)
+            ide, id_err, scale, ks, es, med1, med2 = self.compute_id_binomial_k(self.kstar, r_eff, bayes=False)
+            # compute likelihood
+            # log_lik = ut.binomial_loglik(id, self.kstar - 1, n - 1, r_eff)
 
             ids[i] = ide
             ids_err[i] = id_err
             kstars[i] = self.kstar
-            ks_stats[i] = ks
-            p_values[i] = pv
+            ks_pv[i] = ks
+            es_pv[i] = es
+            ks_pv1[i] = med1
+            es_pv1[i] = med2
+           
+        self.intrinsic_dim = id
+        self.intrinsic_dim_err = id_err
 
-        return ids, ids_err, kstars, None, ks_stats, p_values
+        return ids, ids_err, kstars, ks_pv, es_pv, ks_pv1, es_pv1
