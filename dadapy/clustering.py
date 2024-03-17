@@ -950,9 +950,9 @@ class Clustering(DensityEstimation):
                             current_saddle = saddle_density[i, 0]
 
             if check == 1:
-                saddle_indices[to_remove, -1] = (
-                    0  # the couple center1, center2 is removed
-                )
+                saddle_indices[
+                    to_remove, -1
+                ] = 0  # the couple center1, center2 is removed
                 margin1 = max_a1 / max_sum_err1
                 margin2 = max_a2 / max_sum_err2
 
