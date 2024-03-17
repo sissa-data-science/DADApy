@@ -74,7 +74,15 @@ class MetricComparisons(Base):
         )
 
     def return_information_imbalace(self, coordinates, k=1):
+        """Return the imbalance with another dataset X.
 
+        Args:
+            coordinates (np.ndarray(float)): the coordinates of the othe dataset (N , dimension of embedding space)
+            k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
+
+        Returns:
+            (float, float): the information imbalance from distance i to distance j and vice versa
+        """
         distances = None
         dist_indices = None
 
