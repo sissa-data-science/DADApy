@@ -228,7 +228,8 @@ class DensityEstimation(KStar):
             warnings.warn(
                 "Found pointwise optimal k already computed and CONSTANT over the datapoints. \
                 Make sure to have used a point-adaptive k selection function such as \
-                'self.compute_kstar()'' "
+                'self.compute_kstar()'' ",
+                stacklevel=2,
             )
 
         if self.verb:
