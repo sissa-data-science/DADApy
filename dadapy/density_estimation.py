@@ -21,6 +21,7 @@ The different algorithms of density estimation are implemented as methods of thi
 
 import multiprocessing
 import time
+import warnings
 
 import numpy as np
 
@@ -221,7 +222,14 @@ class DensityEstimation(KStar):
             log_den_err (np.ndarray(float)): estimated error on log density
         """
         # compute optimal k
-        self.compute_kstar(Dthr=Dthr)
+        if self.kstar is None:
+            self.compute_kstar(Dthr=Dthr)
+        elif len(np.unique(self.kstar)) == 1:
+            warnings.warn(
+                "Found pointwise optimal k already computed and CONSTANT over the datapoints. \
+                Make sure to have used a point-adaptive k selection function such as \
+                'self.compute_kstar()'' "
+            )
 
         if self.verb:
             print("PAk density estimation started")
