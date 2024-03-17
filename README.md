@@ -30,10 +30,10 @@ data = Data(X)
 data.compute_distances(maxk=100)
 
 # compute the intrinsic dimension using 2nn estimator
-id, id_error, id_scale = data.compute_id_2NN()
+id, id_error, id_distance = data.compute_id_2NN()
 
 # compute the intrinsic dimension up to the 64th nearest neighbors using Gride
-id_list, id_error_list, id_rank_list = data.return_id_scaling_gride(range_max=64)
+id_list, id_error_list, id_distance_list = data.return_id_scaling_gride(range_max=64)
 
 # compute the density using PAk, a point adaptive kNN estimator
 log_den, log_den_error = data.compute_density_PAk()
