@@ -103,6 +103,12 @@ To install the latest development version, clone the source code from GitHub
 and install it with pip as follows:
 
 ```sh
+pip install git+https://github.com/sissa-data-science/DADApy
+```
+
+Alternatively, if you'd like to modify the implementation of some function locally you can download the repository and install the package with:
+
+```sh
 git clone https://github.com/sissa-data-science/DADApy.git
 cd DADApy
 pip install .
