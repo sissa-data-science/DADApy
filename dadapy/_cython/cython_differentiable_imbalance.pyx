@@ -154,7 +154,7 @@ def compute_dist_cython_parallel(double[:, :] X, int n_jobs, bint squared=False)
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] gammas not None, double lambd, double[:] period not None, int n_jobs, bint periodic = False):
+def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:] data_A not None, long[:,:] rank_matrix_B not None, double[:] weights not None, double lambd, double[:] period not None, int n_jobs, bint periodic = False):
     """Compute the gradient of DII between input data matrix A and groundtruth data matrix B; Cython implementation.
 
     Args:
@@ -164,8 +164,8 @@ def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:
             The input array A, where N is the number of points and D is the number of dimensions.
         rank_matrix_B : numpy.ndarray, shape (N, N), of type 'int' (python) a.k.a. 'long' (C).
             The rank matrix for groundtruth data array B, where N is the number of points.
-        gammas : numpy.ndarray, shape (D,), of type 'float' (python) a.k.a. 'double' (C).
-            The array of weight values for the input values, where D is the number of gammas.
+        weights : numpy.ndarray, shape (D,), of type 'float' (python) a.k.a. 'double' (C).
+            The array of weight values for the input values, where D is the number of weights.
             This cannot be initialized to 0's. It can be initialized to all 1 or the inverse of the standard deviation
         lambd : float
             The lambda scaling parameter of the softmax. This can be calculated automatically with python function 'return_optimal_lambda'.
@@ -227,23 +227,23 @@ def return_dii_gradient_cython(double[:,:] dists_rescaled_A not None, double[:,:
                     c_matrix[i,j] = c_matrix[i,j] / summ
                 c_matrix[i,i] = 0 # set diagonale to 0
             
-        # compute the gradient term for each gamma (parallelization is faster than the loop below):
+        # compute the gradient term for each weight (parallelization is faster than the loop below):
         if periodic == True:
             for i in range(D):
-                if gammas[i] == 0:
+                if weights[i] == 0:
                     gradient_view[i] = 0.
                 else:
                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
-                    gradient_view[i] = alphagamma_gradientterm_cython_PBC_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)   
-                    gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)
+                    gradient_view[i] = alphaweight_gradientterm_cython_PBC_parallel(alpha_weight=i, alphacolumn=alphacolumn, weights=weights, period=period, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)   
+                    gradient_view[i] = (gradient_view[i] * weights[i]) / (lambd * N*N)
         else:
             for i in range(D):
-                if gammas[i] == 0:
+                if weights[i] == 0:
                     gradient_view[i] = 0.
                 else:
                     alphacolumn = data_A[:,i,None] # data_A[:,i] creates a 1D vector, the ",None" adds a dimension
-                    gradient_view[i] = alphagamma_gradientterm_cython_parallel(alpha_gamma=i, alphacolumn=alphacolumn, gammas=gammas, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)   
-                    gradient_view[i] = (gradient_view[i] * gammas[i]) / (lambd * N*N)    
+                    gradient_view[i] = alphaweight_gradientterm_cython_parallel(alpha_weight=i, alphacolumn=alphacolumn, weights=weights, dists_rescaled_A=dists_rescaled_A, rank_matrix_B=rank_matrix_B, c_matrix=c_matrix, n_jobs=n_jobs)   
+                    gradient_view[i] = (gradient_view[i] * weights[i]) / (lambd * N*N)    
 
     return gradient
 
@@ -266,13 +266,13 @@ cdef double cmin(double[:] arr) nogil:
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):
+cpdef double alphaweight_gradientterm_cython_PBC_parallel(int alpha_weight, double[:,:] alphacolumn, double[:] weights, double[:] period, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):
     
     cdef int D,N,i,j
-    D = gammas.shape[0]
+    D = weights.shape[0]
     N = alphacolumn.shape[0]
-    cdef double summ, gradient_alphagamma
-    gradient_alphagamma = 0.
+    cdef double summ, gradient_alphaweight
+    gradient_alphaweight = 0.
 
     t1 = np.empty((N,N), dtype=float)
     cdef double[:,::1] first_term = t1
@@ -282,7 +282,7 @@ cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double
 
     #periodcorrection according to the rescaling factors of the inputs
     cdef double[:] periodalpha
-    periodalpha=period[alpha_gamma,None] #this creates a 1D array with just my 1 period number I need
+    periodalpha=period[alpha_weight,None] #this creates a 1D array with just my 1 period number I need
     dists_squared_A = compute_dist_PBC_cython_parallel(alphacolumn, box_size=periodalpha, n_jobs=n_jobs, squared=True)
     cdef double [:,:] d_s_A_view = dists_squared_A
     
@@ -297,7 +297,7 @@ cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double
 
             #### This following I cannot do because it throughs Nan - probably tue to the parallelization ####
             # for j in range(N): 
-            #     gradient_alphagamma = gradient_alphagamma + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])  
+            #     gradient_alphaweight = gradient_alphaweight + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])  
 
             #### Instead I do the weird loop below where I read the intermediate result in the 1D array "second_term" and 
             #### add that up outside the parallelized loop. Looks ugly but is fast ####
@@ -306,21 +306,21 @@ cpdef double alphagamma_gradientterm_cython_PBC_parallel(int alpha_gamma, double
                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])
             second_term[i] = summ   
     for i in range(N):
-        gradient_alphagamma = gradient_alphagamma + second_term[i]
+        gradient_alphaweight = gradient_alphaweight + second_term[i]
 
-    return gradient_alphagamma
+    return gradient_alphaweight
 
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
 @cython.wraparound(False)
-cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:] alphacolumn, double[:] gammas, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):
+cpdef double alphaweight_gradientterm_cython_parallel(int alpha_weight, double[:,:] alphacolumn, double[:] weights, double[:,:] dists_rescaled_A, long[:,:] rank_matrix_B, double[:,:] c_matrix, int n_jobs):
     
     cdef int D,N,i,j
-    D = gammas.shape[0]
+    D = weights.shape[0]
     N = alphacolumn.shape[0]
-    cdef double summ, gradient_alphagamma    
-    gradient_alphagamma = 0.
+    cdef double summ, gradient_alphaweight    
+    gradient_alphaweight = 0.
 
     t1 = np.empty((N,N), dtype=float)
     cdef double[:,::1] first_term = t1
@@ -340,7 +340,7 @@ cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:
 
             #### This following I cannot do because it throughs Nan - probably tue to the parallelization ####
             # for j in range(N): 
-            #     gradient_alphagamma = gradient_alphagamma + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])  
+            #     gradient_alphaweight = gradient_alphaweight + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])  
 
             #### Instead I do the weird loop below where I read the intermediate result in the 1D array "second_term" and 
             #### add that up outside the parallelized loop. Looks ugly but is fast ####
@@ -349,8 +349,8 @@ cpdef double alphagamma_gradientterm_cython_parallel(int alpha_gamma, double[:,:
                 summ = summ + c_matrix[i,j] * rank_matrix_B[i,j] * (first_term[i,j] + second_term[i])
             second_term[i] = summ   
     for i in range(N):
-        gradient_alphagamma = gradient_alphagamma + second_term[i]
+        gradient_alphaweight = gradient_alphaweight + second_term[i]
    
-    return gradient_alphagamma
+    return gradient_alphaweight
 
 
