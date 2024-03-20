@@ -536,7 +536,7 @@ class FeatureWeighting(Base):
             end = time.time()
             timing = end - start
             if self.verb:
-                print("number of nonzero weights= ", nonzeros, ", time: ", timing)
+                print(f"number of nonzero weights: {int(nonzeros)}, execution time: {timing:.2f} s.")
             end_weights = gs[-1].copy()
             arr = end_weights.copy()
             arr[arr == 0] = np.nan
@@ -695,13 +695,8 @@ class FeatureWeighting(Base):
             end = time.time()
             if self.verb:
                 print(
-                    "optimization with l1-penalty",
-                    i + 1,
-                    "of strength ",
-                    np.around(l1_penalties[i], 4),
-                    "took:",
-                    end - start,
-                    "s in total.",
+                    f"optimization with l1-penalty {i+1} of strength "
+                    + f"{l1_penalties[i]:.4g} took: {end - start:.2f} s.",
                 )
 
         # Refine l1 search
