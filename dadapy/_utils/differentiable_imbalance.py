@@ -461,7 +461,10 @@ def _optimize_dii(
     if period is not None:
         # Removed period typecheck here, this should be handled somewhere else
         dists_rescaled_A = _return_full_dist_matrix(
-            data=rescaled_data_A, period=weights * period, cythond=cythond, n_jobs=n_jobs
+            data=rescaled_data_A,
+            period=weights * period,
+            cythond=cythond,
+            n_jobs=n_jobs,
         )
     else:
         periodarray = None
@@ -620,7 +623,10 @@ def _optimize_dii_static_zeros(
     # for adaptive lambda: calculate distance matrix in rescaled input
     if period is not None:
         dists_rescaled_A = _return_full_dist_matrix(
-            data=rescaled_data_A, period=weights * period, cythond=cythond, n_jobs=n_jobs
+            data=rescaled_data_A,
+            period=weights * period,
+            cythond=cythond,
+            n_jobs=n_jobs,
         )
     else:
         dists_rescaled_A = _return_full_dist_matrix(
