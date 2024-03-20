@@ -50,12 +50,14 @@ def check_maxk(func):
     @wraps(func)
     def with_check(*args, **kwargs):
         feature_selector: type[FeatureWeighting] = args[0]
-        if feature_selector.maxk != feature_selector.N - 1:
-            warnings.warn(
-                f"""maxk neighbors is not available for this functionality.\n
-                It will be ignored and treated as the number of data-1, {feature_selector.N}""",
-                stacklevel=2,
-            )
+        if feature_selector._maxk_warning:
+            if feature_selector.maxk != feature_selector.N - 1:
+                warnings.warn(
+                    f"maxk option not yet available for the FeatureWeighting class. "
+                    +f"It will be set to the number of data-1 ({feature_selector.N}-1).",
+                    stacklevel=2,
+                )
+            feature_selector._maxk_warning = False
         return func(*args, **kwargs)
 
     return with_check
@@ -84,6 +86,9 @@ class FeatureWeighting(Base):
         self._cythond = True
         self.history = None
         self._full_distance_matrix = None
+        
+        # To show maxk warning only once
+        self._maxk_warning = True
 
     @property
     def full_distance_matrix(self):
