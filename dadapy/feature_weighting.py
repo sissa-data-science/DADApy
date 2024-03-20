@@ -54,7 +54,7 @@ def check_maxk(func):
             if feature_selector.maxk != feature_selector.N - 1:
                 warnings.warn(
                     f"maxk option not yet available for the FeatureWeighting class. "
-                    +f"It will be set to the number of data-1 ({feature_selector.N}-1).",
+                    + f"It will be set to the number of data-1 ({feature_selector.N}-1).",
                     stacklevel=2,
                 )
             feature_selector._maxk_warning = False
@@ -86,7 +86,7 @@ class FeatureWeighting(Base):
         self._cythond = True
         self.history = None
         self._full_distance_matrix = None
-        
+
         # To show maxk warning only once
         self._maxk_warning = True
 
@@ -536,7 +536,9 @@ class FeatureWeighting(Base):
             end = time.time()
             timing = end - start
             if self.verb:
-                print(f"number of nonzero weights: {int(nonzeros)}, execution time: {timing:.2f} s.")
+                print(
+                    f"number of nonzero weights: {int(nonzeros)}, execution time: {timing:.2f} s."
+                )
             end_weights = gs[-1].copy()
             arr = end_weights.copy()
             arr[arr == 0] = np.nan

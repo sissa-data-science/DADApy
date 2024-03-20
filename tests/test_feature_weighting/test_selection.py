@@ -182,7 +182,9 @@ def test_optimal_learning_rate():
     assert feature_selection.history["weights_per_epoch_per_lr"].shape[0] == len(
         trial_learning_rates
     )
-    assert feature_selection.history["weights_per_epoch_per_lr"].shape[1] == n_epochs + 1
+    assert (
+        feature_selection.history["weights_per_epoch_per_lr"].shape[1] == n_epochs + 1
+    )
     assert feature_selection.history["weights_per_epoch_per_lr"].shape[2] == len(
         weights_array
     )
@@ -202,7 +204,9 @@ def test_optimal_learning_rate():
     assert feature_selection.history["weights_per_epoch_per_lr"].shape[0] == len(
         learning_rates
     )
-    assert feature_selection.history["weights_per_epoch_per_lr"].shape[1] == n_epochs + 1
+    assert (
+        feature_selection.history["weights_per_epoch_per_lr"].shape[1] == n_epochs + 1
+    )
     assert feature_selection.history["weights_per_epoch_per_lr"].shape[2] == len(
         weights_array
     )
