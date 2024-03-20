@@ -39,11 +39,11 @@ def test_optimise_imbalance_typing():
         with pytest.raises(ValueError):
             feature_selection.return_weights_optimize_dii(Data(data), 1)
 
-    for initial_gammas in [np.array([2, 2], np.float32), "faz"]:
+    for initial_weights in [np.array([2, 2], np.float32), "faz"]:
         feature_selection = FeatureWeighting(data)
         with pytest.raises(ValueError):
             feature_selection.return_weights_optimize_dii(
-                Data(data), initial_gammas=initial_gammas
+                Data(data), initial_weights=initial_weights
             )
 
 
@@ -72,7 +72,7 @@ def test_maxk_warning():
     feature_selection = FeatureWeighting(data, maxk=3)
 
     with pytest.warns():
-        feature_selection.return_dii_gradient(Data(data), gammas=np.zeros(5))
+        feature_selection.return_dii_gradient(Data(data), weights=np.zeros(5))
 
 
 def test_dii_gradient():
@@ -81,10 +81,10 @@ def test_dii_gradient():
     feature_selection = FeatureWeighting(data, maxk=3)
 
     cython_grad = feature_selection.return_dii_gradient(
-        Data(data * rng.random(size=(5,))), gammas=np.zeros(5)
+        Data(data * rng.random(size=(5,))), weights=np.zeros(5)
     )
     feature_selection._cythond = False
-    np_grad = feature_selection.return_dii_gradient(Data(data), gammas=np.zeros(5))
+    np_grad = feature_selection.return_dii_gradient(Data(data), weights=np.zeros(5))
     assert np.allclose(cython_grad, np_grad)
 
 
@@ -98,7 +98,7 @@ def test_optimise_imbalance():
     target_data = data * weights_array
     periods = [None, np.ones(5)]
     constrains = [True, False]
-    initial_gammass = [None, 1.0, weights_array]
+    initial_weightss = [None, 1.0, weights_array]
     lambdas = [1e-5, 1, None]
     l1_penalties = [1.0, 10, 0.0]
     decays = [True, False]
@@ -107,26 +107,26 @@ def test_optimise_imbalance():
     for (
         period,
         constrain,
-        initial_gammas,
+        initial_weights,
         lambda_,
         l1_penalty,
         decay,
     ) in itertools.product(
-        periods, constrains, initial_gammass, lambdas, l1_penalties, decays
+        periods, constrains, initial_weightss, lambdas, l1_penalties, decays
     ):
         feature_selection = FeatureWeighting(data, period=period)
         assert feature_selection.history is None
-        gammas = feature_selection.return_weights_optimize_dii(
+        weights = feature_selection.return_weights_optimize_dii(
             Data(target_data),
             n_epochs=n_epochs,
             learning_rate=1e-2,
             constrain=constrain,
-            initial_gammas=initial_gammas,
+            initial_weights=initial_weights,
             lambd=lambda_,
             l1_penalty=l1_penalty,
             decaying_lr=decay,
         )
-        assert gammas.shape[0] == len(weights_array)
+        assert weights.shape[0] == len(weights_array)
         assert feature_selection.history is not None
 
         assert isinstance(feature_selection.history["weights_per_epoch"], np.ndarray)
@@ -144,18 +144,18 @@ def test_optimise_imbalance():
     weights_array = np.array([1, 1, 1e-3, 1e-3, 1e-3])
     target_data = data * weights_array
     feature_selection = FeatureWeighting(data, period=None)
-    gammas = feature_selection.return_weights_optimize_dii(
+    weights = feature_selection.return_weights_optimize_dii(
         Data(target_data),
         n_epochs=50,
         learning_rate=None,
         constrain=True,
-        initial_gammas=np.ones_like(weights_array),
+        initial_weights=np.ones_like(weights_array),
         lambd=None,
         l1_penalty=1e-5,
         decaying_lr=True,
     )
-    assert np.all(gammas[0] >= gammas[2:])
-    assert np.all(gammas[1] >= gammas[2:])
+    assert np.all(weights[0] >= weights[2:])
+    assert np.all(weights[1] >= weights[2:])
 
 
 def test_optimal_learning_rate():
@@ -179,11 +179,11 @@ def test_optimal_learning_rate():
         trial_learning_rates
     )
     assert feature_selection.history["dii_per_epoch_per_lr"].shape[1] == n_epochs + 1
-    assert feature_selection.history["gammas_per_epoch_per_lr"].shape[0] == len(
+    assert feature_selection.history["weights_per_epoch_per_lr"].shape[0] == len(
         trial_learning_rates
     )
-    assert feature_selection.history["gammas_per_epoch_per_lr"].shape[1] == n_epochs + 1
-    assert feature_selection.history["gammas_per_epoch_per_lr"].shape[2] == len(
+    assert feature_selection.history["weights_per_epoch_per_lr"].shape[1] == n_epochs + 1
+    assert feature_selection.history["weights_per_epoch_per_lr"].shape[2] == len(
         weights_array
     )
 
@@ -199,11 +199,11 @@ def test_optimal_learning_rate():
         learning_rates
     )
     assert feature_selection.history["dii_per_epoch_per_lr"].shape[1] == n_epochs + 1
-    assert feature_selection.history["gammas_per_epoch_per_lr"].shape[0] == len(
+    assert feature_selection.history["weights_per_epoch_per_lr"].shape[0] == len(
         learning_rates
     )
-    assert feature_selection.history["gammas_per_epoch_per_lr"].shape[1] == n_epochs + 1
-    assert feature_selection.history["gammas_per_epoch_per_lr"].shape[2] == len(
+    assert feature_selection.history["weights_per_epoch_per_lr"].shape[1] == n_epochs + 1
+    assert feature_selection.history["weights_per_epoch_per_lr"].shape[2] == len(
         weights_array
     )
 

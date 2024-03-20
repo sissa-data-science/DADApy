@@ -101,10 +101,10 @@ def test_py_kernel_gradient():
     for n_data in np.logspace(1, 2, 10, dtype=np.int16):
         for n_dim in np.logspace(1, 2, 10, dtype=np.int16):
             n_jobs = 4
-            gammas = rng.random((n_dim,), dtype=dii.CYTHON_DTYPE)
+            weights = rng.random((n_dim,), dtype=dii.CYTHON_DTYPE)
             data = rng.random((n_data, n_dim), dtype=dii.CYTHON_DTYPE)
             dist_mat = dii._return_full_dist_matrix(
-                data * gammas,
+                data * weights,
                 period=np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
                 n_jobs=n_jobs,
                 cythond=False,
@@ -118,9 +118,9 @@ def test_py_kernel_gradient():
 
             py_grad = dii._return_dii_gradient_python(
                 dists_rescaled_A=dist_mat,
-                data_A=data * gammas,
+                data_A=data * weights,
                 rank_matrix_B=ranks,
-                gammas=gammas,
+                weights=weights,
                 lambd=1.0,
                 period=np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
                 n_jobs=n_jobs,
@@ -128,9 +128,9 @@ def test_py_kernel_gradient():
 
             cython_grad = c_dii.return_dii_gradient_cython(
                 dist_mat,
-                data * gammas,
+                data * weights,
                 ranks,
-                gammas,
+                weights,
                 1.0,
                 np.zeros(n_dim, dtype=dii.CYTHON_DTYPE),
                 n_jobs,
