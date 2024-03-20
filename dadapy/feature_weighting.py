@@ -50,12 +50,14 @@ def check_maxk(func):
     @wraps(func)
     def with_check(*args, **kwargs):
         feature_selector: type[FeatureWeighting] = args[0]
-        if feature_selector.maxk != feature_selector.N - 1:
-            warnings.warn(
-                f"""maxk neighbors is not available for this functionality.\n
-                It will be ignored and treated as the number of data-1, {feature_selector.N}""",
-                stacklevel=2,
-            )
+        if feature_selector._maxk_warning:
+            if feature_selector.maxk != feature_selector.N - 1:
+                warnings.warn(
+                    f"maxk option not yet available for the FeatureWeighting class. "
+                    + f"It will be set to the number of data-1 ({feature_selector.N}-1).",
+                    stacklevel=2,
+                )
+            feature_selector._maxk_warning = False
         return func(*args, **kwargs)
 
     return with_check
@@ -84,6 +86,9 @@ class FeatureWeighting(Base):
         self._cythond = True
         self.history = None
         self._full_distance_matrix = None
+
+        # To show maxk warning only once
+        self._maxk_warning = True
 
     @property
     def full_distance_matrix(self):
@@ -128,34 +133,34 @@ class FeatureWeighting(Base):
     def _parse_own_period(self):
         return self._parse_period_for_dii(self.period, self.dims)
 
-    def _parse_initial_gammas(self, initial_gammas: Union[np.ndarray, int, float]):
+    def _parse_initial_weights(self, initial_weights: Union[np.ndarray, int, float]):
         if not (
-            isinstance(initial_gammas, np.ndarray)
-            or isinstance(initial_gammas, int)
-            or isinstance(initial_gammas, float)
-            or initial_gammas is None
+            isinstance(initial_weights, np.ndarray)
+            or isinstance(initial_weights, int)
+            or isinstance(initial_weights, float)
+            or initial_weights is None
         ):
             raise ValueError(
-                f"'initial_gammas' must be either None,"
+                f"'initial_weights' must be either None,"
                 f" float scalar or a numpy array of floats of shape ({self.dims},)"
             )
-        if initial_gammas is not None:
-            if isinstance(initial_gammas, np.ndarray):
-                if initial_gammas.shape == (self.dims,):
-                    initial_gammas = initial_gammas
+        if initial_weights is not None:
+            if isinstance(initial_weights, np.ndarray):
+                if initial_weights.shape == (self.dims,):
+                    initial_weights = initial_weights
                 else:
                     raise ValueError(
-                        f"'initial_gammas' must be either None,"
+                        f"'initial_weights' must be either None,"
                         f" float scalar or a numpy array of floats of shape ({self.dims},)"
                     )
-            elif isinstance(initial_gammas, (int, float)):
-                initial_gammas = np.full(
-                    (self.dims), fill_value=initial_gammas, dtype=float
+            elif isinstance(initial_weights, (int, float)):
+                initial_weights = np.full(
+                    (self.dims), fill_value=initial_weights, dtype=float
                 )
         else:
-            initial_gammas = 1 / np.std(self.X, axis=0)
+            initial_weights = 1 / np.std(self.X, axis=0)
 
-        return initial_gammas
+        return initial_weights
 
     @check_maxk
     def return_optimal_lambda(self, fraction: float = 1.0):
@@ -178,7 +183,7 @@ class FeatureWeighting(Base):
         target_data: Type[Base],
         n_epochs: int = 50,
         n_samples: int = 200,
-        initial_gammas: Union[np.ndarray, int, float] = None,
+        initial_weights: Union[np.ndarray, int, float] = None,
         lambd: float = None,
         decaying_lr: bool = True,
         trial_learning_rates: np.ndarray = None,
@@ -189,7 +194,7 @@ class FeatureWeighting(Base):
                 groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
             n_epochs (int): number of epochs in each optimization cycle
             n_samples (int): Number of samples to use for the learning rate screening. Default = 300.
-            initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
+            initial_weights (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred),
                 this chosen automatically with compute_optimial_lambda
             decaying_lr (bool): default: True.
@@ -216,7 +221,7 @@ class FeatureWeighting(Base):
             in_data = in_data[-n_samples:]
             groundtruth = groundtruth[-n_samples:]
 
-        initial_gammas = self._parse_initial_gammas(initial_gammas)
+        initial_weights = self._parse_initial_weights(initial_weights)
         period = self._parse_own_period()
         groundtruthperiod = self._parse_period_for_dii(
             target_data.period, target_data.dims
@@ -228,7 +233,7 @@ class FeatureWeighting(Base):
         else:
             lrates = trial_learning_rates
 
-        gammas_per_epoch_per_lr = np.zeros(
+        weights_per_epoch_per_lr = np.zeros(
             (len(lrates), n_epochs + 1, in_data.shape[1])
         )
         dii_per_epoch_per_lr = np.zeros((len(lrates), n_epochs + 1))
@@ -236,13 +241,13 @@ class FeatureWeighting(Base):
         # optmizations for different learning rates
         for i, lrate in enumerate(lrates):
             (
-                gammas_per_epoch_per_lr[i],
+                weights_per_epoch_per_lr[i],
                 dii_per_epoch_per_lr[i],
                 _,
             ) = _optimize_dii(
                 groundtruth_data=groundtruth,
                 data=in_data,
-                gammas_0=initial_gammas,
+                weights_0=initial_weights,
                 lambd=lambd,
                 n_epochs=n_epochs,
                 l_rate=lrate,
@@ -261,7 +266,7 @@ class FeatureWeighting(Base):
 
         self.history = {
             "dii_per_epoch_per_lr": dii_per_epoch_per_lr,
-            "gammas_per_epoch_per_lr": gammas_per_epoch_per_lr,
+            "weights_per_epoch_per_lr": weights_per_epoch_per_lr,
             "trial_learning_rates": lrates,
         }
         return opt_l_rate
@@ -304,7 +309,7 @@ class FeatureWeighting(Base):
 
     @check_maxk
     def return_dii_gradient(
-        self, target_data: Type[Base], gammas: np.ndarray, lambd: float = None
+        self, target_data: Type[Base], weights: np.ndarray, lambd: float = None
     ):
         """Computes the gradient of the DII between two FeatureWeighting objects
             (input object and ground truth object (= target_data)) with respect to the weights of the input features.
@@ -312,7 +317,7 @@ class FeatureWeighting(Base):
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
                 (D_groundtruth x N array, period (optional)) to be compared to.
-            gammas (np.ndarray): The array of weight values for the input values, where D is the dimension of data.
+            weights (np.ndarray): The array of weight values for the input values, where D is the dimension of data.
             lambd (float, optional): The regularization parameter. Default: 0.1.
                 The higher this value, the more nearest neighbors are included.
                 Can be calculated automatically with 'return_optimal_lambda'.
@@ -328,13 +333,13 @@ class FeatureWeighting(Base):
 
         period = self._parse_own_period()
         if period is not None:
-            period *= gammas
+            period *= weights
         target_period = self._parse_period_for_dii(
             target_data.period, in_dims=target_data.dims
         )
 
         rescaled_distances_i = _return_full_dist_matrix(
-            self.X * gammas, period=period, n_jobs=self.n_jobs
+            self.X * weights, period=period, n_jobs=self.n_jobs
         )
         rank_matrix_j = _return_full_rank_matrix(
             target_data.X, period=target_period, n_jobs=self.n_jobs
@@ -344,7 +349,7 @@ class FeatureWeighting(Base):
             rescaled_distances_i,
             self.X,
             rank_matrix_j,
-            gammas=self._parse_initial_gammas(gammas),
+            weights=self._parse_initial_weights(weights),
             lambd=lambd,
             period=period,
             n_jobs=self.n_jobs,
@@ -357,7 +362,7 @@ class FeatureWeighting(Base):
         target_data: Type[Base],
         n_epochs: int = 100,
         constrain: bool = False,
-        initial_gammas: Union[np.ndarray, int, float] = None,
+        initial_weights: Union[np.ndarray, int, float] = None,
         lambd: float = None,
         learning_rate: float = None,
         l1_penalty: float = 0.0,
@@ -373,7 +378,7 @@ class FeatureWeighting(Base):
                 The number of epochs in the gradient descent optimization. If None, it is set to 100.
             constrain: bool
                 Constrain the sum of the weights to sum up to the number of weights. Default: False
-            initial_ gammas : numpy.ndarray, shape (D,)
+            initial_ weights : numpy.ndarray, shape (D,)
                 The array of starting weight values for the input values, where D is the dimension of data.
                 If none, it is initialized to 1/var for each variable
                 This cannot be initialized to 0's.
@@ -401,7 +406,7 @@ class FeatureWeighting(Base):
         """
         # initiate the weights
         period = self._parse_own_period()
-        initial_gammas = self._parse_initial_gammas(initial_gammas)
+        initial_weights = self._parse_initial_weights(initial_weights)
 
         # find a suitable learning rate by chosing the best optimization
         if learning_rate is None:
@@ -409,20 +414,20 @@ class FeatureWeighting(Base):
                 target_data=target_data,
                 n_epochs=50,
                 n_samples=200,
-                initial_gammas=initial_gammas,
+                initial_weights=initial_weights,
                 lambd=lambd,
                 decaying_lr=decaying_lr,
                 trial_learning_rates=None,
             )
 
-        gammas_list, diis, l1_loss_terms = _optimize_dii(
+        weights_list, diis, l1_loss_terms = _optimize_dii(
             groundtruth_data=target_data.X,
             groundtruthperiod=self._parse_period_for_dii(
                 target_data.period, target_data.dims
             ),
             data=self.X,
             period=period,
-            gammas_0=initial_gammas,
+            weights_0=initial_weights,
             lambd=lambd,
             constrain=constrain,
             l1_penalty=l1_penalty,
@@ -434,17 +439,17 @@ class FeatureWeighting(Base):
         )
         # TODO: include a function that gives at least a reasonable estimate for the l1 penalty when wanting x features
         self.history = {
-            "weights_per_epoch": gammas_list,
+            "weights_per_epoch": weights_list,
             "dii_per_epoch": diis,
             "l1_term_per_epoch": l1_loss_terms,
         }
-        return gammas_list[-1]
+        return weights_list[-1]
 
     @check_maxk
     def return_backward_greedy_dii_elimination(
         self,
         target_data: Type[Base],
-        initial_gammas: Union[np.ndarray, int, float] = None,
+        initial_weights: Union[np.ndarray, int, float] = None,
         lambd: float = None,
         n_epochs: int = 100,
         learning_rate: float = None,
@@ -457,7 +462,7 @@ class FeatureWeighting(Base):
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
                 (D_groundtruth x N array, period (optional)) to be compared to.
-            initial_gammas (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
+            initial_weights (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred) this chosen automatically with compute_optimal_lambda
             n_epochs (int): number of epochs in each optimization cycle
             learning_rate (float): learning rate.
@@ -474,13 +479,13 @@ class FeatureWeighting(Base):
         History entries added to FeatureWeighting object:
             dii_per_epoch: np.ndarray, shape (D, n_epochs+1, D).
                 Weights during optimisation for every epoch and every number of non-zero weights.
-                For final weights: gammas_list[:,-1,:]
+                For final weights: weights_list[:,-1,:]
             weights_per_epoch: np.ndarray, shape (D, n_epochs+1, ).
             DII during optimization for every epoch and number of non-zero weights.
             For final imbalances: diis_list[:,-1]
         These history entries can be accessed as follows: objectname.history['entry_name']
         """
-        initial_gammas = self._parse_initial_gammas(initial_gammas)
+        initial_weights = self._parse_initial_weights(initial_weights)
 
         # INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization
         # and the results are not optimal any more.
@@ -489,7 +494,7 @@ class FeatureWeighting(Base):
                 target_data=target_data,
                 n_epochs=50,
                 n_samples=200,
-                initial_gammas=initial_gammas,
+                initial_weights=initial_weights,
                 lambd=lambd,
                 decaying_lr=decaying_lr,
                 trial_learning_rates=None,
@@ -501,7 +506,7 @@ class FeatureWeighting(Base):
         end_weights = self.return_weights_optimize_dii(
             target_data=target_data,
             n_epochs=n_epochs,
-            initial_gammas=initial_gammas,
+            initial_weights=initial_weights,
             lambd=lambd,
             learning_rate=learning_rate,
             decaying_lr=decaying_lr,
@@ -514,7 +519,7 @@ class FeatureWeighting(Base):
             gs, imbs = _optimize_dii_static_zeros(
                 groundtruth_data=target_data.X,
                 data=self.X,
-                gammas_0=end_weights,
+                weights_0=end_weights,
                 lambd=lambd,
                 n_epochs=n_epochs,
                 l_rate=learning_rate,
@@ -531,7 +536,9 @@ class FeatureWeighting(Base):
             end = time.time()
             timing = end - start
             if self.verb:
-                print("number of nonzero weights= ", nonzeros, ", time: ", timing)
+                print(
+                    f"number of nonzero weights: {int(nonzeros)}, execution time: {timing:.2f} s."
+                )
             end_weights = gs[-1].copy()
             arr = end_weights.copy()
             arr[arr == 0] = np.nan
@@ -539,8 +546,8 @@ class FeatureWeighting(Base):
                 weights_per_epoch[self.dims - int(nonzeros)] = gs
                 imbalances_per_epoch[self.dims - int(nonzeros)] = imbs
                 break
-            mingamma = np.nanargmin(arr)
-            end_weights[mingamma] = 0
+            minweight = np.nanargmin(arr)
+            end_weights[minweight] = 0
             weights_per_epoch[self.dims - (int(nonzeros))] = gs
             imbalances_per_epoch[self.dims - (int(nonzeros))] = imbs
             nonzeros = norm(end_weights, 0)
@@ -558,7 +565,7 @@ class FeatureWeighting(Base):
     def return_lasso_optimization_dii_search(
         self,
         target_data: Type[Base],
-        initial_gammas: Union[np.ndarray, int, float] = None,
+        initial_weights: Union[np.ndarray, int, float] = None,
         lambd: float = None,
         n_epochs: int = 100,
         learning_rate: float = None,
@@ -572,7 +579,7 @@ class FeatureWeighting(Base):
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
                 (D_groundtruth x N array, period (optional)) to be compared to.
-            initial_gammas (np.ndarray or list): D(input) initial weights for the input features.
+            initial_weights (np.ndarray or list): D(input) initial weights for the input features.
                 No zeros allowed. If None (default), the inverse standard deviation of the input features is used
             lambd (float or None): softmax scaling.
                 If None (default), lambd is chosen automatically with compute_optimial_lambda.
@@ -620,7 +627,7 @@ class FeatureWeighting(Base):
                 (in the order of the returned weights, diis and l1_loss_contributions)
             weights_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs x D.
                 All weights for each optimization step for each number of l1-regularization.
-                For final weights: gammas_list[:,-1,:]
+                For final weights: weights_list[:,-1,:]
             dii_per_l1_per_epoch (np.ndarray): len(l1_penalties) x n_epochs.
                 Imbalance for each optimization step for each number of l1-regularization strength.
                 For final imbalances: diis_list[:,-1]
@@ -630,7 +637,7 @@ class FeatureWeighting(Base):
         These history entries can be accessed as follows: objectname.history['entry_name']
         """
         # Initial l1 search
-        initial_gammas = self._parse_initial_gammas(initial_gammas)
+        initial_weights = self._parse_initial_weights(initial_weights)
 
         # INFO: do not precompute optimal lambda here, otherwise it becomes a fixed value in the optimization
         # and the results are not optimal any more.
@@ -640,7 +647,7 @@ class FeatureWeighting(Base):
                 target_data=target_data,
                 n_epochs=50,
                 n_samples=200,
-                initial_gammas=initial_gammas,
+                initial_weights=initial_weights,
                 lambd=lambd,
                 decaying_lr=decaying_lr,
                 trial_learning_rates=None,
@@ -672,7 +679,7 @@ class FeatureWeighting(Base):
             weights[i], diis[i], l1_loss_contributions[i] = _optimize_dii(
                 groundtruth_data=target_data.X,
                 data=self.X,
-                gammas_0=initial_gammas,
+                weights_0=initial_weights,
                 lambd=lambd,
                 n_epochs=n_epochs,
                 l_rate=learning_rate,
@@ -690,19 +697,14 @@ class FeatureWeighting(Base):
             end = time.time()
             if self.verb:
                 print(
-                    "optimization with l1-penalty",
-                    i + 1,
-                    "of strength ",
-                    np.around(l1_penalties[i], 4),
-                    "took:",
-                    end - start,
-                    "s in total.",
+                    f"optimization with l1-penalty {i+1} of strength "
+                    + f"{l1_penalties[i]:.4g} took: {end - start:.2f} s.",
                 )
 
         # Refine l1 search
         if refine:
             (
-                gammas_list,
+                weights_list,
                 dii_list,
                 lassoterm_list,
                 penalties,
@@ -713,7 +715,7 @@ class FeatureWeighting(Base):
                 l1_penalties,
                 groundtruth_data=target_data.X,
                 data=self.X,
-                gammas_0=initial_gammas,
+                weights_0=initial_weights,
                 lambd=lambd,
                 n_epochs=n_epochs,
                 l_rate=learning_rate,
@@ -727,7 +729,7 @@ class FeatureWeighting(Base):
                 cythond=self._cythond,
                 verbose=self.verb,
             )
-            weights = gammas_list
+            weights = weights_list
             diis = dii_list
             l1_loss_contributions = lassoterm_list
             l1_penalties = penalties
