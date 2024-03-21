@@ -111,6 +111,7 @@ Alternatively, if you'd like to modify the implementation of some function local
 ```sh
 git clone https://github.com/sissa-data-science/DADApy.git
 cd DADApy
+python setup.py build_ext --inplace
 pip install .
 ```
 
