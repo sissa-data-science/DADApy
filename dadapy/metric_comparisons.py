@@ -73,6 +73,43 @@ class MetricComparisons(Base):
             n_jobs=n_jobs,
         )
 
+    def return_information_imbalace(self, coordinates, k=1):
+        """Return the imbalance with another dataset X.
+
+        Args:
+            coordinates (np.ndarray(float)): the coordinates of the othe dataset (N , dimension of embedding space)
+            k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
+
+        Returns:
+            (float, float): the information imbalance from distance i to distance j and vice versa
+        """
+        distances = None
+        dist_indices = None
+
+        assert any(
+            var is not None for var in [self.X, self.distances, self.dist_indices]
+        ), "MetricComparisons should be initialized with a dataset."
+
+        assert any(
+            var is not None for var in [coordinates, distances, dist_indices]
+        ), "The overlap with data requires a second dataset. \
+            Provide at least one of coordinates, distances, dist_indices."
+
+        dist_indices_base, _ = self._get_nn_indices(
+            self.X, self.distances, self.dist_indices, self.maxk
+        )
+
+        dist_indices_other, _ = self._get_nn_indices(
+            coordinates, distances, dist_indices, self.maxk
+        )
+
+        assert dist_indices_base.shape[0] == dist_indices_other.shape[0]
+
+        imb_ij = _return_imbalance(dist_indices_base, dist_indices_other, self.rng, k=k)
+        imb_ji = _return_imbalance(dist_indices_other, dist_indices_base, self.rng, k=k)
+
+        return imb_ij, imb_ji
+
     def return_inf_imb_two_selected_coords(self, coords1, coords2, k=1):
         """Return the imbalances between distances taken as the i and the j component of the coordinate matrix X.
 

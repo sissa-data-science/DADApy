@@ -30,10 +30,10 @@ data = Data(X)
 data.compute_distances(maxk=100)
 
 # compute the intrinsic dimension using 2nn estimator
-id, id_error, id_scale = data.compute_id_2NN()
+id, id_error, id_distance = data.compute_id_2NN()
 
 # compute the intrinsic dimension up to the 64th nearest neighbors using Gride
-id_list, id_error_list, id_rank_list = data.return_id_scaling_gride(range_max=64)
+id_list, id_error_list, id_distance_list = data.return_id_scaling_gride(range_max=64)
 
 # compute the density using PAk, a point adaptive kNN estimator
 log_den, log_den_error = data.compute_density_PAk()
@@ -103,8 +103,15 @@ To install the latest development version, clone the source code from GitHub
 and install it with pip as follows:
 
 ```sh
+pip install git+https://github.com/sissa-data-science/DADApy
+```
+
+Alternatively, if you'd like to modify the implementation of some function locally you can download the repository and install the package with:
+
+```sh
 git clone https://github.com/sissa-data-science/DADApy.git
 cd DADApy
+python setup.py build_ext --inplace
 pip install .
 ```
 

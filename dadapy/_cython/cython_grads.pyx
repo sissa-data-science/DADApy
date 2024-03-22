@@ -1,0 +1,497 @@
+import time
+
+import cython
+import numpy as np
+
+cimport numpy as np
+
+DTYPE = np.int_
+floatTYPE = np.float_
+boolTYPE = np.bool_
+
+ctypedef np.int_t DTYPE_t
+ctypedef np.float64_t floatTYPE_t
+
+from libc.math cimport exp, fabs, nearbyint, sqrt  # c FUNCTIONS FASTER THAN NUMPY
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_ind(np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                     np.ndarray[DTYPE_t, ndim = 1] kstar):
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t kstar_max = np.max(kstar)
+    cdef DTYPE_t nspar = kstar.sum() - N
+    cdef np.ndarray[DTYPE_t, ndim = 2] nind_list = np.ndarray((nspar, 2), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim = 1] nind_iptr = np.ndarray(shape=(N + 1,), dtype=DTYPE)
+
+    cdef DTYPE_t i, j, k, ind_spar, ki
+
+    ind_spar = 0
+    for i in range(N):
+        nind_iptr[i] = ind_spar
+        ki = kstar[i] - 1
+        for k in range(ki):
+            j = dist_indices[i, k + 1]
+            #nind_mat[i,j] = ind_spar
+            nind_list[ind_spar, 0] = i
+            nind_list[ind_spar, 1] = j
+            ind_spar += 1
+    nind_iptr[N] = nspar
+    assert (ind_spar == nspar)
+
+    #    return nind_list, nind_mat
+    return nind_list, nind_iptr
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_distances_array(   np.ndarray[floatTYPE_t, ndim = 2] distances,
+                                    np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                    np.ndarray[DTYPE_t, ndim = 1] kstar):
+    cdef DTYPE_t N = len(kstar)
+    cdef DTYPE_t nspar = kstar.sum() - N
+    cdef np.ndarray[floatTYPE_t, ndim = 1] distarray = np.ndarray((nspar,),dtype=floatTYPE)
+
+    cdef DTYPE_t i, j, ind_spar
+
+    ind_spar = 0
+    for i in range(N):
+        for j in range(1,kstar[i]):
+            distarray[ind_spar] =  distances[i,j]
+            ind_spar += 1
+
+    assert (ind_spar == nspar)
+
+    return distarray
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_vector_diffs(np.ndarray[floatTYPE_t, ndim = 2] X,
+                              np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    cdef DTYPE_t dims = X.shape[1]
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims))
+
+    cdef DTYPE_t i, j, ind_spar, dim
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        for dim in range(dims):
+            vector_diffs[ind_spar, dim] = X[j, dim] - X[i, dim]
+
+    return vector_diffs
+
+# ----------------------------------------------------------------------------------------------
+
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_vector_diffs_periodic(np.ndarray[floatTYPE_t, ndim = 2] X,
+                              np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                              np.ndarray[floatTYPE_t, ndim = 1] period):
+    cdef DTYPE_t dims = X.shape[1]
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims))
+
+    cdef DTYPE_t i, j, ind_spar, dim
+    cdef floatTYPE_t temp
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        for dim in range(dims):
+            temp = X[j, dim] - X[i, dim]
+            if temp > period[dim]/2:
+                temp -= period[dim]
+            if temp < -period[dim]/2:
+                temp += period[dim] 
+            vector_diffs[ind_spar, dim] = temp
+
+    return vector_diffs
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
+                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                         np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t nspar = nind_list.shape[0]
+
+    cdef DTYPE_t i, j, ind_spar
+
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        common_neighs_array[ind_spar] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
+                                          assume_unique=True).sum()
+
+    return common_neighs_array
+
+# ----------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
+                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                         np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t nspar = nind_list.shape[0]
+
+    cdef DTYPE_t i, j, ind_spar
+
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
+    cdef np.ndarray[DTYPE_t, ndim=2] common_neighs_mat = np.zeros((N,N), dtype=np.int_)
+
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+        if common_neighs_mat[j,i] == 0:
+            common_neighs_mat[i,j] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
+                                          assume_unique=True).sum()
+            common_neighs_mat[j,i] = common_neighs_mat[i,j]
+            common_neighs_array[ind_spar] = common_neighs_mat[i,j]
+        else:
+            common_neighs_mat[i,j] = common_neighs_mat[j,i]
+            common_neighs_array[ind_spar] = common_neighs_mat[j,i]
+
+    return common_neighs_array, common_neighs_mat
+
+# ----------------------------------------------------------------------------------------------
+
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_deltaFs_inv_cross_covariance(double[:,:,:] grads_covmat,
+                                        double[:,:] neigh_vector_diffs,
+                                        long[:,:] nind_list,          # nspar x 2
+                                        double[:,:] p,                  # pearson_correlation matrix (NxN)
+                                        double[:] Fij_var_array):
+    cdef int dims = neigh_vector_diffs.shape[1]
+    cdef int nspar = nind_list.shape[0]
+
+    inv_Gamma_nonview   = np.zeros(nspar, dtype=np.float_)       # inverse of diagonal of Gamma matrix
+    cdef double[::1] inv_Gamma = inv_Gamma_nonview
+    
+    #support
+    denom_nonview   = np.zeros(nspar, dtype=np.float_)
+    cdef double[::1] denom = denom_nonview
+
+    cdef double gamma, ptot, tmpi, tmpj, tmpl, tmpm, temp
+    cdef int i,j,l,m,a,b,dim1,dim2    
+
+    for a in range(nspar):
+        i = nind_list[a, 0]
+        j = nind_list[a, 1]
+        inv_Gamma[a] = Fij_var_array[a]
+        denom[a] += Fij_var_array[a]*Fij_var_array[a]
+        for b in range(a+1, nspar):
+            l = nind_list[b, 0]
+            m = nind_list[b, 1]
+            gamma = 0
+            ptot = 0
+            tmpi = 0
+            tmpj = 0
+            tmpl = 0
+            tmpm = 0
+            if p[i,l] > 0:
+                ptot += p[i,l]
+
+                for dim1 in range(dims):
+                    for dim2 in range(dims):
+                        # r_ij @ vari @ r_lm
+                        tmpi += neigh_vector_diffs[a,dim1]*grads_covmat[i,dim1,dim2]*neigh_vector_diffs[b,dim2]        
+                for dim1 in range(dims):
+                    for dim2 in range(dims):
+                        # r_ij @ varl @ r_lm
+                        tmpl += neigh_vector_diffs[a,dim1]*grads_covmat[l,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                gamma += p[i,l]*sqrt(fabs(tmpi*tmpl))
+
+                if p[i,m] > 0:
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            # r_ij @ varm @ r_lm
+                            tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[i,m]*sqrt(fabs(tmpi*tmpm))
+            else:
+                if p[i,m] > 0:
+                    ptot += p[i,m]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            # r_ij @ vari @ r_lm
+                            tmpi += neigh_vector_diffs[a,dim1]*grads_covmat[i,dim1,dim2]*neigh_vector_diffs[b,dim2]        
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            # r_ij @ varm @ r_lm
+                            tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]        
+                    gamma += p[i,m]*sqrt(fabs(tmpi*tmpm))
+
+            if p[j,l] > 0:
+                if ptot == 0:
+                    ptot += p[j,l]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            # r_ij @ varj @ r_lm
+                            tmpj += neigh_vector_diffs[a,dim1]*grads_covmat[j,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            # r_ij @ varl @ r_lm
+                            tmpl += neigh_vector_diffs[a,dim1]*grads_covmat[l,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[j,l]*sqrt(fabs(tmpj*tmpl))
+                    if p[j,m] > 0:
+                        for dim1 in range(dims):
+                            for dim2 in range(dims):
+                                # r_ij @ varm @ r_lm
+                                tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                        gamma += p[j,m]*sqrt(fabs(tmpj*tmpm))
+                else:
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            # r_ij @ varj @ r_lm
+                            tmpj += neigh_vector_diffs[a,dim1]*grads_covmat[j,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    if tmpl == 0:
+                        for dim1 in range(dims):
+                            for dim2 in range(dims):
+                                # r_ij @ varl @ r_lm
+                                tmpl += neigh_vector_diffs[a,dim1]*grads_covmat[l,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[j,l]*sqrt(fabs(tmpj*tmpl))
+                    if p[j,m] > 0:
+                        if tmpm == 0:
+                            for dim1 in range(dims):
+                                for dim2 in range(dims):
+                                    # r_ij @ varm @ r_lm
+                                    tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                        gamma += p[j,m]*sqrt(fabs(tmpj*tmpm))
+            else:
+                if p[j,m] > 0:
+                    if ptot == 0:
+                        ptot += p[j,m]
+                    if tmpm == 0:
+                        for dim1 in range(dims):
+                            for dim2 in range(dims):
+                                # r_ij @ varm @ r_lm
+                                tmpm += neigh_vector_diffs[a,dim1]*grads_covmat[m,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    for dim1 in range(dims):
+                        for dim2 in range(dims):
+                            # r_ij @ varj @ r_lm
+                            tmpj += neigh_vector_diffs[a,dim1]*grads_covmat[j,dim1,dim2]*neigh_vector_diffs[b,dim2]
+                    gamma += p[j,m]*sqrt(fabs(tmpj*tmpm))
+            if ptot != 0:
+                denom[a] += gamma * gamma / 16.
+                denom[b] += gamma * gamma / 16.
+        
+    for a in range(nspar):
+        inv_Gamma[a] /= denom[a]
+
+    #return Gamma, inv_Gamma
+    return np.asarray(inv_Gamma)
+
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,
+                                        np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                        np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                        floatTYPE_t id_selected):
+# NOT USED AT THE MOMENT
+
+    cdef DTYPE_t N = X.shape[0]
+    cdef DTYPE_t dims = X.shape[1]
+    cdef DTYPE_t kstar_max = np.max(kstar)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
+    
+    cdef DTYPE_t i, j, dim, ki, dim2
+    cdef DTYPE_t ind_j
+    cdef floatTYPE_t rk_sq, kifloat
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+    for i in range(N):
+        ki = kstar[i]-1
+
+        kifloat = float(ki)
+
+        rk_sq = 0.
+        for dim in range(dims):
+            rk_sq += (X[dist_indices[i, ki+1], dim] - X[i, dim])**2
+
+        # compute gradients and variance of gradients together
+        for dim in range(dims):
+            for j in range(ki):
+                ind_j = dist_indices[i, j+1]
+
+                grads[i, dim] += (X[ind_j, dim] - X[i, dim])
+                grads_var[i, dim] += (X[ind_j, dim] - X[i, dim]) * (X[ind_j, dim] - X[i, dim])
+
+            grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+            grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                              - grads[i, dim]*grads[i, dim] / kifloat
+
+    return grads, grads_var
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,
+                                            np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                            np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                            floatTYPE_t id_selected):
+# NOT USED AT THE MOMENT
+
+    cdef DTYPE_t N = X.shape[0]
+    cdef DTYPE_t dims = X.shape[1]
+    cdef DTYPE_t kstar_max = np.max(kstar)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims))
+
+    cdef DTYPE_t i, j, dim, ki, dim2
+    cdef DTYPE_t ind_j
+    cdef floatTYPE_t rk_sq, kifloat
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+    for i in range(N):
+        ki = kstar[i]-1
+
+        kifloat = float(ki)
+
+        rk_sq = 0.
+        for dim in range(dims):
+            rk_sq += (X[dist_indices[i, ki+1], dim] - X[i, dim])**2
+
+        # compute gradients
+        for dim in range(dims):
+            for j in range(ki):
+                ind_j = dist_indices[i, j+1]
+
+                grads[i, dim] += (X[ind_j, dim] - X[i, dim])
+
+            grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+        # compute covariance matrix of gradients
+        for dim in range(dims):
+            for dim2 in range(dims):
+                for j in range(ki):
+                    ind_j = dist_indices[i, j+1]
+
+                    grads_covmat[i, dim, dim2] += (X[ind_j, dim] - X[i, dim]) * (X[ind_j, dim2] - X[i, dim2])
+
+                grads_covmat[i, dim, dim2] = grads_covmat[i, dim, dim2] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                                  - grads[i, dim]*grads[i, dim2] / kifloat
+
+    return grads, grads_covmat
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_grads_and_var_from_nnvecdiffs(   np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                            np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                            np.ndarray[DTYPE_t, ndim = 1] nind_iptr,
+                                            np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                            floatTYPE_t id_selected):
+
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+    cdef DTYPE_t kstar_max = np.max(kstar)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
+    
+    cdef DTYPE_t i, j, dim, ki, dim2
+    cdef DTYPE_t ind_j
+    cdef floatTYPE_t rk_sq, kifloat
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+
+    for i in range(N):
+        ki = kstar[i]-1
+
+        kifloat = float(ki)
+
+        rk_sq = 0.
+        for dim in range(dims):
+            rk_sq += (neigh_vector_diffs[nind_iptr[i+1]-1,dim])**2
+
+        # compute gradients and variance of gradients together
+        for dim in range(dims):
+            for j in range(ki):
+                ind_j = nind_iptr[i]+j
+
+                grads[i, dim] += neigh_vector_diffs[ind_j,dim]
+                grads_var[i, dim] += neigh_vector_diffs[ind_j,dim]*neigh_vector_diffs[ind_j,dim]
+
+            grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+            grads_var[i, dim] = grads_var[i, dim] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                              - grads[i, dim]*grads[i, dim] / kifloat
+
+    return grads, grads_var
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_grads_and_covmat_from_nnvecdiffs(np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                            np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                            np.ndarray[DTYPE_t, ndim = 1] nind_iptr,
+                                            np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                            floatTYPE_t id_selected):
+
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+    cdef DTYPE_t kstar_max = np.max(kstar)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims))
+
+    cdef DTYPE_t i, j, dim, ki, dim2
+    cdef DTYPE_t ind_j
+    cdef floatTYPE_t rk_sq, kifloat
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+    for i in range(N):
+        ki = kstar[i]-1
+
+        kifloat = float(ki)
+
+        rk_sq = 0.
+        for dim in range(dims):
+            rk_sq += (neigh_vector_diffs[nind_iptr[i+1]-1,dim])**2
+
+        # compute gradients
+        for dim in range(dims):
+            for j in range(ki):
+                ind_j = nind_iptr[i]+j
+
+                grads[i, dim] += neigh_vector_diffs[ind_j,dim]
+
+            grads[i, dim] = grads[i, dim] / kifloat * dp2/rk_sq
+
+        # compute covariance matrix of gradients
+        for dim in range(dims):
+            for dim2 in range(dims):
+                for j in range(ki):
+                    ind_j = nind_iptr[i]+j
+
+                    grads_covmat[i, dim, dim2] += neigh_vector_diffs[ind_j,dim]*neigh_vector_diffs[ind_j,dim2]
+
+                grads_covmat[i, dim, dim2] = grads_covmat[i, dim, dim2] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
+                                  - grads[i, dim]*grads[i, dim2] / kifloat
+
+    return grads, grads_covmat
+
+# ----------------------------------------------------------------------------------------------

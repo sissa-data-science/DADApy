@@ -27,6 +27,7 @@ import numpy as np
 
 from dadapy._utils import utils as ut
 from dadapy.clustering import Clustering
+from dadapy.density_advanced import DensityAdvanced
 from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons
 
@@ -35,7 +36,7 @@ np.set_printoptions(precision=2)
 os.getcwd()
 
 
-class Data(Clustering, MetricComparisons, FeatureWeighting):
+class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
     """Data class."""
 
     def __init__(
