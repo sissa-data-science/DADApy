@@ -929,7 +929,7 @@ def _plot_min_lasso_results(dii_min, num_nonzero_features, p_min):
         label="$L_1$-reg. search",
         zorder=7,
     )
-    sc = ax.scatter(num_nonzero_features, dii_min, s=50, c=p_min, norm="log", zorder=8)
+    sc = ax.scatter(num_nonzero_features, dii_min, s=50, c=np.log(p_min, where=p_min>0), zorder=8)
     cb = fig.colorbar(sc, ax=ax, orientation="vertical")
     cb.set_label(label="ln($L_1$-strength)", size="large")
     cb.ax.tick_params(labelsize="large")
