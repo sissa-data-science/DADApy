@@ -84,6 +84,10 @@ overlap_labels = data.return_label_overlap(labels)
 - Information imbalance
   > Glielmo et al., *PNAS Nexus* (2022)
 
+- Feature selection and weighting tool
+    -
+- Differentiable Information Imbalance
+
 
 # Installation
 The package is compatible with the Python versions 3.7, 3.8, 3.9, 3.10, 3.11, and 3.12. We currently only support Unix-based systems, including Linux and macOS. 
