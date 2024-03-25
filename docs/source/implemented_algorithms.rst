@@ -44,3 +44,12 @@ The algorithms currently implemented are:
 
 * Neighbourhood overlap
 * Information imbalance
+
+Feature weighting
+--------------------------
+
+These algorithms estimate the information content of each feature in the dataset with respect to a ground truth (or the full set), 
+and assign a weight to each feature. The weights can take one the value zero, leading to feature selection.
+The algorithm currently implemented is:
+
+* DII ("Differentiable Information Imbalance") 
