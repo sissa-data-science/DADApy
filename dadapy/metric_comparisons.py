@@ -83,7 +83,7 @@ class MetricComparisons(Base):
             k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
 
         Returns:
-            (float, float): the information imbalance from distance i to distance j and vice versa
+            (np.array, np.array): the information imbalance from distance i to distance j and its standard error and vice versa
         """
         assert self.X is not None, "information imbalance requires coordinate matrix."
         assert (
