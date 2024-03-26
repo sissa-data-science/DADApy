@@ -29,8 +29,8 @@ from scipy.optimize import curve_fit
 from sklearn.metrics import pairwise_distances_chunked
 
 from dadapy._utils import utils as ut
-from dadapy._utils.utils import compute_nn_distances
 from dadapy._utils.id_estimation import _binomial_model_validation as bmv
+from dadapy._utils.utils import compute_nn_distances
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
@@ -666,7 +666,9 @@ class IdEstimation(Base):
 
         if isinstance(rk, np.ndarray):
             assert np.all(rk > 0), "Not all radii are positive"
-            assert rk.shape[0] == self.N, "array of radii must have the same length of datapoints"
+            assert (
+                rk.shape[0] == self.N
+            ), "array of radii must have the same length of datapoints"
             rn = rk * r
             k = np.sum([d < ri for d, ri in zip(self.distances, rk)], axis=1)
             n = np.sum([d < ri for d, ri in zip(self.distances, rn)], axis=1)
@@ -701,7 +703,9 @@ class IdEstimation(Base):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_id_binomial_rk(self, rk, r, bayes=True):
+    def compute_id_binomial_rk(
+        self, rk, r, bayes=True, plot_mv=False, plot_posterior=False
+    ):
         """Calculate the id using the binomial estimator by fixing the same eternal radius for all the points.
 
         In the estimation of the id one has to remove the central point from the counting of n and k
@@ -713,18 +717,23 @@ class IdEstimation(Base):
             bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
                 gives the mean value and std of d, while mle returns the max of the likelihood and the std
                 according to Cramer-Rao lower bound
+            plot_mv (bool, default=False): whether to print the output of the model validation
+            plot_posterior (bool, default=False): if True, together with bayes, plots the posterior of the ID
 
         Returns:
             id (float): the estimated intrinsic dimension
             id_err (float): the standard error on the id estimation
             scale (float): scale at which the id is performed
-            ts (float): test statistics
-            pv (float): p-value of the test statistics
+            pv (float): p-value of the test statistics computed with Epps-Singleton model validation
 
         """
         k, n, mask = self._fix_rk(rk, r)
 
-        self.intrinsic_dim_scale = 0.5 * (rk.mean() + (rk * r).mean()) if isinstance(rk, np.ndarray) else 0.5 * (rk + rk * r)
+        self.intrinsic_dim_scale = (
+            0.5 * (rk.mean() + (rk * r).mean())
+            if isinstance(rk, np.ndarray)
+            else 0.5 * (rk + rk * r)
+        )
 
         n_eff = n[mask]
         k_eff = k[mask]
@@ -753,15 +762,16 @@ class IdEstimation(Base):
                 self.intrinsic_dim_err,
                 posterior_domain,
                 posterior_values,
-            ) = ut._beta_prior(k_eff - 1, n_eff - 1, r, posterior_profile=False)
+            ) = ut._beta_prior(
+                k_eff - 1.0, n_eff - 1.0, r, posterior_profile=plot_posterior
+            )
         else:
             print("Select a proper method for id computation")
             return 0
 
-        # ts, pv = bmv(k_eff, n_eff, r**self.intrinsic_dim)
-        ks,es, ks_med, es_med = bmv(k_eff, n_eff, r**self.intrinsic_dim)
+        pv = bmv(k_eff, n_eff, r**self.intrinsic_dim, plot=plot_mv)
 
-        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ks, es, ks_med, es_med
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, pv
 
     # ----------------------------------------------------------------------------------------------
 
@@ -787,7 +797,9 @@ class IdEstimation(Base):
         if isinstance(k, np.ndarray):
             assert np.all(k > 0), "Not all ks are positive"
             assert np.all(k <= self.maxk), "Some ks are larger than maxk"
-            assert k.shape[0] == self.N, "array of ks must have the same length of datapoints"
+            assert (
+                k.shape[0] == self.N
+            ), "array of ks must have the same length of datapoints"
             rk = np.array([di[ki] for di, ki in zip(self.distances, k)])
             rn = rk * r
             n = np.sum([di < ri for di, ri in zip(self.distances, rn)], axis=1)
@@ -806,7 +818,9 @@ class IdEstimation(Base):
 
     # --------------------------------------------------------------------------------------
 
-    def compute_id_binomial_k(self, k, r, bayes=True):
+    def compute_id_binomial_k(
+        self, k, r, bayes=True, plot_mv=False, plot_posterior=False
+    ):
         """Calculate id using the binomial estimator by fixing the number of neighbours.
 
         As in the case in which one fixes rk, also in this version of the estimation
@@ -823,13 +837,14 @@ class IdEstimation(Base):
             bayes (bool, default=True): choose method between bayes (True) and mle (False). The bayesian estimate
                 gives the mean value and std of d, while mle returns the max of the likelihood and the std
                 according to Cramer-Rao lower bound
+            plot_mv (bool, default=False): whether to print the output of the model validation
+            plot_posterior (bool, default=False): if True, together with bayes, plots the posterior of the ID
 
         Returns:
             id (float): the estimated intrinsic dimension
             id_err (float): the standard error on the id estimation
             scale (float): the average nearest neighbor distance (rs)
-            ts (float): test statistics
-            pv (float): p-value of the test statistics
+            pv (float): p-value of the test statistics through Epps-Singleton test
         """
         n = self._fix_k(k, r)
         e_n = n.mean()
@@ -844,9 +859,11 @@ class IdEstimation(Base):
         k_eff = k.mean() if isinstance(k, np.ndarray) else k
 
         if bayes is False:
-            self.intrinsic_dim = np.log((e_n - 1) / (k_eff - 1)) / np.log(r)
+            self.intrinsic_dim = np.log((e_n - 1.0) / (k_eff - 1.0)) / np.log(r)
             self.intrinsic_dim_err = np.sqrt(
-                ut._compute_binomial_cramerrao(self.intrinsic_dim, k_eff - 1, r, n.shape[0])
+                ut._compute_binomial_cramerrao(
+                    self.intrinsic_dim, k_eff - 1, r, n.shape[0]
+                )
             )
 
         elif bayes is True:
@@ -855,15 +872,16 @@ class IdEstimation(Base):
                 self.intrinsic_dim_err,
                 posterior_domain,
                 posterior_values,
-            ) = ut._beta_prior(k_eff - 1, n - 1, r, posterior_profile=False)
+            ) = ut._beta_prior(
+                k_eff - 1.0, n - 1.0, r, posterior_profile=plot_posterior
+            )
         else:
             print("select a proper method for id computation")
             return 0
 
-        #ts, pv = bmv(k, n, r ** self.intrinsic_dim)
-        ks, es,aa,bb = bmv(k, n, r**self.intrinsic_dim)
+        pv = bmv(k, n, r**self.intrinsic_dim, plot=plot_mv)
 
-        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, ks, es,aa,bb
+        return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, pv
 
     # ----------------------------------------------------------------------------------------------
 

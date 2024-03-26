@@ -445,8 +445,8 @@ def plot_pdf(n_emp, n_mod, title=None, fileout=None):
     plt.figure()
     if title is not None:
         plt.title(title)
-    plt.plot(a[0], "-", label="n empirical", linewidth=4, alpha=0.9)
-    plt.plot(b[0], "--", label="n model", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, a[0], "-", label="n empirical", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, b[0], "--", label="n model", linewidth=4, alpha=0.9)
     plt.xlabel("n", fontsize=15)
     plt.ylabel("P(n)", fontsize=15)
     plt.legend(fontsize=14, frameon=False)
@@ -462,7 +462,7 @@ def plot_pdf(n_emp, n_mod, title=None, fileout=None):
 # --------------------------------------------------------------------------------------
 
 
-def plot_cdf(n_emp, n_mod, title, fileout=None):
+def plot_cdf(n_emp, n_mod, title=None, fileout=None):
     """Compare two cdfs.
 
     Args:
@@ -490,8 +490,8 @@ def plot_cdf(n_emp, n_mod, title, fileout=None):
 
     plt.figure()
     plt.title(title)
-    plt.plot(cdf_nn, "-", label="n empirical", linewidth=4, alpha=0.9)
-    plt.plot(cdf_nmod, "--", label="n model", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, cdf_nn, "-", label="n empirical", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, cdf_nmod, "--", label="n model", linewidth=4, alpha=0.9)
     plt.xlabel("n", fontsize=15)
     plt.ylabel("F(n)", fontsize=15)
     plt.legend(fontsize=14, frameon=False)

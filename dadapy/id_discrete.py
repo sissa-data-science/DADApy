@@ -21,7 +21,6 @@ The different algorithms of intrinsic dimension estimation for discrete spaces
 """
 
 import multiprocessing
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -418,8 +417,13 @@ class IdDiscrete(Base):
         ids_e = np.zeros_like(Lks, dtype=float)
 
         for i, lk in enumerate(Lks):
+
+            ln = np.ceil(lk * r).astype(int)
+            if ln == lk:
+                ln -= 1
+
             id_i, id_er, scale = self.compute_id_binomial_lk(
-                lk, int(lk * r), method=method, subset=subset, set_attr=False
+                lk, ln, method=method, subset=subset, set_attr=False
             )
             ids[i] = id_i
             ids_e[i] = id_er
@@ -989,7 +993,13 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def model_validation_full(  # noqa: C901
-        self, alpha=0.05, subset=None, pdf=False, cdf=True, path=None
+        self,
+        alpha=0.05,
+        subset=None,
+        artificial_samples=100000,
+        pdf=False,
+        cdf=True,
+        filename=None,
     ):
         """Use Kolmogorov-Smirnoff test to assess the goodness of the id estimate
 
@@ -1006,9 +1016,10 @@ class IdDiscrete(Base):
         Args:
             alpha (float, default=0.05): tolerance for the KS test
             subset (int or np.ndarray(int)): subset of points used to perform the model validation
+            artificial_samples (int, default=100000): number of points sampled from the theoretical distribution
             pdf (bool, default=False): plot histogram of n_emp and n_i
             cdf (bool, default=False): plot cdf of n_emp and n_i
-            path (str, default=None): directory where to save plots
+            filename (str, default=None): directory where to save plots
         Returns:
             s (float): KS statistics, max distance between empirical and theoretical cdfs
             pv (float): p-value associated to the KS statistics
@@ -1016,10 +1027,6 @@ class IdDiscrete(Base):
         if self.intrinsic_dim is None:
             print("compute the id before validating the model!")
             return 0
-
-        if path is not None:
-            path = path.rstrip("/") + "/"
-            os.system("mkdir -p " + path)
 
         mask = self._my_mask(subset)
         n_eff = self.n[mask] - self.central_point
@@ -1035,21 +1042,33 @@ class IdDiscrete(Base):
                 ln_eff, self.intrinsic_dim
             ) / df.compute_discrete_volume(lk_eff, self.intrinsic_dim)
 
-        else:  # id estimated at fixed lK
+        else:  # id estimated at fixed lk
             title = "R=" + str(self.lk)
 
             p = df.compute_discrete_volume(
                 self.ln, self.intrinsic_dim
             ) / df.compute_discrete_volume(self.lk, self.intrinsic_dim)
 
-        n_model = rng.binomial(k_eff, p, size=mask.sum())
-        if self.central_point==0:
-            n_model = n_model[n_model>0]
+        if self.n.shape[0] < artificial_samples:
+            replicas = int(artificial_samples / self.n.shape[0])
+            if isinstance(self.ln, np.ndarray):
+                n_model = np.array(
+                    [rng.binomial(ki, pi, size=replicas) for ki, pi in zip(k_eff, p)]
+                ).reshape(-1)
+            else:
+                n_model = np.array(
+                    [rng.binomial(ki, p, size=replicas) for ki in k_eff]
+                ).reshape(-1)
+
+        else:
+            n_model = rng.binomial(k_eff, p)
+
+        # n_model = rng.binomial(k_eff, p, size=mask.sum())
+
+        if self.central_point == 0:
+            n_model = n_model[n_model > 0]
 
         s, pv = KS(n_eff, n_model)
-
-        print("ks_stat:\t" + str(s))
-        print("p-value:\t" + str(pv))
 
         if self.verb:
             if pv > alpha:
@@ -1064,275 +1083,14 @@ class IdDiscrete(Base):
                 )
 
         if pdf:
-            fileout = path + "mv_pdf.pdf" if (path is not None) else None
+            fileout = filename + "_mv_pdf.pdf" if (filename is not None) else None
             ddp.plot_pdf(n_eff, n_model, title, fileout)
 
         if cdf:
-            fileout = path + "mv_cdf.pdf" if (path is not None) else None
+            fileout = filename + "_mv_cdf.pdf" if (filename is not None) else None
             ddp.plot_cdf(n_eff, n_model, title, fileout)
 
         return s, pv
-
-    # ----------------------------------------------------------------------------------------------
-
-    def R_mod_val(  # noqa: C901
-        self, k_win, subset=None, path=None, pdf=False, cdf=True, recap=False
-    ):
-        """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
-
-        For a fixed value of R and for given values of windows of k, compute
-        artificial estimates for the n and compare them to the empirical ones
-        using the KS test
-
-        Args:
-            k_win (np.ndarray(int)): boundaries of the windows in k
-            subset (int or np.ndarray(int)): subset of points used to perform the model validation
-            path (string): if provided, save the plots and observables to the provided folder
-            pdf (bool): plot empirical vs model pdfs
-            cdf (bool): plot empirical vs model cdfs
-            recap (bool): plot id and p-values for each window
-        """
-        if path is not None:
-            path = path.rstrip("/") + "/"
-            os.system("mkdir -p " + path)
-        obs = []
-        mask = self._my_mask(subset)
-        n_eff = self.n[mask] - self.central_point
-        k_eff = self.k[mask] - self.central_point
-
-        for i in range(len(k_win) - 1):
-            # find points within window
-            k_ave = (k_win[i + 1] + k_win[i]) / 2.0
-            mask_i = np.logical_and(k_win[i] < k_eff, k_eff <= k_win[i + 1])
-            ki = k_eff[mask_i]
-            ni = n_eff[mask_i]
-
-            # skip window with too few points
-            if len(ni) < 10:
-                continue
-
-            # find id and error within window
-            id_i = df.find_d_root(self.ln, self.lk, ni.mean(), ki.mean())
-            cr = (
-                df.binomial_cramer_rao(id_i, self.ln, self.lk, len(ni), ki.mean())
-                ** 0.5
-            )
-
-            # model validation
-            # compute the p of the binomial distribution
-            p = df.compute_discrete_volume(self.ln, id_i) / df.compute_discrete_volume(
-                self.lk, id_i
-            )
-
-            # extract the artificial n (do or don't keep 0s)
-            #n_mod = rng.binomial(ki, p)
-            temp = rng.binomial(ki, p)
-            n_mod = temp[temp!=0]
-
-            # perform KS test
-            kstat, pvi = KS(n_mod, ni)
-            print(
-                "window elements:\t",
-                len(ni),
-                "\nwindow id:\t",
-                id_i,
-                "\nwindow p-value:\t",
-                pvi,
-            )
-            # save observables
-            obs.append(
-                (
-                    k_ave,
-                    id_i,
-                    cr,
-                    ni.mean(),
-                    ni.std(),
-                    n_mod.mean(),
-                    n_mod.std(),
-                    len(ni),
-                    pvi,
-                )
-            )
-            # PLOT
-            title = (
-                r"R=" + str(self.lk) + "\t$\overline{k}=$" + str(k_ave)  # noqa: W605
-            )
-            # PDF--------------------------------------------------------
-            if pdf:
-                fileout = (
-                    path + "k" + str(k_ave) + "_pdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_pdf(ni, n_mod, title, fileout)
-
-            # CDF-------------------------------------------------------
-            if cdf:
-                fileout = (
-                    path + "k" + str(k_ave) + "_cdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_cdf(ni, n_mod, title, fileout)
-
-        obs = np.array(obs)
-        if recap:
-            fileout = path + "id_pv.pdf" if (path is not None) else None
-            ddp.plot_id_pv(
-                obs[:, 0],
-                obs[:, 1],
-                obs[:, -1],
-                "R=" + str(self.lk),
-                r"$\overline{k}$",
-                fileout,
-            )
-
-        if path:
-            np.savetxt(
-                path + "observables.txt",
-                obs,
-                header="<k_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value",
-                fmt="%.3f",
-                delimiter="\t",
-            )
-        else:
-            print(
-                "<k_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value"
-            )
-            for ob in obs:
-                print(ob)
-
-        return [ob[-1] for ob in obs]
-
-    # ----------------------------------------------------------------------------------------------
-    def K_mod_val(  # noqa: C901
-        self, R_win, subset=None, path=None, pdf=False, cdf=True, recap=False
-    ):
-        """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
-
-        For a fixed value of K and for given values of windows of R, compute
-        artificial estimates for the n and compare them to the empirical ones
-        using the KS test
-
-        Args:
-            R_win (np.ndarray(int)): boundaries of the windows in R
-            subset (int or np.ndarray(int)): subset of points used to perform the model validation
-            path (string): if provided, save the plots and observables to the provided folder
-            pdf (bool): plot empirical vs model pdfs
-            cdf (bool): plot empirical vs model cdfs
-            recap (bool): plot id and p-values for each window
-        """
-        if path is not None:
-            path = path.rstrip("/") + "/"
-            os.system("mkdir -p " + path)
-        obs = []
-
-        mask = self._my_mask(subset)
-        n_eff = self.n[mask] - self.central_point
-        k_eff = self.k[mask] - self.central_point
-        ln_eff = self.ln[mask]
-        lk_eff = self.lk[mask]
-
-        for i in range(len(R_win) - 1):
-            # find points within window
-            R_ave = (R_win[i + 1] + R_win[i]) / 2.0
-            mask_i = np.logical_and(R_win[i] < lk_eff, lk_eff <= R_win[i + 1])
-            # mask_i = mask_i * (
-            #     k_eff >= 0.8 * k_eff.max()
-            # )  # selects only those points for which k_eff >~ 0.8 K
-            ki = k_eff[mask_i]
-            ni = n_eff[mask_i]
-            lki = lk_eff[mask_i]
-            lni = ln_eff[mask_i]
-
-            k_ave = ki.mean()
-            # skip window with too few points
-            if len(ni) < 10:
-                continue
-
-            # find id and error within window
-            id_i = df.find_d_likelihood(lni, lki, ni, ki, 1)
-            cr = (
-                df.binomial_cramer_rao(
-                    id_i, np.rint(R_ave * self.ratio), np.rint(R_ave), len(ni), k_ave
-                )
-                ** 0.5
-            )
-
-            # model validation
-            # compute the p of the binomial distribution
-            p = df.compute_discrete_volume(lni, id_i) / df.compute_discrete_volume(
-                lki, id_i
-            )
-            # extract the artificial n
-            n_mod = self.rng.binomial(ki, p)  # size=mask_i.sum())
-
-            # perform KS test
-            kstat, pvi = KS(n_mod, ni)
-            print(
-                "window elements:\t",
-                len(ni),
-                "\nwindow id:\t",
-                id_i,
-                "\nwindow p-value:\t",
-                pvi,
-            )
-            # save observables
-            obs.append(
-                (
-                    R_ave,
-                    id_i,
-                    cr,
-                    ni.mean(),
-                    ni.std(),
-                    n_mod.mean(),
-                    n_mod.std(),
-                    len(ni),
-                    pvi,
-                )
-            )
-            # PLOT
-            title = (
-                r"K=" + str(self._k) + "\t$\overline{R}=$" + str(R_ave)  # noqa: W605
-            )
-
-            # PDF--------------------------------------------------------
-            if pdf:
-                fileout = (
-                    path + "R" + str(R_ave) + "_pdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_pdf(ni, n_mod, title, fileout)
-            # CDF-------------------------------------------------------
-            if cdf:
-                fileout = (
-                    path + "R" + str(R_ave) + "_cdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_cdf(ni, n_mod, title, fileout)
-
-        obs = np.array(obs)
-        if recap:
-            fileout = path + "id_pv.pdf" if (path is not None) else None
-            ddp.plot_id_pv(
-                obs[:, 0],
-                obs[:, 1],
-                obs[:, -1],
-                "K=" + str(self._k),
-                r"$\overline{R}$",
-                fileout,
-            )
-
-        if path:
-            np.savetxt(
-                path + "observables.txt",
-                obs,
-                header="<R_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value",
-                fmt="%.3f",
-                delimiter="\t",
-            )
-        else:
-            print(
-                "<R_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value"
-            )
-            for ob in obs:
-                print(ob)
-
-        return [ob[-1] for ob in obs]
 
     # ----------------------------------------------------------------------------------------------
 
