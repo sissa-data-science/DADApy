@@ -117,4 +117,6 @@ setup(
     ext_modules=ext_modules,
     include_package_data=True,
     package_data={"dadapy": ["_utils/discrete_volumes/*.dat"]},
+    install_requires=["dadac"],
+    dependency_links=["git+https://github.com/lykos98/dadaC"],
 )

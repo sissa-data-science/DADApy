@@ -20,6 +20,7 @@ Density-based clustering algorithms are implemented as methods of this class.
 """
 
 import multiprocessing
+import platform
 import time
 import warnings
 
@@ -28,6 +29,17 @@ import scipy as sp
 
 from dadapy._cython import cython_clustering as cf
 from dadapy._cython import cython_clustering_v2 as cf2
+
+try:
+    from dadac import Data as c_data
+except ModuleNotFoundError:
+    warnings.warn(
+        """C accelerated implementation is not provided,
+        something went wrong when installing dadac dependency""",
+        stacklevel=2,
+    )
+
+
 from dadapy.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()
@@ -77,7 +89,7 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering_ADP(self, Z=1.65, halo=False, v2=False):
+    def compute_clustering_ADP(self, Z=1.65, halo=False, impl="c", v2=False):
         """Compute clustering according to the algorithm DPA.
 
         The only free parameter is the merging factor Z, which controls how the different density peaks are merged
@@ -87,6 +99,8 @@ class Clustering(DensityEstimation):
         Args:
             Z(float): merging parameter
             halo (bool): compute (or not) the halo points
+            impl (str): default "c", implementation type "c" uses optimized implementation written in pure C,
+            "py" uses original dadapy implementation
 
         Returns:
             cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
@@ -96,75 +110,120 @@ class Clustering(DensityEstimation):
                 non-parametric  density peak clustering, Information Sciences 560 (2021) 476–492
 
         """
-        if self.log_den is None:
-            self.compute_density_PAk()
-
-        assert not np.isnan(np.sum(self.log_den)), "log density contains nan values"
-        assert not np.isnan(
-            np.sum(self.log_den_err)
-        ), "log error density contains nan values"
-
-        if self.verb:
-            print("Clustering started")
-
-        if v2 is True:
+        try:
+            # try to generate the dadac handler, if it fails print a warning and then
+            # fall back to default
+            dadac_handler = c_data(self.X, verbose=self.verb)
+        except NameError:
             warnings.warn(
-                """using adp implementation v2: this requires less memory but can
-                be two times slower than the original implementation""",
+                f"""Cannot load dadac.Data, falling back to python/cython implementation.
+                This is can be caused from the fact that you are running from a non Linux system.
+                Your platform, is {platform.platform()}, please refer to dadaC docs to manually install
+                the package""",
                 stacklevel=2,
             )
+            impl = "py"
 
-        # Make all values of log_den positives (this is important to help convergence)
-        # even when subtracting the value Z*log_den_err
-        log_den_min = np.min(self.log_den - Z * self.log_den_err)
-        log_den_c = self.log_den - log_den_min + 1
+        if impl == "py":
+            if self.log_den is None:
+                self.compute_density_PAk()
 
-        # Putative modes of the PDF as preliminary clusters
-        g = log_den_c - self.log_den_err
+            assert not np.isnan(np.sum(self.log_den)), "log density contains nan values"
+            assert not np.isnan(
+                np.sum(self.log_den_err)
+            ), "log error density contains nan values"
 
-        # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
-        seci = time.time()
+            if self.verb:
+                print("Clustering started")
 
-        if v2:
-            out = cf2._compute_clustering(
-                Z,
-                halo,
-                self.kstar,
-                self.dist_indices.astype(int),
-                self.maxk,
-                self.verb,
-                self.log_den_err,
-                log_den_c,
-                g,
-                self.N,
-            )
+            if v2 is True:
+                warnings.warn(
+                    """using adp implementation v2: this requires less memory but can
+                    be two times slower than the original implementation""",
+                    stacklevel=2,
+                )
+
+            # Make all values of log_den positives (this is important to help convergence)
+            # even when subtracting the value Z*log_den_err
+            log_den_min = np.min(self.log_den - Z * self.log_den_err)
+            log_den_c = self.log_den - log_den_min + 1
+
+            # Putative modes of the PDF as preliminary clusters
+            g = log_den_c - self.log_den_err
+
+            # centers are point of max density  (max(g) ) within their optimal neighborhood (defined by kstar)
+            seci = time.time()
+
+            if v2:
+                out = cf2._compute_clustering(
+                    Z,
+                    halo,
+                    self.kstar,
+                    self.dist_indices.astype(int),
+                    self.maxk,
+                    self.verb,
+                    self.log_den_err,
+                    log_den_c,
+                    g,
+                    self.N,
+                )
+            else:
+                out = cf._compute_clustering(
+                    Z,
+                    halo,
+                    self.kstar,
+                    self.dist_indices.astype(int),
+                    self.maxk,
+                    self.verb,
+                    self.log_den_err,
+                    log_den_c,
+                    g,
+                    self.N,
+                )
+
+            secf = time.time()
+
+            self.cluster_indices = out[0]
+            self.N_clusters = out[1]
+            self.cluster_assignment = out[2]
+            self.cluster_centers = out[3]
+            print(self.cluster_centers)
+            self.log_den_bord = out[4] + log_den_min - 1
+            self.log_den_bord_err = out[5]
+            self.bord_indices = out[6]
+
+            if self.verb:
+                print(f"Clustering finished, {self.N_clusters} clusters found")
+                print(f"total time is, {secf - seci}")
         else:
-            out = cf._compute_clustering(
-                Z,
-                halo,
-                self.kstar,
-                self.dist_indices.astype(int),
-                self.maxk,
-                self.verb,
-                self.log_den_err,
-                log_den_c,
-                g,
-                self.N,
+            # handle with dadaC
+            if self.log_den is None:
+                self.compute_density_PAk()
+            log_den_min = np.min(self.log_den - Z * self.log_den_err)
+            dadac_handler.import_density(self.log_den, self.log_den_err, self.kstar)
+            dadac_handler.import_neighbors_and_distances(
+                self.dist_indices, self.distances
             )
+            dadac_handler.compute_clustering_ADP(Z, halo)
 
-        secf = time.time()
+            print("Exporting results to python")
 
-        self.cluster_indices = out[0]
-        self.N_clusters = out[1]
-        self.cluster_assignment = out[2]
-        self.cluster_centers = out[3]
-        self.log_den_bord = out[4] + log_den_min - 1
-        self.log_den_bord_err = out[5]
-        self.bord_indices = out[6]
+            from copy import deepcopy
 
-        if self.verb:
-            print(f"Clustering finished, {self.N_clusters} clusters found")
-            print(f"total time is, {secf - seci}")
+            self.N_clusters = deepcopy(dadac_handler.N_clusters)
+            self.cluster_assignment = deepcopy(dadac_handler.cluster_assignment)
+            self.cluster_centers = deepcopy(dadac_handler.cluster_centers)
+            self.bord_indices = deepcopy(dadac_handler.border_indices)
+
+            # subtract a one on the diagonal only for consistency with the original implementation and conventions
+            self.log_den_bord = deepcopy(dadac_handler.log_den_bord + log_den_min - 1.0)
+            self.log_den_bord_err = deepcopy(dadac_handler.log_den_bord_err)
+
+            idxs = np.array([i for i in range(self.N)])
+            self.cluster_indices = [
+                idxs[np.where(self.cluster_assignment == c)]
+                for c in range(self.N_clusters)
+            ]
 
         return self.cluster_assignment
 
