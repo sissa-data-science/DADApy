@@ -119,6 +119,7 @@ class MetricComparisons(Base):
             # splitting the indices array into 'repeats'
             subsets = np.array_split(indices, repeats)
             if len(subsets[-1]) != len(subsets[-2]):
+                # all groups should have the same size
                 subsets = subsets[:-1]
                 repeats -= 1
 
