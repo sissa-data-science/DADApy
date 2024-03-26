@@ -127,8 +127,14 @@ class MetricComparisons(Base):
         if avg:
             if num_repeat == 1:
                 return np.array([imb_ij[0], 0]), np.array([imb_ji[0], 0])
-            mean_ij, err_ij = np.mean(imb_ij), np.std(imb_ij, ddof=1) / num_repeat**0.5
-            mean_ji, err_ji = np.mean(imb_ji), np.std(imb_ji, ddof=1) / num_repeat**0.5
+            mean_ij, err_ij = (
+                np.mean(imb_ij),
+                np.std(imb_ij, ddof=1) / num_repeat**0.5,
+            )
+            mean_ji, err_ji = (
+                np.mean(imb_ji),
+                np.std(imb_ji, ddof=1) / num_repeat**0.5,
+            )
             return np.array([mean_ij, err_ij]), np.array([mean_ji, err_ji])
 
         return imb_ij, imb_ji
