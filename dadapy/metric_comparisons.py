@@ -74,14 +74,15 @@ class MetricComparisons(Base):
         )
 
     def return_information_imbalace(
-        self, coordinates, k=1, subset_size=2000, num_repeat=5, avg=True
+        self, coordinates, k=1, subset_size=2000, repeats=None, avg=True
     ):
         """Return the imbalance with another dataset X.
 
         Args:
-            coordinates (np.ndarray(float)): the coordinates of the othe dataset (N , dimension of embedding space)
-            k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1
-
+            coordinates (np.ndarray(float)): the coordinates of the othe dataset (N , dimension of embedding space).
+            k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1,
+            subset_size (int): size of the subsets on which the information imbalance is computed.
+            repeats (int): the number of repetitions for the information imbalance calculation.
         Returns:
             (np.array, np.array): the information imbalances their standard error
         """
@@ -90,20 +91,40 @@ class MetricComparisons(Base):
             self.X.shape[0] == coordinates.shape[0]
         ), "the two datasets must have the same number of samples"
 
+        if repeats is None:
+            repeats = self.N // subset_size
+
         if self.N <= subset_size:
             warnings.warn(
                 "Subset size greater than the dataset size. \
-                Compuing information imbalance once on the entire dataset.",
+                Computing information imbalance once on the entire dataset.",
                 stacklevel=2,
             )
-            num_repeat = 1
+            repeats = 1
             subset_size = self.N
+        elif repeats > self.N // subset_size:
+            warnings.warn(
+                "repeats * subset_size > dataset size. \
+                setting repeats = dataset_size // subset_size.",
+                stacklevel=2,
+            )
+            repeats = self.N // subset_size
 
-        imb_ij = np.zeros(num_repeat)
-        imb_ji = np.zeros(num_repeat)
+        # subsets is a list of arrays. Each array contained the indices of points belonging to
+        # the subsets
+        subsets = [np.arange(self.N)]
+        if repeats > 1:
+            # shuffling the integers from 0 to self.N -1
+            indices = self.rng.choice(self.N, self.N, replace=False)
+            # splitting the indices array into 'repeats'
+            subsets = np.array_split(indices, repeats)
+            if len(subsets[-1]) != len(subsets[-2]):
+                subsets = subsets[:-1]
+                repeats -= 1
 
-        for i in range(num_repeat):
-            idx = self.rng.choice(self.N, subset_size, replace=False)
+        imb_ij = np.zeros(repeats)
+        imb_ji = np.zeros(repeats)
+        for i, idx in enumerate(subsets):
             x_base = self.X[idx]
             x_other = coordinates[idx]
 
@@ -125,15 +146,15 @@ class MetricComparisons(Base):
             )
 
         if avg:
-            if num_repeat == 1:
+            if repeats == 1:
                 return np.array([imb_ij[0], 0]), np.array([imb_ji[0], 0])
             mean_ij, err_ij = (
                 np.mean(imb_ij),
-                np.std(imb_ij, ddof=1) / num_repeat**0.5,
+                np.std(imb_ij, ddof=1) / repeats**0.5,
             )
             mean_ji, err_ji = (
                 np.mean(imb_ji),
-                np.std(imb_ji, ddof=1) / num_repeat**0.5,
+                np.std(imb_ji, ddof=1) / repeats**0.5,
             )
             return np.array([mean_ij, err_ij]), np.array([mean_ji, err_ji])
 

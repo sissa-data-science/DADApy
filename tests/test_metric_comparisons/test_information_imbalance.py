@@ -28,6 +28,18 @@ filename_traj = os.path.join(
 )
 
 
+X = np.load(filename)
+
+mc = MetricComparisons(coordinates=X[:, 0:1])
+
+imbalances = mc.return_information_imbalace(
+    X[:, :2], subset_size=50, num_repeat=5, avg=True
+)
+imbalances
+
+assert imbalances == pytest.approx([0.598, 0.144], abs=0.001)
+
+
 def test_information_imbalance_basics():
     """Test the information imbalance operations work correctly."""
     X = np.load(filename)
