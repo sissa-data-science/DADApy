@@ -73,7 +73,9 @@ class MetricComparisons(Base):
             n_jobs=n_jobs,
         )
 
-    def return_information_imbalace(self, coordinates, k=1):
+    def return_information_imbalace(
+        self, coordinates, k=1, subset_size=2000, num_repeat=5, avg=True
+    ):
         """Return the imbalance with another dataset X.
 
         Args:
@@ -83,30 +85,51 @@ class MetricComparisons(Base):
         Returns:
             (float, float): the information imbalance from distance i to distance j and vice versa
         """
-        distances = None
-        dist_indices = None
+        assert self.X is not None, "information imbalance requires coordinate matrix."
+        assert (
+            self.X.shape[0] == coordinates.shape[0]
+        ), "the two datasets must have the same number of samples"
 
-        assert any(
-            var is not None for var in [self.X, self.distances, self.dist_indices]
-        ), "MetricComparisons should be initialized with a dataset."
+        if self.N <= subset_size:
+            warnings.warn(
+                "Subset size greater than the dataset size. \
+                Compuing information imbalance once on the entire dataset.",
+                stacklevel=2,
+            )
+            num_repeat = 1
+            subset_size = self.N
 
-        assert any(
-            var is not None for var in [coordinates, distances, dist_indices]
-        ), "The overlap with data requires a second dataset. \
-            Provide at least one of coordinates, distances, dist_indices."
+        imb_ij = np.zeros(num_repeat)
+        imb_ji = np.zeros(num_repeat)
 
-        dist_indices_base, _ = self._get_nn_indices(
-            self.X, self.distances, self.dist_indices, self.maxk
-        )
+        for i in range(num_repeat):
+            idx = self.rng.choice(self.N, subset_size, replace=False)
+            x_base = self.X[idx]
+            x_other = coordinates[idx]
 
-        dist_indices_other, _ = self._get_nn_indices(
-            coordinates, distances, dist_indices, self.maxk
-        )
+            dist_indices_base, _ = self._get_nn_indices(
+                x_base, None, None, subset_size - 1, force_computation=True
+            )
+            dist_indices_other, _ = self._get_nn_indices(
+                x_other, None, None, subset_size - 1, force_computation=True
+            )
 
-        assert dist_indices_base.shape[0] == dist_indices_other.shape[0]
+            assert dist_indices_base.shape[0] == dist_indices_other.shape[0]
 
-        imb_ij = _return_imbalance(dist_indices_base, dist_indices_other, self.rng, k=k)
-        imb_ji = _return_imbalance(dist_indices_other, dist_indices_base, self.rng, k=k)
+            imb_ij[i] = _return_imbalance(
+                dist_indices_base, dist_indices_other, self.rng, k=k
+            )
+
+            imb_ji[i] = _return_imbalance(
+                dist_indices_other, dist_indices_base, self.rng, k=k
+            )
+
+        if avg:
+            if num_repeat == 1:
+                return np.array([imb_ij[0], 0]), np.array([imb_ji[0], 0])
+            mean_ij, err_ij = np.mean(imb_ij), np.std(imb_ij, ddof=1) / num_repeat**0.5
+            mean_ji, err_ji = np.mean(imb_ji), np.std(imb_ji, ddof=1) / num_repeat**0.5
+            return np.array([mean_ij, err_ij]), np.array([mean_ji, err_ji])
 
         return imb_ij, imb_ji
 
@@ -506,7 +529,21 @@ class MetricComparisons(Base):
 
         return np.array(coord_list), np.array(imbalances)
 
-    def _get_nn_indices(self, coordinates, distances, dist_indices, k, coords=None):
+    def _get_nn_indices(
+        self,
+        coordinates,
+        distances,
+        dist_indices,
+        k,
+        coords=None,
+        force_computation=False,
+    ):
+        if force_computation:
+            _, dist_indices = compute_nn_distances(
+                coordinates, k, self.metric, self.period
+            )
+            return dist_indices, k
+
         if coords is not None:
             assert (
                 coordinates is not None
