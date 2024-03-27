@@ -418,7 +418,6 @@ class IdDiscrete(Base):
         ids_e = np.zeros_like(Lks, dtype=float)
 
         for i, lk in enumerate(Lks):
-
             ln = np.ceil(lk * r).astype(int)
             if ln == lk:
                 ln -= 1
