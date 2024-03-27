@@ -18,7 +18,8 @@ import numpy as np
 
 rng = np.random.default_rng()
 
-from scipy.stats import epps_singleton_2samp as es2s
+# from scipy.stats import epps_singleton_2samp as es2s
+from scipy.stats import ks_2samp
 
 from ..plot import plot_cdf
 
@@ -194,9 +195,11 @@ def _binomial_model_validation(
     k, n, p, artificial_samples=100000, k_bootstrap=1, plot=False
 ):
     """Perform the model validation for the binomial estimator. To this aim, an artificial set of binomially distributed
-    points is extracted and compared to the observed ones. The quantitative test is performed by means of the 2-samples Epps-Singleton tests.
+    points is extracted and compared to the observed ones. The quantitative test should be performed by means of the 2-samples Epps-Singleton tests,
+    as it is capable of dealing with discrete distribution. However, the scipy routine happens to have computational issues, with SVD often not converging.
+    For this reason we stick to the 2-samples Kolmogorov-Smirnoff test that, even if it is supposed to operate on continuous distributions,
+    it still provides reasonable and interpretable results.
     The associated statistics and p-value are returned.
-    Initially, the 2-samples Kolmogorov-Smirnoff was used but, even if providing reasonable results, it is supposed to deal with continuous distributions.
 
     Args:
         k (int or np.ndarray(int)): Observed points in outer shells.
@@ -207,17 +210,18 @@ def _binomial_model_validation(
         plot (bool, default=False): flag that, if se to True, allows to plot the observed vs theoretical distributions
 
     Returns:
+        ks_statistics (float): max distance between cumulative distribution functions
         p_value (float): p-value obtained from the test
     """
     assert 0 < p < 1, "The binomial parameter must be in the interval (0,1)"
-    # sample an artificial ensemble of binomially distributed points to be compared with the observed ones
+    # sample an artificial ensemble of binomially distributed points, to be compared with the observed ones
     if n.shape[0] < artificial_samples:
-        if isinstance(k, np.ndarray):
+        if isinstance(k, np.ndarray):  # id computed found with inhomogenous k
             replicas = int(artificial_samples / n.shape[0])
             n_samp = np.array(
                 [rng.binomial(ki, p, size=replicas) for ki in (k - 1)]
             ).reshape(-1)
-        else:
+        else:  # id sampled with constant k
             n_samp = rng.binomial(k - 1, p, size=artificial_samples)
     else:
         if isinstance(k, np.ndarray):
@@ -228,15 +232,19 @@ def _binomial_model_validation(
     if plot:
         plot_cdf(n - 1, n_samp)
 
-    es_d, es_pv = es2s(n_samp, n - 1)
+    # es_d, es_pv = es2s(n_samp, n - 1)
+    ks_d, ks_pv = ks_2samp(n_samp, n - 1)
 
     # possibly test against re-sampled distribution using bootstrap
     if k_bootstrap > 1:
-        pvs = [es_pv]
+        kss = [ks_d]
+        pvs = [ks_pv]
         for ki in range(k_bootstrap):
             n_temp = rng.choice(n, size=len(n), replace=True)
-            es_d, es_pv = es2s(n_samp, n_temp - 1)
-            pvs.append(es_pv)
-        return np.mean(pvs)
+            # es_d, es_pv = es2s(n_samp, n_temp - 1)
+            ks_d, ks_pv = ks_2samp(n_samp, n_temp - 1)
+            kss.append(ks_d)
+            pvs.append(ks_pv)
+        return np.mean(kss), np.mean(pvs)
     else:
-        return es_pv
+        return ks_d, ks_pv

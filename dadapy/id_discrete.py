@@ -31,6 +31,7 @@ from dadapy import plot as ddp
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
+rng = np.random.default_rng()
 
 
 class IdDiscrete(Base):
