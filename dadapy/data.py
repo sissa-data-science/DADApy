@@ -157,11 +157,13 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             Dthr (float): threshold value for the kstar test
             r (float, default=None): parameter of binomial estimator, 0 < r < 1. If None, the optimal, adaptive one is
              used
-            plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions compared by
-             means of the Epps-Singleton test
+            plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions
 
         Returns:
-            ids, ids_err, kstars, log_likelihoods
+            ids (np.ndarray(float)): intrinsic dimension across iterations
+            ids_err (np.ndarray(float)): intrinsic dimension error across iterations
+            kstars (np.ndarray(int): arrays of kstars across iterations
+            p-values (np.ndarray(float)): p-values from model validation across iterations
         """
         # start with an initial estimate of the ID and the associated k*
         if initial_id is None:
@@ -182,7 +184,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
                 print("id ", self.intrinsic_dim)
 
             # set new ratio
-            r_eff = min(0.95, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
+            r_eff = min(0.975, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
             # compute id using the k*
             ide, id_err, scale, pv = self.compute_id_binomial_k(
                 self.kstar, r_eff, bayes=False, plot_mv=plot_mv

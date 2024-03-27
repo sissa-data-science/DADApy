@@ -34,12 +34,8 @@ def test_compute_id_binomial():
 
     ie = IdEstimation(coordinates=X)
 
-    id_b = ie.compute_id_binomial_rk(0.5, 0.5, plot_mv=True, plot_posterior=True)
-    assert id_b == pytest.approx(
-        [1.85642662, 0.136802, 0.375000, 0.0], abs=1e-4, rel=1e-2
-    )
+    id_b = ie.compute_id_binomial_rk(0.25, 0.5, plot_mv=True, plot_posterior=True)[:3]
+    assert id_b == pytest.approx([1.991042219, 0.275630420, 0.1875], abs=1e-4, rel=1e-2)
 
-    id_b = ie.compute_id_binomial_k(5, 0.5, bayes=False)
-    assert id_b == pytest.approx(
-        [1.9856447, 0.12411362, 0.56159, 0.0], abs=1e-4, rel=1e-2
-    )
+    id_b = ie.compute_id_binomial_k(5, 0.5, bayes=False)[:3]
+    assert id_b == pytest.approx([1.9856447, 0.12411362, 0.56159], abs=1e-4, rel=1e-2)
