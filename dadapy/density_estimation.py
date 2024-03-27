@@ -134,7 +134,8 @@ class DensityEstimation(KStar):
             log_den (np.ndarray(float)): estimated log density
             log_den_err (np.ndarray(float)): estimated error on log density
         """
-        self.compute_kstar(Dthr)
+        if self.kstar is None:
+            self.compute_kstar(Dthr=Dthr)
 
         if self.verb:
             print("kstar-NN density estimation started")

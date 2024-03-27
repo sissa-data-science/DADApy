@@ -72,8 +72,8 @@ def test_distances_condensed():
     assert n.mean() == pytest.approx(0.0003806227)
     assert m.mean() == pytest.approx(0.00015221269)
 
-    a = I3Dc.K_mod_val(range(10, 16, 2), cdf=False)
-    assert a == pytest.approx(np.array([0.999, 1.0]), abs=1e0)
+    ks, pv = I3Dc.model_validation_full(cdf=False)
+    assert pv == pytest.approx(0.775, abs=1.0)
 
     # fix number of filled shells
     I3Dc.compute_id_binomial_k_discrete(k=4, ratio=0.5, shell=True)
@@ -84,17 +84,12 @@ def test_distances_condensed():
     assert I3Dc.intrinsic_dim == pytest.approx(5.0210151347136245)
 
     ks, pv = I3Dc.model_validation_full(cdf=False)
-    assert pv == pytest.approx(0.9997401855816054, abs=1e0)
-
-    a = I3Dc.R_mod_val(range(2, 15, 3), cdf=False)
-    assert a == pytest.approx(np.array([1.0, 1.0, 0.9999999999999999]), abs=1e0)
+    assert pv == pytest.approx(0.9999855816054, abs=1.0)
 
     # look at different radii
-    a, b = I3Dc.return_id_scaling(range(2, 10), method="mle", plot=True)
-    d = np.array(
-        [2.414214, 2.541382, 4.575392, 4.475622, 5.558403, 5.425578, 4.857541, 4.843088]
-    )
-    assert a == pytest.approx(d)
+    a, b = I3Dc.return_id_scaling(range(3, 10), method="mle", plot=True)
+    d = np.array([2.69, 4.57, 5.78, 5.55, 4.72, 4.85, 5.03])
+    assert a == pytest.approx(d, abs=1e-2)
 
     # or different ks
     a, b, c = I3Dc.return_id_scaling_k(range(5, 35, 5), plot=True)

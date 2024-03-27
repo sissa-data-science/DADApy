@@ -31,6 +31,8 @@ from dadapy.density_advanced import DensityAdvanced
 from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons
 
+rng = np.random.default_rng()
+
 cores = multiprocessing.cpu_count()
 np.set_printoptions(precision=2)
 os.getcwd()
@@ -145,7 +147,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         return ids, ids_err, kstars, log_likelihoods
 
     def return_ids_kstar_binomial(
-        self, initial_id=None, n_iter=5, Dthr=23.92812698, r=0.5
+        self, initial_id=None, n_iter=5, Dthr=23.92812698, r=None, plot_mv=False
     ):
         """Return the id estimates of the binomial algorithm coupled with the kstar estimation of the scale.
 
@@ -153,49 +155,52 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             initial_id (float): initial estimate of the id default uses 2NN
             n_iter (int): number of iteration
             Dthr (float): threshold value for the kstar test
-            r (float): parameter of binomial estimator, 0 < r < 1
+            r (float, default=None): parameter of binomial estimator, 0 < r < 1. If None, the optimal, adaptive one is
+             used
+            plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions
+
         Returns:
-            ids, ids_err, kstars, log_likelihoods
+            ids (np.ndarray(float)): intrinsic dimension across iterations
+            ids_err (np.ndarray(float)): intrinsic dimension error across iterations
+            kstars (np.ndarray(int): arrays of kstars across iterations
+            p-values (np.ndarray(float)): p-values from model validation across iterations
         """
-        # start with an initial estimate of the ID
+        # start with an initial estimate of the ID and the associated k*
         if initial_id is None:
-            self.compute_id_binomial_k(k=10, r=r)
-            id = self.intrinsic_dim
+            self.compute_id_2NN(algorithm="base")
         else:
             self.compute_distances()
             self.set_id(initial_id)
-            id = initial_id
+        self.compute_kstar(Dthr)
 
-        ids = []
-        ids_err = []
-        kstars = []
-        log_likelihoods = []
+        ids = np.zeros(n_iter)
+        ids_err = np.zeros(n_iter)
+        kstars = np.zeros((n_iter, self.N), dtype=int)
+        es_pv = np.zeros(n_iter)
 
         for i in range(n_iter):
-            # compute kstar
+            if self.verb:
+                print("iteration ", i)
+                print("id ", self.intrinsic_dim)
+
+            # set new ratio
+            r_eff = min(0.975, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
+            # compute id using the k*
+            ide, id_err, scale, pv = self.compute_id_binomial_k(
+                self.kstar, r_eff, bayes=False, plot_mv=plot_mv
+            )
+            # compute likelihood
+            """
+            n = self._fix_k(self.kstar, r_eff)
+            log_lik = ut.binomial_loglik(ide, self.kstar - 1, n - 1, r_eff)
+            """
+
+            # update the k*
             self.compute_kstar(Dthr)
-            print("iteration ", i)
-            print("id ", id)
+            # store the obtained values
+            ids[i] = ide
+            ids_err[i] = id_err
+            kstars[i] = self.kstar
+            es_pv[i] = pv
 
-            rk = np.array([dd[self.kstar[j]] for j, dd in enumerate(self.distances)])
-            rn = rk * r
-            n = np.sum([dd < rn[j] for j, dd in enumerate(self.distances)], axis=1)
-            id = np.log((n.mean() - 1) / (self.kstar.mean() - 1)) / np.log(r)
-            id_err = ut._compute_binomial_cramerrao(id, self.kstar, r, self.N)
-            log_lik = ut.binomial_loglik(id, self.kstar - 1, n - 1, r)
-
-            ids.append(id)
-            ids_err.append(id_err)
-            kstars.append(self.kstar)
-            log_likelihoods.append(log_lik)
-
-        ids = np.array(ids)
-        ids_err = np.array(ids_err)
-        kstars = np.array(kstars)
-        log_likelihoods = np.array(log_likelihoods)
-
-        self.intrinsic_dim = id
-        self.intrinsic_dim_err = id_err
-        self.intrinsic_dim_scale = 0.5 * (rn.mean() + rk.mean())
-
-        return ids, ids_err, kstars, log_likelihoods
+        return ids, ids_err, kstars, es_pv
