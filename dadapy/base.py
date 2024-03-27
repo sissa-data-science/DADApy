@@ -54,13 +54,13 @@ class Base:
             njobs (int): number of cores to be used
         """
         self.X = coordinates
-        self.maxk = maxk
+        self.maxk = maxk  # remove from here
         self.verb = verbose
         self.n_jobs = n_jobs
         self.dims = None
         self.N = None
-        self.metric = "euclidean"
-        self.period = period
+        self.metric = "euclidean"  # remove from here
+        self.period = period  # remove from here
         self.rng = np.random.default_rng(rng_seed)
 
         if self.X is not None:
@@ -83,7 +83,7 @@ class Base:
             self.dims = coordinates.shape[1]
             self.distances = None
             self.dist_indices = None
-            if self.maxk is None:
+            if self.maxk is None:  # remove from here
                 self.maxk = min(100, self.N - 1)
 
         if distances is not None:
