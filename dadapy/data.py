@@ -190,8 +190,11 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
                 self.kstar, r_eff, bayes=False, plot_mv=plot_mv
             )
             # compute likelihood
-            # n = self._fix_k(self.kstar, r_eff)
-            # log_lik = ut.binomial_loglik(ide, self.kstar - 1, n - 1, r_eff)
+            """
+            n = self._fix_k(self.kstar, r_eff)
+            log_lik = ut.binomial_loglik(ide, self.kstar - 1, n - 1, r_eff)
+            """
+
             # update the k*
             self.compute_kstar(Dthr)
             # store the obtained values
