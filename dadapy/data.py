@@ -93,15 +93,15 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         else:
             self.compute_distances()
             self.set_id(initial_id)
+        # compute kstar
+        self.compute_kstar(Dthr)
 
-        ids = []
-        ids_err = []
-        kstars = []
-        log_likelihoods = []
+        ids = [self.intrinsic_dim]
+        ids_err = [self.intrinsic_dim_err]
+        kstars = [self.kstar]
+        log_likelihoods = [0]
 
         for i in range(n_iter):
-            # compute kstar
-            self.compute_kstar(Dthr)
             print("iteration ", i)
             print("id ", self.intrinsic_dim)
 
@@ -123,6 +123,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             id, id_err = self._compute_id_gride_single_scale(d0, d1, mus, n1s, n2s, eps)
             self.set_id(id)
             log_lik = -ut._neg_loglik(self.dtype, id, mus, n1s, n2s)
+            self.compute_kstar(Dthr)
 
             ids.append(id)
             ids_err.append(id_err)
@@ -173,15 +174,14 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             self.set_id(initial_id)
         self.compute_kstar(Dthr)
 
-        ids = np.zeros(n_iter)
-        ids_err = np.zeros(n_iter)
-        kstars = np.zeros((n_iter, self.N), dtype=int)
-        es_pv = np.zeros(n_iter)
+        ids = [self.intrinsic_dim]
+        ids_err = [self.intrinsic_dim_err]
+        kstars = [self.kstar]
+        pvalues = [0]
 
         for i in range(n_iter):
-            if self.verb:
-                print("iteration ", i)
-                print("id ", self.intrinsic_dim)
+            print("iteration ", i)
+            print("id ", self.intrinsic_dim)
 
             # set new ratio
             r_eff = min(0.975, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
@@ -198,9 +198,14 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             # update the k*
             self.compute_kstar(Dthr)
             # store the obtained values
-            ids[i] = ide
-            ids_err[i] = id_err
-            kstars[i] = self.kstar
-            es_pv[i] = pv
+            ids.append(ide)
+            ids_err.append(id_err)
+            kstars.append(self.kstar)
+            pvalues.append(pv)
 
-        return ids, ids_err, kstars, es_pv
+        ids = np.array(ids)
+        ids_err = np.array(ids_err)
+        kstars = np.array(kstars)
+        pvalues = np.array(pvalues)
+
+        return ids, ids_err, kstars, pvalues
