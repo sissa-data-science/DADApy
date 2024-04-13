@@ -850,7 +850,7 @@ class IdEstimation(Base):
         e_n = n.mean()
         if math.isclose(e_n, 1.0):
             print(
-                "no points in the inner shell, returning 0\n. Consider increasing rk and/or the ratio"
+                "no points in the inner shell, returning 0\n. Consider increasing k and/or the ratio"
             )
             self.intrinsic_dim = 0
             self.intrinsic_dim_err = 0

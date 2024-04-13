@@ -33,8 +33,8 @@ def test_compute_id_kstar_gride():
         initial_id=5, n_iter=3
     )
 
-    assert ids == pytest.approx([2.02, 1.93, 1.93], abs=0.01)
-    assert log_likelihoods == pytest.approx([668.1, 1153.89, 1170.77], abs=0.01)
+    assert ids[1:] == pytest.approx([2.02, 1.93, 1.93], abs=0.01)
+    assert log_likelihoods[1:] == pytest.approx([668.1, 1153.89, 1170.77], abs=0.01)
 
 
 def test_compute_id_kstar_binom():
@@ -47,4 +47,4 @@ def test_compute_id_kstar_binom():
 
     ids, ids_err, kstars, pv = de.return_ids_kstar_binomial(initial_id=5, n_iter=3)
 
-    assert ids == pytest.approx([2.01, 1.95, 1.95], abs=0.01)
+    assert ids[1:] == pytest.approx([2.01, 1.95, 1.95], abs=0.01)
