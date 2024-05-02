@@ -28,7 +28,14 @@ import scipy as sp
 
 from dadapy._cython import cython_clustering as cf
 from dadapy._cython import cython_clustering_v2 as cf2
+from dadapy._cython import cython_density as cd
+
 from dadapy.density_estimation import DensityEstimation
+from dadapy._utils.density_estimation import (
+    return_not_normalised_density_kstarNN,
+    return_not_normalised_density_PAk,
+)
+from dadapy._utils.utils import compute_cross_nn_distances
 
 cores = multiprocessing.cpu_count()
 
@@ -251,6 +258,90 @@ class Clustering(DensityEstimation):
             self.cluster_assignment = halo
 
         return self.cluster_assignment
+
+    def predict_cluster_ADP(self, X_new, Dthr=23.92812698, density_est="PAk"):
+        """Compute clustering for points outside the initialization set using PAk (or kstarNN) interpolator and DPA clustering algorithm.
+
+        Args:
+            X_new (np.ndarray(float)): The points for which to predict cluster assignment
+            Dthr (float, optional): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
+                to a p-value of 1e-6.
+            density_est (str, optional): chosen density estimator for interpolated densities. Currently implemented: "PAk" and "kstarNN"
+
+        Returns:
+            cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new
+        """
+        if self.verb:
+            print("Estimation of the distances started")
+        sec = time.time()
+        sec2=sec
+        cross_distances, cross_dist_indices = compute_cross_nn_distances(
+            X_new, self.X, self.maxk, self.metric, self.period
+        )
+        if self.verb:
+            print("{0:0.2f} seconds to compute distances.".format(time.time() - sec))
+
+        if self.verb:
+            print("Estimation of kstar started")
+        sec = time.time()
+        kstar = cd._compute_kstar_interp(
+            self.intrinsic_dim,
+            X_new.shape[0],
+            self.maxk,
+            Dthr,
+            cross_dist_indices,
+            cross_distances,
+            self.distances,
+        )
+        if self.verb:
+            print("{0:0.2f} seconds to compute kstar.".format(time.time() - sec))
+
+        if self.verb:
+            print("Estimation of interpolated density started")
+        sec = time.time()
+        if density_est == "PAk":
+            log_den, log_den_err, dc = return_not_normalised_density_PAk(
+                cross_distances,
+                self.intrinsic_dim,
+                kstar,
+                interpolation=True
+            )
+        elif density_est == "kstarNN":
+            log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
+                cross_distances, self.intrinsic_dim, kstar, interpolation=True
+            )
+
+        log_den -= np.log(self.N)
+        if self.verb:
+            print("{0:0.2f} seconds to compute density.".format(time.time() - sec))
+
+        if self.verb:
+            print("Prediction of cluster labels started")
+        cluster_probability = np.zeros((len(X_new), self.N_clusters))
+        for i in np.arange(len(X_new)):
+            higher_density_neighbours = (
+                self.log_den[cross_dist_indices][i]
+                - self.log_den_err[cross_dist_indices][i]
+                > log_den[i] - log_den_err[i]
+            )
+            try:
+                index_nearest_neighbour_higher_density = cross_dist_indices[i][
+                    higher_density_neighbours
+                ][0]
+                cluster_probability[
+                    i, self.cluster_assignment[index_nearest_neighbour_higher_density]
+                ] = 1
+            # If no data with higher density is found in the neighbourhood, predict the cluster of the closest data point
+            except IndexError:
+                cluster_probability[
+                    i, self.cluster_assignment[cross_dist_indices[0]]
+                ] = 1
+        cluster_prediction = np.argmax(cluster_probability, axis=-1)
+        if self.verb:
+            print("{0:0.2f} seconds to predict clusters.".format(time.time() - sec))
+            print("{0:0.2f} seconds total run time.".format(time.time() - sec2))
+
+        return cluster_prediction, cluster_probability
 
     def compute_clustering_ADP_pure_python(  # noqa: C901
         self, Z=1.65, halo=False, v2=False
