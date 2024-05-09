@@ -192,7 +192,7 @@ def correlation_integral(dists, scales, cond=False, plot=True):
 
 
 def _binomial_model_validation(
-    k, n, p, artificial_samples=100000, k_bootstrap=1, plot=False
+    k, n, p, artificial_samples=100000, k_bootstrap=20, plot=False
 ):
     """Perform the model validation for the binomial estimator. To this aim, an artificial set of binomially distributed
     points is extracted and compared to the observed ones. The quantitative test should be performed by means of the 2-samples Epps-Singleton tests,

@@ -91,8 +91,9 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         if initial_id is None:
             self.compute_id_2NN()
         else:
-            self.compute_distances()
             self.set_id(initial_id)
+            if self.distances is None:
+                self.compute_distances()
         # compute kstar
         self.compute_kstar(Dthr)
 
@@ -148,7 +149,13 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         return ids, ids_err, kstars, log_likelihoods
 
     def return_ids_kstar_binomial(
-        self, initial_id=None, n_iter=5, Dthr=23.92812698, r=None, plot_mv=False
+        self,
+        initial_id=None,
+        n_iter=5,
+        Dthr=23.92812698,
+        r=None,
+        plot_mv=False,
+        k_bootstrap=1,
     ):
         """Return the id estimates of the binomial algorithm coupled with the kstar estimation of the scale.
 
@@ -170,8 +177,9 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         if initial_id is None:
             self.compute_id_2NN(algorithm="base")
         else:
-            self.compute_distances()
             self.set_id(initial_id)
+            if self.distances is None:
+                self.compute_distances()
         self.compute_kstar(Dthr)
 
         ids = [self.intrinsic_dim]
@@ -187,7 +195,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             r_eff = min(0.975, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
             # compute id using the k*
             ide, id_err, scale, pv = self.compute_id_binomial_k(
-                self.kstar, r_eff, bayes=False, plot_mv=plot_mv
+                self.kstar, r_eff, bayes=False, plot_mv=plot_mv, k_bootstrap=k_bootstrap
             )
             # compute likelihood
             """

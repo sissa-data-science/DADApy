@@ -819,7 +819,7 @@ class IdEstimation(Base):
     # --------------------------------------------------------------------------------------
 
     def compute_id_binomial_k(
-        self, k, r, bayes=True, plot_mv=False, plot_posterior=False
+        self, k, r, bayes=True, plot_mv=False, plot_posterior=False, k_bootstrap=1
     ):
         """Calculate id using the binomial estimator by fixing the number of neighbours.
 
@@ -879,7 +879,9 @@ class IdEstimation(Base):
             print("select a proper method for id computation")
             return 0
 
-        ks, pv = bmv(k, n, r**self.intrinsic_dim, plot=plot_mv)
+        ks, pv = bmv(
+            k, n, r**self.intrinsic_dim, plot=plot_mv, k_bootstrap=k_bootstrap
+        )
 
         return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, pv
 
