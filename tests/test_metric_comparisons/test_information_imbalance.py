@@ -192,8 +192,8 @@ def test_return_inf_imb_causality_conditioning():
 def test_return_inf_imb_causality_conditioning_pbcs():
     """Test information imbalance for causality test, when conditioning is employed."""
     traj = np.load(filename_traj)
-    weights_X0 = [0.1, 0.2]
-    weights_Z0 = [0.1, 0.2]
+    weights_X0 = [0.1, 10]
+    weights_Z0 = [0.1, 10]
     k = 5
     tau = 5
     X0 = traj[:-tau, :3] - np.min(traj[:-tau, :3])
@@ -205,7 +205,7 @@ def test_return_inf_imb_causality_conditioning_pbcs():
     period_conditioning = 100
 
     expected_imbs_no_cause = [0.06198, 0.06198]
-    expected_imbs_with_cause = [0.05812, 0.05339, 0.05820, 0.053423]
+    expected_imbs_with_cause = [0.05812, 0.11494, 0.06197, 0.05215]
 
     mc = MetricComparisons(maxk=X0.shape[0] - 1)
 

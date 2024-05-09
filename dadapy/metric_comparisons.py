@@ -930,6 +930,9 @@ class MetricComparisons(Base):
         """
         if conditioning_present is None:
             space_present = np.column_stack((weight * cause_present, effect_present))
+            if period_present is not None:
+                dim_cause = cause_present.shape[1]
+                period_present[:dim_cause] *= weight
         else:
             space_present = np.column_stack(
                 (
@@ -938,6 +941,11 @@ class MetricComparisons(Base):
                     effect_present,
                 )
             )
+            if period_present is not None:
+                dim_cause = cause_present.shape[1]
+                dim_conditioning = conditioning_present.shape[1]
+                period_present[:dim_cause] *= weight[0]
+                period_present[dim_cause : dim_cause + dim_conditioning] *= weight[1]
 
         _, ranks_present = compute_nn_distances(
             space_present,
