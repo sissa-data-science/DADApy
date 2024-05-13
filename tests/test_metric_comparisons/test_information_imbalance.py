@@ -137,7 +137,7 @@ def test_return_inf_imb_causality_input_rank():
     Y0 = traj[:-tau, 3:]
     Ytau = traj[tau:, 3:]
 
-    expected_imbalances = [0.05328]
+    expected_imbalances = [0.05328, 0.06816]
 
     mc = MetricComparisons(maxk=X0.shape[0] - 1)
 
@@ -146,12 +146,32 @@ def test_return_inf_imb_causality_input_rank():
         effect_present=Y0,
         weights=weights,
     )
-
-    imbalances = mc.return_inf_imb_causality_input_rank(
+    imbalances1 = mc.return_inf_imb_causality_input_rank(
         ranks_present=ranks_present, effect_future=Ytau, k=k
     )
 
-    assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
+    X0 -= np.min(X0, axis=0)
+    Y0 -= np.min(Y0, axis=0)
+    Ytau -= np.min(Ytau, axis=0)
+    period_cause = 100
+    period_effect = 100
+    ranks_present = mc.return_ranks_present_for_all_weights(
+        cause_present=X0,
+        effect_present=Y0,
+        weights=weights,
+        period_cause=period_cause,
+        period_effect=period_effect,
+    )
+    imbalances2 = mc.return_inf_imb_causality_input_rank(
+        ranks_present=ranks_present,
+        effect_future=Ytau,
+        k=k,
+        period_effect=period_effect,
+    )
+
+    assert [imbalances1[0], imbalances2[0]] == pytest.approx(
+        expected_imbalances, abs=0.00001
+    )
 
 
 def test_return_inf_imb_causality_conditioning():

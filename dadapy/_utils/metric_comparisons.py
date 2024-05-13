@@ -85,8 +85,9 @@ def _return_period_present(
     dim_cause,
     dim_effect,
     dim_conditioning,
+    weight,
 ):
-    """Compute the array of periods for the space (cause, effect, conditioning).
+    """Compute the array of periods for the space (weight1 * cause, weight2 * conditioning, effect).
 
     Args:
         period_cause (float, np.ndarray(float)): periods of variables in 'cause' system
@@ -95,28 +96,43 @@ def _return_period_present(
         dim_cause (int): number of variables in 'cause' system
         dim_effect (int): number of variables in 'effect' system
         dim_conditioning (int): number of variables in 'conditioning' system
+        weight (float, np.ndarray(float)): single weight if 'period_conditioning' is None, array of
+            shape (2,) if 'period_conditioning' is not None
 
     Returns:
         (np.ndarray(float)): array of shape (dim_cause + dim_effect + dim_conditioning,) with the
             concatenated periods of the three spaces, or 'None' if all the periods are None (PBCs not applied)
 
     """
-    period_present = _return_period_mixed(
-        period_cause, period_effect, dim_cause, dim_effect
-    )
+    period_present = period_effect
+    dim_present = dim_effect
 
     if period_conditioning is not None:
         period_present = _return_period_mixed(
-            period_present,
             period_conditioning,
-            dim_cause + dim_effect,
+            period_present,
             dim_conditioning,
+            dim_present,
+            weight[1],
+            1,
         )
+        dim_present = period_present.shape[0]
+    else:
+        weight = [weight, None]
+
+    period_present = _return_period_mixed(
+        period_cause,
+        period_present,
+        dim_cause,
+        dim_present,
+        weight[0],
+        1,
+    )
 
     return period_present
 
 
-def _return_period_mixed(period1, period2, dim1, dim2):
+def _return_period_mixed(period1, period2, dim1, dim2, weight1=1, weight2=1):
     """Compute the array of periods for a space obtained by concatenating two sets of coordinates.
 
     Args:
@@ -124,10 +140,12 @@ def _return_period_mixed(period1, period2, dim1, dim2):
         period2 (float, np.ndarray(float)): periods of variables in second space
         dim1 (int): number of variables in first space
         dim2 (int): number of variables in second space
+        weight1 (float): scaling weight for variables in first space
+        weight2 (float): scaling weight for variables in second space
 
     Returns:
         (np.ndarray(float)): array of shape (dim1 + dim2,) with the concatenated periods of the
-            two spaces, or 'None' if period1 and period2 are None (PBCs not applied)
+            scaled feature spaces, or 'None' if period1 and period2 are None (PBCs not applied)
 
     """
     if period1 is None and period2 is None:
@@ -155,7 +173,11 @@ def _return_period_mixed(period1, period2, dim1, dim2):
             period1 = np.full(dim1, fill_value=period1, dtype=float)
         if isinstance(period2, (int, float)):
             period2 = np.full(dim2, fill_value=period2, dtype=float)
-        period_mixed = np.concatenate((period1, period2))
+        if weight1 == 0:  # avoid period scaling when features are scaled by zero weight
+            weight1 = 1
+        if weight2 == 0:
+            weight2 = 1
+        period_mixed = np.concatenate((weight1 * period1, weight2 * period2))
 
     return period_mixed
 
