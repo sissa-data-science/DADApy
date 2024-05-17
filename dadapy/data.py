@@ -26,7 +26,7 @@ import os
 import numpy as np
 
 from dadapy._utils import utils as ut
-from dadapy.clustering import Clustering
+from DADApy.dadapy.clustering import Clustering
 from dadapy.density_advanced import DensityAdvanced
 from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons

@@ -398,3 +398,25 @@ def _compute_clustering(floatTYPE_t Z,
       sec = time.time()
 
     return clstruct_m, Nclus_m, labels, centers_m, out_bord, Rho_bord_err_m, Point_bord_m
+
+def _assign_cluster_ADP(np.ndarray [floatTYPE_t, ndim = 1] g_inter, 
+                         np.ndarray [floatTYPE_t, ndim = 1] g, 
+                         np.ndarray [DTYPE_t, ndim = 1] cluster_assignment,  
+                         np.ndarray [DTYPE_t, ndim = 2] cross_dist_indices,    
+                         DTYPE_t Nele,      
+                         DTYPE_t Ncluster,
+                         DTYPE_t Maxk): 
+
+    cdef np.ndarray[DTYPE_t, ndim = 2] cluster_probability = np.zeros((Nele, Ncluster), dtype = int)
+        
+    cdef DTYPE_t idx_highest_density_neigh = 0
+    for i in range(Nele):
+        # If no data with higher density is found in the neighbourhood, predict the cluster of the closest data point
+        highest_density_neigh = 0
+        for j in range(Maxk):
+            if(g[cross_dist_indices[i][j]] > g_inter[i]):
+                idx_highest_density_neigh = j
+                break
+    
+        cluster_probability[i, cluster_assignment[cross_dist_indices[i][idx_highest_density_neigh]]] = 1
+    return cluster_probability
