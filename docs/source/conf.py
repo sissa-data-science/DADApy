@@ -94,4 +94,5 @@ autodoc_mock_imports = [
     "dadapy._cython.cython_overlap",
     "dadapy._cython.cython_distances",
     "dadapy._cython.cython_grads",
+    "dadapy._cython.cython_differentiable_imbalance",
 ]
