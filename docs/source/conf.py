@@ -51,7 +51,6 @@ extensions = [
     "nbsphinx_link",
     "sphinx.ext.napoleon",
     "IPython.sphinxext.ipython_console_highlighting",
-    "sphinx.ext.mathjax",
 ]
 
 napoleon_custom_sections = [("Returns", "params_style")]
