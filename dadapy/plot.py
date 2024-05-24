@@ -122,7 +122,7 @@ def plot_MDS(Data, cmap="viridis", savefig=""):
     plt.ylim((bottom - yr * 0.05, up + yr * 0.05))
     plt.xticks([])
     plt.yticks([])
-    cmal = cm.get_cmap(cmap, Data.N_clusters)
+    cmal = plt.get_cmap(cmap, Data.N_clusters)
     colors = cmal(np.arange(0, cmal.N))
     for i in range(Data.N_clusters):
         cc = "k"
@@ -349,7 +349,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
         )
 
     zorder = zorder + 1
-    cmal = cm.get_cmap(cmap, Data.N_clusters)
+    cmal = plt.get_cmap(cmap, Data.N_clusters)
     colors = cmal(np.arange(0, cmal.N))
     plt.scatter(xs, ys, c=labels, s=100, zorder=zorder, cmap=cmap)
     for i in range(Data.N_clusters):
