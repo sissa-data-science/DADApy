@@ -18,6 +18,7 @@
 
 import os
 
+import matplotlib
 import numpy as np
 import pytest
 
@@ -37,6 +38,7 @@ def test_compute_id_CD_BC():
     ie = IdEstimation(coordinates=X, maxk=len(X) - 1)
     ie.compute_distances()
 
+    matplotlib.use("AGG")  # use non-interactive backend for testing
     id_cd, _, _ = CD(ie.distances, np.linspace(0.25, 1.75, 10), plot=True)
     assert id_cd == pytest.approx(
         [
