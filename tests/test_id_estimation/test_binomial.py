@@ -33,7 +33,9 @@ def test_compute_id_binomial():
     np.random.seed(0)
 
     ie = IdEstimation(coordinates=X)
+    import matplotlib
 
+    matplotlib.use("AGG")  # use non-interactive backend for testing
     id_b = ie.compute_id_binomial_rk(0.25, 0.5, plot_mv=True, plot_posterior=True)[:3]
     assert id_b == pytest.approx([1.991042219, 0.275630420, 0.1875], abs=1e-4, rel=1e-2)
 

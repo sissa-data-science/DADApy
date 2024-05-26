@@ -15,6 +15,7 @@
 
 """Module for testing the I3D estimator."""
 
+import matplotlib
 import numpy as np
 import pytest
 
@@ -29,6 +30,8 @@ def test_distances():
     rng = np.random.default_rng(12345)
 
     X = rng.integers(0, box, size=(N, d))
+
+    matplotlib.use("AGG")  # use non-interactive backend for testing
 
     I3D = IdDiscrete(X, maxk=X.shape[0])
     I3D.compute_distances(metric="manhattan", period=box, condensed=False)
