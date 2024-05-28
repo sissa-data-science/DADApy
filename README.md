@@ -67,6 +67,8 @@ overlap_labels = data.return_label_overlap(labels)
 - k*NN estimator (kNN with an adaptive choice of k)
 - PAk estimator
   > Rodriguez et al., *JCTC* (2018)
+- BMTI estimator
+  > Carli et al., *in preparation*
 
 - Density peaks clustering methods
     - 
