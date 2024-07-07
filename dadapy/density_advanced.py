@@ -155,6 +155,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             self.grads_covmat = np.einsum(
                 "ijk, i -> ijk", self.grads_covmat, self.kstar / (self.kstar - 1)
             )
+            smallnumber = 1.e-10
+            self.grads_covmat += smallnumber*np.tile(np.eye(self.dims),(self.N,1,1))
 
             # get diagonal elements of the covariance matrix
             self.grads_var = np.zeros((self.N, self.dims))
