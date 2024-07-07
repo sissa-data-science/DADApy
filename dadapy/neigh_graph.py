@@ -281,7 +281,7 @@ class NeighGraph(KStar):
         sec = time.time()
         k1 = self.kstar[self.nind_list[:, 0]]
         k2 = self.kstar[self.nind_list[:, 1]]
-        # method to estimate pearson
+        # method to estimate pearson modulus
         if method == "jaccard":
             self.pearson_array = (
                 self.common_neighs_array * 1.0 / (k1 + k2 - self.common_neighs_array)
@@ -294,6 +294,12 @@ class NeighGraph(KStar):
             )
         else:
             raise ValueError("method not recognised")
+
+        #estimate pearson sign
+        Fij_i_oneway = np.einsum("ij, ij -> i", self.grads[self.nind_list[:, 0]] , self.neigh_vector_diffs)
+        Fij_j_oneway = np.einsum("ij, ij -> i", self.grads[self.nind_list[:, 1]] , self.neigh_vector_diffs)
+        psign_est = np.sign(Fij_i_oneway*Fij_j_oneway)
+        self.pearson_array *= psign_est
 
         sec2 = time.time()
         if self.verb:
