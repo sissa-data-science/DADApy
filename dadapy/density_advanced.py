@@ -84,6 +84,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads = None
         self.grads_var = None
         self.grads_covmat = None
+        self.pearson_array = None
+        self.pearson_mat = None
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
@@ -105,6 +107,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads = None
         self.grads_var = None
         self.grads_covmat = None
+        self.pearson_array = None
+        self.pearson_mat = None
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
