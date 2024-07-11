@@ -53,6 +53,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             gradient components at point i
         grads_covmat (np.ndarray(float), optional): size N x dims x dims. For each line i contains the estimated
             covariance matrix of the gradient components at point i
+        pearson_array (np.ndarray(float), optional): size nspar. At position p corresponding to the directed edge (i,j)
+            of the neighbourhood graph, it contains an estimate of the Pearson correlation coefficient between the
+            directed deltaFij computed with the gradients in i and in j, namely between dot(g_i,(x_j-x_i)) and
+            dot(g_j,(x_j-x_i)).
+        pearson_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains the Pearson correlation coefficient
+            between the directed deltaFij computed with the gradients in i and in j (see pearson_array) if (i,j) is an
+            edge of the directed neighbourhood graph; it contains a 0 otherwise.
         Fij_array (list(np.array(float)), optional): size nspar. Stores for each couple in nind_list the estimates of
             deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j
         Fij_var_array (np.array(float), optional): size nspar. Stores for each couple in nind_list the estimates of the
@@ -155,8 +162,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             self.grads_covmat = np.einsum(
                 "ijk, i -> ijk", self.grads_covmat, self.kstar / (self.kstar - 1)
             )
-            smallnumber = 1.e-10
-            self.grads_covmat += smallnumber*np.tile(np.eye(self.dims),(self.N,1,1))
+            smallnumber = 1.0e-10
+            self.grads_covmat += smallnumber * np.tile(
+                np.eye(self.dims), (self.N, 1, 1)
+            )
 
             # get diagonal elements of the covariance matrix
             self.grads_var = np.zeros((self.N, self.dims))
@@ -168,6 +177,58 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             print("{0:0.2f} seconds computing gradients".format(sec2 - sec))
 
     # ----------------------------------------------------------------------------------------------
+
+    def compute_pearson(self, comp_p_mat=False, method="jaccard"):
+        """
+        Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
+        Pearson correlation coefficient between the directed deltaFij computed with the gradients in i and in j, namely
+        between dot(g_i,(x_j-x_i)) and dot(g_j,(x_j-x_i)). These are needed in order to compute the errors on the
+        deltaFs. They are estimated as the neighbourhood similarity index (see documentation for
+        compute_neigh_similarity_index) times the sign of the product of the two directed deltaFijs. The Pearson
+        coefficients take values between -1 and 1 and are stored in the pearson_array attribute.
+
+        Args:
+            comp_p_mat (bool): if True, also computes the pearson_mat attribute.
+            method (str): method to compute the neighbourhood similarity index (see documentation for
+                compute_neigh_similarity_index).
+        """
+
+        # check or compute neigh_similarity_index
+        if self.neigh_similarity_index is None:
+            self.compute_neigh_similarity_index(method=method)
+        # check or compute grads
+        if self.grads is None:
+            self.compute_grads()
+
+        sec = time.time()
+        # estimate pearson sign
+        Fij_i_oneway = np.einsum(
+            "ij, ij -> i", self.grads[self.nind_list[:, 0]], self.neigh_vector_diffs
+        )
+        Fij_j_oneway = np.einsum(
+            "ij, ij -> i", self.grads[self.nind_list[:, 1]], self.neigh_vector_diffs
+        )
+        psign_est = np.sign(Fij_i_oneway * Fij_j_oneway)
+        self.pearson_array = self.neigh_similarity_index * psign_est
+        sec2 = time.time()
+        if self.verb:
+            print(
+                "{0:0.2f} seconds to carry out Pearson coefficients estimation.".format(
+                    sec2 - sec
+                )
+            )
+
+        # save in matrix form
+        if comp_p_mat is True:
+            p_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+            for nspar, indices in enumerate(self.nind_list):
+                i = indices[0]
+                j = indices[1]
+                p_mat[i, j] = self.pearson_array[nspar]
+                if p_mat[j, i] == 0:
+                    p_mat[j, i] = p_mat[i, j]
+            self.pearson_mat = p_mat.todense()
+            np.fill_diagonal(self.pearson_mat, 1.0)
 
     def compute_deltaFs(self, pearson_method="jaccard", comp_p_mat=False):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
