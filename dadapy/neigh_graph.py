@@ -55,11 +55,9 @@ class NeighGraph(KStar):
             directed edge of the neighbourhood graph.
         common_neighs_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains the total number
             of points in common between the neighbourhoods of points i and j.
-        pearson_array (np.ndarray(float), optional): size nspar. At position p, it contains an estimate of
+        neigh_similarity_index (np.ndarray(float), optional): size nspar. At position p, it contains an estimate of
             the overlap between the neighbourhoods of the two points forming the p-th directed edge of the
             neighbourhood graph.
-        pearson_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains an estimate of the
-            overlap between the neighbourhoods of the two points i and j.
         neigh_vector_diffs (np.ndarray(float), optional): size nspar x dims. At position p, it stores the
             vector difference from point nind_list[p,0] to point nind_list[p,1].
         neigh_dists (np.array(float), optional): size nspar. Stores the distances from each point to its
@@ -83,8 +81,7 @@ class NeighGraph(KStar):
         self.nind_iptr = None
         self.common_neighs_array = None
         self.common_neighs_mat = None
-        self.pearson_array = None
-        self.pearson_mat = None
+        self.neigh_similarity_index = None
         self.neigh_vector_diffs = None
         self.neigh_dists = None
 
@@ -107,8 +104,7 @@ class NeighGraph(KStar):
         self.nind_iptr = None
         self.common_neighs_array = None
         self.common_neighs_mat = None
-        self.pearson_array = None
-        self.pearson_mat = None
+        self.neigh_similarity_index = None
         self.neigh_vector_diffs = None
         self.neigh_dists = None
 
@@ -254,19 +250,18 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_pearson(self, comp_p_mat=False, method="jaccard"):
+    def compute_neigh_similarity_index(self, method="jaccard"):
         """
         Compute an estimate of the overlaps between the neighbourhoods of the points connected by edges on the DNG
-        values from 0 to 1 and stores them in the pearson_array attribute. See also the documentation for the
-        pearson_array attribute for completeness.
+        values from 0 to 1 and stores them in the neigh_similarity_index attribute. See also the documentation for the
+        neigh_similarity_index attribute for completeness.
 
         Args:
-            comp_p_mat (bool): if True, also computes the pearson_mat attribute.
             method (str): currently implemented "jaccard", "geometric", "squared_geometric".
             Let us denote the neighbourhoods of points 1 and 2 respectively by the sets Ω_1 and Ω_2.
             Then k_1 = #Ω_1 and k_2 = #Ω_2 are the neighbourhood sizes and k_1,2 = Ω_1 ∩ Ω_2 the number of points
             in common between the two neighbourhoods (which can be read off at common_neighs_mat[1,2]
-            if common_neighs_mat has been computed). The methods to compute the Pearson coefficients are:
+            if common_neighs_mat has been computed). The methods to compute the neighbourhood similarity index are:
 
             "jaccard": p_1,2 = k_1,2 / (k_1 + k_2 - k_1,2) = #(Ω_1 ∩ Ω_2) / #(Ω_1 ∪ Ω_2), i.e. the Jaccard index
             "geometric": p_1,2 = k_1,2 / sqrt(k_1 * k_2), i.e. the number of common points divided by the geometric mean
@@ -277,42 +272,26 @@ class NeighGraph(KStar):
         if self.common_neighs_array is None:
             self.compute_common_neighs()
         if self.verb:
-            print("Estimation of the pearson correlation coefficient started")
+            print("Estimation of the neighbourhood similarity index started")
         sec = time.time()
         k1 = self.kstar[self.nind_list[:, 0]]
         k2 = self.kstar[self.nind_list[:, 1]]
-        # method to estimate pearson modulus
+        # method to estimate neighbourhood similarity index
         if method == "jaccard":
-            self.pearson_array = (
+            self.neigh_similarity_index = (
                 self.common_neighs_array * 1.0 / (k1 + k2 - self.common_neighs_array)
             )
         elif method == "geometric":
-            self.pearson_array = self.common_neighs_array * 1.0 / np.sqrt(k1 * k2)
+            self.neigh_similarity_index = (
+                self.common_neighs_array * 1.0 / np.sqrt(k1 * k2)
+            )
         elif method == "squared_geometric":
-            self.pearson_array = (
+            self.neigh_similarity_index = (
                 self.common_neighs_array * self.common_neighs_array * 1.0 / (k1 * k2)
             )
         else:
             raise ValueError("method not recognised")
 
-        #estimate pearson sign
-        Fij_i_oneway = np.einsum("ij, ij -> i", self.grads[self.nind_list[:, 0]] , self.neigh_vector_diffs)
-        Fij_j_oneway = np.einsum("ij, ij -> i", self.grads[self.nind_list[:, 1]] , self.neigh_vector_diffs)
-        psign_est = np.sign(Fij_i_oneway*Fij_j_oneway)
-        self.pearson_array *= psign_est
-
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec))
-
-        # save in matrix form
-        if comp_p_mat is True:
-            p_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
-            for nspar, indices in enumerate(self.nind_list):
-                i = indices[0]
-                j = indices[1]
-                p_mat[i, j] = self.pearson_array[nspar]
-                if p_mat[j, i] == 0:
-                    p_mat[j, i] = p_mat[i, j]
-            self.pearson_mat = p_mat.todense()
-            np.fill_diagonal(self.pearson_mat, 1.0)
