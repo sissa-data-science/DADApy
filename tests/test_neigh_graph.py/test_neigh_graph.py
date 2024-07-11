@@ -70,7 +70,6 @@ def test_compute_neigh_indices():
     """Test the compute_neigh_indices method."""
     # create the NeighGraph object
     neigh_graph = NeighGraph(coordinates=data)
-    neigh_graph.set_id(1)
     neigh_graph.compute_kstar(Dthr=0.0)
     # compute the indices of the neighbors
     neigh_graph.compute_neigh_indices()
@@ -84,7 +83,6 @@ def test_compute_neigh_dists():
     """Test the compute_neigh_dists method."""
     # create the NeighGraph object
     neigh_graph = NeighGraph(coordinates=data)
-    neigh_graph.set_id(1)
     neigh_graph.compute_kstar(Dthr=0.0)
     # compute the distances of the neighbors
     neigh_graph.compute_neigh_dists()
@@ -96,7 +94,6 @@ def test_return_sparse_distance_graph():
     """Test the return_sparse_distance_graph method."""
     # create the NeighGraph object
     neigh_graph = NeighGraph(coordinates=data)
-    neigh_graph.set_id(1)
     neigh_graph.compute_kstar(Dthr=0.0)
     graph = neigh_graph.return_sparse_distance_graph()
     # check that the result is correct
@@ -107,7 +104,6 @@ def test_compute_neigh_vector_diffs():
     """Test the compute_neigh_vector_diffs method."""
     # create the NeighGraph object
     neigh_graph = NeighGraph(coordinates=data)
-    neigh_graph.set_id(1)
     neigh_graph.compute_kstar(Dthr=0.0)
     # compute the distances of the neighbors
     neigh_graph.compute_neigh_vector_diffs()
@@ -120,7 +116,6 @@ def test_compute_common_neighs():
     # create the NeighGraph object
     neigh_graph = NeighGraph(coordinates=data)
     neigh_graph.compute_distances()
-    neigh_graph.set_id(1)
     neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
 
     neigh_graph.compute_common_neighs(comp_common_neighs_mat=False)
@@ -137,7 +132,6 @@ def test_compute_neigh_similarity_index():
     # create the NeighGraph object
     neigh_graph = NeighGraph(coordinates=data)
     neigh_graph.compute_distances()
-    neigh_graph.set_id(1)
     neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
     neigh_graph.compute_neigh_similarity_index()
     assert np.allclose(
