@@ -216,7 +216,7 @@ class Base:
         # find all distances which are 0
         indices = np.nonzero(distances[:, 1:] < np.finfo(self.dtype).eps)
         # set distance to epsilon
-        distances[indices] = np.finfo(self.dtype).eps
+        distances[:, 1:][indices] = np.finfo(self.dtype).eps
 
         return distances
 

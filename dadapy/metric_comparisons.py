@@ -831,14 +831,17 @@ class MetricComparisons(Base):
     ):
         """Return the imbalances (weight * cause_present, effect_present) -> effect_future.
 
-           When conditioning_present is not None, the first space is extended with an additional weight.
+           When conditioning_present is not None, the first space is extended with an additional weight,
+           resulting in (weight1 * cause_present, weight2 * conditioning_present, effect_present) -> effect_future.
 
         Args:
             cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time 0
             effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time 0
             effect_future (np.ndarray(float)): N x D2 matrix, putative driven system data set at time tau
             weights (list(float), np.ndarray(float)): scaling parameters for the variables at time 0
-                (1D array if conditioning_present is None, 2D array otherwise)
+                (1D array if conditioning_present is None, 2D array of shape (n_weights,2) otherwise,
+                where the first column is referred to 'cause_present' and the second one to 'conditioning_present')
+            conditioning_present (np.ndarray(float): N x D3 matrix, conditioning system data set at time 0
             k (int): order of nearest neighbour considered for the calculation of the imbalance
             period_cause (int,float,np.ndarray(float)): periods of variables in 'cause_present'
             period_effect (int,float,np.ndarray(float)): periods of variables in 'effect_present' and 'effect_future'
@@ -873,14 +876,6 @@ class MetricComparisons(Base):
         dim_conditioning = (
             None if conditioning_present is None else conditioning_present.shape[1]
         )
-        period_present = _return_period_present(
-            period_cause,
-            period_effect,
-            period_conditioning,
-            dim_cause,
-            dim_effect,
-            dim_conditioning,
-        )
 
         _, ranks_effect_future = compute_nn_distances(
             effect_future, self.maxk, self.metric, period_effect
@@ -894,7 +889,15 @@ class MetricComparisons(Base):
                 conditioning_present,
                 weight,
                 k,
-                period_present,
+                _return_period_present(
+                    period_cause,
+                    period_effect,
+                    period_conditioning,
+                    dim_cause,
+                    dim_effect,
+                    dim_conditioning,
+                    weight,
+                ),
             )
             for weight in weights
         )
@@ -913,17 +916,21 @@ class MetricComparisons(Base):
     ):
         """Return the imbalance (weight * cause_present, effect_present) -> effect_future.
 
-           When conditioning_present is not None, the first space is extended with an additional weight.
+           When 'conditioning_present' is not None, the imbalance that is computed is
+           (weight[0] * cause_present, weight[1] * conditioning_present, effect_present) -> effect_future.
+
 
         Args:
             cause_present (np.ndarray(float)): N x D1 matrix, putative driver system data set at time 0
             effect_present (np.ndarray(float)): N x D2 matrix, putative driven system data set at time 0
             ranks_effect_future (np.ndarray(float)): N x maxk matrix, putative driven system ranks at time tau
+            conditioning_present (np.ndarray(float): N x D3 matrix, conditioning system data set at time 0
             weight (float or np.ndarray(float)): scaling parameter space at time 0; scalar number if
                 conditioning_present is None, np.ndarray of shape (2,) otherwise
             k (int): order of nearest neighbour considered for the calculation of the imbalance
             period_present (np.ndarray(float)): periods of all features in space
-                (weight*cause_present, effect_present), to compute distances with PBCs
+                (weight*cause_present, effect_present) if 'conditioning_present' is None, or in space
+                (weight[0] * cause_present, weight[1] * conditioning_present, effect_present) otherwise
 
         Returns:
             imb (float): the information imbalance
@@ -1043,16 +1050,15 @@ class MetricComparisons(Base):
             )
         dim_cause = cause_present.shape[1]
         dim_effect = effect_present.shape[1]
-        period_present = _return_period_mixed(
-            period_cause, period_effect, dim_cause, dim_effect
-        )
 
         ranks_present = Parallel(n_jobs=self.n_jobs)(
             delayed(compute_nn_distances)(
                 np.column_stack((weight * cause_present, effect_present)),
                 self.maxk,
                 self.metric,
-                period_present,
+                _return_period_mixed(
+                    period_cause, period_effect, dim_cause, dim_effect, weight, 1
+                ),
             )
             for weight in weights
         )

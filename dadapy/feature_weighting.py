@@ -53,7 +53,7 @@ def check_maxk(func):
         if feature_selector._maxk_warning:
             if feature_selector.maxk != feature_selector.N - 1:
                 warnings.warn(
-                    f"maxk option not yet available for the FeatureWeighting class. "
+                    f'{"maxk option not yet available for the FeatureWeighting class. "}'
                     + f"It will be set to the number of data-1 ({feature_selector.N}-1).",
                     stacklevel=2,
                 )

@@ -384,7 +384,7 @@ def _beta_prior(k, n, r, a0=1, b0=1, posterior_profile=False):
     D_MIN = 0.0001
 
     a = a0 + n.sum()
-    if isinstance(k, (np.int64, int)):
+    if isinstance(k, (np.int64, int, float)):
         b = b0 + k * n.shape[0] - n.sum()
     else:
         b = b0 + k.sum() - n.sum()

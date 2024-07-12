@@ -137,7 +137,7 @@ def test_return_inf_imb_causality_input_rank():
     Y0 = traj[:-tau, 3:]
     Ytau = traj[tau:, 3:]
 
-    expected_imbalances = [0.05328]
+    expected_imbalances = [0.05328, 0.06816]
 
     mc = MetricComparisons(maxk=X0.shape[0] - 1)
 
@@ -146,12 +146,32 @@ def test_return_inf_imb_causality_input_rank():
         effect_present=Y0,
         weights=weights,
     )
-
-    imbalances = mc.return_inf_imb_causality_input_rank(
+    imbalances1 = mc.return_inf_imb_causality_input_rank(
         ranks_present=ranks_present, effect_future=Ytau, k=k
     )
 
-    assert imbalances == pytest.approx(expected_imbalances, abs=0.00001)
+    X0 -= np.min(X0, axis=0)
+    Y0 -= np.min(Y0, axis=0)
+    Ytau -= np.min(Ytau, axis=0)
+    period_cause = 100
+    period_effect = 100
+    ranks_present = mc.return_ranks_present_for_all_weights(
+        cause_present=X0,
+        effect_present=Y0,
+        weights=weights,
+        period_cause=period_cause,
+        period_effect=period_effect,
+    )
+    imbalances2 = mc.return_inf_imb_causality_input_rank(
+        ranks_present=ranks_present,
+        effect_future=Ytau,
+        k=k,
+        period_effect=period_effect,
+    )
+
+    assert [imbalances1[0], imbalances2[0]] == pytest.approx(
+        expected_imbalances, abs=0.00001
+    )
 
 
 def test_return_inf_imb_causality_conditioning():
@@ -192,8 +212,8 @@ def test_return_inf_imb_causality_conditioning():
 def test_return_inf_imb_causality_conditioning_pbcs():
     """Test information imbalance for causality test, when conditioning is employed."""
     traj = np.load(filename_traj)
-    weights_X0 = [0.1, 0.2]
-    weights_Z0 = [0.1, 0.2]
+    weights_X0 = [0.1, 10]
+    weights_Z0 = [0.1, 10]
     k = 5
     tau = 5
     X0 = traj[:-tau, :3] - np.min(traj[:-tau, :3])
@@ -205,7 +225,7 @@ def test_return_inf_imb_causality_conditioning_pbcs():
     period_conditioning = 100
 
     expected_imbs_no_cause = [0.06198, 0.06198]
-    expected_imbs_with_cause = [0.05812, 0.05339, 0.05820, 0.053423]
+    expected_imbs_with_cause = [0.05812, 0.11494, 0.06197, 0.05215]
 
     mc = MetricComparisons(maxk=X0.shape[0] - 1)
 

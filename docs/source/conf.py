@@ -51,6 +51,7 @@ extensions = [
     "nbsphinx_link",
     "sphinx.ext.napoleon",
     "IPython.sphinxext.ipython_console_highlighting",
+    "sphinx.ext.mathjax",
 ]
 
 napoleon_custom_sections = [("Returns", "params_style")]
@@ -92,4 +93,6 @@ autodoc_mock_imports = [
     "dadapy._cython.cython_density",
     "dadapy._cython.cython_overlap",
     "dadapy._cython.cython_distances",
+    "dadapy._cython.cython_grads",
+    "dadapy._cython.cython_differentiable_imbalance",
 ]

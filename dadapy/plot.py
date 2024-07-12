@@ -122,7 +122,7 @@ def plot_MDS(Data, cmap="viridis", savefig=""):
     plt.ylim((bottom - yr * 0.05, up + yr * 0.05))
     plt.xticks([])
     plt.yticks([])
-    cmal = cm.get_cmap(cmap, Data.N_clusters)
+    cmal = plt.get_cmap(cmap, Data.N_clusters)
     colors = cmal(np.arange(0, cmal.N))
     for i in range(Data.N_clusters):
         cc = "k"
@@ -349,7 +349,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
         )
 
     zorder = zorder + 1
-    cmal = cm.get_cmap(cmap, Data.N_clusters)
+    cmal = plt.get_cmap(cmap, Data.N_clusters)
     colors = cmal(np.arange(0, cmal.N))
     plt.scatter(xs, ys, c=labels, s=100, zorder=zorder, cmap=cmap)
     for i in range(Data.N_clusters):
@@ -445,8 +445,8 @@ def plot_pdf(n_emp, n_mod, title=None, fileout=None):
     plt.figure()
     if title is not None:
         plt.title(title)
-    plt.plot(a[0], "-", label="n empirical", linewidth=4, alpha=0.9)
-    plt.plot(b[0], "--", label="n model", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, a[0], "-", label="n empirical", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, b[0], "--", label="n model", linewidth=4, alpha=0.9)
     plt.xlabel("n", fontsize=15)
     plt.ylabel("P(n)", fontsize=15)
     plt.legend(fontsize=14, frameon=False)
@@ -462,7 +462,7 @@ def plot_pdf(n_emp, n_mod, title=None, fileout=None):
 # --------------------------------------------------------------------------------------
 
 
-def plot_cdf(n_emp, n_mod, title, fileout=None):
+def plot_cdf(n_emp, n_mod, title=None, fileout=None):
     """Compare two cdfs.
 
     Args:
@@ -490,8 +490,8 @@ def plot_cdf(n_emp, n_mod, title, fileout=None):
 
     plt.figure()
     plt.title(title)
-    plt.plot(cdf_nn, "-", label="n empirical", linewidth=4, alpha=0.9)
-    plt.plot(cdf_nmod, "--", label="n model", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, cdf_nn, "-", label="n empirical", linewidth=4, alpha=0.9)
+    plt.plot(a[1][:-1] + 0.5, cdf_nmod, "--", label="n model", linewidth=4, alpha=0.9)
     plt.xlabel("n", fontsize=15)
     plt.ylabel("F(n)", fontsize=15)
     plt.legend(fontsize=14, frameon=False)

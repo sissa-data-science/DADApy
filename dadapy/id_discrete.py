@@ -21,7 +21,6 @@ The different algorithms of intrinsic dimension estimation for discrete spaces
 """
 
 import multiprocessing
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,6 +31,7 @@ from dadapy import plot as ddp
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
+rng = np.random.default_rng()
 
 
 class IdDiscrete(Base):
@@ -40,7 +40,6 @@ class IdDiscrete(Base):
     Inherits from class Base.
 
     Attributes:
-
         lk (int, np.ndarray(int)): radius of the external shells
         ln (int, np.ndarray(int)): radius of the internal shells
         k (np.ndarray(int)): total number of points within the external shell
@@ -52,7 +51,6 @@ class IdDiscrete(Base):
         intrinsic_dim_scale (float): scale at which the id has been computed
         posterior_domain (np.ndarray(float)): eventual support of the posterior distribution of the id
         posterior (np.ndarray(float)): posterior distribution when evaluated with Bayesian inference
-
     """
 
     def __init__(
@@ -66,6 +64,22 @@ class IdDiscrete(Base):
         verbose=False,
         n_jobs=cores,
     ):
+        """Instantiate the IdDiscrete object.
+
+        Args:
+            coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
+            is_network (bool, default=False): if True a network is assumed to be loaded, meaning that in each
+                computation the central points must not be removed from the enumeration
+            maxk (int): maximum number of neighbours to be considered for the calculation of distances
+            condensed (bool, default=False): if True, distances are saved in a cumulative fashion: the position
+                in the self.distances array is the distance and the number represents the amount of points up to that
+                distance (self is included)
+            weights (np.ndarray(int), default=None): keeps into account explicitly possible repetitions of datapoints
+            verbose (bool): whether you want the code to speak or shut up
+            n_jobs (int): number of cores to be used
+
+        """
         super().__init__(
             coordinates=coordinates,
             distances=distances,
@@ -114,7 +128,7 @@ class IdDiscrete(Base):
         Args:
             maxk: maximum number of neighbours for which distance is computed and stored
             metric: type of metric
-            period (float or np.array): periodicity (only used for periodic distance computation). Default is None.
+            period (float or np.ndarray): periodicity (only used for periodic distance computation). Default is None.
             condensed (bool): save how many points one finds at each distance instead of all distances
             d_max (int, default=100): decide the farthest distance to be saved (only if condensed is True)
 
@@ -158,7 +172,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def fix_lk(self, lk=None, ln=None):
-        """Computes the k points within the given Rk and n points within given Rn.
+        """Compute the k points within the given Rk and n points within given Rn.
 
         For each point, computes the number self.k of points within a sphere of radius Rk
         and the number self.n within an inner sphere of radius Rk. It also provides
@@ -174,8 +188,6 @@ class IdDiscrete(Base):
         Args:
             lk (int): external shell radius
             ln (int): internal shell radius
-
-        Returns:
 
         """
         # checks-in and initializations
@@ -257,7 +269,7 @@ class IdDiscrete(Base):
         plot=True,
         set_attr=True,
     ):
-        """Calculate Id using the binomial estimator by fixing the eternal radius for all the points
+        """Calculate Id using the binomial estimator by fixing the eternal radius for all the points.
 
         In the estimation of d one has to remove the central point from the counting of n and k
         as it generates the process, but it is not effectively part of it
@@ -275,6 +287,7 @@ class IdDiscrete(Base):
             intrinsic_dim (float): the id esteem
             intrinsic_dim_err (float): the error estimate on the id
             intrinsic_dim_scale (float): the scale at which the id was computed (lk)
+
         """
         # checks-in and initialisations
         assert (
@@ -328,8 +341,9 @@ class IdDiscrete(Base):
             # explicit computation of likelihood, not necessary when ln and lk are fixed, but apparently\
             # more stable than root searching
             intrinsic_dim = df.find_d_likelihood(self.ln, self.lk, n_eff, k_eff, w_eff)
-            # intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
-
+            """
+            intrinsic_dim = df.find_d_root(self.ln, self.lk, n_eff, k_eff)
+            """
             intrinsic_dim_err = (
                 df.binomial_cramer_rao(
                     d=intrinsic_dim, ln=self.ln, lk=self.lk, N=N, k=k_eff
@@ -367,7 +381,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def return_id_scaling(self, Lks, r=0.5, method="mle", subset=None, plot=True):
-        """Compute the ID by varying the radii
+        """Compute the ID by varying the radii.
 
         Args:
             Lks (list or np.ndarray(int)): external radii lk
@@ -413,13 +427,18 @@ class IdDiscrete(Base):
         References:
             Iuri Macocco, Aldo Glielmo, Jacopo Grilli, and Alessandro Laio, Intrinsic Dimension Estimation for Discrete
             Metrics, Phys. Rev. Lett. 130, 067401 – Published 8 February 2023
+
         """
         ids = np.zeros_like(Lks, dtype=float)
         ids_e = np.zeros_like(Lks, dtype=float)
 
         for i, lk in enumerate(Lks):
+            ln = np.ceil(lk * r).astype(int)
+            if ln == lk:
+                ln -= 1
+
             id_i, id_er, scale = self.compute_id_binomial_lk(
-                lk, int(lk * r), method=method, subset=subset, set_attr=False
+                lk, ln, method=method, subset=subset, set_attr=False
             )
             ids[i] = id_i
             ids_e[i] = id_er
@@ -436,7 +455,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def fix_k(self, k_eff=None, ratio=0.5):  # noqa: C901
-        """Computes Rk, Rn, n for each point given a selected value of k
+        """Compute Rk, Rn, n for each point given a selected value of k.
 
         This routine computes external radii lk, internal radii ln and internal points n.
         It also ensures that lk is scaled onto the most external shell
@@ -448,9 +467,7 @@ class IdDiscrete(Base):
             k_eff (int, default=self.k_max): selected (max) number of NN
             ratio (float, default = 0.5): approximate ratio among ln and lk
 
-        Returns:
         """
-
         # TODO: what if we have multiplicity???? use it straightly on the plain points
         #       or take it into account when counting the number of NN?
 
@@ -522,10 +539,12 @@ class IdDiscrete(Base):
                     # of points at that radius.
                     # The index at which a distance is first met == number of points at smaller distance
                     # EXAMPLE:
-                    # a = np.array([0,1,1,2,3,3,4,4,4,6,6])     and suppose it would go on as 6,6,6,7,8...
-                    # un, ind = np.unique(a, return_index=True)
-                    # un: array([0, 1, 2, 3, 4, 6])
-                    # ind: array([0, 1, 3, 4, 6, 9])
+                    """
+                    a = np.array([0,1,1,2,3,3,4,4,4,6,6])     and suppose it would go on as 6,6,6,7,8...
+                    un, ind = np.unique(a, return_index=True)
+                    un: array([0, 1, 2, 3, 4, 6])
+                    ind: array([0, 1, 3, 4, 6, 9])
+                    """
                     unique, index = np.unique(dist_i, return_index=True)
 
                     if unique.shape[0] < 3:
@@ -567,7 +586,7 @@ class IdDiscrete(Base):
     # --------------------------------------------------------------------------------------
 
     def fix_k_shell(self, k_shell, ratio=0.5):  # noqa: C901
-        """Computes the lk, ln, n given k_shell
+        """Compute the lk, ln, n given k_shell.
 
         This routine computes the external radius lk, the associated points k,
         internal radius ln and associated points n. The computation is performed
@@ -580,7 +599,6 @@ class IdDiscrete(Base):
             ratio (float): ratio among Rn and Rk
 
         """
-
         # TODO: one might want to use it even with less shells available
 
         # initial checks
@@ -677,7 +695,7 @@ class IdDiscrete(Base):
     def compute_id_binomial_k_discrete(
         self, k, ratio=0.5, shell=False, subset=None, approx_err=True, set_attr=True
     ):
-        """Calculate Id using the binomial estimator by fixing the number of neighbours or shells
+        """Calculate Id using the binomial estimator by fixing the number of neighbours or shells.
 
         As in the case in which one fix lk, also in this version of the estimation
         one removes the central point from n and k. Two different ways of computing
@@ -698,6 +716,7 @@ class IdDiscrete(Base):
             intrinsic_dim (float): the id estimation
             intrinsic_dim_err (float): the error estimate on the id
             intrinsic_dim_scale (float): the scale at which the id was computed: <lk>
+
         """
         # checks-in and initialisations
         assert (
@@ -757,7 +776,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def return_id_scaling_k(self, Ks, r=0.5, subset=None, plot=True):
-        """Compute the ID by varying the number of neighbours considered
+        """Compute the ID by varying the number of neighbours considered.
 
         Args:
             Ks (list or np.ndarray(int)): number of neighbours
@@ -769,6 +788,7 @@ class IdDiscrete(Base):
             ids (np.ndarray(float)): intrinsic dimension at different scales
             ids_err (np.ndarray(float)): error estimate on intrinsic dimension at different scales
             scale (np.ndarray(float)): scale at which the id was computed (mean values of lk)
+
         """
         ids = np.zeros_like(Ks, dtype=float)
         ids_e = np.zeros_like(Ks, dtype=float)
@@ -790,7 +810,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def return_id_fit(self, scales, subset=None, plot=True):
-        """Find the ID as least square fit between the actual and the theoretical number of points
+        r"""Find the ID as least square fit between the actual and the theoretical number of points.
 
         Compute the id as least square fit between the average number of neighbours N(r) and the theoretical number
         of points within a given shell \rho*V(r). Given a radius r, the fit takes into account all points with r_i <= r.
@@ -807,7 +827,6 @@ class IdDiscrete(Base):
             scales (np.ndarray(int)): the scales at which the ID is computed (the first point is excluded)
 
         """
-
         from scipy.optimize import curve_fit
 
         def fit_func(r, d, rho):
@@ -854,7 +873,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def return_id_fit_continuum(self, R, fit_intercept=True, subset=None, plot=True):
-        """Find the ID as linear fit between Log(n) vs Log(r), assuming N~r**d
+        r"""Find the ID as linear fit between Log(n) vs Log(r), assuming N~r**d.
 
         Compute the id fitting a line between Log(n) and Log(r). Given a radius r_i, the fit takes into account
         all points with r <= r_i.
@@ -912,8 +931,6 @@ class IdDiscrete(Base):
                     * 0.5
                 )
                 n = np.sum(self.distances[mask] < r) + shell - el
-            # normalization is pointless when fitting log log
-            # n/=el/(el-1)
 
             N.append(n)
 
@@ -939,7 +956,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def compute_local_density(self, plot=True):
-        """Compute and compare the rescaled local density of points
+        """Compute and compare the rescaled local density of points.
 
         Compute and compare the local density of points inside inner and outer shells
         after fixing lk and ln as n/<n> and (k-n)/<k-n>.
@@ -951,8 +968,8 @@ class IdDiscrete(Base):
         Returns:
             n (np.ndarray(float)): n/<n>
             m (np.ndarray(float)): (k-n)/<k-n>
-        """
 
+        """
         assert self.n is not None and self.k is not None, "find k and n first!"
         assert self.intrinsic_dim is not None, "compute the ID first!"
 
@@ -989,9 +1006,15 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def model_validation_full(  # noqa: C901
-        self, alpha=0.05, subset=None, pdf=False, cdf=True, path=None
+        self,
+        alpha=0.05,
+        subset=None,
+        artificial_samples=100000,
+        pdf=False,
+        cdf=True,
+        filename=None,
     ):
-        """Use Kolmogorov-Smirnoff test to assess the goodness of the id estimate
+        """Use Kolmogorov-Smirnoff test to assess the goodness of the id estimate.
 
         In order to validate estimate of the intrinsic dimension and the model
         and the goodness of the binomial estimator we perform a KS test. In
@@ -1006,20 +1029,18 @@ class IdDiscrete(Base):
         Args:
             alpha (float, default=0.05): tolerance for the KS test
             subset (int or np.ndarray(int)): subset of points used to perform the model validation
+            artificial_samples (int, default=100000): number of points sampled from the theoretical distribution
             pdf (bool, default=False): plot histogram of n_emp and n_i
             cdf (bool, default=False): plot cdf of n_emp and n_i
-            path (str, default=None): directory where to save plots
+            filename (str, default=None): directory where to save plots
         Returns:
             s (float): KS statistics, max distance between empirical and theoretical cdfs
             pv (float): p-value associated to the KS statistics
+
         """
         if self.intrinsic_dim is None:
             print("compute the id before validating the model!")
             return 0
-
-        if path is not None:
-            path = path.rstrip("/") + "/"
-            os.system("mkdir -p " + path)
 
         mask = self._my_mask(subset)
         n_eff = self.n[mask] - self.central_point
@@ -1035,19 +1056,31 @@ class IdDiscrete(Base):
                 ln_eff, self.intrinsic_dim
             ) / df.compute_discrete_volume(lk_eff, self.intrinsic_dim)
 
-        else:  # id estimated at fixed lK
+        else:  # id estimated at fixed lk
             title = "R=" + str(self.lk)
 
             p = df.compute_discrete_volume(
                 self.ln, self.intrinsic_dim
             ) / df.compute_discrete_volume(self.lk, self.intrinsic_dim)
 
-        n_model = self.rng.binomial(k_eff, p, size=mask.sum())
+        if self.n.shape[0] < artificial_samples:
+            replicas = int(artificial_samples / self.n.shape[0])
+            if isinstance(self.ln, np.ndarray):
+                n_model = np.array(
+                    [rng.binomial(ki, pi, size=replicas) for ki, pi in zip(k_eff, p)]
+                ).reshape(-1)
+            else:
+                n_model = np.array(
+                    [rng.binomial(ki, p, size=replicas) for ki in k_eff]
+                ).reshape(-1)
+
+        else:
+            n_model = rng.binomial(k_eff, p)
+
+        if self.central_point == 0:
+            n_model = n_model[n_model > 0]
 
         s, pv = KS(n_eff, n_model)
-
-        print("ks_stat:\t" + str(s))
-        print("p-value:\t" + str(pv))
 
         if self.verb:
             if pv > alpha:
@@ -1062,295 +1095,37 @@ class IdDiscrete(Base):
                 )
 
         if pdf:
-            fileout = path + "mv_pdf.pdf" if (path is not None) else None
+            fileout = filename + "_mv_pdf.pdf" if (filename is not None) else None
             ddp.plot_pdf(n_eff, n_model, title, fileout)
 
         if cdf:
-            fileout = path + "mv_cdf.pdf" if (path is not None) else None
+            fileout = filename + "_mv_cdf.pdf" if (filename is not None) else None
             ddp.plot_cdf(n_eff, n_model, title, fileout)
 
         return s, pv
 
     # ----------------------------------------------------------------------------------------------
 
-    def R_mod_val(  # noqa: C901
-        self, k_win, subset=None, path=None, pdf=False, cdf=True, recap=False
-    ):
-        """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
-
-        For a fixed value of R and for given values of windows of k, compute
-        artificial estimates for the n and compare them to the empirical ones
-        using the KS test
-
-        Args:
-            k_win (np.ndarray(int)): boundaries of the windows in k
-            subset (int or np.ndarray(int)): subset of points used to perform the model validation
-            path (string): if provided, save the plots and observables to the provided folder
-            pdf (bool): plot empirical vs model pdfs
-            cdf (bool): plot empirical vs model cdfs
-            recap (bool): plot id and p-values for each window
-        """
-        if path is not None:
-            path = path.rstrip("/") + "/"
-            os.system("mkdir -p " + path)
-        obs = []
-        mask = self._my_mask(subset)
-        n_eff = self.n[mask] - self.central_point
-        k_eff = self.k[mask] - self.central_point
-
-        for i in range(len(k_win) - 1):
-            # find points within window
-            k_ave = (k_win[i + 1] + k_win[i]) / 2.0
-            mask_i = np.logical_and(k_win[i] < k_eff, k_eff <= k_win[i + 1])
-            ki = k_eff[mask_i]
-            ni = n_eff[mask_i]
-
-            # skip window with too few points
-            if len(ni) < 10:
-                continue
-
-            # find id and error within window
-            id_i = df.find_d_root(self.ln, self.lk, ni.mean(), ki.mean())
-            cr = (
-                df.binomial_cramer_rao(id_i, self.ln, self.lk, len(ni), ki.mean())
-                ** 0.5
-            )
-
-            # model validation
-            # compute the p of the binomial distribution
-            p = df.compute_discrete_volume(self.ln, id_i) / df.compute_discrete_volume(
-                self.lk, id_i
-            )
-
-            # extract the artificial n
-            n_mod = self.rng.binomial(ki, p)
-
-            # perform KS test
-            kstat, pvi = KS(n_mod, ni)
-            print(
-                "window elements:\t",
-                len(ni),
-                "\nwindow id:\t",
-                id_i,
-                "\nwindow p-value:\t",
-                pvi,
-            )
-            # save observables
-            obs.append(
-                (
-                    k_ave,
-                    id_i,
-                    cr,
-                    ni.mean(),
-                    ni.std(),
-                    n_mod.mean(),
-                    n_mod.std(),
-                    len(ni),
-                    pvi,
-                )
-            )
-            # PLOT
-            title = (
-                r"R=" + str(self.lk) + "\t$\overline{k}=$" + str(k_ave)  # noqa: W605
-            )
-            # PDF--------------------------------------------------------
-            if pdf:
-                fileout = (
-                    path + "k" + str(k_ave) + "_pdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_pdf(ni, n_mod, title, fileout)
-
-            # CDF-------------------------------------------------------
-            if cdf:
-                fileout = (
-                    path + "k" + str(k_ave) + "_cdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_cdf(ni, n_mod, title, fileout)
-
-        obs = np.array(obs)
-        if recap:
-            fileout = path + "id_pv.pdf" if (path is not None) else None
-            ddp.plot_id_pv(
-                obs[:, 0],
-                obs[:, 1],
-                obs[:, -1],
-                "R=" + str(self.lk),
-                r"$\overline{k}$",
-                fileout,
-            )
-
-        if path:
-            np.savetxt(
-                path + "observables.txt",
-                obs,
-                header="<k_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value",
-                fmt="%.3f",
-                delimiter="\t",
-            )
-        else:
-            print(
-                "<k_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value"
-            )
-            for ob in obs:
-                print(ob)
-
-        return [ob[-1] for ob in obs]
-
-    # ----------------------------------------------------------------------------------------------
-    def K_mod_val(  # noqa: C901
-        self, R_win, subset=None, path=None, pdf=False, cdf=True, recap=False
-    ):
-        """Use Kolmogorov-Smirnoff test to assess the goodness of the estimate at fixed R within certain windows in k
-
-        For a fixed value of K and for given values of windows of R, compute
-        artificial estimates for the n and compare them to the empirical ones
-        using the KS test
-
-        Args:
-            R_win (np.ndarray(int)): boundaries of the windows in R
-            subset (int or np.ndarray(int)): subset of points used to perform the model validation
-            path (string): if provided, save the plots and observables to the provided folder
-            pdf (bool): plot empirical vs model pdfs
-            cdf (bool): plot empirical vs model cdfs
-            recap (bool): plot id and p-values for each window
-        """
-        if path is not None:
-            path = path.rstrip("/") + "/"
-            os.system("mkdir -p " + path)
-        obs = []
-
-        mask = self._my_mask(subset)
-        n_eff = self.n[mask] - self.central_point
-        k_eff = self.k[mask] - self.central_point
-        ln_eff = self.ln[mask]
-        lk_eff = self.lk[mask]
-
-        for i in range(len(R_win) - 1):
-            # find points within window
-            R_ave = (R_win[i + 1] + R_win[i]) / 2.0
-            mask_i = np.logical_and(R_win[i] < lk_eff, lk_eff <= R_win[i + 1])
-            # mask_i = mask_i * (
-            #     k_eff >= 0.8 * k_eff.max()
-            # )  # selects only those points for which k_eff >~ 0.8 K
-            ki = k_eff[mask_i]
-            ni = n_eff[mask_i]
-            lki = lk_eff[mask_i]
-            lni = ln_eff[mask_i]
-
-            k_ave = ki.mean()
-            # skip window with too few points
-            if len(ni) < 10:
-                continue
-
-            # find id and error within window
-            id_i = df.find_d_likelihood(lni, lki, ni, ki, 1)
-            cr = (
-                df.binomial_cramer_rao(
-                    id_i, np.rint(R_ave * self.ratio), np.rint(R_ave), len(ni), k_ave
-                )
-                ** 0.5
-            )
-
-            # model validation
-            # compute the p of the binomial distribution
-            p = df.compute_discrete_volume(lni, id_i) / df.compute_discrete_volume(
-                lki, id_i
-            )
-            # extract the artificial n
-            n_mod = self.rng.binomial(ki, p)  # size=mask_i.sum())
-
-            # perform KS test
-            kstat, pvi = KS(n_mod, ni)
-            print(
-                "window elements:\t",
-                len(ni),
-                "\nwindow id:\t",
-                id_i,
-                "\nwindow p-value:\t",
-                pvi,
-            )
-            # save observables
-            obs.append(
-                (
-                    R_ave,
-                    id_i,
-                    cr,
-                    ni.mean(),
-                    ni.std(),
-                    n_mod.mean(),
-                    n_mod.std(),
-                    len(ni),
-                    pvi,
-                )
-            )
-            # PLOT
-            title = (
-                r"K=" + str(self._k) + "\t$\overline{R}=$" + str(R_ave)  # noqa: W605
-            )
-
-            # PDF--------------------------------------------------------
-            if pdf:
-                fileout = (
-                    path + "R" + str(R_ave) + "_pdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_pdf(ni, n_mod, title, fileout)
-            # CDF-------------------------------------------------------
-            if cdf:
-                fileout = (
-                    path + "R" + str(R_ave) + "_cdf.pdf" if (path is not None) else None
-                )
-                ddp.plot_cdf(ni, n_mod, title, fileout)
-
-        obs = np.array(obs)
-        if recap:
-            fileout = path + "id_pv.pdf" if (path is not None) else None
-            ddp.plot_id_pv(
-                obs[:, 0],
-                obs[:, 1],
-                obs[:, -1],
-                "K=" + str(self._k),
-                r"$\overline{R}$",
-                fileout,
-            )
-
-        if path:
-            np.savetxt(
-                path + "observables.txt",
-                obs,
-                header="<R_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value",
-                fmt="%.3f",
-                delimiter="\t",
-            )
-        else:
-            print(
-                "<R_win>\tid\tstd(id)\t<n emp>\tstd(n emp)\t<n mod>\tstd(n mod)>\telem\tp-value"
-            )
-            for ob in obs:
-                print(ob)
-
-        return [ob[-1] for ob in obs]
-
-    # ----------------------------------------------------------------------------------------------
-
     def set_id(self, d):
-        """Set id manually
+        """Set id manually.
+
         Args:
-            id (float): intrinsic dimension to assign to the class
+            d (float): intrinsic dimension to assign to the class
 
         """
-
         assert d > 0, "cannot support negative dimensions (yet)"
         self.intrinsic_dim = d
 
     # ----------------------------------------------------------------------------------------------
 
     def set_lk_ln(self, lk, ln):
-        """Assign lk and ln to class
+        """Assign lk and ln to class.
+
         Args:
             lk (int): radius of external shells
             ln (int): radius of internal shells
-        """
 
+        """
         assert (
             isinstance(ln, (np.int8, np.int16, np.int32, np.int64, int)) and ln >= 0
         ), "select a proper integer ln>=0"
@@ -1364,7 +1139,8 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def set_ratio(self, r):
-        """Set ratio between internal and external shells
+        """Set ratio between internal and external shells.
+
         Args:
             r (float): ratio, 0<r<1 is required
         """
@@ -1374,9 +1150,11 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def set_w(self, w):
-        """Set weights of points
+        """Set weights of points.
+
         Args:
             w (np.ndarray(int)): multiplicity of points. Needs to have the same length of points
+
         """
         assert len(w) == self.N and all(
             [wi > 0 and isinstance(wi, (np.int, int))] for wi in w
@@ -1386,7 +1164,7 @@ class IdDiscrete(Base):
     # ----------------------------------------------------------------------------------------------
 
     def _my_mask(self, subset=None):
-        """Compute the mask to select points to be used when computing the id
+        """Compute the mask to select points to be used when computing the id.
 
         This function create a mask used to compute the id on a subset of datapoints.
         It takes into account mask given by the fix_k or fix_lk methods and integrate
@@ -1399,8 +1177,8 @@ class IdDiscrete(Base):
 
         Returns:
             my_mask (np.ndarray(bool)): mask indicating which points will be used in id computation
-        """
 
+        """
         assert self._mask is not None
 
         if subset is None:
@@ -1432,7 +1210,6 @@ class IdDiscrete(Base):
                         shuffle=False,
                     )
                 )
-                #                print(idx)
                 my_mask[idx] = True
 
                 assert my_mask.sum() == subset
@@ -1447,13 +1224,10 @@ class IdDiscrete(Base):
 # ----------------------------------------------------------------------------------------------
 
 
-# if __name__ == '__main__':
-#     X = rng.uniform(size = (1000, 2))
-#
-#     ide = IdEstimation(coordinates=X)
-#
-#     ide.compute_distances(maxk = 10)
-#
-#     ide.compute_id_2NN(decimation=1)
-#
-#     print(ide.id_estimated_2NN,ide.intrinsic_dim)
+if __name__ == "__main__":
+    X = rng.integers(0, 20, size=(1000, 2))
+    ide = IdDiscrete(coordinates=X)
+    ide.compute_distances(maxk=30, metric="manhattan", period=20)
+    ide.compute_id_binomial_lk(4, 2)
+
+    print(ide.intrinsic_dim)
