@@ -24,6 +24,8 @@ The algorithms currently implemented are:
 * k-NN ("k-nearest neighbours estimator")
 * PAk ("Point adaptive k-NN estomator")
 * k*-NN ("k-star nearest neighbours estimator")
+* point-adaptive mean-shift gradient estimator
+* BMTI ("Binless Multidimensional Thermodynamic Integration")
 
 Density based clustering
 --------------------------

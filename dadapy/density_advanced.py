@@ -182,7 +182,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_pearson(self, comp_p_mat=False, method="jaccard"):
+    def compute_pearson(self, comp_p_mat=False, similarity_method="jaccard"):
         """
         Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
         Pearson correlation coefficient between the directed deltaFij computed with the gradients in i and in j, namely
@@ -193,13 +193,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         Args:
             comp_p_mat (bool): if True, also computes the pearson_mat attribute.
-            method (str): method to compute the neighbourhood similarity index (see documentation for
-                compute_neigh_similarity_index).
+            similarity_method (str): similarity_method to compute the neighbourhood similarity index (see documentation
+                for compute_neigh_similarity_index).
         """
 
         # check or compute neigh_similarity_index
         if self.neigh_similarity_index is None:
-            self.compute_neigh_similarity_index(method=method)
+            self.compute_neigh_similarity_index(method=similarity_method)
         # check or compute grads
         if self.grads is None:
             self.compute_grads()
@@ -234,7 +234,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             self.pearson_mat = p_mat.todense()
             np.fill_diagonal(self.pearson_mat, 1.0)
 
-    def compute_deltaFs(self, pearson_method="jaccard", comp_p_mat=False):
+    def compute_deltaFs(self, similarity_method="jaccard", comp_p_mat=False):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
             a linear expansion with as slope the semisum of the average gradient of the log-density over
             the neighbourhood of points i and j.
@@ -246,7 +246,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             The log-density differences are stored Fij_array, their variances in Fij_array_var.
 
         Args:
-            pearson_method: see docs for compute_pearson function
+            similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
             comp_p_mat: see docs for compute_pearson function
 
         """
@@ -270,7 +270,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # check or compute common_neighs
         if self.pearson_mat is None:
-            self.compute_pearson(method=pearson_method, comp_p_mat=comp_p_mat)
+            self.compute_pearson(
+                similarity_method=similarity_method, comp_p_mat=comp_p_mat
+            )
 
         Fij_array = 0.5 * np.einsum("ij, ij -> i", g1 + g2, self.neigh_vector_diffs)
         vari = np.einsum(
@@ -296,18 +298,17 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_inv_cross_covariance(self, pearson_method="jaccard"):
+    def compute_deltaFs_inv_cross_covariance(self, similarity_method="jaccard"):
         """Compute the appoximate inverse cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using the LSDI
-        approximation (see compute_density_BMTI_reg docs)
+        approximation (see compute_density_BMTI docs)
 
         Args:
-            pearson_method: see docs for compute_pearson function
-
+            similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
         """
 
         # check for deltaFs
         if self.pearson_mat is None:
-            self.compute_pearson(method=pearson_method, comp_p_mat=True)
+            self.compute_pearson(similarity_method=similarity_method, comp_p_mat=True)
 
         # check or compute deltaFs_grads_semisum
         if self.Fij_var_array is None:
