@@ -270,7 +270,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # check or compute common_neighs
         if self.pearson_mat is None:
-            self.compute_pearson(similarity_method=similarity_method, comp_p_mat=comp_p_mat)
+            self.compute_pearson(
+                similarity_method=similarity_method, comp_p_mat=comp_p_mat
+            )
 
         Fij_array = 0.5 * np.einsum("ij, ij -> i", g1 + g2, self.neigh_vector_diffs)
         vari = np.einsum(
