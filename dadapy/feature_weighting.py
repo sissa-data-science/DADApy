@@ -738,7 +738,7 @@ class FeatureWeighting(Base):
         self.history = {
             "l1_penalties": l1_penalties,
             "weights_per_l1_per_epoch": weights,
-            "dii_per_l1_per_epoch": l1_penalties,
+            "dii_per_l1_per_epoch": diis,
             "l1_term_per_l1_per_epoch": l1_loss_contributions,
         }
 
