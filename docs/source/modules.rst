@@ -1,8 +1,7 @@
 Modules (API reference)
 =======================
 
-The package contains the following modules: id_estimation, density_estimation, clustering, metric_comparisons,
-feature_weighting,data, data_sets.
+The package contains the following modules:
 
 
 .. toctree::
@@ -10,7 +9,9 @@ feature_weighting,data, data_sets.
 
    base
    id_estimation
+   neigh_graph
    density_estimation
+   density_advanced
    clustering
    id_discrete
    metric_comparisons
