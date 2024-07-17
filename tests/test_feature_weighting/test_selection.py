@@ -71,7 +71,7 @@ def test_maxk_warning():
     data = rng.random((10, 5))
     feature_selection = FeatureWeighting(data, maxk=3)
 
-    with pytest.warns():
+    with pytest.warns(UserWarning):
         feature_selection.return_dii_gradient(Data(data), weights=np.zeros(5))
 
 
