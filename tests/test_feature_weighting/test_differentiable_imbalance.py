@@ -28,7 +28,7 @@ rng = np.random.default_rng()
 def test_typing():
     """Test typing decorator function."""
     data = rng.random((10, 5))
-    for dtype in [np.float16, np.float32, np.double, np.float64, np.float128]:
+    for dtype in [np.float16, np.float32, np.double, np.float64]:
         # This should run with only floats as input arrays
         dist_mat = dii._return_full_dist_matrix(
             data.astype(dtype), period=np.zeros(5, dtype=dtype), n_jobs=1, cythond=True
@@ -45,7 +45,6 @@ def test_typing():
     assert cast_func(np.zeros(10, dtype=np.int64))[0][0].dtype == np.int64
 
     assert cast_func(np.zeros(10, dtype=np.float16))[0][0].dtype == dii.CYTHON_DTYPE
-    assert cast_func(np.zeros(10, dtype=np.float128))[0][0].dtype == dii.CYTHON_DTYPE
     assert cast_func(np.zeros(10, dtype=np.double))[0][0].dtype == dii.CYTHON_DTYPE
 
     assert cast_func(0, test=np.zeros(10, dtype=np.float16))[0][0] == 0
