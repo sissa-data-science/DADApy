@@ -68,7 +68,7 @@ overlap_labels = data.return_label_overlap(labels)
 - PAk estimator
   > Rodriguez et al., *JCTC* (2018)
 - BMTI estimator
-  > Carli et al., *in preparation*
+  > Carli et al., *ArXiv* (2024)
 
 - Density peaks clustering methods
     - 
