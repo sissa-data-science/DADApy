@@ -697,7 +697,7 @@ class FeatureWeighting(Base):
             end = time.time()
             if self.verb:
                 print(
-                    f"optimization with l1-penalty {i+1} of strength "
+                    f"optimization with l1-penalty {i + 1} of strength "
                     + f"{l1_penalties[i]:.4g} took: {end - start:.2f} s.",
                 )
 
