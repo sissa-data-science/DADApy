@@ -319,7 +319,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         sec = time.time()
         # compute a diagonal approximation of the inverse of the cross-covariance matrix
         self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
-            self.grads_var,
+            self.grads_covmat,
             self.neigh_vector_diffs,
             self.nind_list,
             self.pearson_mat,
