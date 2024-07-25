@@ -263,10 +263,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         Fij_array = np.zeros(self.nspar)
         self.Fij_var_array = np.zeros(self.nspar)
 
-        g1 = self.grads[self.nind_list[:, 0]]
-        g2 = self.grads[self.nind_list[:, 1]]
-        g_var1 = self.grads_covmat[self.nind_list[:, 0]]
-        g_var2 = self.grads_covmat[self.nind_list[:, 1]]
+        g0 = self.grads[self.nind_list[:, 0]]
+        g1 = self.grads[self.nind_list[:, 1]]
+        g_var0 = self.grads_covmat[self.nind_list[:, 0]]
+        g_var1 = self.grads_covmat[self.nind_list[:, 1]]
 
         # check or compute common_neighs
         if self.pearson_mat is None:
@@ -274,16 +274,16 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 similarity_method=similarity_method, comp_p_mat=comp_p_mat
             )
 
-        Fij_array = 0.5 * np.einsum("ij, ij -> i", g1 + g2, self.neigh_vector_diffs)
+        Fij_array = 0.5 * np.einsum("ij, ij -> i", g0 + g1, self.neigh_vector_diffs)
         vari = np.einsum(
             "ij, ij -> i",
             self.neigh_vector_diffs,
-            np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
+            np.einsum("ijk, ik -> ij", g_var0, self.neigh_vector_diffs),
         )
         varj = np.einsum(
             "ij, ij -> i",
             self.neigh_vector_diffs,
-            np.einsum("ijk, ik -> ij", g_var2, self.neigh_vector_diffs),
+            np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
         )
         self.Fij_var_array = 0.25 * (
             vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj)
@@ -336,6 +336,81 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
+    def debug_compute_deltaFs_inv_cross_covariance(self, similarity_method="jaccard"):
+        """Compute the appoximate inverse cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using the LSDI
+        approximation (see compute_density_BMTI docs)
+
+        Args:
+            similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
+        """
+
+        # check for deltaFs
+        if self.neigh_similarity_index_mat is None:
+            self.compute_neigh_similarity_index_mat(method=similarity_method)
+
+        # check or compute deltaFs_grads_semisum
+        if self.Fij_var_array is None:
+            self.compute_deltaFs()
+
+        # estimate directional deltaFs
+        if self.verb:
+            print("Estimation of the directional deltaFs started")
+        sec = time.time()
+        Fij_i_oneway = np.einsum(
+            "ij, ij -> i", self.grads[self.nind_list[:, 0]], self.neigh_vector_diffs
+        )
+        Fij_j_oneway = np.einsum(
+            "ij, ij -> i", self.grads[self.nind_list[:, 1]], self.neigh_vector_diffs
+        )
+        sec2 = time.time()
+        if self.verb:
+            print(
+                "{0:0.2f} seconds estimating the directional deltaFs".format(sec2 - sec)
+            )
+        # estimate standard deviations on directional deltaFs
+        g_var0 = self.grads_covmat[self.nind_list[:, 0]]
+        g_var1 = self.grads_covmat[self.nind_list[:, 1]]
+        epsi = np.sqrt(
+            np.einsum(
+                "ij, ij -> i",
+                self.neigh_vector_diffs,
+                np.einsum("ijk, ik -> ij", g_var0, self.neigh_vector_diffs),
+            )
+        )
+        epsj = np.sqrt(
+            np.einsum(
+                "ij, ij -> i",
+                self.neigh_vector_diffs,
+                np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
+            )
+        )
+        # compute epsilon^i_ij * sgn(deltaF^i_ij)
+        seps0 = epsi * np.sign(Fij_i_oneway)
+        seps1 = epsj * np.sign(Fij_j_oneway)
+
+
+        if self.verb:
+            print("Estimation of the diagonal of the inverse of the deltaFs cross-covariance started")
+        sec = time.time()
+
+        # compute a diagonal approximation of the inverse of the cross-covariance matrix
+        self.inv_deltaFs_cov = cgr.debug_return_deltaFs_inv_cross_covariance(
+            self.nind_list,
+            self.neigh_similarity_index_mat,
+            self.Fij_var_array,
+            seps0,
+            seps1
+        )
+
+        sec2 = time.time()
+        if self.verb:
+            print(
+                "{0:0.2f} seconds computing the diagonal of the inverse of the deltaFs cross-covariance".format(
+                    sec2 - sec
+                )
+            )
+
+    # ----------------------------------------------------------------------------------------------
     def compute_density_BMTI(
         self,
         delta_F_inv_cov="uncorr",
@@ -410,7 +485,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         sec2 = time.time()
 
         if self.verb:
-            print("{0:0.2f} seconds to fill sparse matrix".format(sec2 - sec))
+            print("{0:0.2f} seconds to fill get linear system ready".format(sec2 - sec))
 
         # solve linear system
         log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, mem_efficient)
@@ -438,6 +513,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     # ----------------------------------------------------------------------------------------------
 
     def _get_BMTI_reg_linear_system(self, delta_F_inv_cov, alpha):
+        sec=time.time()
         if delta_F_inv_cov == "uncorr":
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding kstar
             k1 = self.kstar[self.nind_list[:, 0]]
@@ -448,7 +524,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
             )
         elif delta_F_inv_cov == "LSDI":
-            self.compute_deltaFs_inv_cross_covariance()
+            #self.compute_deltaFs_inv_cross_covariance()
+            self.debug_compute_deltaFs_inv_cross_covariance()
             tmpvec = self.inv_deltaFs_cov
 
         elif delta_F_inv_cov == "identity":
@@ -458,7 +535,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             raise ValueError(
                 "The delta_F_inv_cov parameter is not valid, choose 'uncorr', 'LSDI' or 'none'"
             )
+        if self.verb:
+            print("{0:0.2f} seconds finding the diagonal of the deltaFs cross-covariance matrix".format(time.time() - sec))
 
+        sec=time.time()
         # compute adjacency matrix
         A = sparse.csr_matrix(
             (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
@@ -493,6 +573,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )
             + (1.0 - alpha) * self.log_den / self.log_den_err**2
         )
+        if self.verb:
+            print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec))
 
         return A, deltaFcum
 
