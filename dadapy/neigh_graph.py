@@ -337,4 +337,3 @@ class NeighGraph(KStar):
         self.neigh_similarity_index_mat = nsi_mat.todense()
         # diagonal must be 1 (overlap of a neighbourhood with itself)
         np.fill_diagonal(self.neigh_similarity_index_mat, 1.0)
-

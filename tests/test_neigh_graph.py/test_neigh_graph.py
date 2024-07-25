@@ -149,6 +149,7 @@ def test_compute_neigh_similarity_index():
         neigh_graph.neigh_similarity_index, expected_neigh_similarity_index
     )
 
+
 def test_compute_neigh_similarity_index_mat():
     """Test the compute_neigh_similarity_index_mat."""
     # create the NeighGraph object
