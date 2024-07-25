@@ -65,6 +65,17 @@ expected_common_neighs_mat = [
 
 expected_neigh_similarity_index = np.array([1.0 / 3.0, 1.0, 1.0, 1.0, 1.0, 1.0 / 3.0])
 
+expected_neigh_similarity_index_mat = np.array(
+    [
+        [1.0, 1.0 / 3.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0 / 3.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 1.0, 1.0 / 3.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0 / 3.0, 1.0],
+    ]
+)
+
 
 def test_compute_neigh_indices():
     """Test the compute_neigh_indices method."""
@@ -136,4 +147,15 @@ def test_compute_neigh_similarity_index():
     neigh_graph.compute_neigh_similarity_index()
     assert np.allclose(
         neigh_graph.neigh_similarity_index, expected_neigh_similarity_index
+    )
+
+def test_compute_neigh_similarity_index_mat():
+    """Test the compute_neigh_similarity_index_mat."""
+    # create the NeighGraph object
+    neigh_graph = NeighGraph(coordinates=data)
+    neigh_graph.compute_distances()
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
+    neigh_graph.compute_neigh_similarity_index_mat()
+    assert np.allclose(
+        neigh_graph.neigh_similarity_index_mat, expected_neigh_similarity_index_mat
     )
