@@ -319,7 +319,7 @@ def debug_return_deltaFs_inv_cross_covariance(long[:,:] nind_list,      # nspar 
     cdef double[::1] denom = denom_nonview
 
     cdef double gamma, ptot, sgn
-    cdef int i,j,l,m,a,b,dim1,dim2    
+    cdef int i,j,l,m,a,b  
 
     for a in range(nspar):
         i = nind_list[a, 0]
