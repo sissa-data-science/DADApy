@@ -388,9 +388,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         seps0 = epsi * np.sign(Fij_i_oneway)
         seps1 = epsj * np.sign(Fij_j_oneway)
 
-
         if self.verb:
-            print("Estimation of the diagonal of the inverse of the deltaFs cross-covariance started")
+            print(
+                "Estimation of the diagonal of the inverse of the deltaFs cross-covariance started"
+            )
         sec = time.time()
 
         # compute a diagonal approximation of the inverse of the cross-covariance matrix
@@ -399,7 +400,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             self.neigh_similarity_index_mat,
             self.Fij_var_array,
             seps0,
-            seps1
+            seps1,
         )
 
         sec2 = time.time()
@@ -513,7 +514,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     # ----------------------------------------------------------------------------------------------
 
     def _get_BMTI_reg_linear_system(self, delta_F_inv_cov, alpha):
-        sec=time.time()
+        sec = time.time()
         if delta_F_inv_cov == "uncorr":
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding kstar
             k1 = self.kstar[self.nind_list[:, 0]]
@@ -524,7 +525,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
             )
         elif delta_F_inv_cov == "LSDI":
-            #self.compute_deltaFs_inv_cross_covariance()
+            # self.compute_deltaFs_inv_cross_covariance()
             self.debug_compute_deltaFs_inv_cross_covariance()
             tmpvec = self.inv_deltaFs_cov
 
@@ -536,9 +537,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 "The delta_F_inv_cov parameter is not valid, choose 'uncorr', 'LSDI' or 'none'"
             )
         if self.verb:
-            print("{0:0.2f} seconds finding the diagonal of the deltaFs cross-covariance matrix".format(time.time() - sec))
+            print(
+                "{0:0.2f} seconds finding the diagonal of the deltaFs cross-covariance matrix".format(
+                    time.time() - sec
+                )
+            )
 
-        sec=time.time()
+        sec = time.time()
         # compute adjacency matrix
         A = sparse.csr_matrix(
             (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),

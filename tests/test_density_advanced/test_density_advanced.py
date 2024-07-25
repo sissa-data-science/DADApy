@@ -60,6 +60,7 @@ def test_compute_grads():
 
 expected_pearson_array = np.array([1.0 / 3.0, -1.0, -1.0, -1.0, -1.0, 1.0 / 3.0])
 
+
 def test_compute_pearson():
     """Test the compute_pearson method."""
     # create the DensityAdvanced object
