@@ -252,9 +252,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # check or compute common_neighs
         if self.pearson_array is None:
-            self.compute_pearson(
-                similarity_method=similarity_method
-            )
+            self.compute_pearson(similarity_method=similarity_method)
 
         Fij_array = 0.5 * np.einsum("ij, ij -> i", g0 + g1, self.neigh_vector_diffs)
         vari = np.einsum(
@@ -280,7 +278,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_diag_inv_deltaFs_cross_covariance_LSDI(self, similarity_method="jaccard"):
+    def compute_diag_inv_deltaFs_cross_covariance_LSDI(
+        self, similarity_method="jaccard"
+    ):
         """Compute the diagonal of the appoximate inverse of the deltaFs cross-covariance cov[deltaFij,deltaFlm] using
         the LSDI approximation (see compute_density_BMTI docs)
 
