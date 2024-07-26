@@ -57,9 +57,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             of the neighbourhood graph, it contains an estimate of the Pearson correlation coefficient between the
             directed deltaFij computed with the gradients in i and in j, namely between dot(g_i,(x_j-x_i)) and
             dot(g_j,(x_j-x_i)).
-        pearson_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains the Pearson correlation coefficient
-            between the directed deltaFij computed with the gradients in i and in j (see pearson_array) if (i,j) is an
-            edge of the directed neighbourhood graph; it contains a 0 otherwise.
         Fij_array (list(np.array(float)), optional): size nspar. Stores for each couple in nind_list the estimates of
             deltaF_ij computed from point i as semisum of the gradients in i and minus the gradient in j
         Fij_var_array (np.array(float), optional): size nspar. Stores for each couple in nind_list the estimates of the
@@ -85,7 +82,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads_var = None
         self.grads_covmat = None
         self.pearson_array = None
-        self.pearson_mat = None
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
@@ -108,7 +104,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.grads_var = None
         self.grads_covmat = None
         self.pearson_array = None
-        self.pearson_mat = None
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
@@ -182,7 +177,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_pearson(self, comp_p_mat=False, similarity_method="jaccard"):
+    def compute_pearson(self, similarity_method="jaccard"):
         """
         Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
         Pearson correlation coefficient between the directed deltaFij computed with the gradients in i and in j, namely
@@ -192,7 +187,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         coefficients take values between -1 and 1 and are stored in the pearson_array attribute.
 
         Args:
-            comp_p_mat (bool): if True, also computes the pearson_mat attribute.
             similarity_method (str): similarity_method to compute the neighbourhood similarity index (see documentation
                 for compute_neigh_similarity_index).
         """
@@ -222,24 +216,12 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 )
             )
 
-        # save in matrix form
-        if comp_p_mat is True:
-            p_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
-            for nspar, indices in enumerate(self.nind_list):
-                i = indices[0]
-                j = indices[1]
-                p_mat[i, j] = self.pearson_array[nspar]
-                if p_mat[j, i] == 0:
-                    p_mat[j, i] = p_mat[i, j]
-            self.pearson_mat = p_mat.todense()
-            np.fill_diagonal(self.pearson_mat, 1.0)
-
     def compute_deltaFs(self, similarity_method="jaccard", comp_p_mat=False):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
             a linear expansion with as slope the semisum of the average gradient of the log-density over
             the neighbourhood of points i and j.
 
-            If not defined, compute the Pearson coefficients p (see docs for pearson_array and pearson_mat) by running
+            If not defined, compute the Pearson coefficients p (see docs for pearson_array) by running
             compute_pearson.
             Then use these p in the estimate of the variances on the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where
             E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2024]).
@@ -269,9 +251,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         g_var1 = self.grads_covmat[self.nind_list[:, 1]]
 
         # check or compute common_neighs
-        if self.pearson_mat is None:
+        if self.pearson_array is None:
             self.compute_pearson(
-                similarity_method=similarity_method, comp_p_mat=comp_p_mat
+                similarity_method=similarity_method
             )
 
         Fij_array = 0.5 * np.einsum("ij, ij -> i", g0 + g1, self.neigh_vector_diffs)

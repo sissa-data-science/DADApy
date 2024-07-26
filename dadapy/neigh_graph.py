@@ -303,7 +303,7 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_similarity_index_mat(self, method="jaccard"):
+    def compute_neigh_similarity_index_mat(self, method=None):
         """
         Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
         overlaps between the neighbourhoods of the points connected by edges on the DNG, with values from 0 to 1 and
@@ -321,9 +321,14 @@ class NeighGraph(KStar):
             "squared geometric": p_1,2 = (k_1,2)^2 / (k_1 * k_2), i.e. the square of the "geometric" version
         """
 
+        sec = time.time()
         # check if the neigh_similarity_index array exists
-        if self.neigh_similarity_index is None:
+        if method is not None:
+            print("recomputing")
             self.compute_neigh_similarity_index(method=method)
+        else:
+            if self.neigh_similarity_index is None:
+                self.compute_neigh_similarity_index()
 
         # fill a sparse matrix from the neigh_similarity_index array
         nsi_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
@@ -337,3 +342,5 @@ class NeighGraph(KStar):
         self.neigh_similarity_index_mat = nsi_mat.todense()
         # diagonal must be 1 (overlap of a neighbourhood with itself)
         np.fill_diagonal(self.neigh_similarity_index_mat, 1.0)
+        if self.verb:
+            print("{0:0.2f} seconds to compute neigh_similarity_index_mat.".format(time.time() - sec))
