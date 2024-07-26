@@ -343,4 +343,8 @@ class NeighGraph(KStar):
         # diagonal must be 1 (overlap of a neighbourhood with itself)
         np.fill_diagonal(self.neigh_similarity_index_mat, 1.0)
         if self.verb:
-            print("{0:0.2f} seconds to compute neigh_similarity_index_mat.".format(time.time() - sec))
+            print(
+                "{0:0.2f} seconds to compute neigh_similarity_index_mat.".format(
+                    time.time() - sec
+                )
+            )
