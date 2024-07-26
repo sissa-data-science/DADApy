@@ -174,7 +174,8 @@ def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def return_deltaFs_inv_cross_covariance(double[:,:,:] grads_covmat,
+# Old version, with Pearson correlation coefficients from 0 to 1 (only positive elements in the cov matrix)
+def return_diag_inv_deltaFs_cross_covariance_LSDI_positive_pearson(double[:,:,:] grads_covmat,
                                         double[:,:] neigh_vector_diffs,
                                         long[:,:] nind_list,          # nspar x 2
                                         double[:,:] p,                # pearson_correlation matrix (NxN)
@@ -303,7 +304,7 @@ def return_deltaFs_inv_cross_covariance(double[:,:,:] grads_covmat,
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
-def debug_return_deltaFs_inv_cross_covariance(long[:,:] nind_list,      # nspar x 2
+def return_diag_inv_deltaFs_cross_covariance_LSDI(long[:,:] nind_list,      # nspar x 2
                                         double[:,:] p,                  # neigh_similarity_index matrix (NxN)
                                         double[:] Fij_var_array,
                                         double[:] seps0,
@@ -320,6 +321,11 @@ def debug_return_deltaFs_inv_cross_covariance(long[:,:] nind_list,      # nspar 
 
     cdef double gamma, ptot, sgn
     cdef int i,j,l,m,a,b  
+
+    print("-----------------------------------")
+    print("PIPPOOOOOOOOOOOOOOOOOOOOOOOO")
+    print("-----------------------------------")
+
 
     for a in range(nspar):
         i = nind_list[a, 0]
