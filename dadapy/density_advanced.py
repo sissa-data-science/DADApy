@@ -298,47 +298,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_deltaFs_inv_cross_covariance(self, similarity_method="jaccard"):
-        """Compute the appoximate inverse cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using the LSDI
-        approximation (see compute_density_BMTI docs)
-
-        Args:
-            similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
-        """
-
-        # check for deltaFs
-        if self.pearson_mat is None:
-            self.compute_pearson(similarity_method=similarity_method, comp_p_mat=True)
-
-        # check or compute deltaFs_grads_semisum
-        if self.Fij_var_array is None:
-            self.compute_deltaFs()
-
-        if self.verb:
-            print("Estimation of the deltaFs cross-covariance started")
-        sec = time.time()
-        # compute a diagonal approximation of the inverse of the cross-covariance matrix
-        self.inv_deltaFs_cov = cgr.return_deltaFs_inv_cross_covariance(
-            self.grads_covmat,
-            self.neigh_vector_diffs,
-            self.nind_list,
-            self.pearson_mat,
-            self.Fij_var_array,
-        )
-
-        sec2 = time.time()
-        if self.verb:
-            print(
-                "{0:0.2f} seconds computing the deltaFs cross-covariance".format(
-                    sec2 - sec
-                )
-            )
-
-    # ----------------------------------------------------------------------------------------------
-
-    def debug_compute_deltaFs_inv_cross_covariance(self, similarity_method="jaccard"):
-        """Compute the appoximate inverse cross-covariance of the deltaFs cov[deltaFij,deltaFlm] using the LSDI
-        approximation (see compute_density_BMTI docs)
+    def compute_diag_inv_deltaFs_cross_covariance_LSDI(self, similarity_method="jaccard"):
+        """Compute the diagonal of the appoximate inverse of the deltaFs cross-covariance cov[deltaFij,deltaFlm] using
+        the LSDI approximation (see compute_density_BMTI docs)
 
         Args:
             similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
@@ -367,9 +329,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             print(
                 "{0:0.2f} seconds estimating the directional deltaFs".format(sec2 - sec)
             )
-        # estimate standard deviations on directional deltaFs
+        # get grads covariance matrices
         g_var0 = self.grads_covmat[self.nind_list[:, 0]]
         g_var1 = self.grads_covmat[self.nind_list[:, 1]]
+        # estimate standard deviations on directional deltaFs
         epsi = np.sqrt(
             np.einsum(
                 "ij, ij -> i",
@@ -395,7 +358,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         sec = time.time()
 
         # compute a diagonal approximation of the inverse of the cross-covariance matrix
-        self.inv_deltaFs_cov = cgr.debug_return_deltaFs_inv_cross_covariance(
+        self.inv_deltaFs_cov = cgr.return_diag_inv_deltaFs_cross_covariance_LSDI(
             self.nind_list,
             self.neigh_similarity_index_mat,
             self.Fij_var_array,
@@ -412,6 +375,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )
 
     # ----------------------------------------------------------------------------------------------
+
     def compute_density_BMTI(
         self,
         delta_F_inv_cov="uncorr",
@@ -526,7 +490,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )
         elif delta_F_inv_cov == "LSDI":
             # self.compute_deltaFs_inv_cross_covariance()
-            self.debug_compute_deltaFs_inv_cross_covariance()
+            self.compute_diag_inv_deltaFs_cross_covariance_LSDI()
             tmpvec = self.inv_deltaFs_cov
 
         elif delta_F_inv_cov == "identity":
