@@ -1,15 +1,17 @@
-from dadapy.base import Base
 import multiprocessing
-import numpy as np
 import os
-from dadapy._utils.utils import compute_cross_nn_distances
-from jax import numpy as jnp, jit, lax
+
+import numpy as np
 from jax import devices as jdevices
+from jax import jit, lax
+from jax import numpy as jnp
 
 # from jax.config import config
 from jax.experimental.host_callback import call
 from scipy.special import gammaln
 
+from dadapy._utils.utils import compute_cross_nn_distances
+from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
 

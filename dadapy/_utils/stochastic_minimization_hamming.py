@@ -1,12 +1,17 @@
-from jax import numpy as jnp, jit, lax, random, grad
-from jax.tree_util import register_pytree_node
+import os
+import sys
+from time import time
+
+import numpy as np
+from jax import devices as jdevices
+from jax import grad, jit, lax
+from jax import numpy as jnp
+from jax import random
 from jax.experimental.host_callback import call
 from jax.scipy.special import gammaln
-from jax import devices as jdevices
-import sys, os
+from jax.tree_util import register_pytree_node
+
 from dadapy.hamming import Hamming
-import numpy as np
-from time import time
 
 # from jax.config import config
 # config.update('jax_platform_name', 'cpu')
