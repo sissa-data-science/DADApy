@@ -185,20 +185,11 @@ def minimize_KL(Op):
     Op.acc_ratio = jnp.double(Op.accepted) / jnp.double(Op.Nsteps)
     return Op
 
-
-def test_initial_condition(Op, d0, d1):
-    """ """
-    Op.d0_r = jnp.double(d0)
-    Op.d1_r = jnp.double(d1)
-    Op = compute_Pmodel(Op)
-    Op = compute_KLd(Op)
-    return np.log(Op.KL)
-
-
 class BID:
     def __init__(
         self,
         H=None,
+        Op=None,
         alphamin=0.0,
         alphamax=0.2,
         seed=1,
@@ -213,6 +204,7 @@ class BID:
         L=0,  # Number of bits / Ising spins
     ):
         self.H = H
+        self.Op = Op
         self.alphamin = alphamin
         self.alphamax = alphamax
         self.seed = seed
@@ -284,6 +276,13 @@ class BID:
         self.Pemp /= jnp.sum(self.Pemp)
         self.Pmodel = jnp.zeros(shape=self.Pemp.shape, dtype=jnp.float64)
 
+    def test_initial_condition(self, d0, d1):
+        self.Op.d0_r = jnp.double(d0)
+        self.Op.d1_r = jnp.double(d1)
+        self.Op = compute_Pmodel(self.Op)
+        self.Op = compute_KLd(self.Op)
+        return np.log(self.Op.KL)
+
     def set_initial_condition(self, d00min=0.05, d00max=0.95, d00step=0.05):
         # our home-made guess:
         d00_guess_list = jnp.array([jnp.double(self.Op.remp[-1])])
@@ -305,8 +304,7 @@ class BID:
         logKLs0 = jnp.empty(shape=(len(d00_guess_list)), dtype=jnp.double)
         for i in range(len(d00_guess_list)):
             logKLs0 = logKLs0.at[i].set(
-                test_initial_condition(
-                    self.Op,
+                self.test_initial_condition(
                     d00_guess_list[i],
                     d10_guess_list[i],
                 )
