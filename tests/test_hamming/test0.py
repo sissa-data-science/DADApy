@@ -16,14 +16,13 @@
 """ Module for testing BID routines"""
 
 import os
-os.environ['JAX_ENABLE_X64'] = 'True'
+
+os.environ["JAX_ENABLE_X64"] = "True"
 
 import pytest
 
-from dadapy.hamming import Hamming
 from dadapy._utils.stochastic_minimization_hamming import *
-
-
+from dadapy.hamming import Hamming
 
 # EXPECTED OUTPUT
 d_0 = 99.855
@@ -35,38 +34,41 @@ seed = 1
 np.random.seed(seed=seed)
 
 # DATA
-L = 100    # number of bits 
+L = 100  # number of bits
 Ns = 5000  # number of samples
-X = 2*np.random.randint(low=0,high=2,size=(Ns,L))-1 # spins must be normalized to +-1 
+X = (
+    2 * np.random.randint(low=0, high=2, size=(Ns, L)) - 1
+)  # spins must be normalized to +-1
 
-# DISTANCES 
-histfolder = f'./tests/test_hamming/results/hist/'
+# DISTANCES
+histfolder = f"./tests/test_hamming/results/hist/"
 H = Hamming(coordinates=X)
 H.compute_distances()
-H.D_histogram(L=L,Ns=Ns,resultsfolder=histfolder)
+H.D_histogram(L=L, Ns=Ns, resultsfolder=histfolder)
 
 # PARAMETER DEFINITIONS
-eps = 1E-5                   # good-old small epsilon
-alphamin = 0 #+ eps          # order of  min_quantile, to remove poorly sampled parts of the histogram
-alphamax = 1 #- eps          # order of max_quantile, to define r* (named rmax here)
-delta = 5E-4                 # stochastic optimization step 
-Nsteps = int(1E6)            # number of optimization steps
-seed = 1                     # 
-optfolder0 = f'results/opt/' # folder where optimization results are saved
-export_logKLs = 1            # flag to export the logKLs during optimization
+eps = 1e-5  # good-old small epsilon
+alphamin = 0  # + eps          # order of  min_quantile, to remove poorly sampled parts of the histogram
+alphamax = 1  # - eps          # order of max_quantile, to define r* (named rmax here)
+delta = 5e-4  # stochastic optimization step
+Nsteps = int(1e6)  # number of optimization steps
+seed = 1  #
+optfolder0 = f"results/opt/"  # folder where optimization results are saved
+export_logKLs = 1  # flag to export the logKLs during optimization
 
-B = BID(H,
-        alphamin=alphamin,
-        alphamax=alphamax,
-        seed=seed,
-        delta=delta,
-        Nsteps=Nsteps,
-        export_logKLs=export_logKLs,
-        optfolder0=optfolder0,
-        L=L
-        )
+B = BID(
+    H,
+    alphamin=alphamin,
+    alphamax=alphamax,
+    seed=seed,
+    delta=delta,
+    Nsteps=Nsteps,
+    export_logKLs=export_logKLs,
+    optfolder0=optfolder0,
+    L=L,
+)
 B.computeBID()
 
-assert pytest.approx(B.Op.d0,abs=1E-3) == d_0
-assert pytest.approx(B.Op.d1,abs=1E-3) == d_1
-assert pytest.approx(jnp.log(B.Op.KL),abs=1E-2) == logKL
+assert pytest.approx(B.Op.d0, abs=1e-3) == d_0
+assert pytest.approx(B.Op.d1, abs=1e-3) == d_1
+assert pytest.approx(jnp.log(B.Op.KL), abs=1e-2) == logKL

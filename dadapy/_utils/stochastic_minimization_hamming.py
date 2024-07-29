@@ -185,6 +185,7 @@ def minimize_KL(Op):
     Op.acc_ratio = jnp.double(Op.accepted) / jnp.double(Op.Nsteps)
     return Op
 
+
 class BID:
     def __init__(
         self,
