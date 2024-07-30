@@ -5,7 +5,7 @@ description = "Distance-based Analysis of DAta-manifolds in python"
 authors = [{ name = "DADApy author"}]
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 
 dependencies = ["numpy<2.0", "scipy", "scikit-learn", "matplotlib", "seaborn", "jax", "jaxlib"]
 
