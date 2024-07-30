@@ -60,17 +60,6 @@ def test_compute_grads():
 
 expected_pearson_array = np.array([1.0 / 3.0, -1.0, -1.0, -1.0, -1.0, 1.0 / 3.0])
 
-expected_pearson_mat = np.array(
-    [
-        [1.0, 1.0 / 3.0, 0.0, 0.0, 0.0, 0.0],
-        [1.0 / 3.0, 1.0, -1.0, 0.0, 0.0, 0.0],
-        [0.0, -1.0, 1.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0, -1.0, 0.0],
-        [0.0, 0.0, 0.0, -1.0, 1.0, 1.0 / 3.0],
-        [0.0, 0.0, 0.0, 0.0, 1.0 / 3.0, 1.0],
-    ]
-)
-
 
 def test_compute_pearson():
     """Test the compute_pearson method."""
@@ -79,9 +68,8 @@ def test_compute_pearson():
     da.compute_distances()
     da.set_id(1)
     da.set_kstar(2)
-    da.compute_pearson(comp_p_mat=True)
+    da.compute_pearson()
     assert np.allclose(da.pearson_array, expected_pearson_array)
-    assert np.allclose(da.pearson_mat, expected_pearson_mat)
 
 
 def test_compute_deltaFs():

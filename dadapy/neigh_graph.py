@@ -58,6 +58,9 @@ class NeighGraph(KStar):
         neigh_similarity_index (np.ndarray(float), optional): size nspar. At position p, it contains an estimate of
             the overlap between the neighbourhoods of the two points forming the p-th directed edge of the
             neighbourhood graph.
+        neigh_similarity_index_mat (np.ndarray(float), optional): size N x N. Entry (i,j) contains an estimate of the
+            overlap between the neighbourhoods of points i and j if (i,j) is an edge of the directed neighbourhood
+            graph; it contains a 0 otherwise.
         neigh_vector_diffs (np.ndarray(float), optional): size nspar x dims. At position p, it stores the
             vector difference from point nind_list[p,0] to point nind_list[p,1].
         neigh_dists (np.array(float), optional): size nspar. Stores the distances from each point to its
@@ -82,6 +85,7 @@ class NeighGraph(KStar):
         self.common_neighs_array = None
         self.common_neighs_mat = None
         self.neigh_similarity_index = None
+        self.neigh_similarity_index_mat = None
         self.neigh_vector_diffs = None
         self.neigh_dists = None
 
@@ -105,6 +109,7 @@ class NeighGraph(KStar):
         self.common_neighs_array = None
         self.common_neighs_mat = None
         self.neigh_similarity_index = None
+        self.neigh_similarity_index_mat = None
         self.neigh_vector_diffs = None
         self.neigh_dists = None
 
@@ -252,9 +257,9 @@ class NeighGraph(KStar):
 
     def compute_neigh_similarity_index(self, method="jaccard"):
         """
-        Compute an estimate of the overlaps between the neighbourhoods of the points connected by edges on the DNG
-        values from 0 to 1 and stores them in the neigh_similarity_index attribute. See also the documentation for the
-        neigh_similarity_index attribute for completeness.
+        Compute an estimate of the overlaps between the neighbourhoods of the points connected by edges on the DNG,
+        with values from 0 to 1, and stores them in the neigh_similarity_index attribute. See also the documentation
+        for the neigh_similarity_index attribute for completeness.
 
         Args:
             method (str): currently implemented "jaccard", "geometric", "squared_geometric".
@@ -295,3 +300,51 @@ class NeighGraph(KStar):
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds to carry out the estimation.".format(sec2 - sec))
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_neigh_similarity_index_mat(self, method=None):
+        """
+        Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
+        overlaps between the neighbourhoods of the points connected by edges on the DNG, with values from 0 to 1 and
+        stores them in the neigh_similarity_index_mat matrix attribute.
+
+        Args:
+            method (str): currently implemented "jaccard", "geometric", "squared_geometric".
+            Let us denote the neighbourhoods of points 1 and 2 respectively by the sets Ω_1 and Ω_2.
+            Then k_1 = #Ω_1 and k_2 = #Ω_2 are the neighbourhood sizes and k_1,2 = Ω_1 ∩ Ω_2 the number of points
+            in common between the two neighbourhoods (which can be read off at common_neighs_mat[1,2]
+            if common_neighs_mat has been computed). The methods to compute the neighbourhood similarity index are:
+
+            "jaccard": p_1,2 = k_1,2 / (k_1 + k_2 - k_1,2) = #(Ω_1 ∩ Ω_2) / #(Ω_1 ∪ Ω_2), i.e. the Jaccard index
+            "geometric": p_1,2 = k_1,2 / sqrt(k_1 * k_2), i.e. the number of common points divided by the geometric mean
+            "squared geometric": p_1,2 = (k_1,2)^2 / (k_1 * k_2), i.e. the square of the "geometric" version
+        """
+
+        sec = time.time()
+        # check if the neigh_similarity_index array exists
+        if method is not None:
+            print("recomputing")
+            self.compute_neigh_similarity_index(method=method)
+        else:
+            if self.neigh_similarity_index is None:
+                self.compute_neigh_similarity_index()
+
+        # fill a sparse matrix from the neigh_similarity_index array
+        nsi_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+        for nspar, indices in enumerate(self.nind_list):
+            i = indices[0]
+            j = indices[1]
+            nsi_mat[i, j] = self.neigh_similarity_index[nspar]
+            if nsi_mat[j, i] == 0:
+                nsi_mat[j, i] = nsi_mat[i, j]
+        # convert to dense matrix
+        self.neigh_similarity_index_mat = nsi_mat.todense()
+        # diagonal must be 1 (overlap of a neighbourhood with itself)
+        np.fill_diagonal(self.neigh_similarity_index_mat, 1.0)
+        if self.verb:
+            print(
+                "{0:0.2f} seconds to compute neigh_similarity_index_mat.".format(
+                    time.time() - sec
+                )
+            )
