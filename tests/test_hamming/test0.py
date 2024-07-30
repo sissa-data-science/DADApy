@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-""" Module for testing BID routines"""
+"""Module for testing BID routines."""
 
 import os
 
