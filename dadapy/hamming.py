@@ -77,8 +77,8 @@ class Hamming:
 
     def D_histogram(
         self,
-        compute_flag=0,  # 1 to compute distances (else they are loaded)
-        save=False,  # 1 to save computed distances
+        compute_flag=0,  # 1 to compute histogram (else it is loaded)
+        save=False,  # 1 to save computed histogram
         resultsfolder="results/hist/",
     ):
         if save:
