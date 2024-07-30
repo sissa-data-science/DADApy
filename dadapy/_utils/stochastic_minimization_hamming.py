@@ -1,17 +1,15 @@
 import os
-import sys
 from time import time
 
 import numpy as np
 from jax import devices as jdevices
-from jax import grad, jit, lax
+from jax import jit, lax
 from jax import numpy as jnp
 from jax import random
-from jax.experimental.host_callback import call
+
+# from jax.experimental.host_callback import call
 from jax.scipy.special import gammaln
 from jax.tree_util import register_pytree_node
-
-from dadapy.hamming import Hamming
 
 # from jax.config import config
 # config.update('jax_platform_name', 'cpu')
@@ -177,7 +175,7 @@ def minimize_KL(Op):
 
     Op = lax.fori_loop(lower=0, upper=Op.Nsteps, body_fun=step, init_val=Op)
 
-    ### This is necessary to keep the last *accepted* move
+    # This is necessary to keep the last *accepted* move
     Op.d0_r = Op.d0
     Op.d1_r = Op.d1
     Op = compute_Pmodel(Op)
@@ -198,7 +196,7 @@ class BID:
         d10=jnp.double(0),
         delta=5e-4,
         Nsteps=1e6,
-        optfolder0=f"results/opt/",
+        optfolder0="results/opt/",
         load_initial_condition_flag=False,
         optimization_elapsed_time=None,
         export_logKLs=0,  # To export the curve of logKLs during optimization
@@ -241,14 +239,14 @@ class BID:
         self.optfolder += f"Nsteps{self.Nsteps}/"
         self.optfolder += f"delta{self.delta:.5f}/"
         self.optfolder += f"seed{self.seed}/"
-        self.optfile = self.optfolder + f"opt.txt"
-        self.valfile = self.optfolder + f"model_validation.txt"
-        self.KLfile = self.optfolder + f"logKLs_opt.txt"
+        self.optfile = self.optfolder + "opt.txt"
+        self.valfile = self.optfolder + "model_validation.txt"
+        self.KLfile = self.optfolder + "logKLs_opt.txt"
 
     def set_idmin(
         self,
     ):
-        if self.regularize == False:
+        if self.regularize is False:
             self.idmin = 0
             self.rmin = self.H.D_values[0]
         else:
@@ -342,7 +340,7 @@ class BID:
         )
         self.set_initial_condition()
 
-        print(f"starting optimization")
+        print("starting optimization")
         starting_time = time()
         self.Op = minimize_KL(self.Op)
         self.optimization_elapsed_time = (time() - starting_time) / 60.0

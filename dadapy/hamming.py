@@ -7,11 +7,7 @@ from jax import jit, lax
 from jax import numpy as jnp
 
 # from jax.config import config
-from jax.experimental.host_callback import call
-from scipy.special import gammaln
-
-from dadapy._utils.utils import compute_cross_nn_distances
-from dadapy.base import Base
+# from jax.experimental.host_callback import call
 
 cores = multiprocessing.cpu_count()
 
@@ -54,8 +50,7 @@ class Hamming:
                 sort=sort,
             )
 
-    """ TODO: MODIFY HISTOGRAM ROUTINE TO DISCARD THE TRIVIAL ZEROS 
-  WHEN CROSSED_DISTANCES = 1  """
+    """TODO: MODIFY HISTOGRAM ROUTINE TO DISCARD THE TRIVIAL ZEROS WHEN CROSSED_DISTANCES = 1"""
 
     def remove_D_outliers(self):
         # left outliers:
@@ -84,33 +79,11 @@ class Hamming:
         self,
         compute_flag=0,  # 1 to compute distances (else they are loaded)
         save=False,  # 1 to save computed distances
-        T=None,  # Temperature
-        precision_T=2,  # Decimals for T
-        digits_T=1,  # Digits for T
-        L=None,  # Length of system
-        Ns=None,  # Number of samples
-        k=None,  # Typically sub-system length
-        t=None,  # Time
-        r_id=None,  # realization index
-        resultsfolder=f"results/hist/",
+        resultsfolder="results/hist/",
     ):
         if save:
             os.makedirs(resultsfolder, exist_ok=True)
-        if L is not None:
-            resultsfolder += f"L{L}"
-        if T is not None:
-            resultsfolder += f"_T{T:{digits_T}.{precision_T}f}"
-        if k is not None:
-            resultsfolder += f"_k{k}"
-        if Ns is not None:
-            resultsfolder += f"_Ns{Ns}"
-        if t is not None:
-            resultsfolder += f"_t{t}"
-        if r_id is not None:
-            resultsfolder += f"_rid{r_id}"
-        if self.crossed_distances == 1:
-            resultsfolder += f"_crossed"
-        c_fname = resultsfolder + f"D_counts"
+        c_fname = resultsfolder + "counts"
 
         if compute_flag:
             self.D_values, self.D_counts = np.unique(self.distances, return_counts=True)
@@ -180,7 +153,6 @@ class Hamming:
 
 
 def check_data_format(X):
-    U = np.unique(X)
     e1, e2 = np.unique(X)
     assert (
         e1 == -1 and e2 == 1

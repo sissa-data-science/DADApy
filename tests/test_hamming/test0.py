@@ -13,16 +13,17 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Module for testing BID routines."""
+"""Module for testing BID optimization routines."""
 
 import os
 
-os.environ["JAX_ENABLE_X64"] = "True"
-
+import numpy as np
 import pytest
 
-from dadapy._utils.stochastic_minimization_hamming import *
+from dadapy._utils.stochastic_minimization_hamming import BID
 from dadapy.hamming import Hamming
+
+os.environ["JAX_ENABLE_X64"] = "True"  # this should go above the BID imports...
 
 # EXPECTED OUTPUT
 d_0 = 99.855
@@ -41,7 +42,7 @@ X = (
 )  # spins must be normalized to +-1
 
 # DISTANCES
-histfolder = f"./tests/test_hamming/results/hist/"
+histfolder = "./tests/test_hamming/results/hist/"
 H = Hamming(coordinates=X)
 H.compute_distances()
 H.D_histogram(L=L, Ns=Ns, resultsfolder=histfolder)
@@ -53,7 +54,7 @@ alphamax = 1  # - eps          # order of max_quantile, to define r* (named rmax
 delta = 5e-4  # stochastic optimization step
 Nsteps = int(1e6)  # number of optimization steps
 seed = 1  #
-optfolder0 = f"results/opt/"  # folder where optimization results are saved
+optfolder0 = "results/opt/"  # folder where optimization results are saved
 export_logKLs = 1  # flag to export the logKLs during optimization
 
 B = BID(
@@ -71,4 +72,4 @@ B.computeBID()
 
 assert pytest.approx(B.Op.d0, abs=1e-3) == d_0
 assert pytest.approx(B.Op.d1, abs=1e-3) == d_1
-assert pytest.approx(jnp.log(B.Op.KL), abs=1e-2) == logKL
+assert pytest.approx(np.log(B.Op.KL), abs=1e-2) == logKL
