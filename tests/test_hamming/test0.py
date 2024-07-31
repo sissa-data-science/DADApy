@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Module for testing BID optimization routines."""
+"""Module for testing BID routines."""
 
 import os
 
@@ -22,8 +22,7 @@ import pytest
 
 # this environmental variable must be set <before> the BID imports
 os.environ["JAX_ENABLE_X64"] = "True"
-from dadapy._utils.stochastic_minimization_hamming import BID  # noqa: E402
-from dadapy.hamming import Hamming  # noqa: E402
+from dadapy.hamming import BID, Hamming  # noqa: E402
 
 # EXPECTED OUTPUT
 d_0 = 99.855
