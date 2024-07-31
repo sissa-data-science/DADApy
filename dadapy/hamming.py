@@ -22,7 +22,7 @@ class Hamming:
         coordinates=None,  # spins: must be normalized to +-1 to compute distances.
         distances=None,  #
         crossed_distances=0,  # 0 means we have one dataset with N samples and N(N-1)/2 (correlated) distances.
-        verbose=False,  #
+        verbose=True,  #
     ):
         self.q = q
         self.coordinates = coordinates
@@ -425,13 +425,16 @@ class BID:
         alphamin=0.0,
         alphamax=0.2,
         seed=1,
-        d00=jnp.double(0),
-        d10=jnp.double(0),
+        d0=jnp.double(0),  # BID \equiv d(r=0)  (see paper)
+        d1=jnp.double(0),  # slope of d(r) at r=0
+        d00=jnp.double(0),  # initial value of d0
+        d10=jnp.double(0),  # initial value of d1
         delta=5e-4,
         Nsteps=1e6,
         optfolder0="results/opt/",
         load_initial_condition_flag=False,
         optimization_elapsed_time=None,
+        export_results=1,
         export_logKLs=0,  # To export the curve of logKLs during optimization
         L=0,  # Number of bits / Ising spins
     ):
@@ -440,11 +443,14 @@ class BID:
         self.alphamin = alphamin
         self.alphamax = alphamax
         self.seed = seed
+        self.d0 = d0
+        self.d1 = d1
         self.d00 = d00
         self.d10 = d10
         self.delta = delta
         self.Nsteps = Nsteps
         self.optimization_elapsed_time = optimization_elapsed_time  # in minutes
+        self.export_results = export_results
         self.export_logKLs = export_logKLs
         self.L = L
 
@@ -558,7 +564,8 @@ class BID:
         self.set_idmax()
         self.truncate_hist()
         self.set_filepaths()
-        os.makedirs(self.optfolder, exist_ok=True)
+        if self.export_results:
+            os.makedirs(self.optfolder, exist_ok=True)
 
         self.Op = Optimizer(
             key=self.key0,
@@ -573,25 +580,36 @@ class BID:
         )
         self.set_initial_condition()
 
-        print("starting optimization")
+        if self.H.verbose == 1:
+            print("starting optimization")
+
         starting_time = time()
         self.Op = minimize_KL(self.Op)
         self.optimization_elapsed_time = (time() - starting_time) / 60.0
-        print(f"optimization took {self.optimization_elapsed_time:.1f} minutes")
-        print(
-            f"d_0={self.Op.d0:.3f},d_1={self.Op.d1:.3f},logKL={jnp.log(self.Op.KL):.2f}"
-        )
 
-        os.system(f"rm -f {self.optfile}")
-        print(
-            f"{self.rmax:d},{self.Op.d0:.8f},{self.Op.d1:8f},{np.log(self.Op.KL):.8f}",
-            file=open(self.optfile, "a"),
-        )
-        np.savetxt(
-            fname=self.valfile, X=np.transpose([self.remp, self.Pemp, self.Op.Pmodel])
-        )
-        if self.export_logKLs:
-            np.savetxt(fname=self.KLfile, X=self.Op.logKLs)
+        if self.H.verbose == 1:
+            print(f"optimization took {self.optimization_elapsed_time:.1f} minutes")
+            print(
+                f"d_0={self.Op.d0:.3f},d_1={self.Op.d1:.3f},logKL={jnp.log(self.Op.KL):.2f}"
+            )
+
+        if self.export_results:
+            os.system(f"rm -f {self.optfile}")
+            print(
+                f"{self.rmax:d},{self.Op.d0:.8f},{self.Op.d1:8f},{np.log(self.Op.KL):.8f}",
+                file=open(self.optfile, "a"),
+            )
+            np.savetxt(
+                fname=self.valfile,
+                X=np.transpose([self.remp, self.Pemp, self.Op.Pmodel]),
+            )
+            if self.export_logKLs:
+                np.savetxt(fname=self.KLfile, X=self.Op.logKLs)
+
+        self.d0 = self.Op.d0.item()
+        self.d1 = self.Op.d1.item()
+        self.logKL = jnp.log(self.Op.KL).item()
+        self.Pmodel = np.array(self.Op.Pmodel)
 
     def load_results(
         self,
