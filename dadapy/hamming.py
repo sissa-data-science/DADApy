@@ -57,6 +57,7 @@ class Hamming:
             )
 
     """TODO: MODIFY HISTOGRAM ROUTINE TO DISCARD THE TRIVIAL ZEROS WHEN CROSSED_DISTANCES = 1"""
+
     def D_histogram(
         self,
         compute_flag=0,  # 1 to compute histogram (else it is loaded)
@@ -67,7 +68,7 @@ class Hamming:
         Given the computed distances this routine computes the histogram (Pemp) and saves is
         """
         assert self.crossed_distances == 0
-        
+
         if save:
             os.makedirs(resultsfolder, exist_ok=True)
         c_fname = resultsfolder + "counts"
@@ -209,7 +210,7 @@ def _jcompute_distances(idx, pytree):
 
 def _set_lower_idx_true(pytree):
     """
-    if we have two datasets, we have Ns1 * Ns2 distances to compute. 
+    if we have two datasets, we have Ns1 * Ns2 distances to compute.
     """
     pytree["lower_idx"] = 0
     return pytree
