@@ -185,7 +185,7 @@ class FeatureWeighting(Base):
         n_samples: int = 200,
         initial_weights: Union[np.ndarray, int, float] = None,
         lambd: float = None,
-        decaying_lr: bool = True,
+        decaying_lr: str = "exp",
         trial_learning_rates: np.ndarray = None,
     ):
         """Find the optimal learning rate for the optimization of the DII by testing several on a reduced set
@@ -197,9 +197,11 @@ class FeatureWeighting(Base):
             initial_weights (np.ndarray or list): D(input) initial weights for the input features. No zeros allowed here
             lambd (float): softmax scaling. If None (preferred),
                 this chosen automatically with compute_optimial_lambda
-            decaying_lr (bool): default: True.
-                Apply decaying learning rate = l_rate * 2**(-i_epoch/10)
-                - every 10 epochs the learning rate will be halfed
+            decaying_lr (string): Default: "exp".
+                "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
+                lrate = l_rate_initial * 2**(-i_epoch/10),
+                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                "static" for no decay in the learning rate.
             trial_learning_rates (np.ndarray or list or None): learning rates to try.
                 If None are given, a sensible set of learning rates is tested.
         Returns:
@@ -366,7 +368,7 @@ class FeatureWeighting(Base):
         lambd: float = None,
         learning_rate: float = None,
         l1_penalty: float = 0.0,
-        decaying_lr: bool = True,
+        decaying_lr: str = "exp",
     ):
         """Optimize the differentiable information imbalance using gradient descent
             of the DII between input data object A and groundtruth data object B.
@@ -389,9 +391,11 @@ class FeatureWeighting(Base):
                 The learning rate of the gradient descent. If None, automatically estimated to be fast.
             l1_penalty: float, optional
                 The l1-regularization strength, if sparcity is needed. Default: 0 (l1-regularization turned off).
-            decaying_lr: bool
-                Use exponentially decaying learning rate in gradient descent or not. Default: True.
-
+            decaying_lr (string): Default: "exp".
+                "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
+                lrate = l_rate_initial * 2**(-i_epoch/10),
+                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                "static" for no decay in the learning rate.
         Returns:
             final_weights: np.ndarray, shape (D). Array of the optmized weights.
 
@@ -454,7 +458,7 @@ class FeatureWeighting(Base):
         n_epochs: int = 100,
         learning_rate: float = None,
         constrain: bool = False,
-        decaying_lr: bool = True,
+        decaying_lr: str = "exp",
     ):
         """Do a stepwise backward elimination of feature weights, always eliminating the lowest weight;
             after each elimination the DII is optimized by gradient descent using the remaining features
@@ -469,8 +473,11 @@ class FeatureWeighting(Base):
                 Has to be tuned, especially if constrain=True (otherwise optmization could fail)
             constrain (bool): if True, rescale the weights so the biggest weight = 1
             l1_penalty (float): l1 regularization strength
-            decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10)
-                - every 10 epochs the learning rate will be halfed
+            decaying_lr (string): Default: "exp".
+                "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
+                lrate = l_rate_initial * 2**(-i_epoch/10),
+                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                "static" for no decay in the learning rate.
 
         Returns:
             final_diis: np.ndarray, shape (D). Array of the optmized DII for each of the according weights.
@@ -571,7 +578,7 @@ class FeatureWeighting(Base):
         learning_rate: float = None,
         l1_penalties: Union[list, float] = None,
         constrain: bool = False,
-        decaying_lr: bool = True,
+        decaying_lr: str = "exp",
         refine: bool = False,
         plotlasso: bool = True,
     ):
@@ -591,8 +598,11 @@ class FeatureWeighting(Base):
             l1_penalties (list or None): l1 regularization strengths to be tested.
                 If None (default), a list of 10 sensible l1-penalties is tested,
                 which are chosen depending on the learning rate.
-            decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10)
-                - every 10 epochs the learning rate will be halfed.
+            decaying_lr (string): Default: "exp".
+                "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
+                lrate = l_rate_initial * 2**(-i_epoch/10),
+                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                "static" for no decay in the learning rate.
             refine (bool): default: False. If True, the l1-penalties are added in between penalties
                 where the number of non-zero weights changes by more than one.
                 This is done to find the optimal l1-penalty for each number of non-zero weights.
