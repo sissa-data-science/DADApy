@@ -8,3 +8,4 @@ scipy
 scikit-learn
 joblib
 matplotlib
+jax

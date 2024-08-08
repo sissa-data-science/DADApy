@@ -15,7 +15,8 @@ black-check: ## check black formatting
 flake8: ## check style with flake8
 	flake8 dadapy/base.py dadapy/metric_comparisons.py dadapy/clustering.py dadapy/id_estimation.py \
 	dadapy/density_estimation.py dadapy/id_discrete.py dadapy/data.py dadapy/feature_weighting.py \
-	dadapy/kstar.py dadapy/neigh_graph.py dadapy/density_advanced.py tests #dev_scripts examples
+	dadapy/kstar.py dadapy/neigh_graph.py dadapy/density_advanced.py dadapy/hamming.py \
+	tests #dev_scripts examples
 
 # to include the "dadapy" folder: pytest tests --doctest-modules dadapy tests/
 test: ## run tests quickly with the default Python
