@@ -26,7 +26,6 @@ class Hamming:
     ):
         self.q = q
         self.coordinates = coordinates
-        self.metric = "hamming"
         self.distances = distances
         self.crossed_distances = crossed_distances
         self.verbose = verbose
@@ -45,7 +44,8 @@ class Hamming:
         check_format=True,
     ):
         """
-        Computes all to all distances in dataset and stores them in the matrix self.distances
+        Computes all to all distances in dataset and stores them
+        in the matrix "self.distances" of shape (Ns,Ns), where Ns is the number of samples
         """
         if self.q == 2:
             self.distances = jcompute_distances(
@@ -63,15 +63,20 @@ class Hamming:
         compute_flag=0,  # 1 to compute histogram (else it is loaded)
         save=False,  # 1 to save computed histogram
         resultsfolder="results/hist/",
+        filename="counts.txt",
     ):
         """
-        Given the computed distances this routine computes the histogram (Pemp) and saves is
+        Given the computed distances, this routine computes the histogram (Pemp).
+        It defines
+        - self.D_values, a vector containing the sampled distances
+        - self.D_counts, a vector containing how many times each distance was sampled
+        - self.D_probs, self.counts normalized by the total number of counts observed.
         """
         assert self.crossed_distances == 0
 
         if save:
             os.makedirs(resultsfolder, exist_ok=True)
-        c_fname = resultsfolder + "counts"
+        _filename = resultsfolder + filename
 
         if compute_flag:
             self.D_values, self.D_counts = np.unique(self.distances, return_counts=True)
@@ -90,17 +95,25 @@ class Hamming:
 
             if save:
                 np.savetxt(
-                    fname=c_fname + ".txt",
+                    fname=_filename,
                     X=np.transpose([self.D_values, self.D_counts]),
                     fmt="%d,%d",
                 )
         else:
-            f = np.loadtxt(c_fname + ".txt", delimiter=",", dtype=int)
+            f = np.loadtxt(_filename, delimiter=",", dtype=int)
             self.D_values = f[:, 0]
             self.D_counts = f[:, 1]
             self.D_probs = self.D_counts / np.sum(self.D_counts)
 
     def set_r_quantile(self, alpha, round=True, precision=10):
+        """
+        Defines
+
+        - self.r as the quantile of order alpha of self.D_probs,
+        which can be used for rmax or rmin,
+        to discard distances larger than rmax or smaller than rmin, respectively.
+        - self.r_idx as the index of self.r in self.D_values
+        """
         if round:
             alpha = np.round(alpha, precision)
             self.D_probs = np.round(self.D_probs, precision)
@@ -114,28 +127,10 @@ class Hamming:
         self.r = int(self.D_values[self.r_idx])
         return
 
-    def set_r(self, r=None, n_sigma=3):
-        if r is not None:
-            self.r = r
-        else:
-            self.compute_moments()
-            r = int(np.round(self.D_mu_emp - n_sigma * np.sqrt(self.D_var_emp), 0))
-            if r >= self.D_values[0]:
-                self.r = r
-            else:
-                self.r = self.D_values[0]
-
-    def set_r_idx(self, r_idx=None):
-        if r_idx is not None:
-            self.r_idx = r_idx
-        else:
-            aux = np.asarray(self.r == self.D_values).nonzero()[0]
-            if len(aux) > 0:
-                self.r_idx = aux[0]
-            else:
-                self.r_idx = 0
-
     def compute_moments(self):
+        """
+        computes the empirical mean and variance of H.D_probs
+        """
         self.D_mu_emp = np.dot(self.D_probs, self.D_values)
         self.D_var_emp = np.dot(self.D_probs, self.D_values**2) - self.D_mu_emp**2
 
@@ -420,7 +415,7 @@ def minimize_KL(Op):
 class BID:
     def __init__(
         self,
-        H=None,  # instance of Hamming class defined above
+        H=Hamming(),  # instance of Hamming class defined above
         Op=None,  # instance of Optimizer class defined above
         alphamin=0.0,
         alphamax=0.2,
