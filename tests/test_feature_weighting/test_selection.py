@@ -45,6 +45,10 @@ def test_optimise_imbalance_typing():
             feature_selection.return_weights_optimize_dii(
                 Data(data), initial_weights=initial_weights
             )
+    for lrs in [2, np.array([2, 2], np.float32), "faz"]:
+        feature_selection = FeatureWeighting(data)
+        with pytest.raises(ValueError):
+            feature_selection.return_weights_optimize_dii(Data(data), decaying_lr=lrs)
 
 
 def test_dist_matrix():
@@ -101,7 +105,7 @@ def test_optimise_imbalance():
     initial_weightss = [None, 1.0, weights_array]
     lambdas = [1e-5, 1, None]
     l1_penalties = [1.0, 10, 0.0]
-    decays = [True, False]
+    decays = ["cos", "exp", "static"]
     n_epochs = 5
 
     for (
@@ -146,13 +150,13 @@ def test_optimise_imbalance():
     feature_selection = FeatureWeighting(data, period=None)
     weights = feature_selection.return_weights_optimize_dii(
         Data(target_data),
-        n_epochs=50,
+        n_epochs=40,
         learning_rate=None,
         constrain=True,
         initial_weights=np.ones_like(weights_array),
         lambd=None,
         l1_penalty=1e-5,
-        decaying_lr=True,
+        decaying_lr="exp",
     )
     assert np.all(weights[0] >= weights[2:])
     assert np.all(weights[1] >= weights[2:])
@@ -243,10 +247,11 @@ def test_search_lasso_optimization_kernel_imbalance():
     target_data = data * weights_array
     feature_selection = FeatureWeighting(data, period=None)
     l1_penalties_options = [[1e-3, 1e-2, 1e-1], np.array([1e-5]), 1e-5, None]
+    l1_decay_options = ["cos", "exp", "static"]
 
     n_epochs = 10
-    for l1_penalties, constrain, decaying_lr, refine in itertools.product(
-        l1_penalties_options, *([[True, False]] * 3)
+    for l1_penalties, constrain, refine, decaying_lr in itertools.product(
+        l1_penalties_options, *([[True, False]] * 2), l1_decay_options
     ):
         (
             num_nonzero_features,
