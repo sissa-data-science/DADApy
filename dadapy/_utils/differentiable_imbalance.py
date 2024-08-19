@@ -436,7 +436,13 @@ def _optimize_dii(
         l1_penalties: np.ndarray, shape (n_epochs, ). List of the l1_penaltie terms that were added to the imbalances in the loss function
 
     """
-    #  weightcheck = 0
+
+    # Validate decaying_lr
+    if decaying_lr not in ["exp", "cos", "static"]:
+        raise ValueError(
+            "Invalid value for decaying_lr. Must be 'exp', 'cos', or 'static'."
+        )
+
     N = data.shape[0]
     D = data.shape[1]
 
@@ -603,6 +609,12 @@ def _optimize_dii_static_zeros(
     """
     # batch GD optimization with zeroes staying zeros - needed for return_backward_greedy_dii_elimination
 
+    # Validate decaying_lr
+    if decaying_lr not in ["exp", "cos", "static"]:
+        raise ValueError(
+            "Invalid value for decaying_lr. Must be 'exp', 'cos', or 'static'."
+        )
+
     N = data.shape[0]
     D = data.shape[1]
 
@@ -767,7 +779,12 @@ def _refine_lasso_optimization(
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
         diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
     """
-    # TODO: @wildromi typehints
+    # Validate decaying_lr
+    if decaying_lr not in ["exp", "cos", "static"]:
+        raise ValueError(
+            "Invalid value for decaying_lr. Must be 'exp', 'cos', or 'static'."
+        )
+
     # Find where to refine the lasso and decide on new l1 penalties
     gs[np.isnan(gs)] = 0
     l0gs = np.linalg.norm(gs[:, -1, :], 0, axis=1)
