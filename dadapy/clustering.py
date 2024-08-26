@@ -35,7 +35,7 @@ from dadapy._utils.density_estimation import (
     return_not_normalised_density_kstarNN,
     return_not_normalised_density_PAk,
 )
-from dadapy._utils.utils import compute_cross_nn_distances
+from dadapy._utils.utils import compute_cross_nn_distances, from_all_distances_to_nndistances
 
 cores = multiprocessing.cpu_count()
 
@@ -259,27 +259,32 @@ class Clustering(DensityEstimation):
 
         return self.cluster_assignment
 
-    def predict_cluster_ADP(self, X_new, maxk, Dthr=23.92812698, density_est="PAk", halo=False):
+    def predict_cluster_ADP(self, X_new, maxk, distances=None, Dthr=23.92812698, density_est="PAk", halo=False):
         """Compute clustering for points outside the initialization set using PAk (or kstarNN) interpolator and DPA clustering algorithm.
 
         Args:
-            X_new (np.ndarray(float)): the points for which to predict cluster assignment
+            X_new (np.ndarray(float)): the points for which to predict cluster assignment, of shape (N, dimension of embedding space)
             Dthr (float, optional): likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
                 to a p-value of 1e-6.
+            distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float))): Distance matrix (N x N),
+                                        or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
             density_est (str, optional): chosen density estimator for interpolated densities. Currently implemented: "PAk" and "kstarNN"
             halo (bool): use or not halo points
         Returns:
             cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new
         """
-        if self.verb:
-            print("Estimation of the distances started")
-        sec = time.time()
-        sec2=sec
-        cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, maxk, self.metric, self.period
-        )
-        if self.verb:
-            print("{0:0.2f} seconds to compute distances.".format(time.time() - sec))
+        if distances is not None:
+            cross_distances, cross_dist_indices = from_all_distances_to_nndistances(distances, maxk)
+        else:
+            if self.verb:
+                print("Estimation of the distances started")
+            sec = time.time()
+            sec2=sec
+            cross_distances, cross_dist_indices = compute_cross_nn_distances(
+                X_new, self.X, maxk, self.metric, self.period
+            )
+            if self.verb:
+                print("{0:0.2f} seconds to compute distances.".format(time.time() - sec))
 
         if self.verb:
             print("Estimation of kstar started")
@@ -312,6 +317,9 @@ class Clustering(DensityEstimation):
             )
 
         log_den -= np.log(self.N)
+        self.pred_log_den = log_den
+        self.pred_log_den_err = log_den_err
+
         if self.verb:
             print("{0:0.2f} seconds to compute density.".format(time.time() - sec))
 
