@@ -391,7 +391,7 @@ def _optimize_dii(
     l_rate: float = None,
     constrain: bool = False,
     l1_penalty: float = 0.0,
-    decaying_lr: bool = True,
+    decaying_lr: str = "exp",
     period: np.ndarray = None,
     groundtruthperiod: np.ndarray = None,
     cythond: bool = True,
@@ -416,8 +416,8 @@ def _optimize_dii(
             Constrain the sum of the weights to sum up to the number of weights. Default: False
         l1_penalty: float
             The l1-regularization strength, if sparcity is needed. Default: 0 (l1-regularization turned off).
-        decaying_lr: bool
-            Use exponentially decaying learning rate in gradient descent or not. Default: True.
+        decaying_lr: string
+            "exp" for exponentially decaying learning rate (cut in half every 10 epochs) or "cos" for cosine decaying learning rate. "static" for no decay in the learning rate. Default: "exp"
         period : float or numpy.ndarray/list, optional
             D(input data) periods (input should be formatted to be periodic starting at 0). If not a list, the same period is assumed for all D features
             Default is None, which means no periodic boundary conditions are applied. If some of the input feature do not have a a period, set those to 0.
@@ -436,7 +436,13 @@ def _optimize_dii(
         l1_penalties: np.ndarray, shape (n_epochs, ). List of the l1_penaltie terms that were added to the imbalances in the loss function
 
     """
-    #  weightcheck = 0
+
+    # Validate decaying_lr
+    if decaying_lr not in ["exp", "cos", "static"]:
+        raise ValueError(
+            "Invalid value for decaying_lr. Must be 'exp', 'cos', or 'static'."
+        )
+
     N = data.shape[0]
     D = data.shape[1]
 
@@ -483,7 +489,7 @@ def _optimize_dii(
 
     diis[0] = _return_dii(dists_rescaled_A, rank_matrix_B, lambd)
     l1_penalties[0] = l1_penalty * np.sum(np.abs(weights))
-    lrate = l_rate  # for not expon. decaying learning rates
+    lrate = 1 * l_rate  # for not expon. decaying learning rates; "1*" ensures deepcopy
 
     for i_epoch in range(n_epochs):
         # compute gradient * SCALING!!!! to be scale invariant in case of no adaptive lambda
@@ -509,8 +515,10 @@ def _optimize_dii(
             )
             break
         else:
-            # exponentially decaying lr
-            if decaying_lr == True:
+            # exponentially or cosine decaying lr
+            if decaying_lr == "cos":
+                lrate = l_rate * 0.5 * (1 + np.cos((np.pi * i_epoch) / n_epochs))
+            elif decaying_lr == "exp":
                 lrate = l_rate * 2 ** (
                     -i_epoch / 10
                 )  # every 10 epochs the learning rate will be halfed
@@ -576,7 +584,7 @@ def _optimize_dii_static_zeros(
     n_epochs: int = 100,
     l_rate: float = 0.1,
     constrain: bool = False,
-    decaying_lr: bool = True,
+    decaying_lr: str = "exp",
     period: np.ndarray = None,
     groundtruthperiod: np.ndarray = None,
     cythond: bool = True,
@@ -591,7 +599,7 @@ def _optimize_dii_static_zeros(
         l_rate (float): learning rate. Has to be tuned, especially if constrain=True (otherwise optmization could fail)
         constrain (bool): if True, rescale the weights so the biggest weight = 1
         l1_penalty (float): l1 regularization strength
-        decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
+        decaying_lr (string): "exp" for exponentially decaying learning rate (cut in half every 10 epochs) or "cos" for cosine decaying learning rate. "static" for no decay in the learning rate. Default: "exp"
         period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
         groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period).
                                                       If not a list, the same period is assumed for all D(groundtruth) features
@@ -600,6 +608,12 @@ def _optimize_dii_static_zeros(
         diis:
     """
     # batch GD optimization with zeroes staying zeros - needed for return_backward_greedy_dii_elimination
+
+    # Validate decaying_lr
+    if decaying_lr not in ["exp", "cos", "static"]:
+        raise ValueError(
+            "Invalid value for decaying_lr. Must be 'exp', 'cos', or 'static'."
+        )
 
     N = data.shape[0]
     D = data.shape[1]
@@ -672,7 +686,9 @@ def _optimize_dii_static_zeros(
             gradient[weights == 0] = 0
 
             # exponentially decaying lr
-            if decaying_lr == True:
+            if decaying_lr == "cos":
+                lrate = l_rate * 0.5 * (1 + np.cos((np.pi * i_epoch) / n_epochs))
+            elif decaying_lr == "exp":
                 lrate = l_rate * 2 ** (
                     -i_epoch / 10
                 )  # every 10 epochs the learning rate will be halfed
@@ -732,7 +748,7 @@ def _refine_lasso_optimization(
     n_epochs=50,
     l_rate=None,
     constrain=False,
-    decaying_lr=True,
+    decaying_lr="exp",
     period=None,
     groundtruthperiod=None,
     cythond=True,
@@ -752,8 +768,8 @@ def _refine_lasso_optimization(
         l_rate (float or None): if None, the learning rate is determined automatically with optimize_learning_rate
         n_epochs (int): number of epochs in each optimization cycle
         constrain (bool): if True, rescale the weights so the biggest weight = 1
-        decaying_lr (bool): default: True. Apply decaying learning rate = l_rate * 2**(-i_epoch/10) - every 10 epochs the learning rate will be halfed
-        period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
+        decaying_lr (string):
+            "exp" for exponentially decaying learning rate (cut in half every 10 epochs) or "cos" for cosine decaying learning rate. "static" for no decay in the learning rate. Default: "exp"        period (float or np.ndarray/list): D(input) periods (input formatted to be 0-period). If not a list, the same period is assumed for all D features
         groundtruthperiod (float or np.ndarray/list): D(groundtruth) periods (groundtruth formatted to be 0-period). If not a list, the same period is assumed for all D(groundtruth) features
         cythond (bool): Flag indicating whether to use Cython-based distance computation methods.
             Should be True (default) unless you want to test the Python-based methods.
@@ -763,7 +779,12 @@ def _refine_lasso_optimization(
         opt_l_rate (float): Learning rate, which leads to optimal unregularized (no l1-penalty) result in the specified number of epochs
         diis_list: values of the DII during optimization in n_epochs using the l_rate. Plot to ensure the optimization went well
     """
-    # TODO: @wildromi typehints
+    # Validate decaying_lr
+    if decaying_lr not in ["exp", "cos", "static"]:
+        raise ValueError(
+            "Invalid value for decaying_lr. Must be 'exp', 'cos', or 'static'."
+        )
+
     # Find where to refine the lasso and decide on new l1 penalties
     gs[np.isnan(gs)] = 0
     l0gs = np.linalg.norm(gs[:, -1, :], 0, axis=1)

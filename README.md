@@ -67,6 +67,8 @@ overlap_labels = data.return_label_overlap(labels)
 - k*NN estimator (kNN with an adaptive choice of k)
 - PAk estimator
   > Rodriguez et al., *JCTC* (2018)
+- point-adaptive mean-shift gradient estimator
+  > Carli et al., *ArXiv* (2024)
 - BMTI estimator
   > Carli et al., *ArXiv* (2024)
 
