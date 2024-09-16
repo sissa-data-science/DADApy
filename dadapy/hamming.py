@@ -448,6 +448,7 @@ class BID:
         self.export_results = export_results
         self.export_logKLs = export_logKLs
         self.L = L
+        self.intrinsic_dim = self.d0
 
         self.key0 = random.PRNGKey(self.seed)
         self.optfolder0 = optfolder0
@@ -605,6 +606,7 @@ class BID:
         self.d1 = self.Op.d1.item()
         self.logKL = jnp.log(self.Op.KL).item()
         self.Pmodel = np.array(self.Op.Pmodel)
+        self.intrinsic_dim = self.d0
 
     def load_results(
         self,
