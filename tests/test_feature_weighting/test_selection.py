@@ -155,7 +155,7 @@ def test_optimise_imbalance():
         constrain=True,
         initial_weights=np.ones_like(weights_array),
         lambd=None,
-        l1_penalty=1e-5,
+        l1_penalty=0.0,
         decaying_lr="exp",
     )
     assert np.all(weights[0] >= weights[2:])
