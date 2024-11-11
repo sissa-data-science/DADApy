@@ -2,6 +2,7 @@ import os
 from time import time
 
 import numpy as np
+from jax import config
 from jax import devices as jdevices
 from jax import jit, lax
 from jax import numpy as jnp
@@ -13,6 +14,7 @@ from jax.tree_util import register_pytree_node
 
 jdevices("cpu")[0]  # to run JAX on CPU
 eps = 1e-7  # good old small epsilon
+config.update("jax_enable_x64", True) # enable jnp.float64 dtype
 
 
 class Hamming:
