@@ -22,13 +22,14 @@ The code can be runned on gpu using the command
     jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
 """
 
+import warnings
+
 import jax
 import jax.numpy as jnp
 import numpy as np
-from tqdm.auto import tqdm
-from flax.training import train_state
 import optax
-import warnings
+from flax.training import train_state
+from tqdm.auto import tqdm
 
 # OPTIMIZABLE DISTANCE FUNCTIONS
 # ----------------------------------------------------------------------------------------------
@@ -83,7 +84,7 @@ class DiffImbalance:
             lambda_init=1
             lambda_final=1e-2
 
-        2. Global and adaptive: lambda is equal for all the points and is set as a fraction (given by lambda_factor, 
+        2. Global and adaptive: lambda is equal for all the points and is set as a fraction (given by lambda_factor,
         1/10 by default) of the average square distance of neighbor k.
 
         Example:
@@ -94,7 +95,7 @@ class DiffImbalance:
             lambda_final: None
             lambda_factor=1/10
 
-        3. Point-dependent and adaptive: lambda is different for each point and is set as a fraction (given by lambda_factor, 
+        3. Point-dependent and adaptive: lambda is different for each point and is set as a fraction (given by lambda_factor,
         1/10 by default) of the square distance of neighbor k.
 
         Example:
@@ -109,10 +110,10 @@ class DiffImbalance:
         data_A (np.array(float), jnp.array(float)): feature space A, matrix of shape (n_points, n_features_A)
         data_B (np.array(float), jnp.array(float)): feature space B, matrix of shape (n_points, n_features_B)
         periods_A (np.array(float), jnp.array(float)): array of shape (n_features_A,), periods of features A.
-            The default is None, which means that the features A are treated as nonperiodic. If only some 
+            The default is None, which means that the features A are treated as nonperiodic. If only some
             features are periodic, the entry of the nonperiodic ones should be set to 0.
         periods_B (np.array(float), jnp.array(float)): array of shape (n_features_B,), periods of features B.
-            The default is None, which means that the features B are trated as nonperiodic. If only some 
+            The default is None, which means that the features B are trated as nonperiodic. If only some
             features are periodic, the entry of the nonperiodic ones should be set to 0.
         seed (int): seed of jax random generator
         num_epochs (int): number of training epochs
@@ -133,7 +134,7 @@ class DiffImbalance:
             (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
             more.
         learning_rate (float): value of the learning rate. The default is 1e-1.
-        learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided 
+        learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
             with the attribute learning_rate. The avilable schedules are: cosine decay ("cos"), exponential
             decay ("exp"; the initial learning rate is halved every 10 steps), or constant learning rate (None).
             The default is "cos".
@@ -148,9 +149,9 @@ class DiffImbalance:
             datasets, choosing num_points_rows < n_points can significantly speed up the training. The default is
             None, for which num_points_rows == n_points.
         discard_close_ind (int): defines the "close points" (following the same labelling order of data_A and
-            data_B, along axis=0) for which distances and ranks are not computed: for each point i, the distances 
+            data_B, along axis=0) for which distances and ranks are not computed: for each point i, the distances
             d[i,i-discard_close_ind:i+discard_close_ind+1] are discarded. This option is only available with
-            batches_per_epoch=1, compute_error=False and num_points_rows=None. The default is None, for which no 
+            batches_per_epoch=1, compute_error=False and num_points_rows=None. The default is None, for which no
             "close points" are discarded.
     """
 
@@ -177,7 +178,7 @@ class DiffImbalance:
         compute_error=False,
         ratio_rows_columns=1,
         num_points_rows=None,
-        discard_close_ind=None
+        discard_close_ind=None,
     ):
         """Initialise the DiffImbalance class."""
         self.nfeatures_A = data_A.shape[1]
@@ -195,12 +196,12 @@ class DiffImbalance:
         self.data_B = data_B
 
         if compute_error:
-            assert num_points_rows is None, (
-                f"Error: the option num_points_rows is not yet compatible with compute_error == True"
-            )
-            assert discard_close_ind is None, (
-                f"Error: the option discard_close_ind is not yet compatible with compute_error == True"
-            )
+            assert (
+                num_points_rows is None
+            ), f"Error: the option num_points_rows is not yet compatible with compute_error == True"
+            assert (
+                discard_close_ind is None
+            ), f"Error: the option discard_close_ind is not yet compatible with compute_error == True"
             nrows = int(0.5 * ratio_rows_columns * data_A.shape[0])
             indices_rows = jax.random.choice(
                 self.key, jnp.arange(data_A.shape[0]), shape=(nrows,), replace=False
@@ -208,15 +209,18 @@ class DiffImbalance:
             indices_columns = jnp.delete(jnp.arange(data_A.shape[0]), indices_rows)
             self.max_rank = indices_columns.shape[0]  # for correct normalization
         elif num_points_rows is not None:
-            assert discard_close_ind is None, (
-                f"Error: the option discard_close_ind is not yet compatible with num_points_rows != None"
-            )
+            assert (
+                discard_close_ind is None
+            ), f"Error: the option discard_close_ind is not yet compatible with num_points_rows != None"
             # decimate rows but not columns, and keep same indices in upper left square matrix
             indices_rows = jax.random.choice(
-                self.key, jnp.arange(data_A.shape[0]), shape=(num_points_rows,), replace=False
+                self.key,
+                jnp.arange(data_A.shape[0]),
+                shape=(num_points_rows,),
+                replace=False,
             )
             indices_columns = jnp.delete(jnp.arange(data_A.shape[0]), indices_rows)
-            indices_columns = jnp.concatenate((indices_rows, indices_columns)) 
+            indices_columns = jnp.concatenate((indices_rows, indices_columns))
             self.max_rank = indices_columns.shape[0] - 1  # for correct normalization
         else:
             indices_rows = jnp.arange(data_A.shape[0])
@@ -264,11 +268,24 @@ class DiffImbalance:
         # construct mask to discard distances d[i, i-discard_close_ind:i+discard_close_ind+1], for each i
         self.mask = None
         if self.discard_close_ind is not None:
-            mask = jnp.abs( jnp.arange(self.nrows)[:,jnp.newaxis] - jnp.arange(self.ncolumns)[jnp.newaxis,:] )
+            mask = jnp.abs(
+                jnp.arange(self.nrows)[:, jnp.newaxis]
+                - jnp.arange(self.ncolumns)[jnp.newaxis, :]
+            )
             mask = mask > discard_close_ind
             # more columns than necessary discarded for starting and final rows, for shape compatibility
-            first_rows = jnp.concatenate((jnp.zeros(2*discard_close_ind+1), jnp.ones(self.ncolumns - 2*discard_close_ind-1)))
-            last_rows = jnp.concatenate(( jnp.ones(self.ncolumns-2*discard_close_ind-1), jnp.zeros(2*discard_close_ind+1)))
+            first_rows = jnp.concatenate(
+                (
+                    jnp.zeros(2 * discard_close_ind + 1),
+                    jnp.ones(self.ncolumns - 2 * discard_close_ind - 1),
+                )
+            )
+            last_rows = jnp.concatenate(
+                (
+                    jnp.ones(self.ncolumns - 2 * discard_close_ind - 1),
+                    jnp.zeros(2 * discard_close_ind + 1),
+                )
+            )
             mask = mask.at[:discard_close_ind].set(first_rows)
             mask = mask.at[-discard_close_ind:].set(last_rows)
             self.mask = mask
@@ -286,9 +303,9 @@ class DiffImbalance:
             + f"from {self.nrows} samples."
         )
         if batches_per_epoch > 1:
-            assert discard_close_ind is None, (
-                f"Error: the option discard_close_ind is not yet compatible with batches_per_epoch > 1"
-            ) 
+            assert (
+                discard_close_ind is None
+            ), f"Error: the option discard_close_ind is not yet compatible with batches_per_epoch > 1"
         if point_adapt_lambda:
             assert self.k_init is not None and self.k_final is not None, (
                 f"Error: provide values of 'k_init' and 'k_final' "
@@ -349,7 +366,9 @@ class DiffImbalance:
                 )
             dist2_matrix = jnp.sum(diffs * diffs, axis=-1)
             if self.mask is not None:
-                dist2_matrix = dist2_matrix[self.mask].reshape((dist2_matrix.shape[0],-1))
+                dist2_matrix = dist2_matrix[self.mask].reshape(
+                    (dist2_matrix.shape[0], -1)
+                )
 
             rank_matrix = dist2_matrix.argsort(axis=1).argsort(axis=1)
             if self.compute_error:
@@ -395,11 +414,11 @@ class DiffImbalance:
             ).astype(int)
             # take the k_max_allowed smallest distances with negative sign
             smallest_dist2, _ = jax.lax.top_k(-dist2_matrix, self.k_max_allowed)
-            current_lambdas = -smallest_dist2[:, current_k-1] * self.lambda_factor
+            current_lambdas = -smallest_dist2[:, current_k - 1] * self.lambda_factor
 
-            #Adaptive scheme of cython code
-            #diffs_dists_2nd_1st = -smallest_dist2[:, 1] + smallest_dist2[:, 0]
-            #current_lambdas = 0.5*(diffs_dists_2nd_1st.min() + diffs_dists_2nd_1st.mean())
+            # Adaptive scheme of cython code
+            # diffs_dists_2nd_1st = -smallest_dist2[:, 1] + smallest_dist2[:, 0]
+            # current_lambdas = 0.5*(diffs_dists_2nd_1st.min() + diffs_dists_2nd_1st.mean())
 
             return current_lambdas
 
@@ -465,22 +484,29 @@ class DiffImbalance:
                 periods=self.periods_A,
             )
             N = dist2_matrix_A.shape[0]
-            if not self.compute_error:  # set distance of a point with itself to large number
+            if (
+                not self.compute_error
+            ):  # set distance of a point with itself to large number
                 dist2_matrix_A = dist2_matrix_A.at[jnp.arange(N), jnp.arange(N)].set(
                     +1e10
                 )
-            if self.mask is not None:  # apply mask to column indices around the row index
-                dist2_matrix_A = dist2_matrix_A[self.mask].reshape((dist2_matrix_A.shape[0],-1))
+            if (
+                self.mask is not None
+            ):  # apply mask to column indices around the row index
+                dist2_matrix_A = dist2_matrix_A[self.mask].reshape(
+                    (dist2_matrix_A.shape[0], -1)
+                )
             lambdas = self.lambda_method(  # compute lambda values
                 dist2_matrix=dist2_matrix_A, step=step
             )
             c_matrix = jax.nn.softmax(  # NB. diagonale elements are zero if not self.compute_error
-                -dist2_matrix_A / lambdas[:, jnp.newaxis],  axis=1#jax.lax.stop_gradient(lambdas[:, jnp.newaxis]), axis=1 ##lambdas[:, jnp.newaxis],  axis=1 #
+                -dist2_matrix_A / lambdas[:, jnp.newaxis],
+                axis=1,  # jax.lax.stop_gradient(lambdas[:, jnp.newaxis]), axis=1 ##lambdas[:, jnp.newaxis],  axis=1 #
             )
             # alternativde definition of c_ij coefficients (sigmoid instead of softmax)
-            #c_matrix = jax.nn.sigmoid(
+            # c_matrix = jax.nn.sigmoid(
             #    (lambdas[:, jnp.newaxis] - dist2_matrix_A)/(self.lambda_factor * lambdas[:, jnp.newaxis])
-            #)
+            # )
 
             # compute DII and error
             conditional_ranks = jnp.sum(batch_B_ranks * c_matrix, axis=1)
@@ -493,19 +519,17 @@ class DiffImbalance:
             )
 
             # analytical gradient of the DII
-            #diffs_squared = ((batch_A_rows[:,jnp.newaxis,:] - batch_A_columns[jnp.newaxis,:,:])
+            # diffs_squared = ((batch_A_rows[:,jnp.newaxis,:] - batch_A_columns[jnp.newaxis,:,:])
             #                *(batch_A_rows[:,jnp.newaxis,:] - batch_A_columns[jnp.newaxis,:,:])) # shape (nrows, ncols, D)
-            #second_term = (c_matrix[:,:,jnp.newaxis] * diffs_squared).sum(axis=1, keepdims=True)
-            #grad_imbalance = (
+            # second_term = (c_matrix[:,:,jnp.newaxis] * diffs_squared).sum(axis=1, keepdims=True)
+            # grad_imbalance = (
             #    4.0 * params / (N * (self.max_rank + 1))
             #    * jnp.sum((batch_B_ranks * c_matrix)[:,:,jnp.newaxis] / lambdas[:,jnp.newaxis,jnp.newaxis]
             #    * (-diffs_squared + second_term), axis=(0,1))
-            #)
+            # )
             return diff_imbalance, error_imbalance
-        
-        def _train_step(
-            state, batch_A_rows, batch_A_columns, batch_B_ranks
-        ):
+
+        def _train_step(state, batch_A_rows, batch_A_columns, batch_B_ranks):
             """Perform a single gradient descent step in the optimization of the DII.
 
             Args:
@@ -534,46 +558,50 @@ class DiffImbalance:
             imb_and_error, grads = jax.value_and_grad(loss_fn, has_aux=True)(
                 state.params
             )
-            imb = imb_and_error[0] # only select imbalance (don't monitor error during training)
+            imb = imb_and_error[
+                0
+            ]  # only select imbalance (don't monitor error during training)
 
             # Update parameters
             state = state.apply_gradients(grads=grads)
             norm_init = jnp.sqrt((self.init_params**2).sum())
-            norm_now = jnp.sqrt((state.params**2).sum()) # scale weight vector to original norm
-            state = state.replace(
-                params=norm_init / norm_now * state.params
-            )
+            norm_now = jnp.sqrt(
+                (state.params**2).sum()
+            )  # scale weight vector to original norm
+            state = state.replace(params=norm_init / norm_now * state.params)
 
             # Apply L1 penalty
             if self.l1_strength != 0:
                 current_lr = self.lr_schedule(state.step)
 
                 # (GD clipping, B. Carpenter et al, 2008)
-                #state = state.replace(jnp.where(state.params > 0, 1.0, 0.0) 
+                # state = state.replace(jnp.where(state.params > 0, 1.0, 0.0)
                 #        * jnp.maximum(0, state.params - current_lr * self.l1_strength)
                 #        + jnp.where(state.params < 0, 1.0, 0.0)
                 #        * jnp.minimum(0, state.params + current_lr * self.l1_strength)
-                #)
+                # )
 
                 # (Soft version of GD clipping)
-                candidate_params = state.params - jnp.sign(state.params) * current_lr * self.l1_strength
-                state = state.replace(params=state.params
-                    * (1. - jnp.where(state.params * candidate_params < 0, 1., 0.))
+                candidate_params = (
+                    state.params
+                    - jnp.sign(state.params) * current_lr * self.l1_strength
+                )
+                state = state.replace(
+                    params=state.params
+                    * (1.0 - jnp.where(state.params * candidate_params < 0, 1.0, 0.0))
                 )
 
                 # scale weight vector to original norm
                 norm_now = jnp.sqrt((state.params**2).sum())
-                state = state.replace(
-                    params=norm_init / norm_now * state.params
-                )
+                state = state.replace(params=norm_init / norm_now * state.params)
             return state, imb
-        
+
         def _return_nn_indices():
             """
             Returns the indices of the nearest neighbors of each point.
 
             Args:
-                variables (list, jnp.array(int)): array of the coordinates used to build the distance space (with weights 1) 
+                variables (list, jnp.array(int)): array of the coordinates used to build the distance space (with weights 1)
 
             Returns:
                 nn_indices (np.array(float)): array of the nearest neighbors indices: nn_indices[i] is the index of the column
@@ -585,10 +613,10 @@ class DiffImbalance:
                 periods=self.periods_A,
             )
             N = rank_matrix.shape[0]
-            if not self.compute_error and not self.discard_close_ind:  # discard distance rank of a point with itself
-                rank_matrix = rank_matrix.at[jnp.arange(N), jnp.arange(N)].set(
-                    N+1
-                )
+            if (
+                not self.compute_error and not self.discard_close_ind
+            ):  # discard distance rank of a point with itself
+                rank_matrix = rank_matrix.at[jnp.arange(N), jnp.arange(N)].set(N + 1)
             nn_indices = jnp.argmin(rank_matrix, axis=1)
             return nn_indices
 
@@ -607,7 +635,7 @@ class DiffImbalance:
 
         Args:
             bar_label (str): label on the tqdm training bar, useful when several trains are performed
-            
+
         Returns:
             params_training (np.array(float)): matrix of shape (num_epochs+1, n_features_A) containing the
                 scaling weights during the whole training, starting from the initialization
@@ -639,9 +667,7 @@ class DiffImbalance:
             desc += f" ({bar_label})"
         for epoch_idx in tqdm(range(1, self.num_epochs + 1), desc=desc):
             self.key, subkey = jax.random.split(self.key, num=2)
-            params_now, imb_now = self._train_epoch(
-                subkey
-            )
+            params_now, imb_now = self._train_epoch(subkey)
             params_training = params_training.at[epoch_idx].set(jnp.abs(params_now))
             imbs_training = imbs_training.at[epoch_idx].set(imb_now)
         self.final_params = params_training[-1]
@@ -675,7 +701,7 @@ class DiffImbalance:
                 Only used when return_error == True, but always returned for compatibility.
         """
         # DON'T DELETE: ALTERNATIVE WAY, TO RESAMPLE POINTS IN TWO SUBSETS (ROWS AND COLUMNS)
-        #if self.compute_error:
+        # if self.compute_error:
         #    self.key, subkey = jax.random.split(self.key, num=2)
         #    indices_rows = jax.random.choice(
         #        subkey, jnp.arange(self.data_A.shape[0]), shape=(self.nrows,), replace=False
@@ -690,7 +716,7 @@ class DiffImbalance:
         #        batch_columns=self.data_B_columns,
         #        periods=self.periods_B,
         #    )
-        #----------------------------MINI-BATCH GD----------------------------
+        # ----------------------------MINI-BATCH GD----------------------------
         if self.batches_per_epoch > 1:
             all_batch_indices = jnp.split(
                 jax.random.permutation(key, self.nrows), self.batches_per_epoch
@@ -698,16 +724,20 @@ class DiffImbalance:
 
             # 1st method for mini-batch GD (only subsample rows)
             for i_batch, batch_indices in enumerate(all_batch_indices):
-                ordered_column_indices = np.ravel(np.delete(all_batch_indices, i_batch, axis=0))
-                ordered_column_indices = np.append(batch_indices, ordered_column_indices)
+                ordered_column_indices = np.ravel(
+                    np.delete(all_batch_indices, i_batch, axis=0)
+                )
+                ordered_column_indices = np.append(
+                    batch_indices, ordered_column_indices
+                )
                 self.state, imb = self._train_step(
                     self.state,
                     self.data_A_rows[batch_indices],
                     self.data_A_columns[ordered_column_indices],
-                    self.ranks_B[batch_indices][:,ordered_column_indices],
+                    self.ranks_B[batch_indices][:, ordered_column_indices],
                 )
             # DON'T DELETE: alternative way for mini-batch GD (subsample both rows and columns)
-            #for batch_indices in all_batch_indices:
+            # for batch_indices in all_batch_indices:
             #    self.state, imb, error = self._train_step(
             #        self.state,
             #        self.data_A_rows[batch_indices],
@@ -715,7 +745,7 @@ class DiffImbalance:
             #        self.ranks_B[batch_indices][:,batch_indices].argsort().argsort(),
             #    )
 
-        #-----------------------------BATCH GD----------------------------
+        # -----------------------------BATCH GD----------------------------
         else:
             self.state, imb = self._train_step(
                 self.state,
@@ -724,9 +754,9 @@ class DiffImbalance:
                 self.ranks_B,
             )
         assert not jnp.isnan(self.state.params).any(), (
-                "Error: all the parameters were set to zero during the optimization. "
-                +"Reduce the value of l1_strength."
-            )
+            "Error: all the parameters were set to zero during the optimization. "
+            + "Reduce the value of l1_strength."
+        )
 
         return self.state.params, imb
 
@@ -745,8 +775,10 @@ class DiffImbalance:
         elif self.optimizer_name.lower() == "sgd":
             opt_class = optax.sgd
         else:
-            raise ValueError(f'Unknown optimizer "{self.optimizer_name.lower()}". Choose among "sgd", "adam" and "adamw".')
-        
+            raise ValueError(
+                f'Unknown optimizer "{self.optimizer_name.lower()}". Choose among "sgd", "adam" and "adamw".'
+            )
+
         # set the learning rate schedule (cosine decay, exp decay or constant)
         if self.learning_rate_decay == "cos":
             self.lr_schedule = optax.cosine_decay_schedule(
@@ -760,11 +792,11 @@ class DiffImbalance:
                 decay_rate=0.5,
             )
         elif self.learning_rate_decay is None:
-            self.lr_schedule = optax.constant_schedule(
-                value=self.learning_rate
-            )
+            self.lr_schedule = optax.constant_schedule(value=self.learning_rate)
         else:
-            raise ValueError(f'Unknown learning rate decay schedule "{self.learning_rate_decay}". Choose among None, "cos" and "exp".')
+            raise ValueError(
+                f'Unknown learning rate decay schedule "{self.learning_rate_decay}". Choose among None, "cos" and "exp".'
+            )
         optimizer = opt_class(self.lr_schedule)
 
         # Initialize training state
