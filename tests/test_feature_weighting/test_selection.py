@@ -22,7 +22,7 @@ import pytest
 
 from dadapy import Data, FeatureWeighting
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=0)
 
 
 def test_optimise_imbalance_typing():
