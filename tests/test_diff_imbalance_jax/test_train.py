@@ -126,8 +126,8 @@ def test_DiffImbalance_train3():
     data_B = weights_ground_truth[np.newaxis, :] * data_A
     print(f"Ground truth weights = {weights_ground_truth}\n")
 
-    expected_weights = [0.1682, 0.03996, 0.01065]
-    expected_imb = 0.60888
+    expected_weights = [0.12776, 0.09972, 0.06112]
+    expected_imb = 0.53706
 
     # train the DII
     dii = DiffImbalance(

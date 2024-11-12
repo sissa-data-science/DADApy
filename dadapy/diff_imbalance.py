@@ -205,7 +205,7 @@ class DiffImbalance:
             ), f"Error: the option discard_close_ind is not yet compatible with compute_error == True"
             nrows = int(0.5 * ratio_rows_columns * data_A.shape[0])
             indices_rows = jax.random.choice(
-                self.key, jnp.arange(data_A.shape[0]), shape=(nrows,), replace=False
+                subkey, jnp.arange(data_A.shape[0]), shape=(nrows,), replace=False
             )
             indices_columns = jnp.delete(jnp.arange(data_A.shape[0]), indices_rows)
             self.max_rank = indices_columns.shape[0]  # for correct normalization
@@ -215,7 +215,7 @@ class DiffImbalance:
             ), f"Error: the option discard_close_ind is not yet compatible with num_points_rows != None"
             # decimate rows but not columns, and keep same indices in upper left square matrix
             indices_rows = jax.random.choice(
-                self.key,
+                subkey,
                 jnp.arange(data_A.shape[0]),
                 shape=(num_points_rows,),
                 replace=False,
