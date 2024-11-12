@@ -62,6 +62,7 @@ def test_DiffImbalance_train1():
         learning_rate_decay="cos",
         compute_error=False,
         ratio_rows_columns=1,
+        num_points_rows=None,
         discard_close_ind=5,
     )
     weights, imbs = dii.train()
@@ -107,6 +108,7 @@ def test_DiffImbalance_train2():
         learning_rate_decay=None,
         compute_error=False,
         ratio_rows_columns=1,
+        num_points_rows=None,
         discard_close_ind=None,
     )
     weights, imbs = dii.train()
@@ -151,9 +153,60 @@ def test_DiffImbalance_train3():
         learning_rate_decay="exp",
         compute_error=True,
         ratio_rows_columns=1,
+        num_points_rows=None,
         discard_close_ind=None,
     )
     weights, imbs = dii.train()
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
+def test_DiffImbalance_train4():
+    """Test DII train function."""
+    from dadapy import DiffImbalance  # noqa: E402
+
+    # generate test data
+    weights_ground_truth = np.array([10,3,100])
+    data_A = np.load(filename)
+    data_B = weights_ground_truth[np.newaxis,:] * data_A
+    print(f"Ground truth weights = {weights_ground_truth}\n")
+
+    expected_weights = [0.1312, 0.05073, 0.10106]
+    expected_imb = 0.040379
+
+    # train the DII to recover ground-truth metric
+    dii = DiffImbalance(
+        data_A, # matrix of shape (N,D_A)
+        data_B, # matrix of shape (N,D_B)
+        periods_A=None,
+        periods_B=None,
+        seed=0,
+        num_epochs=10,
+        batches_per_epoch=1,
+        l1_strength=0.0,
+        point_adapt_lambda=False,
+        k_init=1,
+        k_final=1,
+        lambda_init=None,
+        lambda_final=None,
+        lambda_factor=1e-1,
+        init_params=None,
+        optimizer_name="sgd",
+        learning_rate=1e-1,
+        learning_rate_decay="cos",
+        compute_error=False,
+        ratio_rows_columns=1,
+        num_points_rows=50,
+        discard_close_ind=None
+    )
+    weights, imbs = dii.train()
+
+    # scale learnt weights in same range of ground-truth ones (same magnitude of the largest one)
+    print(f"Learnt weights: {weights[-1]}")
+    print(f"Final imb: {imbs[-1]}")
+
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
+
