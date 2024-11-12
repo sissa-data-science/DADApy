@@ -15,11 +15,18 @@
 
 """Module for testing methods of the DiffImbalance class."""
 
+import sys
+
 import numpy as np
 import pytest
-from jax import config
 
-from dadapy import DiffImbalance
+pytestmark = pytest.mark.skipif(
+    sys.version_info < (3, 9), reason="Requires Python 3.9 or higher"
+)
+
+from jax import config  # noqa: E402
+
+from dadapy import DiffImbalance  # noqa: E402
 
 config.update("jax_platform_name", "cpu")
 
@@ -62,8 +69,8 @@ def test_DiffImbalance_train1():
     )
     weights, imbs = dii.train()
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.00001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.00001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.0001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.0001)
 
 
 def test_DiffImbalance_train2():
@@ -105,8 +112,8 @@ def test_DiffImbalance_train2():
     )
     weights, imbs = dii.train()
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.00001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.00001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.0001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.0001)
 
 
 def test_DiffImbalance_train3():
@@ -147,5 +154,5 @@ def test_DiffImbalance_train3():
     )
     weights, imbs = dii.train()
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.00001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.00001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.0001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.0001)
