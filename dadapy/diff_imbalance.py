@@ -32,6 +32,7 @@ from flax.training import train_state
 from tqdm.auto import tqdm
 
 # OPTIMIZABLE DISTANCE FUNCTIONS
+# (here new functions may be added for purposes beyond feature selection)
 # ----------------------------------------------------------------------------------------------
 
 
@@ -64,7 +65,7 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
     return dist2_matrix
 
 
-# CLASS TO OPTIMIZE DIFFERENTIAL IMBALANCE
+# CLASS TO OPTIMIZE THE DIFFERENTIAL INFORMATION IMBALANCE
 # ----------------------------------------------------------------------------------------------
 
 
@@ -292,7 +293,7 @@ class DiffImbalance:
             self.max_rank -= 2 * self.discard_close_ind
 
         # for efficiency reasons, faster sort in adaptive-lambda scheme
-        self.k_max_allowed = 100 if self.max_rank > 100 else self.max_rank + 1
+        self.k_max_allowed = 100 if self.max_rank > 100 else self.max_rank
 
         self.state = None
         self._distance_A = _compute_dist2_matrix_scaling  # TODO: assign other functions if other distances A are chosen
