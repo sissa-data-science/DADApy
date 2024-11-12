@@ -52,7 +52,8 @@ Feature weighting / Differentiable Information Imbalance
 
 This algorithm estimates the information content of an input set of features with respect to a ground truth (which
 can be the full set), assigning an optimal weight to each feature. The weights can take the value zero, leading to 
-feature selection.
+feature selection. The JAX implementation of this method, in the class DiffImbalance, is not compatible with Python 
+versions lower than 3.9.
 The algorithm currently implemented is:
 
 * DII ("Differentiable Information Imbalance") 
