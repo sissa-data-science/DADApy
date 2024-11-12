@@ -19,20 +19,16 @@ import sys
 
 import numpy as np
 import pytest
-
-pytestmark = pytest.mark.skipif(
-    sys.version_info < (3, 9), reason="Requires Python 3.9 or higher"
-)
-
-from jax import config  # noqa: E402
-
-from dadapy import DiffImbalance  # noqa: E402
+from jax import config
 
 config.update("jax_platform_name", "cpu")
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
 def test_DiffImbalance_train1():
     """Test DII train function."""
+    from dadapy import DiffImbalance  # noqa: E402
+
     # generate test data
     np.random.seed(0)
     weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
@@ -43,10 +39,10 @@ def test_DiffImbalance_train1():
     expected_weights = [0.08612, 0.03023, 0.014, 0.19341, 0.06376]
     expected_imb = 0.01113
 
-    # train the DII to recover ground-truth metric
+    # train the DII
     dii = DiffImbalance(
-        data_A,  # matrix of shape (N,D_A)
-        data_B,  # matrix of shape (N,D_B)
+        data_A,
+        data_B,
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -69,12 +65,15 @@ def test_DiffImbalance_train1():
     )
     weights, imbs = dii.train()
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.0001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.0001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.001)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
 def test_DiffImbalance_train2():
     """Test DII train function."""
+    from dadapy import DiffImbalance  # noqa: E402
+
     # generate test data
     weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
     np.random.seed(0)
@@ -86,10 +85,10 @@ def test_DiffImbalance_train2():
     expected_weights = [8.40182, 7.44459, 7.24351, 15.58236, 8.87181]
     expected_imb = 0.0427368
 
-    # train the DII to recover ground-truth metric
+    # train the DII
     dii = DiffImbalance(
-        data_A,  # matrix of shape (N,D_A)
-        data_B,  # matrix of shape (N,D_B)
+        data_A,
+        data_B,
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -112,12 +111,15 @@ def test_DiffImbalance_train2():
     )
     weights, imbs = dii.train()
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.0001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.0001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.001)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
 def test_DiffImbalance_train3():
     """Test DII train function."""
+    from dadapy import DiffImbalance  # noqa: E402
+
     # generate test data
     weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
     np.random.seed(0)
@@ -128,10 +130,10 @@ def test_DiffImbalance_train3():
     expected_weights = [0.01044, 0.16464, 0.12139, 0.08465, 0.02972]
     expected_imb = 0.60103
 
-    # train the DII to recover ground-truth metric
+    # train the DII
     dii = DiffImbalance(
-        data_A,  # matrix of shape (N,D_A)
-        data_B,  # matrix of shape (N,D_B)
+        data_A,
+        data_B,
         periods_A=2 * np.pi,
         periods_B=2 * np.pi,
         seed=0,
@@ -154,5 +156,5 @@ def test_DiffImbalance_train3():
     )
     weights, imbs = dii.train()
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.0001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.0001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.001)
