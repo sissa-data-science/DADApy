@@ -168,9 +168,9 @@ def test_DiffImbalance_train4():
     from dadapy import DiffImbalance  # noqa: E402
 
     # generate test data
-    weights_ground_truth = np.array([10,3,100])
+    weights_ground_truth = np.array([10, 3, 100])
     data_A = np.load(filename)
-    data_B = weights_ground_truth[np.newaxis,:] * data_A
+    data_B = weights_ground_truth[np.newaxis, :] * data_A
     print(f"Ground truth weights = {weights_ground_truth}\n")
 
     expected_weights = [0.1312, 0.05073, 0.10106]
@@ -178,8 +178,8 @@ def test_DiffImbalance_train4():
 
     # train the DII to recover ground-truth metric
     dii = DiffImbalance(
-        data_A, # matrix of shape (N,D_A)
-        data_B, # matrix of shape (N,D_B)
+        data_A,  # matrix of shape (N,D_A)
+        data_B,  # matrix of shape (N,D_B)
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -199,7 +199,7 @@ def test_DiffImbalance_train4():
         compute_error=False,
         ratio_rows_columns=1,
         num_points_rows=50,
-        discard_close_ind=None
+        discard_close_ind=None,
     )
     weights, imbs = dii.train()
 
@@ -209,4 +209,3 @@ def test_DiffImbalance_train4():
 
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
-

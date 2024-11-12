@@ -1,7 +1,7 @@
 Implemented Algorithms
 ======================
 
-The algorithms currently implemented in the package can be divided in four broad groups.
+The algorithms currently implemented in the package can be divided in five broad groups.
 
 
 Intrinsic dimension estimation
@@ -47,11 +47,12 @@ The algorithms currently implemented are:
 * Neighbourhood overlap
 * Information imbalance
 
-Feature weighting
---------------------------
+Feature weighting / Differentiable Information Imbalance
+-----------------------------------------------------------
 
-These algorithms estimate the information content of each feature in the dataset with respect to a ground truth (or the full set), 
-and assign a weight to each feature. The weights can take one the value zero, leading to feature selection.
+This algorithm estimates the information content of an input set of features with respect to a ground truth (which
+can be the full set), assigning an optimal weight to each feature. The weights can take the value zero, leading to 
+feature selection.
 The algorithm currently implemented is:
 
 * DII ("Differentiable Information Imbalance") 
