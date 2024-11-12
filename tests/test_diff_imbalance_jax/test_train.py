@@ -15,6 +15,7 @@
 
 """Module for testing methods of the DiffImbalance class."""
 
+import os
 import sys
 
 import numpy as np
@@ -22,6 +23,7 @@ import pytest
 from jax import config
 
 config.update("jax_platform_name", "cpu")
+filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -30,19 +32,18 @@ def test_DiffImbalance_train1():
     from dadapy import DiffImbalance  # noqa: E402
 
     # generate test data
-    np.random.seed(0)
-    weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
-    data_A = np.random.normal(loc=0, scale=1.0, size=(200, 5))
+    weights_ground_truth = np.array([10, 3, 100])
+    data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
     print(f"Ground truth weights = {weights_ground_truth}\n")
 
-    expected_weights = [0.08612, 0.03023, 0.014, 0.19341, 0.06376]
-    expected_imb = 0.01113
+    expected_weights = [0.15569, 0.0724, 0.02274]
+    expected_imb = 0.04744
 
-    # train the DII
+    # train the DII to recover ground-truth metric
     dii = DiffImbalance(
-        data_A,
-        data_B,
+        data_A,  # matrix of shape (N,D_A)
+        data_B,  # matrix of shape (N,D_B)
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -75,15 +76,14 @@ def test_DiffImbalance_train2():
     from dadapy import DiffImbalance  # noqa: E402
 
     # generate test data
-    weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
-    np.random.seed(0)
-    init_params = np.array([10.0, 10.0, 10.0, 10.0, 10.0])
-    data_A = np.random.normal(loc=0, scale=1.0, size=(200, 5))
+    weights_ground_truth = np.array([10, 3, 100])
+    init_params = np.array([10.0, 10.0, 10.0])
+    data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
     print(f"Ground truth weights = {weights_ground_truth}\n")
 
-    expected_weights = [8.40182, 7.44459, 7.24351, 15.58236, 8.87181]
-    expected_imb = 0.0427368
+    expected_weights = [10.90023, 5.43393, 12.31492]
+    expected_imb = 0.04298
 
     # train the DII
     dii = DiffImbalance(
@@ -121,14 +121,13 @@ def test_DiffImbalance_train3():
     from dadapy import DiffImbalance  # noqa: E402
 
     # generate test data
-    weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
-    np.random.seed(0)
-    data_A = np.random.normal(loc=0, scale=1.0, size=(200, 5))
+    weights_ground_truth = np.array([10, 3, 100])
+    data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
     print(f"Ground truth weights = {weights_ground_truth}\n")
 
-    expected_weights = [0.01044, 0.16464, 0.12139, 0.08465, 0.02972]
-    expected_imb = 0.60103
+    expected_weights = [0.1682, 0.03996, 0.01065]
+    expected_imb = 0.60888
 
     # train the DII
     dii = DiffImbalance(
