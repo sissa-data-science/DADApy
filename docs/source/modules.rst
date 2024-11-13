@@ -12,6 +12,7 @@ The package contains the following modules:
    neigh_graph
    density_estimation
    density_advanced
+   diff_imbalance
    clustering
    id_discrete
    metric_comparisons

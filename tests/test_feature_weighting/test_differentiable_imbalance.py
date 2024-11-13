@@ -22,7 +22,7 @@ import numpy as np
 import dadapy._cython.cython_differentiable_imbalance as c_dii
 from dadapy._utils import differentiable_imbalance as dii
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=0)
 
 
 def test_typing():
