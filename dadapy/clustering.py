@@ -26,7 +26,7 @@ import warnings
 import numpy as np
 import scipy as sp
 
-from DADApy.dadapy._cython import cython_clustering as cf
+from dadapy._cython import cython_clustering as cf
 from dadapy._cython import cython_clustering_v2 as cf2
 from dadapy._cython import cython_density as cd
 
