@@ -259,7 +259,7 @@ class Clustering(DensityEstimation):
 
         return self.cluster_assignment
 
-    def predict_cluster_ADP(self, X_new, maxk, distances=None, Dthr=23.92812698, density_est="PAk", halo=False):
+    def predict_cluster_ADP(self, X_new, maxk, distances=None, Dthr=23.92812698, density_est="PAk", halo=False, n_jobs=None):
         """Compute clustering for points outside the initialization set using PAk (or kstarNN) interpolator and DPA clustering algorithm.
 
         Args:
@@ -270,6 +270,7 @@ class Clustering(DensityEstimation):
                                         or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
             density_est (str, optional): chosen density estimator for interpolated densities. Currently implemented: "PAk" and "kstarNN"
             halo (bool): use or not halo points
+            n_jobs (int): number of cores to be used
         Returns:
             cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new
         """
@@ -281,7 +282,7 @@ class Clustering(DensityEstimation):
             sec = time.time()
             sec2=sec
             cross_distances, cross_dist_indices = compute_cross_nn_distances(
-                X_new, self.X, maxk, self.metric, self.period
+                X_new, self.X, maxk, self.metric, self.period, n_jobs
             )
             if self.verb:
                 print("{0:0.2f} seconds to compute distances.".format(time.time() - sec))
