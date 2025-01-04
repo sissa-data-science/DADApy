@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - {os: "macOS-12", python-version: "3.10"}
+          - {os: "macOS-13", python-version: "3.10"}
           - {os: "ubuntu-22.04", python-version: "3.12"}
           - {os: "ubuntu-22.04", python-version: "3.11"}
           - {os: "ubuntu-22.04", python-version: "3.10"}
