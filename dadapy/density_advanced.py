@@ -396,8 +396,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                     'sp_cg_precond': same as 'cg', scipy.sparse.linalg.cg, but with a preconditioner estimated
                         unsuperivisedly with a partial LU decomposition (scipy.sparse.linalg.spilu) of the matrix. In
                         settings where 'direct' performs better than 'cg', 'cg_precond' is likely to perform better
-                        than 'spolve' and 'cg'. If 'cg' already performs better than 'direct', 'cg_precond' is likelyù
-                        to perform worse than 'cg'.
+                        than 'spolve' and 'cg'. If 'cg' already performs better than 'direct', 'cg_precond' is likely
+                        to perform worse than 'cg' alone.
                     'dense': numpy.linalg.solve. Direct solver for dense matrices. O(N^3) complexity, O(N^2) memory
                         complexity. The solver automatically uses multiprocessing if available. This option is suited
                         for small datasets or when memory and cores are not an issue.
@@ -546,12 +546,12 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     def _solve_BMTI_reg_linar_system(self, A, deltaFcum, solver):
         if solver == "dense":
-        # dense solver O(N^3) complexity
+            # dense solver O(N^3) complexity
             if self.verb:
                 print("Solving dense linear system")
             log_den = np.linalg.solve(A.todense(), deltaFcum)
         elif solver == "sp_cg":
-        # conjugate gradient without preconditioner
+            # conjugate gradient without preconditioner
             if self.verb:
                 print(
                     "Solving by conjugate gradient sparse solver without preconditioner"
@@ -560,7 +560,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 A.tocsr(), deltaFcum, x0=self.log_den, atol=0.0, maxiter=None
             )[0]
         elif solver == "sp_cg_precond":
-        # conjugate gradient with preconditioner
+            # conjugate gradient with preconditioner
             if self.verb:
                 print(
                     "Solving by conjugate gradient sparse solver with estimated (spilu) preconditioner"
@@ -581,9 +581,26 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 maxiter=None,
             )[0]
         else:
-        # default solver: sp_direct
+            # default solver: sp_direct
             if self.verb:
                 print("Solving with 'sp_direct' sparse solver")
+            print("cast to csr")
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+            # print("cast to csc")
+            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum)
+            # print("No cast")
+            # log_den = sparse.linalg.spsolve(A, deltaFcum)
+            # print("with reordering AtA and csr cast")
+            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="MMD_ATA")
+            # print("with reordering AtA and csc cast")
+            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="MMD_ATA")
+            # print("with reordering At+A and csr cast")
+            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="MMD_AT_PLUS_A")
+            # print("with reordering At+A and csc cast")
+            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="MMD_AT_PLUS_A")
+            # print("with reordering COLAMD and csc")
+            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="COLAMD")
+            # print("with reordering COLAMD and csr")
+            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="COLAMD")
 
         return log_den
