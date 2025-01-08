@@ -546,10 +546,12 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     def _solve_BMTI_reg_linar_system(self, A, deltaFcum, solver):
         if solver == "dense":
+        # dense solver O(N^3) complexity
             if self.verb:
                 print("Solving dense linear system")
             log_den = np.linalg.solve(A.todense(), deltaFcum)
         elif solver == "sp_cg":
+        # conjugate gradient without preconditioner
             if self.verb:
                 print(
                     "Solving by conjugate gradient sparse solver without preconditioner"
@@ -558,6 +560,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 A.tocsr(), deltaFcum, x0=self.log_den, atol=0.0, maxiter=None
             )[0]
         elif solver == "sp_cg_precond":
+        # conjugate gradient with preconditioner
             if self.verb:
                 print(
                     "Solving by conjugate gradient sparse solver with estimated (spilu) preconditioner"
@@ -578,8 +581,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 maxiter=None,
             )[0]
         else:
+        # default solver: sp_direct
             if self.verb:
-                print("Solving with 'direct' sparse solver")
+                print("Solving with 'sp_direct' sparse solver")
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
 
         return log_den
