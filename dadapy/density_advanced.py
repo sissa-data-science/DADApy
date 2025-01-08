@@ -362,7 +362,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self,
         delta_F_inv_cov="uncorr",
         comp_log_den_err=False,
-        mem_efficient=False,
+        mem_efficient=True,
+        sparse_solver="direct",
         alpha=1,
         log_den=None,
         log_den_err=None,
@@ -384,8 +385,23 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                         finding the approximate diagonal inverse which multiplied by C gives the least-squares closest
                         matrix to the identity in the Frobenius norm
             comp_log_den_err (bool): if True, compute the error on the BMTI estimates. Can be highly time consuming
-            mem_efficient (bool): if True, use a sparse matrice to solve BMTI linear system (slower). If False, use a
-                dense NxN matrix; this is faster, but can require a great amount of memory if the system is large.
+            mem_efficient (bool): if True (default option), use a sparse matrice to solve BMTI linear system. This
+                might be slower than using a dense solver in the case of small N. The default sparse solver is 
+                scipy.sparse.linalg.spsolve (see 'sparse_solver' for more details). If False, use a dense NxN matrix,
+                which might require a very big amount of memory if N is large.
+            sparse_solver (str): specify the sparse solver to use when 'mem_efficient=True' option is selected.
+                Implemented options are:
+                    'direct' (default): scipy.sparse.linalg.spsolve. Performs a LU decomposition of the matrix and
+                        then solves the linear system directly. More robust but less memory efficient than other
+                        implemented sparse solvers. Slower than iterative solvers for very sparse and large matrices.
+                    'cg': scipy.sparse.linalg.cg. This is the iterative conjugate gradient method. It might be
+                        preferred to 'direct' for large and sparse matrices. If a log-density estimate is alredy stored
+                        in self.log_den, it will be used as a guess for the solution for a great spedup. If this option
+                        is chosen, we suggest you call compute_density_kstarNN() right before computing BMTI.
+                    'cg_precond': same as 'cg' but with a preconditioner estimated unsuperivisedly with a partial LU
+                        decomposition (scipy.sparse.linalg.spilu) of the matrix. In settings where 'direct' performs
+                        better than 'cg', 'cg_precond' is likely to perform better than 'spolve' and 'cg'. If 'cg'
+                        already performs better than 'direct', 'cg_precond' is likely to perform worse than 'cg'.
             alpha (float): can take values from 0.0 to 1.0. Indicates the portion of BMTI in the sum of the likelihoods
                 alpha*L_BMTI + (1-alpha)*L_kstarNN. Setting alpha=1.0 corresponds to not reguarising BMTI.
             log_den (np.ndarray(float)): size N. The array of the log-densities of the regulariser.
@@ -435,7 +451,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             print("{0:0.2f} seconds to fill get linear system ready".format(sec2 - sec))
 
         # solve linear system
-        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, mem_efficient)
+        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, mem_efficient,sparse_solver)
         self.log_den = log_den
 
         if self.verb:
@@ -529,10 +545,30 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         return A, deltaFcum
 
-    def _solve_BMTI_reg_linar_system(self, A, deltaFcum, mem_efficient):
-        if mem_efficient is False:
-            log_den = np.linalg.solve(A.todense(), deltaFcum)
+    def _solve_BMTI_reg_linar_system(self, A, deltaFcum, mem_efficient,sparse_solver):
+        if mem_efficient is True:
+            if sparse_solver == "cg":
+                if self.verb:
+                    print("Solving by conjugate gradient sparse solver without preconditioner")
+                log_den = sparse.linalg.cg(A.tocsr(), deltaFcum, x0=self.log_den, atol=0.0, maxiter=None)[0]
+            elif sparse_solver == "cg_precond":
+                if self.verb:
+                    print("Solving by conjugate gradient sparse solver with estimated (spilu) preconditioner")
+                # Create preconditioner
+                sec=time.time()
+                A_csc = sparse.csc_matrix(A)  # Ensure CSC format for spilu
+                M = sparse.linalg.spilu(A_csc)
+                preconditioner = sparse.linalg.LinearOperator(A_csc.shape, matvec=M.solve)
+                if self.verb:
+                    print("{0:0.2f} seconds preconditioning".format(time.time() - sec))
+                log_den = sparse.linalg.cg(A.tocsr(), deltaFcum, M=preconditioner, x0=self.log_den, atol=0.0, maxiter=None)[0]    
+            else:
+                if self.verb:
+                    print("Solving with 'direct' sparse solver")    
+                log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
         else:
-            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+            if self.verb:
+                print("'mem_efficient=False' option selected. Solving with dense solver")
+            log_den = np.linalg.solve(A.todense(), deltaFcum)
 
         return log_den
