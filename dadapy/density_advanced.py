@@ -450,7 +450,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             print("{0:0.2f} seconds to fill get linear system ready".format(sec2 - sec))
 
         # solve linear system
-        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum,solver)
+        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, solver)
         self.log_den = log_den
 
         if self.verb:
@@ -544,29 +544,42 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         return A, deltaFcum
 
-    def _solve_BMTI_reg_linar_system(self, A, deltaFcum,solver):
+    def _solve_BMTI_reg_linar_system(self, A, deltaFcum, solver):
         if solver == "dense":
             if self.verb:
                 print("Solving dense linear system")
             log_den = np.linalg.solve(A.todense(), deltaFcum)
         elif solver == "sp_cg":
             if self.verb:
-                print("Solving by conjugate gradient sparse solver without preconditioner")
-            log_den = sparse.linalg.cg(A.tocsr(), deltaFcum, x0=self.log_den, atol=0.0, maxiter=None)[0]
+                print(
+                    "Solving by conjugate gradient sparse solver without preconditioner"
+                )
+            log_den = sparse.linalg.cg(
+                A.tocsr(), deltaFcum, x0=self.log_den, atol=0.0, maxiter=None
+            )[0]
         elif solver == "sp_cg_precond":
             if self.verb:
-                print("Solving by conjugate gradient sparse solver with estimated (spilu) preconditioner")
+                print(
+                    "Solving by conjugate gradient sparse solver with estimated (spilu) preconditioner"
+                )
             # Create preconditioner
-            sec=time.time()
+            sec = time.time()
             A_csc = sparse.csc_matrix(A)  # Ensure CSC format for spilu
             M = sparse.linalg.spilu(A_csc)
             preconditioner = sparse.linalg.LinearOperator(A_csc.shape, matvec=M.solve)
             if self.verb:
                 print("{0:0.2f} seconds preconditioning".format(time.time() - sec))
-            log_den = sparse.linalg.cg(A.tocsr(), deltaFcum, M=preconditioner, x0=self.log_den, atol=0.0, maxiter=None)[0]    
+            log_den = sparse.linalg.cg(
+                A.tocsr(),
+                deltaFcum,
+                M=preconditioner,
+                x0=self.log_den,
+                atol=0.0,
+                maxiter=None,
+            )[0]
         else:
             if self.verb:
-                print("Solving with 'direct' sparse solver")    
+                print("Solving with 'direct' sparse solver")
             log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
-    
+
         return log_den
