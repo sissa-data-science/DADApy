@@ -363,6 +363,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         delta_F_inv_cov="uncorr",
         comp_log_den_err=False,
         solver="sp_direct",
+        sp_direct_perm_spec="NATURAL",
         alpha=1,
         log_den=None,
         log_den_err=None,
@@ -401,6 +402,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                     'dense': numpy.linalg.solve. Direct solver for dense matrices. O(N^3) complexity, O(N^2) memory
                         complexity. The solver automatically uses multiprocessing if available. This option is suited
                         for small datasets or when memory and cores are not an issue.
+            sp_direct_perm_spec (str): specify the permutation strategy to use when solving the linear system with the
+                'sp_direct' solver. See the scipy.sparse.linalg.spsolve documentation for more information.
             alpha (float): can take values from 0.0 to 1.0. Indicates the portion of BMTI in the sum of the likelihoods
                 alpha*L_BMTI + (1-alpha)*L_kstarNN. Setting alpha=1.0 corresponds to not reguarising BMTI.
             log_den (np.ndarray(float)): size N. The array of the log-densities of the regulariser.
@@ -450,7 +453,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             print("{0:0.2f} seconds to fill get linear system ready".format(sec2 - sec))
 
         # solve linear system
-        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, solver)
+        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, solver, sp_direct_perm_spec)
         self.log_den = log_den
 
         if self.verb:
@@ -544,7 +547,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         return A, deltaFcum
 
-    def _solve_BMTI_reg_linar_system(self, A, deltaFcum, solver):
+    def _solve_BMTI_reg_linar_system(self, A, deltaFcum, solver, sp_direct_perm_spec):
         if solver == "dense":
             # dense solver O(N^3) complexity
             if self.verb:
@@ -582,10 +585,14 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )[0]
         else:
             # default solver: sp_direct
+            if solver != "sp_direct":
+                warnings.warn(
+                    f"The solver '{solver}' selected is not among the options. Using 'sp_direct' instead."
+                )
             if self.verb:
-                print("Solving with 'sp_direct' sparse solver")
+                print(f"Solving with 'sp_direct' sparse solver with perm_spec='{sp_direct_perm_spec}'")
             print("cast to csr")
-            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum)
+            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec=sp_direct_perm_spec)
             # print("cast to csc")
             # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum)
             # print("No cast")
