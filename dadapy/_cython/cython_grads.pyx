@@ -118,28 +118,49 @@ def return_neigh_vector_diffs_periodic(np.ndarray[floatTYPE_t, ndim = 2] X,
 # ----------------------------------------------------------------------------------------------
 
 @cython.boundscheck(False)
-@cython.cdivision(True)
+@cython.wraparound(False)
 def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
                          np.ndarray[DTYPE_t, ndim = 2] dist_indices,
                          np.ndarray[DTYPE_t, ndim = 2] nind_list):
+
     cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t maxk = kstar.shape[1]
     cdef DTYPE_t nspar = nind_list.shape[0]
 
-    cdef DTYPE_t i, j, ind_spar
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
 
     cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
+    cdef np.ndarray[DTYPE_t, ndim=2] sorted_dist_indices = np.zeros((N, maxk), dtype=np.int_)
+
+    sorted_dist_indices = np.sort(dist_indices,axis=1)
 
     for ind_spar in range(nspar):
         i = nind_list[ind_spar, 0]
         j = nind_list[ind_spar, 1]
-        common_neighs_array[ind_spar] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
-                                          assume_unique=True).sum()
+
+        kstar_i = kstar[i]
+        kstar_j = kstar[j]
+
+        count = 0
+        idx = 0
+        idx2 = 0
+
+        # Two-pointer intersection if sorted
+        while idx < kstar_i and idx2 < kstar_j:
+            val_i = sorted_dist_indices[i, idx]
+            val_j = sorted_dist_indices[j, idx2]
+            if val_i < val_j:
+                idx += 1
+            elif val_i > val_j:
+                idx2 += 1
+            else:
+                count += 1
+                idx += 1
+                idx2 += 1
+
+        common_neighs_array[ind_spar] = count
 
     return common_neighs_array
-
-# ----------------------------------------------------------------------------------------------
-
-
 # ----------------------------------------------------------------------------------------------
 
 @cython.boundscheck(False)
@@ -147,22 +168,45 @@ def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
 def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
                          np.ndarray[DTYPE_t, ndim = 2] dist_indices,
                          np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    
     cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t maxk = kstar.shape[1]
     cdef DTYPE_t nspar = nind_list.shape[0]
 
-    cdef DTYPE_t i, j, ind_spar
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
 
     cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
     cdef np.ndarray[DTYPE_t, ndim=2] common_neighs_mat = np.zeros((N,N), dtype=np.int_)
+    cdef np.ndarray[DTYPE_t, ndim=2] sorted_dist_indices = np.zeros((N, maxk), dtype=np.int_)
+
+    sorted_dist_indices = np.sort(dist_indices,axis=1)
 
     for ind_spar in range(nspar):
         i = nind_list[ind_spar, 0]
         j = nind_list[ind_spar, 1]
         if common_neighs_mat[j,i] == 0:
-            common_neighs_mat[i,j] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
-                                          assume_unique=True).sum()
-            common_neighs_mat[j,i] = common_neighs_mat[i,j]
-            common_neighs_array[ind_spar] = common_neighs_mat[i,j]
+            kstar_i = kstar[i]
+            kstar_j = kstar[j]
+
+            count = 0
+            idx = 0
+            idx2 = 0
+
+            # Two-pointer intersection if sorted
+            while idx < kstar_i and idx2 < kstar_j:
+                val_i = sorted_dist_indices[i, idx]
+                val_j = sorted_dist_indices[j, idx2]
+                if val_i < val_j:
+                    idx += 1
+                elif val_i > val_j:
+                    idx2 += 1
+                else:
+                    count += 1
+                    idx += 1
+                    idx2 += 1
+            common_neighs_mat[i,j] = count
+            common_neighs_mat[j,i] = count
+            common_neighs_array[ind_spar] = count
         else:
             common_neighs_mat[i,j] = common_neighs_mat[j,i]
             common_neighs_array[ind_spar] = common_neighs_mat[j,i]
