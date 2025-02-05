@@ -1,4 +1,4 @@
-# Copyright 2021-2024 The DADApy Authors. All Rights Reserved.
+# Copyright 2021-2025 The DADApy Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,10 +35,10 @@ def test_DiffImbalance_train1():
     weights_ground_truth = np.array([10, 3, 100])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
-    print(f"Ground truth weights = {weights_ground_truth}\n")
 
-    expected_weights = [0.15569, 0.0724, 0.02274]
-    expected_imb = 0.04744
+    expected_weights = [0.13817, 0.04679, 0.09338]
+    expected_imb = 0.03670
+    expected_imb_final = 0.03670
 
     # train the DII to recover ground-truth metric
     dii = DiffImbalance(
@@ -51,24 +51,25 @@ def test_DiffImbalance_train1():
         batches_per_epoch=1,
         l1_strength=0.0,
         point_adapt_lambda=False,
-        k_init=None,
-        k_final=None,
-        lambda_init=1e-3,
-        lambda_final=1e-3,
+        k_init=10,
+        k_final=1,
         lambda_factor=1e-1,
-        init_params=None,
+        params_init=None,
         optimizer_name="sgd",
         learning_rate=1e-1,
         learning_rate_decay="cos",
-        compute_error=False,
-        ratio_rows_columns=1,
         num_points_rows=None,
-        discard_close_ind=5,
     )
     weights, imbs = dii.train()
 
+    # compute final DII
+    imb_final, _ = dii.return_final_dii(
+        compute_error=False, ratio_rows_columns=None, seed=0, discard_close_ind=0
+    )
+
     assert weights[-1] == pytest.approx(expected_weights, abs=0.001)
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.001)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -78,13 +79,13 @@ def test_DiffImbalance_train2():
 
     # generate test data
     weights_ground_truth = np.array([10, 3, 100])
-    init_params = np.array([10.0, 10.0, 10.0])
+    params_init = np.array([10.0, 10.0, 10.0])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
-    print(f"Ground truth weights = {weights_ground_truth}\n")
 
-    expected_weights = [10.90023, 5.43393, 12.31492]
-    expected_imb = 0.04298
+    expected_weights = [12.03902, 5.10201, 11.3592]
+    expected_imb = 0.11381
+    expected_imb_final = 0.05178
 
     # train the DII
     dii = DiffImbalance(
@@ -99,22 +100,21 @@ def test_DiffImbalance_train2():
         point_adapt_lambda=False,
         k_init=1,
         k_final=1,
-        lambda_init=None,
-        lambda_final=None,
         lambda_factor=1e-1,
-        init_params=init_params,
+        params_init=params_init,
         optimizer_name="adam",
         learning_rate=1e-1,
         learning_rate_decay=None,
-        compute_error=False,
-        ratio_rows_columns=1,
-        num_points_rows=None,
-        discard_close_ind=None,
     )
     weights, imbs = dii.train()
 
+    imb_final, _ = dii.return_final_dii(
+        compute_error=False, ratio_rows_columns=None, seed=0, discard_close_ind=10
+    )
+
     assert weights[-1] == pytest.approx(expected_weights, abs=0.001)
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.001)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -126,10 +126,11 @@ def test_DiffImbalance_train3():
     weights_ground_truth = np.array([10, 3, 100])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
-    print(f"Ground truth weights = {weights_ground_truth}\n")
 
-    expected_weights = [0.12776, 0.09972, 0.06112]
-    expected_imb = 0.53706
+    expected_weights = [0.16791, 0.04188, 0.00716]
+    expected_imb = 0.438795
+    expected_imb_final = 0.59615
+    expected_error_final = 0.07216
 
     # train the DII
     dii = DiffImbalance(
@@ -144,22 +145,24 @@ def test_DiffImbalance_train3():
         point_adapt_lambda=True,
         k_init=1,
         k_final=1,
-        lambda_init=None,
-        lambda_final=None,
         lambda_factor=1e-1,
-        init_params=None,
+        params_init=None,
         optimizer_name="sgd",
         learning_rate=1e-1,
         learning_rate_decay="exp",
-        compute_error=True,
-        ratio_rows_columns=1,
         num_points_rows=None,
-        discard_close_ind=None,
     )
     weights, imbs = dii.train()
 
+    # compute final DII
+    imb_final, error_final = dii.return_final_dii(
+        compute_error=True, ratio_rows_columns=1, seed=0, discard_close_ind=0
+    )
+
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
+    assert error_final == pytest.approx(expected_error_final, abs=0.001)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -171,10 +174,11 @@ def test_DiffImbalance_train4():
     weights_ground_truth = np.array([10, 3, 100])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
-    print(f"Ground truth weights = {weights_ground_truth}\n")
 
     expected_weights = [0.1312, 0.05073, 0.10106]
-    expected_imb = 0.040379
+    expected_imb = 0.0403795
+    expected_imb_final = 0.08504
+    expected_error_final = 0.01226
 
     # train the DII to recover ground-truth metric
     dii = DiffImbalance(
@@ -189,23 +193,21 @@ def test_DiffImbalance_train4():
         point_adapt_lambda=False,
         k_init=1,
         k_final=1,
-        lambda_init=None,
-        lambda_final=None,
         lambda_factor=1e-1,
-        init_params=None,
+        params_init=None,
         optimizer_name="sgd",
         learning_rate=1e-1,
         learning_rate_decay="cos",
-        compute_error=False,
-        ratio_rows_columns=1,
         num_points_rows=50,
-        discard_close_ind=None,
     )
     weights, imbs = dii.train()
 
-    # scale learnt weights in same range of ground-truth ones (same magnitude of the largest one)
-    print(f"Learnt weights: {weights[-1]}")
-    print(f"Final imb: {imbs[-1]}")
+    # compute final DII
+    imb_final, error_final = dii.return_final_dii(
+        compute_error=True, ratio_rows_columns=0.5, seed=0, discard_close_ind=1
+    )
 
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
+    assert error_final == pytest.approx(expected_error_final, abs=0.001)
