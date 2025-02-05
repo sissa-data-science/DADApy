@@ -91,11 +91,18 @@ overlap_labels = data.return_label_overlap(labels)
 - Feature selection and weighting tool
     - 
 - Differentiable Information Imbalance
+  > Wild et al., *Nature Communications* (2025)
 
+- Causal analysis tools
+    - 
+- Imbalance Gain
+  > Del Tatto et al., *PNAS* (2024)
+- Community causal graph
+  > Allione et al., arXiv (2025)
 
 # Installation
 The package is compatible with the Python versions 3.8, 3.9, 3.10, 3.11, and 3.12.
-The methods of the class DiffImbalance are only compatible with Python>=3.9.
+The methods of the classes ```DiffImbalance``` and ```CausalGraph``` are only compatible with Python>=3.9.
 We currently only support Unix-based systems, including Linux and macOS.
 For Windows machines, we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
 
@@ -125,7 +132,7 @@ python setup.py build_ext --inplace
 pip install .
 ```
 
-The methods of the class ```DiffImbalance``` can be run on GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
+The methods of the classes ```DiffImbalance``` and ```CausalGraph``` can be run on GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
 
 ```sh
 pip install --upgrade "jax[cuda12_pip]==0.4.30" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
