@@ -42,37 +42,35 @@ def test_CausalGraph_optimization():
     num_epochs = 10
     batches_per_epoch = 1
     k = 5
-    time_lags = [5] # time lags tested
+    time_lags = [5]  # time lags tested
 
-    g = CausalGraph(time_series=traj, seed=0) # object of the class CausalGraph
+    g = CausalGraph(time_series=traj, seed=0)  # object of the class CausalGraph
 
-    weights_final, imbs_training, _, _ = (
-        g.optimize_present_to_future(
-            num_samples=num_samples,
-            time_lags=time_lags,
-            target_variables="all",
-            save_weights=False,
-            embedding_dim_present=1,
-            embedding_dim_future=1,
-            embedding_time=1,
-            num_epochs=num_epochs,
-            batches_per_epoch=batches_per_epoch,
-            l1_strength=0.,
-            point_adapt_lambda=True,
-            k_init=k,
-            k_final=k,
-            lambda_factor=0.1,
-            params_init=None,
-            optimizer_name="adam",
-            learning_rate=1e-2,
-            learning_rate_decay="cos",
-            num_points_rows=None,
-            compute_imb_final=False,
-            compute_error=False,
-            ratio_rows_columns=None,
-            discard_close_ind=None
-        )
+    weights_final, imbs_training, _, _ = g.optimize_present_to_future(
+        num_samples=num_samples,
+        time_lags=time_lags,
+        target_variables="all",
+        save_weights=False,
+        embedding_dim_present=1,
+        embedding_dim_future=1,
+        embedding_time=1,
+        num_epochs=num_epochs,
+        batches_per_epoch=batches_per_epoch,
+        l1_strength=0.0,
+        point_adapt_lambda=True,
+        k_init=k,
+        k_final=k,
+        lambda_factor=0.1,
+        params_init=None,
+        optimizer_name="adam",
+        learning_rate=1e-2,
+        learning_rate_decay="cos",
+        num_points_rows=None,
+        compute_imb_final=False,
+        compute_error=False,
+        ratio_rows_columns=None,
+        discard_close_ind=None,
     )
 
-    assert weights_final[:,0,0] == pytest.approx(expected_weights, abs=0.01)
-    assert imbs_training[:,0,-1] == pytest.approx(expected_imbs_final, abs=0.01)
+    assert weights_final[:, 0, 0] == pytest.approx(expected_weights, abs=0.01)
+    assert imbs_training[:, 0, -1] == pytest.approx(expected_imbs_final, abs=0.01)
