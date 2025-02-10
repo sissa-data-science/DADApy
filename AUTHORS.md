@@ -18,6 +18,7 @@
 - [Marco Favorito](https://github.com/marcofavorito)
 - [Maria d'Errico](https://github.com/mariaderrico)
 - [Martin Uhrin](https://github.com/muhrin)
+- [Matteo Allione](https://github.com/Wraithmat)
 - [Olivier Languin-Cattoën](https://github.com/ollyfutur)
 
 You [are welcome](./CONTRIBUTING.md) to contribute too!  
