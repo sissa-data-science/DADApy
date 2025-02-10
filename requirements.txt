@@ -12,3 +12,4 @@ jax
 jaxlib
 flax
 tqdm
+networkx

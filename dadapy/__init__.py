@@ -16,3 +16,5 @@ from .neigh_graph import NeighGraph
 
 if sys.version_info >= (3, 9):
     from .diff_imbalance import DiffImbalance
+if sys.version_info >= (3, 9):
+    from .causal_graph import CausalGraph
