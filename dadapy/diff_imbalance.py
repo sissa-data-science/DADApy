@@ -60,7 +60,7 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
     diffs = batch_rows[:, jnp.newaxis, :] - batch_columns[jnp.newaxis, :, :]
     if periods is not None:  # nonperiodic features must have entry '0'
         diffs -= jnp.where(periods, 1.0, 0.0) * jnp.round(diffs / periods) * periods
-    diffs *= params[jnp.newaxis, jnp.newaxis, :]
+    diffs *= jnp.repeat(params,batch_rows.shape[1]//params.shape[0])[jnp.newaxis, jnp.newaxis, :]
     dist2_matrix = jnp.sum(diffs * diffs, axis=-1)
     return dist2_matrix
 
@@ -214,8 +214,6 @@ class DiffImbalance:
         self.lambda_factor = lambda_factor
         if params_init is not None:
             self.params_init = jnp.array(params_init)
-        else:
-            self.params_init = 0.1 * jnp.ones(self.nfeatures_A)
         self.params_final = None
         self.params_training = None
         self.imb_final = None
@@ -807,7 +805,7 @@ class DiffImbalance:
         self._init_optimizer()
 
         # Construct output arrays and initialize them using inital weights
-        params_training = jnp.empty(shape=(self.num_epochs + 1, self.nfeatures_A))
+        params_training = jnp.empty(shape=(self.num_epochs + 1, self.params_init.shape[0]))
         imbs_training = jnp.empty(shape=(self.num_epochs + 1,))
         batch_indices = jnp.arange(self.nrows // self.batches_per_epoch)
 
