@@ -16,8 +16,8 @@
 """
 The *diff_imbalance* module contains the *DiffImbalance* class, implemented with JAX.
 
-The only method supposed to be called by the user is 'train', which carries out the automatic optimization ot the 
-Differential Information as a function of the weights of the features in the first distance space. 
+The only method supposed to be called by the user is 'train', which carries out the automatic optimization ot the
+Differential Information as a function of the weights of the features in the first distance space.
 The code can be runned on gpu using the command
     jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
 """
@@ -399,9 +399,9 @@ class DiffImbalance:
                 jnp.max(dist2_matrix_A) + 1e6
             )
 
-            lambdas = self.lambda_method(  # compute lambda values
+            lambdas = self.lambda_method(
                 dist2_matrix=dist2_matrix_A, step=step
-            )
+            )  # compute lambda values
             c_matrix = (
                 jax.nn.softmax(  # N.B. diagonal elements already numerically zero
                     -dist2_matrix_A
@@ -459,9 +459,9 @@ class DiffImbalance:
             )
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1]
-            lambdas = self.lambda_method(  # compute lambda values
+            lambdas = self.lambda_method(
                 dist2_matrix=dist2_matrix_A, k=k
-            )
+            )  # compute lambda values
             c_matrix = jax.nn.softmax(
                 -dist2_matrix_A
                 / lambdas[
@@ -523,9 +523,9 @@ class DiffImbalance:
                     (dist2_matrix_A.shape[0], -1)
                 )
                 max_rank = dist2_matrix_A.shape[1]
-            lambdas = self.lambda_method(  # compute lambda values
+            lambdas = self.lambda_method(
                 dist2_matrix=dist2_matrix_A, k=k
-            )
+            )  # compute lambda values
             c_matrix = jax.nn.softmax(  # N.B. diagonal elements already numerically zero if mask is None
                 -dist2_matrix_A / lambdas[:, jnp.newaxis],
                 axis=1,
@@ -983,3 +983,459 @@ class DiffImbalance:
         self.error_final = error_final
 
         return imb_final, error_final
+
+    def forward_greedy_feature_selection(
+        self,
+        n_features_max=None,
+        n_best=10,
+        compute_error=False,
+        ratio_rows_columns=1,
+        seed=0,
+        discard_close_ind=0,
+        num_epochs=10,
+    ):
+        """Performs forward greedy feature selection using the Differentiable Information Imbalance.
+
+        Starting with all individual features, the algorithm evaluates which single feature has
+        the lowest DII. Then it combines the best n_best single features with each
+        of the remaining features to find the best 2-feature combination. This process continues
+        until n_features_max features are selected or all features are included.
+
+        For each candidate feature set, the weights are optimized specifically for that subset.
+        When mini-batches are used, the same random seed ensures consistent mini-batch sequences.
+
+        Args:
+            n_features_max (int): maximum number of features to select. If None, will select up to all features.
+            n_best (int): number of best feature tuples to consider at each iteration. Default is 10.
+            compute_error (bool): whether to compute error estimates for the DII. Default is False.
+            ratio_rows_columns (float): ratio between the number of points along rows and columns when
+                computing the DII. Only used when compute_error is True. Default is 1.
+            seed (int): seed for random number generation. Default is 0.
+            discard_close_ind (int): index to discard close points when computing the DII. Default is 0.
+            num_epochs (int): number of epochs for training the weights for each candidate feature set.
+
+        Returns:
+            best_feature_sets (list): list of lists, where each sublist contains the indices of the selected
+                features at each iteration.
+            best_diis (list): list of DII values corresponding to each set of selected features.
+            best_errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
+        """
+        assert self.params_final is not None, "First call the train() method!"
+
+        n_features = self.nfeatures_A
+        if n_features_max is None:
+            n_features_max = n_features
+
+        # Initialize lists to store results
+        best_feature_sets = []
+        best_diis = []
+        best_errors = []
+        all_imbalances = []
+
+        # First evaluate all single features
+        single_feature_diis = []
+        single_feature_errors = []
+
+        for feature in range(n_features):
+            # Create mask for this single feature
+            mask = jnp.zeros(n_features, dtype=bool)
+            mask = mask.at[feature].set(True)
+
+            # Initialize weights for training (only this feature is active)
+            initial_params = jnp.where(mask, 0.1, 0.0)
+
+            # Create a copy of the current object for training
+            dii_copy = DiffImbalance(
+                self.data_A_rows,
+                self.data_B_rows,
+                periods_A=self.periods_A,
+                periods_B=self.periods_B,
+                seed=seed,
+                num_epochs=num_epochs,
+                batches_per_epoch=self.batches_per_epoch,
+                l1_strength=0.0,
+                point_adapt_lambda=isinstance(
+                    self.lambda_method, type(self._compute_point_adapt_lambdas)
+                ),
+                k_init=self.k_init,
+                k_final=self.k_final,
+                lambda_factor=self.lambda_factor,
+                optimizer_name=self.optimizer_name,
+                learning_rate=self.learning_rate,
+                learning_rate_decay=self.learning_rate_decay,
+                num_points_rows=None,
+            )
+
+            # Set initial parameters and train
+            dii_copy.params_init = initial_params
+            _, _ = dii_copy.train()
+
+            # Compute DII on the full dataset
+            if compute_error:
+                dii_copy.return_final_dii(
+                    compute_error=True,
+                    ratio_rows_columns=ratio_rows_columns,
+                    seed=seed,
+                    discard_close_ind=discard_close_ind,
+                )
+                single_feature_diis.append(dii_copy.imb_final)
+                single_feature_errors.append(dii_copy.error_final)
+            else:
+                dii_copy.return_final_dii(
+                    compute_error=False,
+                    ratio_rows_columns=None,
+                    seed=seed,
+                    discard_close_ind=discard_close_ind,
+                )
+                single_feature_diis.append(dii_copy.imb_final)
+                single_feature_errors.append(None)
+
+            print("[", feature, "]\n", dii_copy.imb_final)
+
+        # Convert to numpy arrays for easier manipulation
+        single_feature_diis = np.array(single_feature_diis)
+
+        # Select the best n_best single features
+        n_best_actual = min(n_best, n_features)
+        selected_indices = np.argsort(single_feature_diis)[:n_best_actual]
+
+        # Convert indices to lists for consistent processing
+        selected_features = [[idx] for idx in selected_indices]
+
+        # Add the best single feature to results
+        best_feature = selected_features[0]
+        best_feature_sets.append(best_feature)
+        best_diis.append(single_feature_diis[selected_indices[0]])
+        if compute_error:
+            best_errors.append(single_feature_errors[selected_indices[0]])
+        else:
+            best_errors.append(None)
+
+        # Store all single feature imbalances for tracking
+        all_imbalances.append([[float(num) for num in single_feature_diis]])
+
+        # Get all features as a list
+        all_features = list(range(n_features))
+
+        # Continue adding features until reaching the desired number
+        while len(best_feature_sets[-1]) < min(n_features_max, n_features):
+            candidate_features = []
+            candidate_diis = []
+            candidate_errors = []
+
+            # Generate candidate feature sets by combining selected features with remaining features
+            for selected_set in selected_features:
+                for feature in all_features:
+                    if feature not in selected_set:
+                        # Create a new candidate set by adding this feature
+                        candidate_set = selected_set + [feature]
+                        candidate_set.sort()  # Sort for consistent comparison
+
+                        # Skip if this set has already been evaluated
+                        if candidate_set in candidate_features:
+                            continue
+
+                        candidate_features.append(candidate_set)
+
+                        # Create mask for this candidate set
+                        mask = jnp.zeros(n_features, dtype=bool)
+                        mask = mask.at[jnp.array(candidate_set)].set(True)
+
+                        # Initialize weights for training: 0.1 is chosen as the default value
+                        initial_params = jnp.where(mask, 0.1, 0.0)
+
+                        # Create a copy of the current object for training
+                        dii_copy = DiffImbalance(
+                            self.data_A_rows,
+                            self.data_B_rows,
+                            periods_A=self.periods_A,
+                            periods_B=self.periods_B,
+                            seed=seed
+                            + len(candidate_features),  # Ensure reproducibility
+                            num_epochs=num_epochs,
+                            batches_per_epoch=self.batches_per_epoch,
+                            l1_strength=0.0,
+                            point_adapt_lambda=isinstance(
+                                self.lambda_method,
+                                type(self._compute_point_adapt_lambdas),
+                            ),
+                            k_init=self.k_init,
+                            k_final=self.k_final,
+                            lambda_factor=self.lambda_factor,
+                            optimizer_name=self.optimizer_name,
+                            learning_rate=self.learning_rate,
+                            learning_rate_decay=self.learning_rate_decay,
+                            num_points_rows=None,
+                        )
+
+                        # Set initial parameters and train
+                        dii_copy.params_init = initial_params
+                        _, _ = dii_copy.train()
+
+                        # Compute DII on the full dataset
+                        if compute_error:
+                            dii_copy.return_final_dii(
+                                compute_error=True,
+                                ratio_rows_columns=ratio_rows_columns,
+                                seed=seed,
+                                discard_close_ind=discard_close_ind,
+                            )
+                            candidate_diis.append(dii_copy.imb_final)
+                            candidate_errors.append(dii_copy.error_final)
+                        else:
+                            dii_copy.return_final_dii(
+                                compute_error=False,
+                                ratio_rows_columns=None,
+                                seed=seed,
+                                discard_close_ind=discard_close_ind,
+                            )
+                            candidate_diis.append(dii_copy.imb_final)
+                            candidate_errors.append(None)
+
+                        print(candidate_set)
+                        print(dii_copy.imb_final)
+
+            # Convert to numpy arrays for easier manipulation
+            candidate_diis = np.array(candidate_diis)
+
+            # Store all imbalances for tracking
+            all_imbalances.append([[float(num) for num in candidate_diis]])
+
+            if not candidate_features:  # No more features to add
+                break
+
+            # Select the best n_best candidates for the next iteration
+            n_best_actual = min(n_best, len(candidate_features))
+            best_indices = np.argsort(candidate_diis)[:n_best_actual]
+            selected_features = [candidate_features[i] for i in best_indices]
+
+            # Add the best new set to results
+            best_idx = best_indices[0]
+            best_feature_sets.append(candidate_features[best_idx])
+            best_diis.append(candidate_diis[best_idx])
+
+            if compute_error:
+                candidate_errors = np.array(candidate_errors)
+                best_errors.append(candidate_errors[best_idx])
+            else:
+                best_errors.append(None)
+
+            # Stop if we've reached the maximum number of features
+            if len(best_feature_sets[-1]) == n_features:
+                break
+
+        return best_feature_sets, best_diis, best_errors
+
+    def backward_greedy_feature_selection(
+        self,
+        n_features_min=1,
+        n_best=10,
+        compute_error=False,
+        ratio_rows_columns=1,
+        seed=0,
+        discard_close_ind=0,
+        num_epochs=10,
+    ):
+        """Performs backward greedy feature selection using the Differentiable Information Imbalance.
+
+        Starting with all features, the algorithm progressively removes the least informative features
+        one at a time, until either no features are left or n_features_min is reached.
+        For each iteration, the algorithm selects the n_best feature sets with the lowest DII values
+        for consideration in the next round.
+
+        For each candidate feature set, the weights are optimized specifically for that subset.
+        When mini-batches are used, the same random seed ensures consistent mini-batch sequences.
+
+        Args:
+            n_features_min (int): minimum number of features to select. Default is 1.
+            n_best (int): number of best feature tuples to consider at each iteration. Default is 10.
+            compute_error (bool): whether to compute error estimates for the DII. Default is False.
+            ratio_rows_columns (float): ratio between the number of points along rows and columns when
+                computing the DII. Only used when compute_error is True. Default is 1.
+            seed (int): seed for random number generation. Default is 0.
+            discard_close_ind (int): index to discard close points when computing the DII. Default is 0.
+            num_epochs (int): number of epochs for training the weights for each candidate feature set.
+
+        Returns:
+            feature_sets (list): list of lists, where each sublist contains the indices of the selected
+                features at each iteration.
+            diis (list): list of DII values corresponding to each set of selected features.
+            errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
+        """
+        assert self.params_final is not None, "First call the train() method!"
+
+        n_features = self.nfeatures_A
+
+        # Initialize lists to store results
+        feature_sets = []
+        diis = []
+        errors = []
+        all_imbalances = []
+
+        # Start with all features and use the original trained weights
+        current_features = [list(range(n_features))]
+
+        print(f"Starting backward greedy search with all {n_features} features")
+
+        # First evaluate DII with all features using return_final_dii
+        if compute_error:
+            self.return_final_dii(
+                compute_error=True,
+                ratio_rows_columns=ratio_rows_columns,
+                seed=seed,
+                discard_close_ind=discard_close_ind,
+            )
+            diis.append(self.imb_final)
+            errors.append(self.error_final)
+        else:
+            self.return_final_dii(
+                compute_error=False,
+                ratio_rows_columns=None,  # Set to None when compute_error is False
+                seed=seed,
+                discard_close_ind=discard_close_ind,
+            )
+            diis.append(self.imb_final)
+            errors.append(None)
+
+        print(f"Initial DII with all features: {self.imb_final}")
+
+        feature_sets.append(current_features[0].copy())
+
+        # Loop until we have the minimum number of features
+        while feature_sets[-1] and len(feature_sets[-1]) > n_features_min:
+            print(f"\nBackward iteration with {len(feature_sets[-1])} features")
+            candidate_diis = []
+            candidate_errors = []
+            candidate_features = []
+
+            # Generate candidates by removing one feature from each of the current best feature sets
+            for selected_set in current_features:
+                if len(selected_set) <= n_features_min:
+                    # Skip sets that are already at minimum size
+                    continue
+
+                for i, feature in enumerate(selected_set):
+                    # Create candidate feature set by removing this feature
+                    candidate_set = selected_set.copy()
+                    candidate_set.pop(i)
+
+                    # Sort the candidate set for consistent comparison
+                    candidate_set.sort()
+
+                    # Skip if this set has already been evaluated
+                    if candidate_set in candidate_features:
+                        continue
+
+                    candidate_features.append(candidate_set)
+
+                    print(
+                        f"Evaluating set by removing feature {feature}: {candidate_set}"
+                    )
+
+                    # Create mask for this candidate set
+                    mask = jnp.zeros(n_features, dtype=bool)
+                    mask = mask.at[jnp.array(candidate_set)].set(True)
+
+                    # Initialize weights for training: 0.1 is chosen as the default value
+                    initial_params = jnp.where(mask, 0.1, 0.0)
+
+                    # Reset the random seed for consistent mini-batch sequence
+                    training_seed = seed + len(candidate_features)
+
+                    # Create a copy of the current object for training
+                    dii_copy = DiffImbalance(
+                        self.data_A_rows,
+                        self.data_B_rows,
+                        periods_A=self.periods_A,
+                        periods_B=self.periods_B,
+                        seed=training_seed,
+                        num_epochs=num_epochs,
+                        batches_per_epoch=self.batches_per_epoch,
+                        l1_strength=0.0,
+                        point_adapt_lambda=isinstance(
+                            self.lambda_method, type(self._compute_point_adapt_lambdas)
+                        ),
+                        k_init=self.k_init,
+                        k_final=self.k_final,
+                        lambda_factor=self.lambda_factor,
+                        optimizer_name=self.optimizer_name,
+                        learning_rate=self.learning_rate,
+                        learning_rate_decay=self.learning_rate_decay,
+                        num_points_rows=None,
+                    )
+
+                    # Set initial parameters and train
+                    dii_copy.params_init = initial_params
+                    _, _ = dii_copy.train()
+
+                    # Store the trained weights
+                    trained_weights = dii_copy.params_final
+
+                    # Use return_final_dii to compute DII on the full dataset
+                    dii_copy.params_final = trained_weights
+                    if compute_error:
+                        dii_copy.return_final_dii(
+                            compute_error=True,
+                            ratio_rows_columns=ratio_rows_columns,
+                            seed=seed,
+                            discard_close_ind=discard_close_ind,
+                        )
+                        candidate_diis.append(dii_copy.imb_final)
+                        candidate_errors.append(dii_copy.error_final)
+                    else:
+                        dii_copy.return_final_dii(
+                            compute_error=False,
+                            ratio_rows_columns=None,  # Set to None when compute_error is False
+                            seed=seed,
+                            discard_close_ind=discard_close_ind,
+                        )
+                        candidate_diis.append(dii_copy.imb_final)
+                        candidate_errors.append(None)
+
+                    print(f"Feature set {candidate_set} has DII: {dii_copy.imb_final}")
+
+            # Make sure we have candidates before proceeding
+            if not candidate_features:
+                print("No more candidates to evaluate, exiting backward search")
+                break
+
+            # Convert to numpy arrays for easier manipulation
+            candidate_diis = np.array(candidate_diis)
+
+            # Store all imbalances for tracking
+            all_imbalances.append([[round(float(num), 3) for num in candidate_diis]])
+
+            # Select the best n_best candidates
+            n_best_actual = min(n_best, len(candidate_features))
+            best_indices = np.argsort(candidate_diis)[:n_best_actual]
+
+            # Update current features for the next iteration
+            current_features = [candidate_features[i] for i in best_indices]
+
+            # Select the best candidate (lowest DII)
+            best_idx = best_indices[0]
+            best_feature_set = candidate_features[best_idx]
+
+            # Print the feature that's being removed (compared to previous best)
+            removed_feature = set(feature_sets[-1]) - set(best_feature_set)
+            print(
+                f"Removing feature {list(removed_feature)[0]}, best DII: {candidate_diis[best_idx]}"
+            )
+
+            # Store results
+            feature_sets.append(best_feature_set.copy())
+            diis.append(candidate_diis[best_idx])
+
+            if compute_error:
+                candidate_errors = np.array(candidate_errors)
+                errors.append(candidate_errors[best_idx])
+            else:
+                errors.append(None)
+
+            print(
+                f"Current best feature set: {best_feature_set}, DII: {candidate_diis[best_idx]}"
+            )
+            print(f"Selected {n_best_actual} best candidates for next iteration")
+
+        print(f"Backward search completed with {len(feature_sets)} steps")
+        return feature_sets, diis, errors
