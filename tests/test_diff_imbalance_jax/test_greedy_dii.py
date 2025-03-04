@@ -321,7 +321,7 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     )
 
     # Expected results based on weights
-    expected_fw_sets = [[3], [3, 0], [3, 0, 4], [3, 0, 4, 1], [3, 0, 4, 1, 2]]
+    expected_fw_sets = [[3], [0, 3], [0, 3, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]]
     expected_bw_sets = [[0, 1, 2, 3, 4], [0, 1, 3, 4], [0, 3, 4], [0, 3], [3]]
 
     # Check forward greedy results
