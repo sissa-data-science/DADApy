@@ -992,7 +992,7 @@ class DiffImbalance:
         ratio_rows_columns=1,
         seed=0,
         discard_close_ind=0,
-        num_epochs=50,
+        num_epochs=10,
     ):
         """Performs forward greedy feature selection using the Differentiable Information Imbalance.
 
@@ -1043,13 +1043,14 @@ class DiffImbalance:
                     # Create candidate feature set by adding this feature
                     candidate_set = current_features + [feature]
                     candidate_features.append(candidate_set)
+                    print(candidate_features)
 
                     # Create mask for this candidate set
                     mask = jnp.zeros(n_features, dtype=bool)
                     mask = mask.at[jnp.array(candidate_set)].set(True)
 
                     # Initialize weights for training
-                    initial_params = jnp.where(mask, self.params_final, 0.0)
+                    initial_params = jnp.where(mask, 0.1, 0.0)
 
                     # Reset the random seed for consistent mini-batch sequence
                     training_seed = seed + len(best_feature_sets)
@@ -1136,7 +1137,7 @@ class DiffImbalance:
         ratio_rows_columns=1,
         seed=0,
         discard_close_ind=0,
-        num_epochs=50,
+        num_epochs=10,
     ):
         """Performs backward greedy feature selection using the Differentiable Information Imbalance.
 
@@ -1171,7 +1172,6 @@ class DiffImbalance:
 
         # Start with all features and use the original trained weights
         current_features = list(range(n_features))
-        best_weights = self.params_final
 
         # First evaluate DII with all features using return_final_dii
         if compute_error:
@@ -1213,7 +1213,7 @@ class DiffImbalance:
                 mask = mask.at[jnp.array(candidate_set)].set(True)
 
                 # Initialize weights - use the current best weights but zero out the removed feature
-                initial_params = jnp.where(mask, best_weights, 0.0)
+                initial_params = jnp.where(mask, 0.1, 0.0)
 
                 # Reset the random seed for consistent mini-batch sequence
                 training_seed = seed + len(feature_sets)
