@@ -349,7 +349,7 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     for i in range(len(feature_sets_fw)):
         assert set(feature_sets_fw[i]) == set(
             feature_sets_bw[-(i + 1)]
-        ), f"Feature sets should be in reverse order, got {feature_sets_fw[i]} and {feature_sets_bw[-(i+1)]}"
+        ), f"Feature sets should be in reverse order, got {feature_sets_fw[i]} and {feature_sets_bw[-(i + 1)]}"
 
 
 if __name__ == "__main__":
