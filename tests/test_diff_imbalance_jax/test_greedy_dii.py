@@ -277,6 +277,7 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     select features in the reverse order of each other, and that the DII values match
     when reversed.
     It also works on the prototypical 5D gaussian example to see if it selects the correct feature.
+    This also checks if mini-batches and the error estimation works fine in the greedy implementation.
     """
     from dadapy import DiffImbalance  # noqa: E402
 
@@ -294,11 +295,11 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
         periods_B=None,
         seed=0,
         num_epochs=10,
-        batches_per_epoch=1,
+        batches_per_epoch=5,
         l1_strength=0.0,
-        point_adapt_lambda=False,
-        k_init=10,
-        k_final=1,
+        point_adapt_lambda=True,
+        k_init=5,
+        k_final=5,
         lambda_factor=1e-1,
         params_init=None,
         optimizer_name="sgd",
@@ -309,11 +310,11 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     weights, imbs = dii.train()
 
     # Run forward and backward greedy feature selection
-    feature_sets_fw, diis_fw, _ = dii.forward_greedy_feature_selection(
-        n_features_max=5, compute_error=False
+    feature_sets_fw, diis_fw, errors_fw = dii.forward_greedy_feature_selection(
+        n_features_max=5, compute_error=True
     )
-    feature_sets_bw, diis_bw, _ = dii.backward_greedy_feature_selection(
-        n_features_min=1, compute_error=False
+    feature_sets_bw, diis_bw, errors_bw = dii.backward_greedy_feature_selection(
+        n_features_min=1, compute_error=True
     )
 
     # Expected results based on weights
@@ -335,7 +336,16 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     diis_bw_array = np.array(diis_bw)
 
     print("Forward DIIs:", diis_fw)
+    print("Forward Errors:", errors_fw)
     print("Backward DIIs:", diis_bw)
+    print("Backward Errors:", errors_bw)
+
+    assert (
+        len(errors_fw) == 5
+    ), f"Forward selection should return 5 DII errors, got {len(errors_fw)}"
+    assert (
+        len(errors_bw) == 5
+    ), f"Backward selection should return 5 DII errors, got {len(errors_bw)}"
 
     assert np.allclose(
         diis_bw_array, diis_fw_array[::-1], atol=1e-2
