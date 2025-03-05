@@ -1019,6 +1019,7 @@ class DiffImbalance:
                 features at each iteration.
             best_diis (list): list of DII values corresponding to each set of selected features.
             best_errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
+            best_weights_list (list): list of arrays containing the optimal weights for each set of selected features.
         """
         assert self.params_final is not None, "First call the train() method!"
 
@@ -1030,6 +1031,7 @@ class DiffImbalance:
         best_feature_sets = []
         best_diis = []
         best_errors = []
+        best_weights_list = []
         all_imbalances = []
 
         # First evaluate all single features
@@ -1115,7 +1117,15 @@ class DiffImbalance:
         print(
             f"Best single feature: {best_feature[0]}, DII: {single_feature_diis[selected_indices[0]]}"
         )
-        print(f"Selected {n_best_actual} best candidates for next iteration\n")
+        print(f"Selected {n_best_actual} best candidates for next iteration")
+
+        # Store the optimal weights for the best single feature
+        best_weights = np.zeros(n_features)
+        best_weights[best_feature[0]] = 0.1  # Initial value was 0.1
+        print(f"\nOptimal weights for feature set {best_feature}: {best_weights}\n")
+
+        # Add to weights list
+        best_weights_list.append(best_weights)
 
         if compute_error:
             best_errors.append(single_feature_errors[selected_indices[0]])
@@ -1238,6 +1248,44 @@ class DiffImbalance:
             )
             print(f"Selected {n_best_actual} best candidates for next iteration\n")
 
+            # Create a copy of DiffImbalance to get the optimal weights for the best feature set
+            mask = jnp.zeros(n_features, dtype=bool)
+            mask = mask.at[jnp.array(candidate_features[best_idx])].set(True)
+            initial_params = jnp.where(mask, 0.1, 0.0)
+            dii_copy = DiffImbalance(
+                self.data_A_rows,
+                self.data_B_rows,
+                periods_A=self.periods_A,
+                periods_B=self.periods_B,
+                seed=seed,
+                num_epochs=num_epochs,
+                batches_per_epoch=self.batches_per_epoch,
+                l1_strength=0.0,
+                point_adapt_lambda=isinstance(
+                    self.lambda_method, type(self._compute_point_adapt_lambdas)
+                ),
+                k_init=self.k_init,
+                k_final=self.k_final,
+                lambda_factor=self.lambda_factor,
+                optimizer_name=self.optimizer_name,
+                learning_rate=self.learning_rate,
+                learning_rate_decay=self.learning_rate_decay,
+                num_points_rows=None,
+            )
+
+            # Set initial parameters and train
+            dii_copy.params_init = initial_params
+            _, _ = dii_copy.train()
+
+            # Print and store optimal weights
+            print(
+                f"\nOptimal weights for feature set {candidate_features[best_idx]}: {dii_copy.params_final}\n"
+            )
+
+            # Save optimal weights
+            best_weights = dii_copy.params_final
+            best_weights_list.append(best_weights)
+
             # Add the best new set to results
             best_feature_sets.append(candidate_features[best_idx])
             best_diis.append(candidate_diis[best_idx])
@@ -1252,7 +1300,7 @@ class DiffImbalance:
             if len(best_feature_sets[-1]) == n_features:
                 break
 
-        return best_feature_sets, best_diis, best_errors
+        return best_feature_sets, best_diis, best_errors, best_weights_list
 
     def backward_greedy_feature_selection(
         self,
@@ -1289,6 +1337,7 @@ class DiffImbalance:
                 features at each iteration.
             diis (list): list of DII values corresponding to each set of selected features.
             errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
+            best_weights_list (list): list of arrays containing the optimal weights for each set of selected features.
         """
         assert self.params_final is not None, "First call the train() method!"
 
@@ -1298,6 +1347,7 @@ class DiffImbalance:
         feature_sets = []
         diis = []
         errors = []
+        best_weights_list = []
         all_imbalances = []
 
         # Start with all features and use the original trained weights
@@ -1325,9 +1375,13 @@ class DiffImbalance:
             diis.append(self.imb_final)
             errors.append(None)
 
-        print(f"Initial DII with all features: {self.imb_final}\n")
+        print(f"Initial DII with all features: {self.imb_final}")
+        print(
+            f"\nOptimal weights for initial feature set {current_features[0]}: {self.params_final}\n"
+        )
 
         feature_sets.append(current_features[0].copy())
+        best_weights_list.append(self.params_final)
 
         # Loop until we have the minimum number of features
         while feature_sets[-1] and len(feature_sets[-1]) > n_features_min:
@@ -1448,6 +1502,44 @@ class DiffImbalance:
                 f"Removing feature {list(removed_feature)[0]}, best DII: {candidate_diis[best_idx]}"
             )
 
+            # Create a copy of DiffImbalance to get the optimal weights for the best feature set
+            mask = jnp.zeros(n_features, dtype=bool)
+            mask = mask.at[jnp.array(best_feature_set)].set(True)
+            initial_params = jnp.where(mask, 0.1, 0.0)
+            dii_copy = DiffImbalance(
+                self.data_A_rows,
+                self.data_B_rows,
+                periods_A=self.periods_A,
+                periods_B=self.periods_B,
+                seed=seed,
+                num_epochs=num_epochs,
+                batches_per_epoch=self.batches_per_epoch,
+                l1_strength=0.0,
+                point_adapt_lambda=isinstance(
+                    self.lambda_method, type(self._compute_point_adapt_lambdas)
+                ),
+                k_init=self.k_init,
+                k_final=self.k_final,
+                lambda_factor=self.lambda_factor,
+                optimizer_name=self.optimizer_name,
+                learning_rate=self.learning_rate,
+                learning_rate_decay=self.learning_rate_decay,
+                num_points_rows=None,
+            )
+
+            # Set initial parameters and train
+            dii_copy.params_init = initial_params
+            _, _ = dii_copy.train()
+
+            # Print optimal weights
+            print(
+                f"\nOptimal weights for feature set {best_feature_set}: {dii_copy.params_final}\n"
+            )
+
+            # Save optimal weights
+            best_weights = dii_copy.params_final
+            best_weights_list.append(best_weights)
+
             # Store results
             feature_sets.append(best_feature_set.copy())
             diis.append(candidate_diis[best_idx])
@@ -1463,4 +1555,4 @@ class DiffImbalance:
             )
             print(f"Selected {n_best_actual} best candidates for next iteration\n")
 
-        return feature_sets, diis, errors
+        return feature_sets, diis, errors, best_weights_list
