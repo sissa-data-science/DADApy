@@ -1036,12 +1036,14 @@ class DiffImbalance:
         single_feature_diis = []
         single_feature_errors = []
 
+        print(f"\nFORWARD GREEDY SEARCH STARTS WITH ALL {n_features} FEATURES")
         for feature in range(n_features):
             # Create mask for this single feature
             mask = jnp.zeros(n_features, dtype=bool)
             mask = mask.at[feature].set(True)
 
             # Initialize weights for training (only this feature is active)
+            # 0.1 is the default value for initialization
             initial_params = jnp.where(mask, 0.1, 0.0)
 
             # Create a copy of the current object for training
@@ -1090,7 +1092,9 @@ class DiffImbalance:
                 single_feature_diis.append(dii_copy.imb_final)
                 single_feature_errors.append(None)
 
-            print("[", feature, "]\n", dii_copy.imb_final)
+            print(
+                f"Forward iteration: feature set = {feature}, DII = {dii_copy.imb_final}\n"
+            )
 
         # Convert to numpy arrays for easier manipulation
         single_feature_diis = np.array(single_feature_diis)
@@ -1106,6 +1110,13 @@ class DiffImbalance:
         best_feature = selected_features[0]
         best_feature_sets.append(best_feature)
         best_diis.append(single_feature_diis[selected_indices[0]])
+
+        # Print the best single feature information
+        print(
+            f"Best single feature: {best_feature[0]}, DII: {single_feature_diis[selected_indices[0]]}"
+        )
+        print(f"Selected {n_best_actual} best candidates for next iteration\n")
+
         if compute_error:
             best_errors.append(single_feature_errors[selected_indices[0]])
         else:
@@ -1192,8 +1203,9 @@ class DiffImbalance:
                             candidate_diis.append(dii_copy.imb_final)
                             candidate_errors.append(None)
 
-                        print(candidate_set)
-                        print(dii_copy.imb_final)
+                        print(
+                            f"Forward iteration: added feature = {feature}, current feature set = {candidate_set}, DII = {dii_copy.imb_final}\n"
+                        )
 
             # Convert to numpy arrays for easier manipulation
             candidate_diis = np.array(candidate_diis)
@@ -1209,8 +1221,24 @@ class DiffImbalance:
             best_indices = np.argsort(candidate_diis)[:n_best_actual]
             selected_features = [candidate_features[i] for i in best_indices]
 
-            # Add the best new set to results
+            # Print the best feature set information
             best_idx = best_indices[0]
+
+            # For iterations after the initial feature selection
+            if len(best_feature_sets) > 0:
+                added_feature = set(candidate_features[best_idx]) - set(
+                    best_feature_sets[-1]
+                )
+                print(
+                    f"Adding feature {list(added_feature)[0]}, best DII: {candidate_diis[best_idx]}"
+                )
+
+            print(
+                f"Current best feature set: {candidate_features[best_idx]}, DII: {candidate_diis[best_idx]}"
+            )
+            print(f"Selected {n_best_actual} best candidates for next iteration\n")
+
+            # Add the best new set to results
             best_feature_sets.append(candidate_features[best_idx])
             best_diis.append(candidate_diis[best_idx])
 
@@ -1275,7 +1303,7 @@ class DiffImbalance:
         # Start with all features and use the original trained weights
         current_features = [list(range(n_features))]
 
-        print(f"Starting backward greedy search with all {n_features} features")
+        print(f"\nBACKWARD GREEDY SEARCH STARTS WITH ALL {n_features} FEATURES")
 
         # First evaluate DII with all features using return_final_dii
         if compute_error:
@@ -1297,13 +1325,13 @@ class DiffImbalance:
             diis.append(self.imb_final)
             errors.append(None)
 
-        print(f"Initial DII with all features: {self.imb_final}")
+        print(f"Initial DII with all features: {self.imb_final}\n")
 
         feature_sets.append(current_features[0].copy())
 
         # Loop until we have the minimum number of features
         while feature_sets[-1] and len(feature_sets[-1]) > n_features_min:
-            print(f"\nBackward iteration with {len(feature_sets[-1])} features")
+            print(f"Backward iteration with {len(feature_sets[-1])} features")
             candidate_diis = []
             candidate_errors = []
             candidate_features = []
@@ -1327,10 +1355,6 @@ class DiffImbalance:
                         continue
 
                     candidate_features.append(candidate_set)
-
-                    print(
-                        f"Evaluating set by removing feature {feature}: {candidate_set}"
-                    )
 
                     # Create mask for this candidate set
                     mask = jnp.zeros(n_features, dtype=bool)
@@ -1392,7 +1416,9 @@ class DiffImbalance:
                         candidate_diis.append(dii_copy.imb_final)
                         candidate_errors.append(None)
 
-                    print(f"Feature set {candidate_set} has DII: {dii_copy.imb_final}")
+                    print(
+                        f"Backward iteration: removed feature = {feature}, current feature set = {candidate_set}, DII = {dii_copy.imb_final}\n"
+                    )
 
             # Make sure we have candidates before proceeding
             if not candidate_features:
@@ -1435,7 +1461,6 @@ class DiffImbalance:
             print(
                 f"Current best feature set: {best_feature_set}, DII: {candidate_diis[best_idx]}"
             )
-            print(f"Selected {n_best_actual} best candidates for next iteration")
+            print(f"Selected {n_best_actual} best candidates for next iteration\n")
 
-        print(f"Backward search completed with {len(feature_sets)} steps")
         return feature_sets, diis, errors

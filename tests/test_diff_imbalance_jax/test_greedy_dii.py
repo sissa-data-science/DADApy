@@ -78,8 +78,6 @@ def test_DiffImbalance_forward_greedy():
     )
 
     print("FORWARD DII TEST:")
-    print("Weights with all features:\n", weights)
-    print("Imbs with all features:\n", imbs)
     print("Feature Sets:", feature_sets)
     print("Final DIIs:", diis)
 
@@ -152,8 +150,6 @@ def test_DiffImbalance_backward_greedy():
     )
 
     print("BACKWARD DII TEST:")
-    print("Weights with all features:\n", weights)
-    print("Imbs with all features:\n", imbs)
     print("Feature Sets:", feature_sets)
     print("Final DIIs:", diis)
 
