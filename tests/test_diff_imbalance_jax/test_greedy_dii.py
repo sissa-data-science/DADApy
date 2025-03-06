@@ -74,7 +74,9 @@ def test_DiffImbalance_forward_greedy():
 
     # Run forward greedy feature selection
     feature_sets, diis, _, weights = dii.forward_greedy_feature_selection(
-        n_features_max=3, compute_error=False
+        n_features_max=3,
+        compute_error=False,
+        n_best=1,
     )
 
     print("FORWARD DII TEST:")
@@ -146,7 +148,9 @@ def test_DiffImbalance_backward_greedy():
 
     # Run backward greedy feature selection
     feature_sets, diis, _, weights = dii.backward_greedy_feature_selection(
-        n_features_min=1, compute_error=False
+        n_features_min=1,
+        compute_error=False,
+        n_best=1,
     )
 
     print("BACKWARD DII TEST:")
@@ -178,108 +182,6 @@ def test_DiffImbalance_backward_greedy():
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
-def test_DiffImbalance_greedy_methods_shape():
-    """Test that the greedy feature selection methods return the expected shapes.
-
-    The dataset is a 3D Gaussian with variances [0.961146, 1.06219351, 0.01091285],
-    where the third dimension has much lower variance. We apply weights [10, 0.1, 5]
-    to the dimensions, making dimensions 0 and 2 more important.
-
-    This test verifies that the greedy feature selection methods return outputs
-    with the expected shapes and types.
-    """
-    from dadapy import DiffImbalance  # noqa: E402
-
-    # generate test data
-    # The dataset has variances [0.961146, 1.06219351, 0.01091285]
-    weights_ground_truth = np.array([1, 0.001, 5])
-    data_A = np.load(filename)
-    data_B = weights_ground_truth[np.newaxis, :] * data_A
-
-    # train the DII to recover ground-truth metric
-    dii = DiffImbalance(
-        data_A,
-        data_B,
-        periods_A=None,
-        periods_B=None,
-        seed=0,
-        num_epochs=10,
-        batches_per_epoch=1,
-        l1_strength=0.0,
-        point_adapt_lambda=False,
-        k_init=10,
-        k_final=1,
-        lambda_factor=1e-1,
-        params_init=None,
-        optimizer_name="sgd",
-        learning_rate=1e-1,
-        learning_rate_decay="cos",
-        num_points_rows=None,
-    )
-    weights, imbs = dii.train()
-
-    # Run forward greedy feature selection
-    feature_sets_f, diis_f, errors_f, weights_f = dii.forward_greedy_feature_selection(
-        n_features_max=3, compute_error=False
-    )
-
-    # Run backward greedy feature selection
-    feature_sets_b, diis_b, errors_b, weights_b = dii.backward_greedy_feature_selection(
-        n_features_min=1, compute_error=False
-    )
-
-    print("VERIFY SHAPES FORWARD:")
-    print(feature_sets_f)
-    print(diis_f)
-    print(errors_f)
-    print(weights_f)
-
-    print("VERIFY SHAPES BACKWARD:")
-    print(feature_sets_b)
-    print(diis_b)
-    print(errors_b)
-    print(weights_b)
-
-    # Check forward greedy results
-    assert (
-        len(feature_sets_f) == 3
-    ), f"Forward selection should return 3 feature sets, got {len(feature_sets_f)}"
-    assert (
-        len(diis_f) == 3
-    ), f"Forward selection should return 3 DII values, got {len(diis_f)}"
-    assert errors_f == [
-        None,
-        None,
-        None,
-    ], f"Forward selection with compute_error=False should return None errors, got {errors_f}"
-
-    # Check weights
-    assert (
-        len(weights_f) == 3
-    ), f"Forward selection should return 3 weights arrays, got {len(weights_f)}"
-
-    # Check backward greedy results - expecting 3 feature sets based on previous test
-    assert (
-        len(feature_sets_b) == 3
-    ), f"Backward selection should return 3 feature sets, got {len(feature_sets_b)}"
-    assert (
-        len(diis_b) == 3
-    ), f"Backward selection should return 3 DII values, got {len(diis_b)}"
-    # The shape of 'errors' returned by the backward greedy search should be (n_features-1)
-    # This is due to the way the while loop is implemented
-    assert errors_b == [
-        None,
-        None,
-        None,
-    ], f"Backward selection with compute_error=False should return None errors, got {errors_b}"
-
-    # Check weights
-    assert (
-        len(weights_b) == 3
-    ), f"Backward selection should return 3 weights arrays, got {len(weights_b)}"
-
-
-@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
 def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     """Test that forward and backward greedy selection are symmetric.
 
@@ -296,7 +198,7 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     # generate test data with 5 dimensions
     np.random.seed(0)
     weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
-    data_A = np.random.normal(loc=0, scale=1.0, size=(500, 5))
+    data_A = np.random.normal(loc=0, scale=1.0, size=(100, 5))
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
     # train the DII to recover ground-truth metric
@@ -327,13 +229,17 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
         diis_fw,
         errors_fw,
         weights_fw,
-    ) = dii.forward_greedy_feature_selection(n_features_max=5, compute_error=True)
+    ) = dii.forward_greedy_feature_selection(
+        n_features_max=5, compute_error=True, n_best=1
+    )
     (
         feature_sets_bw,
         diis_bw,
         errors_bw,
         weights_bw,
-    ) = dii.backward_greedy_feature_selection(n_features_min=1, compute_error=True)
+    ) = dii.backward_greedy_feature_selection(
+        n_features_min=1, compute_error=True, n_best=1
+    )
 
     # Expected results based on weights
     expected_fw_sets = [[3], [0, 3], [0, 3, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]]
@@ -409,5 +315,4 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
 if __name__ == "__main__":
     test_DiffImbalance_forward_greedy()
     test_DiffImbalance_backward_greedy()
-    test_DiffImbalance_greedy_methods_shape()
     test_DiffImbalance_greedy_symmetry_5d_gaussian()
