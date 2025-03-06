@@ -1022,10 +1022,8 @@ class DiffImbalance:
             best_errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
             best_weights_list (list): list of arrays containing the optimal weights for each set of selected features.
         """
-        if self.l1_strength != 0.:
-            warnings.warn(
-                f"The greedy search will run with l1 strength equal to 0."
-            )
+        if self.l1_strength != 0.0:
+            warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
         n_features = self.nfeatures_A
         if n_features_max is None:
             n_features_max = n_features
@@ -1093,9 +1091,7 @@ class DiffImbalance:
                 single_feature_diis.append(float(dii_copy.imb_final))
                 single_feature_errors.append(None)
 
-            print(
-                f"Feature set = [{feature}], DII = {dii_copy.imb_final}\n"
-            )
+            print(f"Feature set = [{feature}], DII = {dii_copy.imb_final}\n")
 
         # Convert to numpy arrays for easier manipulation
         single_feature_diis = np.array(single_feature_diis)
@@ -1274,7 +1270,9 @@ class DiffImbalance:
 
             # Print the best n-tuple information
             print("------------------------------------------------")
-            print(f"Best {len(best_feature_sets[-1])}-tuple: {candidate_features[best_idx]}")
+            print(
+                f"Best {len(best_feature_sets[-1])}-tuple: {candidate_features[best_idx]}"
+            )
             print(f"\tDII: {candidate_diis[best_idx]}")
             print(f"\tOptimal weights: {best_weights}")
             print(f"Selected {n_best_actual} best candidates for next iteration")
@@ -1323,10 +1321,8 @@ class DiffImbalance:
             errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
             best_weights_list (list): list of arrays containing the optimal weights for each set of selected features.
         """
-        if self.l1_strength != 0.:
-            warnings.warn(
-                f"The greedy search will run with l1 strength equal to 0."
-            )
+        if self.l1_strength != 0.0:
+            warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
         assert self.params_final is not None, "First call the train() method!"
 
         n_features = self.nfeatures_A
