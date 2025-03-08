@@ -18,5 +18,6 @@ The package contains the following modules:
    id_discrete
    metric_comparisons
    feature_weighting
+   hamming
    data
    utils

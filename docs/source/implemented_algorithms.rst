@@ -13,7 +13,7 @@ The algorithms currently implemented are:
 
 * Two NN ("Two nearest neighbour estimator")
 * Gride ("Generalized ratios id estimator")
-
+* BID ("Binary intrinsic dimension")
 
 Density estimation
 -----------------------
