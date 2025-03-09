@@ -599,21 +599,5 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             log_den = sparse.linalg.spsolve(
                 A.tocsr(), deltaFcum, permc_spec=sp_direct_perm_spec
             )
-            # print("cast to csc")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum)
-            # print("No cast")
-            # log_den = sparse.linalg.spsolve(A, deltaFcum)
-            # print("with reordering AtA and csr cast")
-            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="MMD_ATA")
-            # print("with reordering AtA and csc cast")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="MMD_ATA")
-            # print("with reordering At+A and csr cast")
-            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="MMD_AT_PLUS_A")
-            # print("with reordering At+A and csc cast")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="MMD_AT_PLUS_A")
-            # print("with reordering COLAMD and csc")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="COLAMD")
-            # print("with reordering COLAMD and csr")
-            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="COLAMD")
 
         return log_den
