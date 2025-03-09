@@ -53,7 +53,7 @@ def return_neigh_distances_array(   np.ndarray[floatTYPE_t, ndim = 2] distances,
                                     np.ndarray[DTYPE_t, ndim = 1] kstar):
     cdef DTYPE_t N = len(kstar)
     cdef DTYPE_t nspar = kstar.sum() - N
-    cdef np.ndarray[floatTYPE_t, ndim = 1] distarray = np.ndarray((nspar,),dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 1] distarray = np.ndarray((nspar,), dtype=floatTYPE)
 
     cdef DTYPE_t i, j, ind_spar
 
@@ -75,7 +75,7 @@ def return_neigh_vector_diffs(np.ndarray[floatTYPE_t, ndim = 2] X,
                               np.ndarray[DTYPE_t, ndim = 2] nind_list):
     cdef DTYPE_t dims = X.shape[1]
     cdef DTYPE_t nspar = nind_list.shape[0]
-    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims), dtype=floatTYPE)
 
     cdef DTYPE_t i, j, ind_spar, dim
 
@@ -97,7 +97,7 @@ def return_neigh_vector_diffs_periodic(np.ndarray[floatTYPE_t, ndim = 2] X,
                               np.ndarray[floatTYPE_t, ndim = 1] period):
     cdef DTYPE_t dims = X.shape[1]
     cdef DTYPE_t nspar = nind_list.shape[0]
-    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims), dtype=floatTYPE)
 
     cdef DTYPE_t i, j, ind_spar, dim
     cdef floatTYPE_t temp
@@ -225,11 +225,11 @@ def return_diag_inv_deltaFs_cross_covariance_LSDI(long[:,:] nind_list,      # ns
                                         ):
     cdef int nspar = nind_list.shape[0]
 
-    inv_Gamma_nonview   = np.zeros(nspar, dtype=np.float_)       # inverse of diagonal of Gamma matrix
+    inv_Gamma_nonview   = np.zeros(nspar, dtype=floatTYPE)       # inverse of diagonal of Gamma matrix
     cdef double[::1] inv_Gamma = inv_Gamma_nonview
     
     #support
-    denom_nonview   = np.zeros(nspar, dtype=np.float_)
+    denom_nonview   = np.zeros(nspar, dtype=floatTYPE)
     cdef double[::1] denom = denom_nonview
 
     cdef double gamma, ptot, sgn
@@ -280,8 +280,8 @@ def return_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,
     cdef DTYPE_t N = X.shape[0]
     cdef DTYPE_t dims = X.shape[1]
     cdef DTYPE_t kstar_max = np.max(kstar)
-    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
-    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims), dtype=floatTYPE)
     
     cdef DTYPE_t i, j, dim, ki, dim2
     cdef DTYPE_t ind_j
@@ -325,8 +325,8 @@ def return_grads_and_covmat_from_coords(   np.ndarray[floatTYPE_t, ndim = 2] X,
     cdef DTYPE_t N = X.shape[0]
     cdef DTYPE_t dims = X.shape[1]
     cdef DTYPE_t kstar_max = np.max(kstar)
-    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
-    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims), dtype=floatTYPE)
 
     cdef DTYPE_t i, j, dim, ki, dim2
     cdef DTYPE_t ind_j
@@ -377,8 +377,8 @@ def return_grads_and_var_from_nnvecdiffs(   np.ndarray[floatTYPE_t, ndim = 2] ne
     cdef DTYPE_t N = kstar.shape[0]
     cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
     cdef DTYPE_t kstar_max = np.max(kstar)
-    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
-    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims), dtype=floatTYPE)
     
     cdef DTYPE_t i, j, dim, ki, dim2
     cdef DTYPE_t ind_j
@@ -423,8 +423,8 @@ def return_grads_and_covmat_from_nnvecdiffs(np.ndarray[floatTYPE_t, ndim = 2] ne
     cdef DTYPE_t N = kstar.shape[0]
     cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
     cdef DTYPE_t kstar_max = np.max(kstar)
-    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims))
-    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims))
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims), dtype=floatTYPE)
 
     cdef DTYPE_t i, j, dim, ki, dim2
     cdef DTYPE_t ind_j

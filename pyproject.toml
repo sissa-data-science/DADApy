@@ -1,13 +1,19 @@
 [project]
 name = "dadapy"
-version = "0.3.1"
+version = "0.3.2"
 description = "Distance-based Analysis of DAta-manifolds in python"
 authors = [{ name = "DADApy author"}]
 license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.8"
 
-dependencies = ["numpy<2.0", "scipy", "scikit-learn", "matplotlib", "seaborn", "jax", "jaxlib"]
+dependencies = ["numpy<2.0", "scipy", "scikit-learn", "matplotlib", 
+                "seaborn", "tqdm", "networkx",
+                'jax; python_version < "3.9"',
+                'jax==0.4.30; python_version >= "3.9"',
+                'jaxlib; python_version < "3.9"',
+                'jaxlib==0.4.30; python_version >= "3.9"',
+                'flax==0.8.5; python_version >= "3.9"']
 
 [project.urls]
 homepage = "https://github.com/sissa-data-science/DADApy"

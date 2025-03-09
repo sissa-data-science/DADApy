@@ -9,3 +9,7 @@ scikit-learn
 joblib
 matplotlib
 jax
+jaxlib
+flax
+tqdm
+networkx

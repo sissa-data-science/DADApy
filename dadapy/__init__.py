@@ -1,3 +1,5 @@
+import sys
+
 from ._utils.utils import *
 from .base import Base
 from .clustering import Clustering
@@ -11,3 +13,8 @@ from .id_estimation import IdEstimation
 from .kstar import KStar
 from .metric_comparisons import MetricComparisons
 from .neigh_graph import NeighGraph
+
+if sys.version_info >= (3, 9):
+    from .diff_imbalance import DiffImbalance
+if sys.version_info >= (3, 9):
+    from .causal_graph import CausalGraph
