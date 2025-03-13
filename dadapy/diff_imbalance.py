@@ -58,8 +58,12 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
             distances between all points in 'batch_rows' and all points in 'batch_columns'.
     """
     diffs = batch_rows[:, jnp.newaxis, :] - batch_columns[jnp.newaxis, :, :]
-    if periods is not None:  # nonperiodic features must have entry '0'
-        diffs -= jnp.where(periods, 1.0, 0.0) * jnp.round(diffs / periods) * periods
+    if periods is not None:
+        periodic_mask = periods > 0  # only shift periodic features
+        periodic_shifts = (
+            jnp.round(diffs / jnp.where(periodic_mask, periods, 1.0)) * periods
+        )
+        diffs -= jnp.where(periodic_mask, periodic_shifts, 0.0)
     diffs *= params[jnp.newaxis, jnp.newaxis, :]
     dist2_matrix = jnp.sum(diffs * diffs, axis=-1)
     return dist2_matrix
@@ -286,10 +290,12 @@ class DiffImbalance:
                     to itself (when a point appears both in batch_rows and batch_columns).
             """
             diffs = batch_rows[:, jnp.newaxis, :] - batch_columns[jnp.newaxis, :, :]
-            if periods is not None:  # nonperiodic features must have entry '0'
-                diffs -= (
-                    jnp.where(periods, 1.0, 0.0) * jnp.round(diffs / periods) * periods
+            if periods is not None:
+                periodic_mask = periods > 0  # only shift periodic features
+                periodic_shifts = (
+                    jnp.round(diffs / jnp.where(periodic_mask, periods, 1.0)) * periods
                 )
+                diffs -= jnp.where(periodic_mask, periodic_shifts, 0.0)
             dist2_matrix = jnp.sum(diffs * diffs, axis=-1)
             rank_matrix = dist2_matrix.argsort(axis=1).argsort(axis=1)
             return rank_matrix
