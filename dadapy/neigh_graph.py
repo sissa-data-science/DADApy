@@ -303,7 +303,7 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_similarity_index_mat(self, method=None):
+    def compute_neigh_similarity_index_mat(self, method=None, sparse_mat=False):
         """
         Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
         overlaps between the neighbourhoods of the points connected by edges on the DNG, with values from 0 to 1 and
@@ -319,6 +319,9 @@ class NeighGraph(KStar):
             "jaccard": p_1,2 = k_1,2 / (k_1 + k_2 - k_1,2) = #(Ω_1 ∩ Ω_2) / #(Ω_1 ∪ Ω_2), i.e. the Jaccard index
             "geometric": p_1,2 = k_1,2 / sqrt(k_1 * k_2), i.e. the number of common points divided by the geometric mean
             "squared geometric": p_1,2 = (k_1,2)^2 / (k_1 * k_2), i.e. the square of the "geometric" version
+
+            sparse_mat (bool): if True, the matrix is returned in sparse format (scipy.sparse.lil_matrix). If False, it
+            is returned in dense format (numpy.ndarray).
         """
 
         sec = time.time()
@@ -338,10 +341,15 @@ class NeighGraph(KStar):
             nsi_mat[i, j] = self.neigh_similarity_index[nspar]
             if nsi_mat[j, i] == 0:
                 nsi_mat[j, i] = nsi_mat[i, j]
-        # convert to dense matrix
-        self.neigh_similarity_index_mat = nsi_mat.todense()
-        # diagonal must be 1 (overlap of a neighbourhood with itself)
-        np.fill_diagonal(self.neigh_similarity_index_mat, 1.0)
+        if sparse_mat is False:
+            # convert to dense matrix
+            self.neigh_similarity_index_mat = nsi_mat.todense()
+            # diagonal must be 1 (overlap of a neighbourhood with itself)
+            np.fill_diagonal(self.neigh_similarity_index_mat, 1.0)
+        else:
+            self.neigh_similarity_index_mat = nsi_mat
+            # diagonal must be 1 (overlap of a neighbourhood with itself)
+            self.neigh_similarity_index_mat.setdiag(1.0)
         if self.verb:
             print(
                 "{0:0.2f} seconds to compute neigh_similarity_index_mat.".format(

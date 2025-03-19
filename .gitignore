@@ -222,8 +222,8 @@ do
 .density_estimation_obsolete.py
 
 # Cython
-duly/cython_/*.html
-duly/cython_/*.so
+dadapy/cython_/*.html
+#dadapy/cython_/*.so
 #dadapy/_cython/*.c
 dadapy/_cython/.*
 
