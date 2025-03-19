@@ -1,6 +1,24 @@
 Release History
 ===============
 
+0.3.2 (Nov 2024)
+------------------
+* BMTI deltaFs error improvements by @charliematteo in https://github.com/sissa-data-science/DADApy/pull/133
+* typo fixed by @wildromi in https://github.com/sissa-data-science/DADApy/pull/134
+* updated docs and minor fixes to density_advanced by @charliematteo in https://github.com/sissa-data-science/DADApy/pull/136
+* Fix DII unittests for newer Python versions by @FelixWodaczek in https://github.com/sissa-data-science/DADApy/pull/137
+* Dii optimization cosine decay by @wildromi in https://github.com/sissa-data-science/DADApy/pull/143
+* Bmti error dev by @charliematteo in https://github.com/sissa-data-science/DADApy/pull/141
+* codecov: update to v4 by @AldoGl in https://github.com/sissa-data-science/DADApy/pull/144
+* BID by @acevedo-s in https://github.com/sissa-data-science/DADApy/pull/140
+* Add jax implementation of DII by @vdeltatto in https://github.com/sissa-data-science/DADApy/pull/146
+
+## New Contributors
+* @acevedo-s made their first contribution in https://github.com/sissa-data-science/DADApy/pull/140
+
+**Full Changelog**: https://github.com/sissa-data-science/DADApy/compare/v0.3.1...v0.3.2
+
+
 0.3.0 (May 2024)
 ------------------
 * bugfix: kstar_gride by @AldoGl in https://github.com/sissa-data-science/DADApy/pull/96
@@ -38,6 +56,7 @@ Release History
 * @FelixWodaczek made their first contribution in https://github.com/sissa-data-science/DADApy/pull/117
 
 **Full Changelog**: https://github.com/sissa-data-science/DADApy/compare/v0.2.0...v0.3.0
+
 
 0.2.0 (May 2023)
 ------------------

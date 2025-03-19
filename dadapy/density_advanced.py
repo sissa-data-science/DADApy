@@ -452,7 +452,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             print("{0:0.2f} seconds to fill get linear system ready".format(sec2 - sec))
 
         # solve linear system
-        log_den = self._solve_BMTI_reg_linar_system(A, deltaFcum, solver, sp_direct_perm_spec)
+        log_den = self._solve_BMTI_reg_linar_system(
+            A, deltaFcum, solver, sp_direct_perm_spec
+        )
         self.log_den = log_den
 
         if self.verb:
@@ -589,24 +591,12 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                     f"The solver '{solver}' selected is not among the options. Using 'sp_direct' instead."
                 )
             if self.verb:
-                print(f"Solving with 'sp_direct' sparse solver with perm_spec='{sp_direct_perm_spec}'")
+                print(
+                    f"Solving with 'sp_direct' sparse solver with perm_spec='{sp_direct_perm_spec}'"
+                )
             print("cast to csr")
-            log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec=sp_direct_perm_spec)
-            # print("cast to csc")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum)
-            # print("No cast")
-            # log_den = sparse.linalg.spsolve(A, deltaFcum)
-            # print("with reordering AtA and csr cast")
-            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="MMD_ATA")
-            # print("with reordering AtA and csc cast")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="MMD_ATA")
-            # print("with reordering At+A and csr cast")
-            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="MMD_AT_PLUS_A")
-            # print("with reordering At+A and csc cast")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="MMD_AT_PLUS_A")
-            # print("with reordering COLAMD and csc")
-            # log_den = sparse.linalg.spsolve(A.tocsc(), deltaFcum, permc_spec="COLAMD")
-            # print("with reordering COLAMD and csr")
-            # log_den = sparse.linalg.spsolve(A.tocsr(), deltaFcum, permc_spec="COLAMD")
+            log_den = sparse.linalg.spsolve(
+                A.tocsr(), deltaFcum, permc_spec=sp_direct_perm_spec
+            )
 
         return log_den
