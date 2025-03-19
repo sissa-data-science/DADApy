@@ -130,9 +130,6 @@ def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
     cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
 
     cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
-    cdef np.ndarray[DTYPE_t, ndim=2] sorted_dist_indices = np.zeros((N, maxk), dtype=np.int_)
-
-    sorted_dist_indices = np.sort(dist_indices,axis=1)
 
     for ind_spar in range(nspar):
         i = nind_list[ind_spar, 0]
@@ -145,18 +142,13 @@ def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
         idx = 0
         idx2 = 0
 
-        # Two-pointer intersection if sorted
-        while idx < kstar_i and idx2 < kstar_j:
-            val_i = sorted_dist_indices[i, idx]
-            val_j = sorted_dist_indices[j, idx2]
-            if val_i < val_j:
-                idx += 1
-            elif val_i > val_j:
-                idx2 += 1
-            else:
-                count += 1
-                idx += 1
-                idx2 += 1
+        for idx in range(kstar_i):
+            val_i = dist_indices[i, idx]
+            for idx2 in range(kstar_j):
+                val_j = dist_indices[j, idx2]
+                if val_i == val_j:
+                    count += 1
+                    break #no point in checking further
 
         common_neighs_array[ind_spar] = count
 
@@ -177,9 +169,6 @@ def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
 
     cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
     cdef np.ndarray[DTYPE_t, ndim=2] common_neighs_mat = np.zeros((N,N), dtype=np.int_)
-    cdef np.ndarray[DTYPE_t, ndim=2] sorted_dist_indices = np.zeros((N, maxk), dtype=np.int_)
-
-    sorted_dist_indices = np.sort(dist_indices,axis=1)
 
     for ind_spar in range(nspar):
         i = nind_list[ind_spar, 0]
@@ -192,18 +181,14 @@ def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
             idx = 0
             idx2 = 0
 
-            # Two-pointer intersection if sorted
-            while idx < kstar_i and idx2 < kstar_j:
-                val_i = sorted_dist_indices[i, idx]
-                val_j = sorted_dist_indices[j, idx2]
-                if val_i < val_j:
-                    idx += 1
-                elif val_i > val_j:
-                    idx2 += 1
-                else:
-                    count += 1
-                    idx += 1
-                    idx2 += 1
+            for idx in range(kstar_i):
+                val_i = dist_indices[i, idx]
+                for idx2 in range(kstar_j):
+                    val_j = dist_indices[j, idx2]
+                    if val_i == val_j:
+                        count += 1
+                        break #no point in checking further
+
             common_neighs_mat[i,j] = count
             common_neighs_mat[j,i] = count
             common_neighs_array[ind_spar] = count
@@ -214,6 +199,48 @@ def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
     return common_neighs_array, common_neighs_mat
 
 # ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def return_cross_common_neighs( np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                np.ndarray[DTYPE_t, ndim = 1] kstar_test,
+                                np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                np.ndarray[DTYPE_t, ndim = 2] cross_dist_indices,
+                                np.ndarray[DTYPE_t, ndim = 2] cross_nind_list
+                                ):
+
+    cdef DTYPE_t N = kstar_test.shape[0]
+    cdef DTYPE_t maxk = kstar_test.shape[1]
+    cdef DTYPE_t nspar = cross_nind_list.shape[0]
+
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
+
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=np.int_)
+
+    for ind_spar in range(nspar):
+        i = cross_nind_list[ind_spar, 0]
+        j = cross_nind_list[ind_spar, 1]
+
+        kstar_i = kstar_test[i]
+        kstar_j = kstar[j]
+
+        count = 0
+        idx = 0
+        idx2 = 0
+
+        for idx in range(kstar_i):
+            val_i = cross_dist_indices[i, idx]
+            for idx2 in range(kstar_j):
+                val_j = dist_indices[j, idx2]
+                if val_i == val_j:
+                    count += 1
+                    break #no point in checking further
+
+        common_neighs_array[ind_spar] = count
+
+    return common_neighs_array
+# ----------------------------------------------------------------------------------------------
+
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
