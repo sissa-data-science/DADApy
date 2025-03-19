@@ -446,7 +446,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # define the likelihood covarince matrix
         A, deltaFcum = self._get_BMTI_reg_linear_system(delta_F_inv_cov, alpha)
-
         sec2 = time.time()
 
         if self.verb:
