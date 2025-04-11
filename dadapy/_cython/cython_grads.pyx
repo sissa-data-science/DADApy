@@ -118,28 +118,41 @@ def return_neigh_vector_diffs_periodic(np.ndarray[floatTYPE_t, ndim = 2] X,
 # ----------------------------------------------------------------------------------------------
 
 @cython.boundscheck(False)
-@cython.cdivision(True)
+@cython.wraparound(False)
 def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
                          np.ndarray[DTYPE_t, ndim = 2] dist_indices,
                          np.ndarray[DTYPE_t, ndim = 2] nind_list):
+
     cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t maxk = kstar.shape[1]
     cdef DTYPE_t nspar = nind_list.shape[0]
 
-    cdef DTYPE_t i, j, ind_spar
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
 
     cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=DTYPE)
 
     for ind_spar in range(nspar):
         i = nind_list[ind_spar, 0]
         j = nind_list[ind_spar, 1]
-        common_neighs_array[ind_spar] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
-                                          assume_unique=True).sum()
+
+        kstar_i = kstar[i]
+        kstar_j = kstar[j]
+
+        count = 0
+        idx = 0
+        idx2 = 0
+
+        for idx in range(kstar_i):
+            val_i = dist_indices[i, idx]
+            for idx2 in range(kstar_j):
+                val_j = dist_indices[j, idx2]
+                if val_i == val_j:
+                    count += 1
+                    break #no point in checking further
+
+        common_neighs_array[ind_spar] = count
 
     return common_neighs_array
-
-# ----------------------------------------------------------------------------------------------
-
-
 # ----------------------------------------------------------------------------------------------
 
 @cython.boundscheck(False)
@@ -147,10 +160,12 @@ def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
 def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
                          np.ndarray[DTYPE_t, ndim = 2] dist_indices,
                          np.ndarray[DTYPE_t, ndim = 2] nind_list):
+    
     cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t maxk = kstar.shape[1]
     cdef DTYPE_t nspar = nind_list.shape[0]
 
-    cdef DTYPE_t i, j, ind_spar
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
 
     cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=2] common_neighs_mat = np.zeros((N,N), dtype=DTYPE)
@@ -159,10 +174,24 @@ def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
         i = nind_list[ind_spar, 0]
         j = nind_list[ind_spar, 1]
         if common_neighs_mat[j,i] == 0:
-            common_neighs_mat[i,j] = np.in1d(dist_indices[i, :kstar[i]], dist_indices[j, :kstar[j]],
-                                          assume_unique=True).sum()
-            common_neighs_mat[j,i] = common_neighs_mat[i,j]
-            common_neighs_array[ind_spar] = common_neighs_mat[i,j]
+            kstar_i = kstar[i]
+            kstar_j = kstar[j]
+
+            count = 0
+            idx = 0
+            idx2 = 0
+
+            for idx in range(kstar_i):
+                val_i = dist_indices[i, idx]
+                for idx2 in range(kstar_j):
+                    val_j = dist_indices[j, idx2]
+                    if val_i == val_j:
+                        count += 1
+                        break #no point in checking further
+
+            common_neighs_mat[i,j] = count
+            common_neighs_mat[j,i] = count
+            common_neighs_array[ind_spar] = count
         else:
             common_neighs_mat[i,j] = common_neighs_mat[j,i]
             common_neighs_array[ind_spar] = common_neighs_mat[j,i]
@@ -170,6 +199,48 @@ def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
     return common_neighs_array, common_neighs_mat
 
 # ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def return_cross_common_neighs( np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                np.ndarray[DTYPE_t, ndim = 1] kstar_test,
+                                np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                np.ndarray[DTYPE_t, ndim = 2] cross_dist_indices,
+                                np.ndarray[DTYPE_t, ndim = 2] cross_nind_list
+                                ):
+
+    cdef DTYPE_t N = kstar_test.shape[0]
+    cdef DTYPE_t maxk = kstar_test.shape[1]
+    cdef DTYPE_t nspar = cross_nind_list.shape[0]
+
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
+
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=DTYPE)
+
+    for ind_spar in range(nspar):
+        i = cross_nind_list[ind_spar, 0]
+        j = cross_nind_list[ind_spar, 1]
+
+        kstar_i = kstar_test[i]
+        kstar_j = kstar[j]
+
+        count = 0
+        idx = 0
+        idx2 = 0
+
+        for idx in range(kstar_i):
+            val_i = cross_dist_indices[i, idx]
+            for idx2 in range(kstar_j):
+                val_j = dist_indices[j, idx2]
+                if val_i == val_j:
+                    count += 1
+                    break #no point in checking further
+
+        common_neighs_array[ind_spar] = count
+
+    return common_neighs_array
+# ----------------------------------------------------------------------------------------------
+
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
