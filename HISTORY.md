@@ -1,6 +1,20 @@
 Release History
 ===============
 
+0.3.3 (Apr 2025)
+------------------
+* new toml for v.0.3.2 by @wildromi in https://github.com/sissa-data-science/DADApy/pull/147
+* Community Causal Graph by @vdeltatto in https://github.com/sissa-data-science/DADApy/pull/150
+* Greedy feature selection in the Differentiable Information Imbalance implementation in JAX by @debarshibanerjee in https://github.com/sissa-data-science/DADApy/pull/151
+* BID docs added by @acevedo-s in https://github.com/sissa-data-science/DADApy/pull/152
+* Cleaned BMTI solvers PR by @AldoGl in https://github.com/sissa-data-science/DADApy/pull/154
+
+## New Contributors
+* @debarshibanerjee made their first contribution in https://github.com/sissa-data-science/DADApy/pull/151
+
+**Full Changelog**: https://github.com/sissa-data-science/DADApy/compare/v0.3.2...v0.3.3
+
+
 0.3.2 (Nov 2024)
 ------------------
 * BMTI deltaFs error improvements by @charliematteo in https://github.com/sissa-data-science/DADApy/pull/133
