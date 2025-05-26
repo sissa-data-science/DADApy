@@ -13,6 +13,7 @@ from .id_estimation import IdEstimation
 from .kstar import KStar
 from .metric_comparisons import MetricComparisons
 from .neigh_graph import NeighGraph
+from .hamming import Hamming, BID
 
 if sys.version_info >= (3, 9):
     from .diff_imbalance import DiffImbalance

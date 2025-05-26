@@ -1,29 +1,49 @@
 import os
+import subprocess
+import sys
+
+def _configure_jax():
+    """ This function sets necessary environmental variables <<before>> importing JAX. """
+    # Enable 64-bit precision
+    os.environ.setdefault("JAX_ENABLE_X64", "True")
+
+    # If there is a GPU available, JAX will use it by default.
+    if "JAX_PLATFORM_NAME" not in os.environ:
+        try:
+            subprocess.run(
+                ['nvidia-smi'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True
+            )
+        except Exception:
+            os.environ["JAX_PLATFORMS"] = "cpu"
+            os.environ["JAX_PLATFORM_NAME"] = "cpu"
+_configure_jax()
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+from jax import  lax, vmap
+from jax import jacfwd, grad, value_and_grad
+from jax import random, debug
+from jax.scipy.special import gammaln
+from flax import struct
+from typing import Any
 from time import time
 
-import numpy as np
-from jax import config
-from jax import devices as jdevices
-from jax import jit, lax
-from jax import numpy as jnp
-from jax import random
-from jax.scipy.special import gammaln
-from jax.tree_util import register_pytree_node
 
-# from jax.experimental.host_callback import call
-
-jdevices("cpu")[0]  # to run JAX on CPU
 eps = 1e-7  # good old small epsilon
-config.update("jax_enable_x64", True)  # enable jnp.float64 dtype
 
+### HAMMING CLASS
 
 class Hamming:
     def __init__(
         self,
-        q=2,  # number of states: 2 for binary spins. In the future we can think of extending this to q>2.
-        coordinates=None,  # spins: must be normalized to +-1 to compute distances.
-        distances=None,  #
-        crossed_distances=0,  # 0 means we have one dataset with N samples and N(N-1)/2 (correlated) distances.
+        q=2,                     # number of states: 2 for binary spins. In the future we can think of extending this to q>2.
+        coordinates=None,        # spins: must be normalized to +-1 to compute distances.
+        distances=None,  
+        crossed_distances=None,  
         verbose=True,  #
     ):
         self.q = q
@@ -40,6 +60,22 @@ class Hamming:
         self.D_mu_emp = None
         self.D_var_emp = None
 
+        self._set_cross_distances()
+
+    def _set_cross_distances(self,):
+        """
+        CPU: self.cross_distances = 0 corresponds we have one dataset with N_s samples and N_s(N_s-1)/2 distances.
+        GPU: self.cross_distances = 1 corresponds to split the dataset in two parts, each with N1 and N2 samples,
+        having in total N1*N2 distances.
+        TODO: solve allocation memory issues in CPU when self.cross_distances = 1.
+
+        """
+        if os.environ['JAX_PLATFORMS'] != 'cpu':
+            self.crossed_distances = 1 
+        else:
+            self.crossed_distances = 0
+        return
+
     def compute_distances(
         self,
         sort=False,
@@ -49,7 +85,7 @@ class Hamming:
         Computes all to all distances in dataset and stores them
         in the matrix "self.distances" of shape (Ns,Ns), where Ns is the number of samples
         """
-        if self.q == 2:
+        if self.q == 2 and self.crossed_distances == 0:
             self.distances = jcompute_distances(
                 X1=self.coordinates,
                 X2=self.coordinates,
@@ -57,8 +93,13 @@ class Hamming:
                 check_format=check_format,
                 sort=sort,
             )
-
-    """TODO: MODIFY HISTOGRAM ROUTINE TO DISCARD THE TRIVIAL ZEROS WHEN CROSSED_DISTANCES = 1"""
+        elif self.crossed_distances == 1:
+            self.X,self.Y = subsample_data(self.coordinates)
+            self.distances = jcompute_crossed_distances(
+                boolean_hamming_distance,
+                self.X,
+                self.Y,
+            )
 
     def D_histogram(
         self,
@@ -74,7 +115,6 @@ class Hamming:
         - self.D_counts, a vector containing how many times each distance was sampled
         - self.D_probs, self.counts normalized by the total number of counts observed.
         """
-        assert self.crossed_distances == 0
 
         if save:
             os.makedirs(resultsfolder, exist_ok=True)
@@ -92,7 +132,8 @@ class Hamming:
                 self.D_counts[0] -= Nzeros
                 if self.D_counts[0] == 0:
                     self.D_values = self.D_values[1:]
-                    self.D_counts = self.D_counts[1:]
+                    self.D_counts = self.D_counts[1:]    
+
             self.D_probs = self.D_counts / np.sum(self.D_counts)
 
             if save:
@@ -152,8 +193,8 @@ def jcompute_distances(
     sort=False,
 ):
     """This routine works for Ising spins variables defined as +-1 (this is faster than scipy)"""
-    X1 = jnp.array(X1).astype(jnp.int32)
-    X2 = jnp.array(X2).astype(jnp.int32)
+    X1 = jnp.array(X1).astype(jnp.int8)
+    X2 = jnp.array(X2).astype(jnp.int8)
 
     if check_format:
         check_data_format(X1)
@@ -187,7 +228,7 @@ def jcompute_distances(
         return np.array(pytree["D"])
 
 
-@jit
+@jax.jit
 def _jcompute_distances(idx, pytree):
     """
     for each data sample indexed by "sample_idx" (row), computes the distance between it and the rest
@@ -221,7 +262,7 @@ def _set_lower_idx_false(pytree):
     return pytree
 
 
-@jit
+@jax.jit
 def compute_row_distances(_idx, pytree):
     """
     for each data sample indexed by "sample_idx", computes the distance between it and the rest
@@ -230,242 +271,78 @@ def compute_row_distances(_idx, pytree):
         pytree["D"]
         .at[pytree["sample_idx"], _idx]
         .set(
-            jnp.int32(
                 (
                     pytree["N"]
                     - jnp.dot(
-                        pytree["X1"][pytree["sample_idx"], :], pytree["X2"][_idx, :]
+                        pytree["X1"][pytree["sample_idx"], :].astype(jnp.int32), pytree["X2"][_idx, :].astype(jnp.int32)
                     )
                 )
-                / 2
-            )
+                // 2
         )
     )
     return pytree
 
+def subsample_data(coordinates,N1=None,seed=0):
+  if N1 == None:
+    N1 = coordinates.shape[0] // 2
+  key = random.PRNGKey(seed)
+  key, subkey = random.split(key, num=2)
+  
+  indices_rows = random.choice(
+    subkey, jnp.arange(coordinates.shape[0]), shape=(N1,), replace=False
+  )
+  indices_columns = jnp.delete(jnp.arange(coordinates.shape[0]), indices_rows)
 
-class Optimizer:
-    """
-    Stochastic optimization
-    """
+  return coordinates[indices_rows],coordinates[indices_columns]
 
-    def __init__(
-        self,
-        key=0,
-        d0=0.0,  # BID
-        d0_r=0.0,  # BID + random perturbation (*** used by compute_Pmodel instead of d0...)
-        d1=0.0,  # slope
-        d1_r=0.0,  # slope + random pertubation (*** used by compute_Pmodel instead of d1...)
-        delta=0.0,  # optimization step size
-        KL=jnp.double(0.0),  # KL divergence between Pemp(r) and Pmodel(r)
-        KL_aux=jnp.inf,  # auxiliary variable to check when KL decreases
-        remp=None,  # vector with empirical Hamming distances
-        Pemp=None,  # vector with empirical probabilities
-        Pmodel=None,  # vector with model probabilities
-        Nsteps=0,  # Number of steps for the optimization
-        accepted=0,  # Accepted moves
-        acc_ratio=jnp.double(1.0),  # Acceptance ratio
-        save_logKLs_flag=0,  # Flag to save logKLs during optimization
-        logKLs=None,  # Vector with logKLs during optimization
-        idx=0,  # Auxiliary index
-        mod_divisor=0,  # Auxiliary variable to export the log KL
-        Nsteps_max=1000,  # Total number of saved steps (subsample of the total number of steps)
-    ):
-        self.key = key
-        self.d0 = d0
-        self.d0_r = d0_r
-        self.d1 = d1
-        self.d1_r = d1_r
-        self.delta = delta
-        self.KL = KL
-        self.KL_aux = KL_aux
-        self.remp = remp
-        self.Pemp = Pemp
-        self.Pmodel = Pmodel
-        self.Nsteps = Nsteps
-        self.accepted = accepted
-        self.acc_ratio = acc_ratio
-        self.save_logKLs_flag = save_logKLs_flag
-        self.logKLs = logKLs
-        self.idx = idx
-        self.mod_divisor = mod_divisor
-        self.Nsteps_max = Nsteps_max
+@jax.jit
+def boolean_hamming_distance(x, y):
+    return jnp.count_nonzero(x != y)
 
-    def _tree_flatten(self):
-        children = (
-            self.key,
-            self.d0,
-            self.d0_r,
-            self.d1,
-            self.d1_r,
-            self.delta,
-            self.KL,
-            self.KL_aux,
-            self.remp,
-            self.Pemp,
-            self.Pmodel,
-            self.Nsteps,
-            self.accepted,
-            self.acc_ratio,
-            self.save_logKLs_flag,
-            self.logKLs,
-            self.idx,
-            self.mod_divisor,
-        )  # arrays / dynamic values
-        aux_data = {
-            "Nsteps_max": self.Nsteps_max,
-        }  # static values
-        return (children, aux_data)
+def jcompute_crossed_distances(dist, xs, ys):
+  return vmap(lambda x: vmap(lambda y: dist(x, y))(xs))(ys).T
 
-    @classmethod
-    def _tree_unflatten(cls, aux_data, children):
-        return cls(*children, **aux_data)
-
-
-register_pytree_node(Optimizer, Optimizer._tree_flatten, Optimizer._tree_unflatten)
-
-
-def _compute_Pmodel(idx, Op):
-    """
-    note that this routine uses Op.d0_r and Op.d1_r to compute Pmodel
-    """
-    ID = Op.d0_r + Op.d1_r * Op.remp[idx]
-    Op.Pmodel = Op.Pmodel.at[idx].set(
-        jnp.exp(
-            gammaln(ID + jnp.double(1))
-            - gammaln(Op.remp[idx] + 1)
-            - gammaln(ID - Op.remp[idx] + 1)
-            - ID * jnp.log(jnp.double(2))
-        )
-    )
-    #  call(lambda x: print(f'{x}'),Op.Pmodel[idx])
-    return Op
-
-
-@jit
-def compute_Pmodel(Op):
-    Op = lax.fori_loop(
-        lower=0, upper=Op.Pmodel.shape[0], body_fun=_compute_Pmodel, init_val=Op
-    )
-    Op.Pmodel /= jnp.sum(Op.Pmodel)
-    return Op
-
-
-@jit
-def step(idx, Op):
-    Op.key, subkey = random.split(Op.key, num=2)
-    r = random.uniform(subkey, dtype=jnp.float64)
-    Op.d0_r = Op.d0 * (1 + Op.delta * (r - jnp.double(0.5)))
-
-    Op.key, subkey = random.split(Op.key, num=2)
-    rr = random.uniform(subkey, dtype=jnp.float64)
-    Op.d1_r = Op.d1 * (1 + Op.delta * (rr - jnp.double(0.5)))
-
-    Op = compute_Pmodel(Op)
-    Op = compute_KLd(Op)
-    Op = lax.cond(Op.KL <= Op.KL_aux, update_state, do_nothing, Op)
-    logical_condition = jnp.logical_and(
-        Op.save_logKLs_flag, jnp.mod(idx, Op.mod_divisor) == 0
-    )
-    Op = lax.cond(logical_condition, save_logKL, do_nothing, Op)
-    return Op
-
-
-@jit
-def compute_KLd(Op):
-    Op.KL = jnp.sum(Op.Pemp * jnp.log(Op.Pemp / Op.Pmodel))
-    return Op
-
-
-@jit
-def update_state(Op):
-    Op.d0 = Op.d0_r
-    Op.d1 = Op.d1_r
-    Op.KL_aux = Op.KL
-    Op.accepted += 1
-    return Op
-
-
-@jit
-def do_nothing(Op):
-    return Op
-
-
-@jit
-def save_logKL(Op):
-    Op.logKLs = Op.logKLs.at[Op.idx].set(jnp.log(Op.KL))
-    Op.idx += 1
-    return Op
-
-
-@jit
-def minimize_KL(Op):
-    Op.logKLs = jnp.empty(shape=(Op.Nsteps_max), dtype=jnp.double)
-    Op.mod_divisor = Op.Nsteps // Op.Nsteps_max
-
-    Op = lax.fori_loop(lower=0, upper=Op.Nsteps, body_fun=step, init_val=Op)
-
-    # This is necessary to keep the last *accepted* move
-    Op.d0_r = Op.d0
-    Op.d1_r = Op.d1
-    Op = compute_Pmodel(Op)
-    Op = compute_KLd(Op)
-    Op.acc_ratio = jnp.double(Op.accepted) / jnp.double(Op.Nsteps)
-    return Op
-
-
+### BID CLASS
 class BID:
     def __init__(
         self,
-        H=Hamming(),  # instance of Hamming class defined above
-        Op=None,  # instance of Optimizer class defined above
-        alphamin=0.0,
-        alphamax=0.2,
-        seed=1,
-        d0=jnp.double(0),  # BID \equiv d(r=0)  (see paper)
-        d1=jnp.double(0),  # slope of d(r) at r=0
-        d00=jnp.double(0),  # initial value of d0
-        d10=jnp.double(0),  # initial value of d1
-        delta=5e-4,
-        Nsteps=1e6,
+        H=Hamming(),  # instance of Hamming class
+        opt=None,  # instance of Optimizer class
+        alphamin=.05,
+        alphamax=0.4,
+        ds=jnp.zeros(shape=2,dtype=jnp.double),
+        steps_initial=jnp.array([1E-1],dtype=jnp.double), # amplitude modulating the gradient descent step
+        step_final=jnp.double(1e-4),
+        Nsteps=jnp.int32(1e3), # total number of optimization steps. There is an early stopping condition, so the optimization can stop before Nsteps.
+        n_optimizations = 1, # number of best initial conditions to start optimizations, selecting the best final result
         optfolder0="results/opt/",
-        load_initial_condition_flag=False,
         optimization_elapsed_time=None,
         export_results=1,
         export_logKLs=0,  # To export the curve of logKLs during optimization
         L=0,  # Number of bits / Ising spins
     ):
         self.H = H
-        self.Op = Op
+        self.opt = opt
         self.alphamin = alphamin
         self.alphamax = alphamax
-        self.seed = seed
-        self.d0 = d0
-        self.d1 = d1
-        self.d00 = d00
-        self.d10 = d10
-        self.delta = delta
+        self.ds = ds
+        self.steps_initial = steps_initial
+        self.step_final = step_final
         self.Nsteps = Nsteps
+        self.n_optimizations = n_optimizations
         self.optimization_elapsed_time = optimization_elapsed_time  # in minutes
         self.export_results = export_results
         self.export_logKLs = export_logKLs
         self.L = L
-        self.intrinsic_dim = self.d0
+        self.intrinsic_dim = self.ds[0]
 
-        self.key0 = random.PRNGKey(self.seed)
+        # self.key0 = random.PRNGKey(self.seed)
         self.optfolder0 = optfolder0
-        self.load_initial_condition_flag = load_initial_condition_flag
 
         if np.isclose(alphamin, 0):
             self.regularize = False
         else:
             self.regularize = True
-
-    def load_initial_condition(
-        self,
-    ):
-        self.set_filepaths()
-        _, self.d00, self.d10, _ = self.load_results()
 
     def set_filepaths(
         self,
@@ -473,9 +350,9 @@ class BID:
         self.optfolder = self.optfolder0
         self.optfolder += f"alphamin{self.alphamin:.5f}/"
         self.optfolder += f"alphamax{self.alphamax:.5f}/"
-        self.optfolder += f"Nsteps{self.Nsteps}/"
-        self.optfolder += f"delta{self.delta:.5f}/"
-        self.optfolder += f"seed{self.seed}/"
+        # self.optfolder += f"Nsteps{self.Nsteps}/"
+        # self.optfolder += f"step{self.step_initial:.5f}/"
+        # self.optfolder += f"seed{self.seed}/"
         self.optfile = self.optfolder + "opt.txt"
         self.valfile = self.optfolder + "model_validation.txt"
         self.KLfile = self.optfolder + "logKLs_opt.txt"
@@ -512,52 +389,7 @@ class BID:
         self.Pemp /= jnp.sum(self.Pemp)
         self.Pmodel = jnp.zeros(shape=self.Pemp.shape, dtype=jnp.float64)
 
-    def test_initial_condition(self, d0, d1):
-        self.Op.d0_r = jnp.double(d0)
-        self.Op.d1_r = jnp.double(d1)
-        self.Op = compute_Pmodel(self.Op)
-        self.Op = compute_KLd(self.Op)
-        return np.log(self.Op.KL)
-
-    def set_initial_condition(self, d00min=0.05, d00max=0.95, d00step=0.05):
-        # our home-made guess:
-        d00_guess_list = jnp.array([jnp.double(self.Op.remp[-1])])
-        d10_guess_list = jnp.array([jnp.double(1)])
-
-        if self.L != 0:
-            # Inspired by Cristopher Erazo:
-            self.H.compute_moments()
-            _d00_guess_list = self.L * jnp.arange(
-                d00min, d00max + eps, d00step, dtype=jnp.double
-            )
-            _d10_guess_list = jnp.double(2) - _d00_guess_list / jnp.double(
-                self.H.D_mu_emp
-            )
-
-            d00_guess_list = jnp.concatenate((d00_guess_list, _d00_guess_list))
-            d10_guess_list = np.concatenate((d10_guess_list, _d10_guess_list))
-
-        logKLs0 = jnp.empty(shape=(len(d00_guess_list)), dtype=jnp.double)
-        for i in range(len(d00_guess_list)):
-            logKLs0 = logKLs0.at[i].set(
-                self.test_initial_condition(
-                    d00_guess_list[i],
-                    d10_guess_list[i],
-                )
-            )
-        # print(f'{logKLs0=}')
-        i0 = jnp.nanargmin(logKLs0)
-        # print(f'{i0=}')
-        # print(f'{logKLs0[i0]=}')
-        self.d00 = d00_guess_list[i0]  # ; print(f'{self.d00=}')
-        self.d10 = d10_guess_list[i0]  # ; print(f'{self.d10=}')
-        self.Op.d0 = self.d00
-        self.Op.d1 = self.d10
-        self.Op.KL_aux = jnp.exp(logKLs0[i0])
-
-    def computeBID(
-        self,
-    ):
+    def initialize_optimizer(self,):
         self.set_idmin()
         self.set_idmax()
         self.truncate_hist()
@@ -565,50 +397,81 @@ class BID:
         if self.export_results:
             os.makedirs(self.optfolder, exist_ok=True)
 
-        self.Op = Optimizer(
-            key=self.key0,
-            d0=jnp.double(self.d00),
-            d1=jnp.double(self.d10),
-            delta=jnp.double(self.delta),
-            remp=self.remp,
-            Pemp=self.Pemp,
-            Pmodel=self.Pmodel,
-            Nsteps=self.Nsteps,
-            save_logKLs_flag=self.export_logKLs,
-        )
-        self.set_initial_condition()
+        params = {
+                'L':self.L,
+                'remp':self.remp,
+                'Pemp':self.Pemp,
+                'Nsteps':self.Nsteps,
+                'steps_initial' : self.steps_initial,
+                'step_initial': self.step_initial,
+                'step_final' : self.step_final,
+                'n_optimizations': self.n_optimizations,
+                }
+        vars = {
+            'indices_optimization': jnp.zeros(shape=(self.n_optimizations,), dtype=jnp.int32),
+            }
 
+        opt = Optimizer(params,vars)
+        opt = opt.create(params,vars)
+        opt = test_initial_conditions(opt)
+        return opt
+
+
+    def computeBID(
+        self,
+    ):        
         if self.H.verbose == 1:
             print("starting optimization")
-
         starting_time = time()
-        self.Op = minimize_KL(self.Op)
-        self.optimization_elapsed_time = (time() - starting_time) / 60.0
+
+        # running the optimization for some different values of the optimization step. 
+        opts = []
+        logKLs = []
+        for step_index,step_initial in enumerate(self.steps_initial):
+            self.step_initial = step_initial
+            opt = self.initialize_optimizer()
+            for idx in opt.vars['indices_optimization']:
+                opt = set_initial_condition_idx(idx,opt)
+                opt = minimize_loss(opt)
+                opts.append(opt)
+                logKLs.append(opt.vars['logKL'])
+
+        best_optimization_id = np.nanargmin(jnp.array(logKLs))
+        self.opt = opts[best_optimization_id]
+        self.opt.vars['ds_optimization'] = self.opt.vars['ds_optimization'][:self.opt.vars['final_optimization_step']]
+        self.opt.vars['logKLs'] = self.opt.vars['logKLs'][:self.opt.vars['final_optimization_step']]
+
+
+        self.optimization_elapsed_time = (time() - starting_time) 
 
         if self.H.verbose == 1:
-            print(f"optimization took {self.optimization_elapsed_time:.1f} minutes")
+            print(f"optimization took {self.optimization_elapsed_time:.1f} sec")
             print(
-                f"d_0={self.Op.d0:.3f},d_1={self.Op.d1:.3f},logKL={jnp.log(self.Op.KL):.2f}"
+                f"d_0={self.opt.params['L'] * self.opt.vars['ds'][0]:.3f},d_1={self.opt.vars['ds'][1]:.3f},logKL={self.opt.vars['logKL']:.3f}"
             )
 
         if self.export_results:
+            """ Note that the BID is normalized per bit, so the intrinsic dimension is d0 * L """
             os.system(f"rm -f {self.optfile}")
             print(
-                f"{self.rmax:d},{self.Op.d0:.8f},{self.Op.d1:8f},{np.log(self.Op.KL):.8f}",
+                f"{self.rmax:d},{self.opt.params['L'] * self.opt.vars['ds'][0]:.8f},{self.opt.vars['ds'][1]:8f},{self.opt.vars['logKL']:.8f}",
                 file=open(self.optfile, "a"),
             )
             np.savetxt(
                 fname=self.valfile,
-                X=np.transpose([self.remp, self.Pemp, self.Op.Pmodel]),
+                X=np.transpose([self.remp, 
+                                self.Pemp, 
+                                self.opt.vars['Pmodel']]),
             )
             if self.export_logKLs:
-                np.savetxt(fname=self.KLfile, X=self.Op.logKLs)
+                np.savetxt(fname=self.KLfile, 
+                           X=self.opt.vars['logKLs'])
 
-        self.d0 = self.Op.d0.item()
-        self.d1 = self.Op.d1.item()
-        self.logKL = jnp.log(self.Op.KL).item()
-        self.Pmodel = np.array(self.Op.Pmodel)
-        self.intrinsic_dim = self.d0
+        self.ds = self.opt.vars['ds']
+        self.logKL = self.opt.vars['logKL']
+        self.Pmodel = np.array(self.opt.vars['Pmodel'])
+        self.intrinsic_dim = self.ds[0] * self.opt.params['L']
+        self.d0,self.d1 = self.intrinsic_dim, self.ds[1]
 
     def load_results(
         self,
@@ -627,3 +490,229 @@ class BID:
     ):
         self.set_filepaths()
         return np.loadtxt(self.KLfile)
+
+
+### OPTIMIZER
+
+@struct.dataclass
+class Optimizer(struct.PyTreeNode):
+  params: Any
+  vars: Any
+
+  @classmethod
+  def create(cls, 
+            params,
+            vars,
+             ):
+    params['mean_r'] = jnp.mean(params['remp'])
+    params['eps'] = 1e-8  # good-old small epsilon
+    vars['ds'] = jnp.zeros(shape=(2),dtype=jnp.double)
+    vars['step'] = jnp.double(0)
+    vars['grad'] = jnp.zeros(shape=(2),dtype=jnp.double)
+    vars['Hessian'] = jnp.zeros(shape=(2,2),dtype=jnp.double)
+    vars['logKL'] = jnp.double(0.)
+    vars['logPmodel'] = jnp.zeros(shape=params['Pemp'].shape, dtype=jnp.float64)
+    vars['Pmodel'] = jnp.zeros(shape=params['Pemp'].shape, dtype=jnp.float64)
+    vars['d_of_r'] = jnp.zeros(shape=params['Pemp'].shape, dtype=jnp.float64)
+
+    ### MONITORING OPTIMIZATION
+    vars['logKLs'] = jnp.zeros(shape=(params['Nsteps']),dtype=jnp.double)
+    vars['ds_optimization'] = jnp.zeros(shape=(params['Nsteps'],len(vars['ds']))) 
+    
+    ### EARLY STOPPING
+    vars['counter_early_stopping'] = jnp.int32(0)
+    params['threshold_early_stopping'] = jnp.double(1E-5)
+    params['tolerance_early_stopping'] = jnp.int32(200)
+    vars['early_stopping_condition'] = False
+    vars['final_optimization_step'] = jnp.int32(-1)
+
+    ### INITIAL CONDITION
+    params['auxmin'] = jnp.double(0.05)
+    params['auxmax'] = jnp.double(0.95)
+    params['auxstep'] = jnp.double(0.05)
+    params['d00_list'] =  jnp.arange(
+                                    params['auxmin'], 
+                                    params['auxmax'] + params['eps'], 
+                                    params['auxstep'], 
+                                    dtype=jnp.double
+                                    )
+    params['d10_list'] = jnp.double(2) - params['L']  * params['d00_list'] / jnp.dot(params['remp'],params['Pemp']) # smart initial condtion from Cristopher Erazo
+
+    # possibly useless, but previously useful guess:
+    params['d10_list'] = jnp.concat([params['d10_list'],
+                                    jnp.ones_like(params['d00_list'])]
+                                    )
+    params['d00_list'] = jnp.concatenate([params['d00_list'],
+                                          params['d00_list']])
+
+    vars['logKLs0'] = jnp.empty(shape=params['d00_list'].shape[0], dtype=jnp.double)
+    return cls(
+              params,
+              vars,
+              )
+  
+@jax.jit
+def set_initial_condition_idx(idx,opt):
+
+  opt.vars['ds'] = opt.vars['ds'].at[0].set(opt.params['d00_list'][idx % opt.params['d00_list'].shape[0]])
+  opt.vars['ds'] = opt.vars['ds'].at[1].set(opt.params['d10_list'][idx % opt.params['d10_list'].shape[0]])
+  
+  return opt
+
+@jax.jit
+def test_initial_conditions(opt):
+
+  opt = lax.fori_loop(lower=0,
+                    upper=opt.vars['logKLs0'].shape[0],
+                    body_fun=_test_initial_conditions,
+                    init_val=opt)
+
+  opt.vars['logKLs0'] = jnp.where(jnp.isnan(opt.vars['logKLs0']), 
+                        jnp.inf,
+                        opt.vars['logKLs0'], 
+                        )
+  
+  top_k_initial_conditions = lax.top_k(-opt.vars['logKLs0'], 
+                                       k=opt.vars['indices_optimization'].shape[0])
+  opt.vars['indices_optimization'] = top_k_initial_conditions[1]
+  return opt
+
+
+def _test_initial_conditions(idx,opt):
+  opt.vars['ds'] = opt.vars['ds'].at[0].set(opt.params['d00_list'][idx // opt.params['d00_list'].shape[0]])
+  opt.vars['ds'] = opt.vars['ds'].at[1].set(opt.params['d10_list'][idx % opt.params['d10_list'].shape[0]])
+  opt = compute_KL(opt)
+  opt.vars['logKLs0'] = opt.vars['logKLs0'].at[idx].set(opt.vars['logKL'])
+  return opt
+
+@jax.jit
+def d_of_r(opt,ds):
+  opt.vars['d_of_r'] = opt.params['L'] * ds[0] + ds[1] *  opt.params['remp']
+  return opt
+  
+@jax.jit
+def _logPmodel(opt):
+
+  opt.vars['logPmodel'] = - opt.vars['d_of_r'] * jnp.log(jnp.double(2))
+  opt.vars['logPmodel'] += gammaln(opt.vars['d_of_r']+jnp.double(1))
+  opt.vars['logPmodel'] -= gammaln(opt.vars['d_of_r']-opt.params['remp']+jnp.double(1))
+  opt.vars['logPmodel'] -= gammaln(opt.params['remp']+jnp.double(1))
+
+  opt.vars['Pmodel'] = jnp.exp(opt.vars['logPmodel'])
+  opt.vars['Pmodel'] /= jnp.sum(opt.vars['Pmodel'])
+  opt.vars['logPmodel'] = jnp.log(opt.vars['Pmodel'])
+  
+  return opt
+
+
+def compute_loss(opt):
+  """The KL has two terms, this is the term that depends on the model parameters."""
+  opt.vars['loss'] = - jnp.dot(opt.params['Pemp'],opt.vars['logPmodel'])
+  return opt
+
+def forward(opt):
+    def loss_fn(ds):
+        opt_local = d_of_r(opt, ds)
+        opt_local = _logPmodel(opt_local)
+        opt_local = compute_loss(opt_local)
+        return opt_local.vars['loss']
+    return loss_fn
+
+def apply_hessian(loss_fn,ds,gradient):
+    hessian_fn = jacfwd(grad(loss_fn))
+    H = hessian_fn(ds)
+    H += (1E-4) * jnp.eye(H.shape[0])
+    return jnp.linalg.solve(H, gradient)
+
+def clip_grad(ds,gradient):
+    return jnp.clip(gradient,
+                    min = -jnp.array(ds * 5./100, dtype=jnp.float64),
+                    max = jnp.array(ds * 5./100, dtype=jnp.float64),
+                    )
+
+@jax.jit
+def _optimization_step(idx,opt):
+
+  loss_fn = forward(opt)
+  loss_and_grad_fn = value_and_grad(loss_fn)
+  loss_val, opt.vars['grad'] = loss_and_grad_fn(opt.vars['ds'])
+
+  opt.vars['grad'] = lax.cond(pred=idx<opt.params['Nsteps']//2,
+                    true_fun=lambda : clip_grad(opt.vars['ds'],opt.vars['grad']),
+                    false_fun=lambda : apply_hessian(loss_fn,opt.vars['ds'],opt.vars['grad']),
+                    )
+
+  opt.vars['ds'] -= opt.vars['step'] * opt.vars['grad']  
+  opt = step_schedule(idx,opt)
+
+  # (optional) monitoring optimization:
+  opt.vars['logKLs'] = opt.vars['logKLs'].at[idx].set(jnp.log(loss_val+opt.params['Pemp'] @ jnp.log(opt.params['Pemp'])))
+  opt.vars['ds_optimization']= opt.vars['ds_optimization'].at[idx].set(opt.vars['ds'])
+
+  # early stopping:
+  pred = abs_relative_change(opt.vars['ds'][0],
+                             opt.vars['ds_optimization'][(idx-1) % opt.params['Nsteps'],0])
+  pred = pred < opt.params['threshold_early_stopping']
+  opt = lax.cond(pred=pred,
+                    true_fun=counter_early_stopping,
+                    false_fun=do_nothing,
+                    operand=opt,
+                    )
+  opt.vars['final_optimization_step'] += 1
+  return opt
+
+def counter_early_stopping(opt):
+  opt.vars['counter_early_stopping'] += 1
+  return opt
+
+def abs_relative_change(x,y):
+  return jnp.abs(y/x - 1)
+
+def replace_nans_with_ones(float_64_tensor):
+    return jnp.where(jnp.isnan(float_64_tensor), jnp.double(1.0), float_64_tensor)
+
+def step_schedule(idx,opt):
+  opt.vars['step'] = opt.params['step_initial'] + jnp.double(idx) / opt.params["Nsteps"] * (opt.params["step_final"]-opt.params["step_initial"])
+  return opt
+
+def do_nothing(opt):
+  return opt
+
+def do_nothing_idx(idx,opt):
+  return opt
+
+@jax.jit
+def minimize_loss(opt):
+
+  opt = lax.fori_loop(lower=0,
+                          upper=opt.params['Nsteps'],
+                          body_fun=early_stopping_optimization_step,
+                          init_val=opt)
+  opt.vars['logKL'] = opt.vars['logKLs'][opt.vars['final_optimization_step']]
+  
+  opt = d_of_r(opt, opt.vars['ds'])
+  opt = _logPmodel(opt)
+  return opt
+
+@jax.jit
+def early_stopping_optimization_step(idx,opt):
+  opt.vars['early_stopping_condition'] = opt.vars['counter_early_stopping'] >= opt.params['tolerance_early_stopping']
+  return lax.cond(opt.vars['early_stopping_condition'],
+                      lambda _ : do_nothing_idx(*_),
+                      lambda _ :_optimization_step(*_),
+                      (idx,opt))
+
+  
+@jax.jit
+def compute_KL(opt):
+  opt = d_of_r(opt,opt.vars['ds'])
+  opt = _logPmodel(opt)
+  KL = jnp.dot(opt.params['Pemp'],
+        jnp.log(opt.params['Pemp']) - jnp.log(opt.vars['Pmodel'])
+  )
+  opt.vars['logKL'] = jnp.log(KL)
+  return opt
+
+
+
+
