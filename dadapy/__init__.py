@@ -1,4 +1,5 @@
-import sys
+import sys,os
+os.environ["JAX_ENABLE_X64"] = "True" # Allowing double precision on JAX before any JAX import
 
 from ._utils.utils import *
 from .base import Base

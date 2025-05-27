@@ -2,25 +2,6 @@ import os
 import subprocess
 import sys
 
-def _configure_jax():
-    """ This function sets necessary environmental variables <<before>> importing JAX. """
-    # Enable 64-bit precision
-    os.environ.setdefault("JAX_ENABLE_X64", "True")
-
-    # If there is a GPU available, JAX will use it by default.
-    if "JAX_PLATFORM_NAME" not in os.environ:
-        try:
-            subprocess.run(
-                ['nvidia-smi'],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=True
-            )
-        except Exception:
-            os.environ["JAX_PLATFORMS"] = "cpu"
-            os.environ["JAX_PLATFORM_NAME"] = "cpu"
-_configure_jax()
-
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -34,6 +15,9 @@ from time import time
 
 
 eps = 1e-7  # good old small epsilon
+
+### TO RUN ON CPU, before any JAX importing: 
+#os.environ["JAX_PLATFORMS"] = "cpu"
 
 ### HAMMING CLASS
 
@@ -70,10 +54,15 @@ class Hamming:
         TODO: solve allocation memory issues in CPU when self.cross_distances = 1.
 
         """
-        if os.environ['JAX_PLATFORMS'] != 'cpu':
-            self.crossed_distances = 1 
+        if 'JAX_PLATFORMS' not in os.environ:
+            self.crossed_distances = 1
+            if self.verbose:
+                print(f'running JAX on GPU') 
         else:
+            os.environ["JAX_PLATFORMS"] = "cpu"
             self.crossed_distances = 0
+            if self.verbose:
+                print(f'running JAX on CPU')
         return
 
     def compute_distances(
@@ -82,8 +71,7 @@ class Hamming:
         check_format=True,
     ):
         """
-        Computes all to all distances in dataset and stores them
-        in the matrix "self.distances" of shape (Ns,Ns), where Ns is the number of samples
+        Computation of distances runs extremely faster on GPU. (not the case for the BID optimization, though).
         """
         if self.q == 2 and self.crossed_distances == 0:
             self.distances = jcompute_distances(
@@ -94,11 +82,11 @@ class Hamming:
                 sort=sort,
             )
         elif self.crossed_distances == 1:
-            self.X,self.Y = subsample_data(self.coordinates)
+            self.X1,self.X2 = subsample_data(self.coordinates)
             self.distances = jcompute_crossed_distances(
                 boolean_hamming_distance,
-                self.X,
-                self.Y,
+                self.X1,
+                self.X2,
             )
 
     def D_histogram(
@@ -282,25 +270,28 @@ def compute_row_distances(_idx, pytree):
     )
     return pytree
 
-def subsample_data(coordinates,N1=None,seed=0):
-  if N1 == None:
-    N1 = coordinates.shape[0] // 2
-  key = random.PRNGKey(seed)
-  key, subkey = random.split(key, num=2)
-  
-  indices_rows = random.choice(
-    subkey, jnp.arange(coordinates.shape[0]), shape=(N1,), replace=False
-  )
-  indices_columns = jnp.delete(jnp.arange(coordinates.shape[0]), indices_rows)
 
-  return coordinates[indices_rows],coordinates[indices_columns]
+def subsample_data(coordinates,N1=None,seed=0):
+    if N1 == None:
+        N1 = coordinates.shape[0] // 2
+    key = random.PRNGKey(seed)
+    key, subkey = random.split(key, num=2)
+
+    indices_rows = random.choice(
+    subkey, jnp.arange(coordinates.shape[0]), shape=(N1,), replace=False
+    )
+    indices_columns = jnp.setdiff1d(jnp.arange(coordinates.shape[0]), 
+                                    indices_rows, 
+                                    assume_unique=True)
+
+    return coordinates[indices_rows],coordinates[indices_columns]
 
 @jax.jit
 def boolean_hamming_distance(x, y):
     return jnp.count_nonzero(x != y)
 
 def jcompute_crossed_distances(dist, xs, ys):
-  return vmap(lambda x: vmap(lambda y: dist(x, y))(xs))(ys).T
+    return vmap(lambda x: vmap(lambda y: dist(x, y))(xs))(ys).T
 
 ### BID CLASS
 class BID:
