@@ -226,8 +226,8 @@ def test_DiffImbalance_train5():
     weights_ground_truth = np.array([10, 3, 100])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
-    params_init = [1,0.1]
-    params_groups = [2,1]
+    params_init = [1, 0.1]
+    params_groups = [2, 1]
 
     expected_weights = [1, 0.10002]
     expected_imb = 0.05411

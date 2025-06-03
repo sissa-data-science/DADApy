@@ -23,6 +23,7 @@ The code can be runned on gpu using the command
 """
 
 import warnings
+from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -30,7 +31,6 @@ import numpy as np
 import optax
 from flax.training import train_state
 from tqdm.auto import tqdm
-from functools import partial
 
 # OPTIMIZABLE DISTANCE FUNCTIONS
 # (here new functions may be added for purposes beyond feature selection)
@@ -38,8 +38,10 @@ from functools import partial
 
 
 # for feature selection
-@partial(jax.jit, static_argnames='params_groups')
-def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=None, params_groups=None):
+@partial(jax.jit, static_argnames="params_groups")
+def _compute_dist2_matrix_scaling(
+    params, batch_rows, batch_columns, periods=None, params_groups=None
+):
     """Computes the (squared) Euclidean distance matrix between points in 'batch_rows' and points in 'batch_columns'.
 
     The features of the points are scaled by the weights in 'params', such that the distance between
@@ -48,12 +50,12 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
 
     Args:
         params (jnp.array(float)): array of shape (n_params,). If parmas_groups is None, n_params == n_features.
-        batch_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features). 
+        batch_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features).
         batch_columns (jnp.array(float)): matrix of shape (n_points_columns, n_features).
         periods (jnp.array(float)): array of shape (n_features,) for computing distances between periodic
             features by applying PBCs. If only a subset of features is periodic, the entries of 'periods' for the
             nonperiodic features should be set to zero. Default is None, for which PBCs are not applied.
-        params_groups (jnp.array(int)): array of shape (n_params,) containing at position i the number of features 
+        params_groups (jnp.array(int)): array of shape (n_params,) containing at position i the number of features
             that share the same weight params[i], using the same order of the columns in batch_rows and batch_columns.
             If params_groups is None, no weight sharing is enforced.
     Returns:
@@ -67,7 +69,7 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
             jnp.round(diffs / jnp.where(periodic_mask, periods, 1.0)) * periods
         )
         diffs -= jnp.where(periodic_mask, periodic_shifts, 0.0)
-    
+
     params_repeated = +params
     if params_groups is not None:
         params_repeated = jnp.repeat(params, np.array(params_groups))
@@ -133,14 +135,14 @@ class DiffImbalance:
             recomputed within each mini-batch. Default is 1.
         lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
         params_init (np.array(float), jnp.array(float)): array of shape (n_params,) containing the initial
-            values of the scaling weights to be optimized. If params_groups is set to None, each feature is 
-            scaled by an independent optimization parameter, so n_params == n_features_A. If params_init is None, 
+            values of the scaling weights to be optimized. If params_groups is set to None, each feature is
+            scaled by an independent optimization parameter, so n_params == n_features_A. If params_init is None,
             the initial scaling parameters are set to [0.1, 0.1, ..., 0.1].
-        params_groups (np.array(int), jnp.array(int)): array of shape (n_params,) containing at position i the 
+        params_groups (np.array(int), jnp.array(int)): array of shape (n_params,) containing at position i the
             number of features that share the same weight in params_init[i], using the same order of the columns
             in data_A. If params_groups = [3, 2, 4], for example, the first 3 features in space A will share a
             common weight, the following 2 features will share a second common weight, and the last 4 features
-            will also be scaled by a common optimization parameter. params_groups should satisfy the constraint 
+            will also be scaled by a common optimization parameter. params_groups should satisfy the constraint
             sum(params_groups) == n_features_A. If params_groups is None, no weight sharing is enforced.
         optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
             (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
@@ -183,9 +185,7 @@ class DiffImbalance:
             f"Space A has {data_A.shape[0]} samples "
             + f"while space B has {data_B.shape[0]} samples."
         )
-        self.nparams = (
-            self.nfeatures_A if params_groups is None else len(params_groups)
-        )
+        self.nparams = self.nfeatures_A if params_groups is None else len(params_groups)
 
         # initialize jax random generator
         self.key = jax.random.PRNGKey(seed)
@@ -283,11 +283,11 @@ class DiffImbalance:
             n_vars = np.sum(self.params_groups)
             assert n_vars == self.nfeatures_A, (
                 f"Number of elements in 'params_groups' ({n_vars}) does not match the number "
-                +f"of features in space A ({self.nfeatures_A})."
+                + f"of features in space A ({self.nfeatures_A})."
             )
         assert self.params_init.shape[0] == self.nparams, (
             f"With your inputs ('data_A' and 'params_groups'), 'params_init' should contain {self.nparams} weights, "
-            +f"while it contains {self.params_init.shape[0]} weights."
+            + f"while it contains {self.params_init.shape[0]} weights."
         )
 
         # create jitted functions
@@ -1067,9 +1067,9 @@ class DiffImbalance:
         """
         if self.l1_strength != 0.0:
             warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
-        assert self.params_groups is None, (
-            f"This method is not yet compatible with option 'params_groups'."
-        )
+        assert (
+            self.params_groups is None
+        ), f"This method is not yet compatible with option 'params_groups'."
         n_features = self.nfeatures_A
         if n_features_max is None:
             n_features_max = n_features
@@ -1369,9 +1369,9 @@ class DiffImbalance:
         """
         if self.l1_strength != 0.0:
             warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
-        assert self.params_groups is None, (
-            f"This method is not yet compatible with option 'params_groups'."
-        )
+        assert (
+            self.params_groups is None
+        ), f"This method is not yet compatible with option 'params_groups'."
         assert self.params_final is not None, "First call the train() method!"
 
         n_features = self.nfeatures_A
