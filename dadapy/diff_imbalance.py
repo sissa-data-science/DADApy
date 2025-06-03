@@ -115,7 +115,7 @@ class DiffImbalance:
         data_A (np.array(float), jnp.array(float)): feature space A, matrix of shape (n_points, n_features_A).
         data_B (np.array(float), jnp.array(float)): feature space B, matrix of shape (n_points, n_features_B).
         distances_B (np.array(float), jnp.array(float)): distance matrix in space B, of shape (n_points, n_points).
-            Default is None, for which distances are computed from the features in data_B. 
+            Default is None, for which distances are computed from the features in data_B.
         periods_A (np.array(float), jnp.array(float)): array of shape (n_features_A,), periods of features A.
             Default is None, which means that features A are treated as nonperiodic. If not all features are
             periodic, the entries of the nonperiodic ones should be set to 0.
