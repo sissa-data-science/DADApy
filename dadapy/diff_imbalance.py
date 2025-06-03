@@ -114,6 +114,8 @@ class DiffImbalance:
     Attributes:
         data_A (np.array(float), jnp.array(float)): feature space A, matrix of shape (n_points, n_features_A).
         data_B (np.array(float), jnp.array(float)): feature space B, matrix of shape (n_points, n_features_B).
+        distances_B (np.array(float), jnp.array(float)): distance matrix in space B, of shape (n_points, n_points).
+            Default is None, for which distances are computed from the features in data_B. 
         periods_A (np.array(float), jnp.array(float)): array of shape (n_features_A,), periods of features A.
             Default is None, which means that features A are treated as nonperiodic. If not all features are
             periodic, the entries of the nonperiodic ones should be set to 0.
@@ -161,6 +163,7 @@ class DiffImbalance:
         self,
         data_A,
         data_B,
+        distances_B=None,
         periods_A=None,
         periods_B=None,
         num_epochs=200,
@@ -180,11 +183,25 @@ class DiffImbalance:
     ):
         """Initialise the DiffImbalance class."""
         self.nfeatures_A = data_A.shape[1]
-        self.nfeatures_B = data_B.shape[1]
-        assert data_A.shape[0] == data_B.shape[0], (
-            f"Space A has {data_A.shape[0]} samples "
-            + f"while space B has {data_B.shape[0]} samples."
-        )
+        if distances_B is None:  # space B provided as features
+            self.nfeatures_B = data_B.shape[1]
+            assert data_A.shape[0] == data_B.shape[0], (
+                f"Space A has {data_A.shape[0]} samples "
+                + f"while space B has {data_B.shape[0]} samples."
+            )
+        else:  # space B provided as distances
+            if data_B is not None:
+                warnings.warn(
+                    f"Argument distances_B is not None; data_B will be ignored."
+                )
+            # self.distances_B = jnp.array(distances_B)
+            assert (
+                distances_B.shape[0] == distances_B.shape[1]
+            ), f"Argument distances_B should be a square matrix, while it has shape {distances_B.shape}"
+            assert data_A.shape[0] == distances_B.shape[0], (
+                f"Number of points in data_A ({data_A.shape[0]}) and distances_B ({distances_B.shape[0]})"
+                + f" do not match."
+            )
         self.nparams = self.nfeatures_A if params_groups is None else len(params_groups)
 
         # initialize jax random generator
@@ -194,6 +211,7 @@ class DiffImbalance:
         # initialize spaces A and B
         self.data_A = data_A
         self.data_B = data_B
+        self.distances_B = distances_B
 
         # option to speed up DII calculation by decimating rows (rectangular distance matrices)
         if num_points_rows is not None:
@@ -216,8 +234,13 @@ class DiffImbalance:
 
         self.data_A_rows = data_A[indices_rows]
         self.data_A_columns = data_A[indices_columns]
-        self.data_B_rows = data_B[indices_rows]
-        self.data_B_columns = data_B[indices_columns]
+        if self.distances_B is None:  # space B provided as features
+            self.data_B_rows = data_B[indices_rows]
+            self.data_B_columns = data_B[indices_columns]
+        else:  # space B provided as distances
+            self.distances_B_subsampled = self.distances_B[indices_rows][
+                :, indices_columns
+            ]
 
         self.nrows = self.data_A_rows.shape[0]
         self.ncolumns = self.data_A_columns.shape[0]
@@ -226,11 +249,12 @@ class DiffImbalance:
             if periods_A is not None
             else periods_A
         )
-        self.periods_B = (
-            jnp.ones(self.nfeatures_B) * jnp.array(periods_B)
-            if periods_B is not None
-            else periods_B
-        )
+        if self.distances_B is None:  # space B provided as features
+            self.periods_B = (
+                jnp.ones(self.nfeatures_B) * jnp.array(periods_B)
+                if periods_B is not None
+                else periods_B
+            )
         self.num_epochs = num_epochs
         self.batches_per_epoch = batches_per_epoch
         self.l1_strength = l1_strength
@@ -294,11 +318,14 @@ class DiffImbalance:
         self._create_functions()
 
         # pre-compute ranks B to speed up training
-        self.ranks_B = self._compute_rank_matrix(
-            batch_rows=self.data_B_rows,
-            batch_columns=self.data_B_columns,
-            periods=self.periods_B,
-        )
+        if self.distances_B is None:  # input B provided as features
+            self.ranks_B = self._compute_rank_matrix(
+                batch_rows=self.data_B_rows,
+                batch_columns=self.data_B_columns,
+                periods=self.periods_B,
+            )
+        else:  # input B provided as features
+            self.ranks_B = self.distances_B_subsampled.argsort(axis=1).argsort(axis=1)
 
         # set method to compute lambda (adaptive or point-adaptive)
         if point_adapt_lambda:
@@ -962,14 +989,21 @@ class DiffImbalance:
             indices_columns = jnp.delete(jnp.arange(data_A.shape[0]), indices_rows)
 
             # compute final DII and its error
-            ranks_B = (
-                self._compute_rank_matrix(
-                    batch_rows=data_B[indices_rows],
-                    batch_columns=data_B[indices_columns],
-                    periods=self.periods_B,
+            if self.distances_B is None:  # space B provided as features
+                ranks_B = (
+                    self._compute_rank_matrix(
+                        batch_rows=data_B[indices_rows],
+                        batch_columns=data_B[indices_columns],
+                        periods=self.periods_B,
+                    )
+                    + 1
                 )
-                + 1
-            )
+            else:  # space B provided as distances
+                ranks_B = (
+                    (self.distances_B[indices_rows][:, indices_columns])
+                    .argsort(axis=1)
+                    .argsort(axis=1)
+                )
 
             # set k to keep same ration k/N used during DII training
             k = int(
@@ -998,11 +1032,15 @@ class DiffImbalance:
             self.mask = mask
 
             # compute final DII
-            ranks_B = self._compute_rank_matrix(
-                batch_rows=self.data_B,
-                batch_columns=self.data_B,
-                periods=self.periods_B,
-            )
+            if self.distances_B is None:  # space B provided as features
+                ranks_B = self._compute_rank_matrix(
+                    batch_rows=self.data_B,
+                    batch_columns=self.data_B,
+                    periods=self.periods_B,
+                )
+            else:  # space B provided as distances
+                ranks_B = self.distances_B.argsort(axis=1).argsort(axis=1)
+
             if mask is not None:
                 ranks_B = ranks_B[mask].reshape((ranks_B.shape[0], -1))
                 ranks_B = ranks_B.argsort(axis=1).argsort(axis=1) + 1
