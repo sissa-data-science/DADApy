@@ -30,6 +30,7 @@ import numpy as np
 import optax
 from flax.training import train_state
 from tqdm.auto import tqdm
+from functools import partial
 
 # OPTIMIZABLE DISTANCE FUNCTIONS
 # (here new functions may be added for purposes beyond feature selection)
@@ -37,8 +38,8 @@ from tqdm.auto import tqdm
 
 
 # for feature selection
-@jax.jit
-def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=None):
+@partial(jax.jit, static_argnames='params_groups')
+def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=None, params_groups=None):
     """Computes the (squared) Euclidean distance matrix between points in 'batch_rows' and points in 'batch_columns'.
 
     The features of the points are scaled by the weights in 'params', such that the distance between
@@ -46,13 +47,15 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
         dist2_matrix[i,j] = ((batch_rows[i,:] - batch_columns[j,:])**2).sum(axis=-1)
 
     Args:
-        params (jnp.array(float)): array of shape (n_features,).
-        batch_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features).
+        params (jnp.array(float)): array of shape (n_params,). If parmas_groups is None, n_params == n_features.
+        batch_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features). 
         batch_columns (jnp.array(float)): matrix of shape (n_points_columns, n_features).
         periods (jnp.array(float)): array of shape (n_features,) for computing distances between periodic
             features by applying PBCs. If only a subset of features is periodic, the entries of 'periods' for the
             nonperiodic features should be set to zero. Default is None, for which PBCs are not applied.
-
+        params_groups (jnp.array(int)): array of shape (n_params,) containing at position i the number of features 
+            that share the same weight params[i], using the same order of the columns in batch_rows and batch_columns.
+            If params_groups is None, no weight sharing is enforced.
     Returns:
         dist2_matrix (jnp.array(float)): array of shape (n_points_rows, n_features) containing the square Euclidean
             distances between all points in 'batch_rows' and all points in 'batch_columns'.
@@ -64,7 +67,12 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
             jnp.round(diffs / jnp.where(periodic_mask, periods, 1.0)) * periods
         )
         diffs -= jnp.where(periodic_mask, periodic_shifts, 0.0)
-    diffs *= params[jnp.newaxis, jnp.newaxis, :]
+    
+    params_repeated = +params
+    if params_groups is not None:
+        params_repeated = jnp.repeat(params, np.array(params_groups))
+
+    diffs *= params_repeated[jnp.newaxis, jnp.newaxis, :]
     dist2_matrix = jnp.sum(diffs * diffs, axis=-1)
     return dist2_matrix
 
@@ -124,8 +132,16 @@ class DiffImbalance:
         k_final (int): final rank of neighbors used to set lambda. If batches_per_epoch > 1, neighbors are
             recomputed within each mini-batch. Default is 1.
         lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
-        params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
-            values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
+        params_init (np.array(float), jnp.array(float)): array of shape (n_params,) containing the initial
+            values of the scaling weights to be optimized. If params_groups is set to None, each feature is 
+            scaled by an independent optimization parameter, so n_params == n_features_A. If params_init is None, 
+            the initial scaling parameters are set to [0.1, 0.1, ..., 0.1].
+        params_groups (np.array(int), jnp.array(int)): array of shape (n_params,) containing at position i the 
+            number of features that share the same weight in params_init[i], using the same order of the columns
+            in data_A. If params_groups = [3, 2, 4], for example, the first 3 features in space A will share a
+            common weight, the following 2 features will share a second common weight, and the last 4 features
+            will also be scaled by a common optimization parameter. params_groups should satisfy the constraint 
+            sum(params_groups) == n_features_A. If params_groups is None, no weight sharing is enforced.
         optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
             (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
             additional details.
@@ -154,6 +170,7 @@ class DiffImbalance:
         k_final=1,
         lambda_factor=0.1,
         params_init=None,
+        params_groups=None,
         optimizer_name="sgd",
         learning_rate=1e-2,
         learning_rate_decay=None,
@@ -166,6 +183,10 @@ class DiffImbalance:
             f"Space A has {data_A.shape[0]} samples "
             + f"while space B has {data_B.shape[0]} samples."
         )
+        self.nparams = (
+            self.nfeatures_A if params_groups is None else len(params_groups)
+        )
+
         # initialize jax random generator
         self.key = jax.random.PRNGKey(seed)
         self.key, subkey = jax.random.split(self.key, num=2)
@@ -218,9 +239,11 @@ class DiffImbalance:
         self.k_final = k_final
         self.lambda_factor = lambda_factor
         if params_init is not None:
-            self.params_init = jnp.array(params_init)
+            self.params_init = jnp.array(params_init, dtype=float)
         else:
-            self.params_init = 0.1 * jnp.ones(self.nfeatures_A)
+            self.params_init = 0.1 * jnp.ones(self.nparams)
+        if params_groups is not None:
+            self.params_groups = tuple(params_groups)
         self.params_final = None
         self.params_training = None
         self.imb_final = None
@@ -255,6 +278,16 @@ class DiffImbalance:
         assert isinstance(k_init, int) and isinstance(
             k_final, int
         ), f"'k_init' and 'k_final' must be positive integers."
+        if self.params_groups is not None:
+            n_vars = np.sum(self.params_groups)
+            assert n_vars == self.nfeatures_A, (
+                f"Number of elements in 'params_groups' ({n_vars}) does not match the number "
+                +f"of features in space A ({self.nfeatures_A})."
+            )
+        assert self.params_init.shape[0] == self.nparams, (
+            f"With your inputs ('data_A' and 'params_groups'), 'params_init' should contain {self.nparams} weights, "
+            +f"while it contains {self.params_init.shape[0]} weights."
+        )
 
         # create jitted functions
         self._create_functions()
@@ -398,6 +431,7 @@ class DiffImbalance:
                 batch_rows=batch_A_rows,
                 batch_columns=batch_A_columns,
                 periods=self.periods_A,
+                params_groups=self.params_groups,
             )
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1] - 1
@@ -464,6 +498,7 @@ class DiffImbalance:
                 batch_rows=batch_A_rows,
                 batch_columns=batch_A_columns,
                 periods=self.periods_A,
+                params_groups=self.params_groups,
             )
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1]
@@ -517,6 +552,7 @@ class DiffImbalance:
                 batch_rows=batch_A_rows,
                 batch_columns=batch_A_columns,
                 periods=self.periods_A,
+                params_groups=self.params_groups,
             )
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1] - 1
@@ -815,7 +851,7 @@ class DiffImbalance:
         self._init_optimizer()
 
         # Construct output arrays and initialize them using inital weights
-        params_training = jnp.empty(shape=(self.num_epochs + 1, self.nfeatures_A))
+        params_training = jnp.empty(shape=(self.num_epochs + 1, self.nparams))
         imbs_training = jnp.empty(shape=(self.num_epochs + 1,))
         batch_indices = jnp.arange(self.nrows // self.batches_per_epoch)
 
@@ -1030,6 +1066,9 @@ class DiffImbalance:
         """
         if self.l1_strength != 0.0:
             warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
+        assert self.params_groups is None, (
+            f"This method is not yet compatible with option 'params_groups'."
+        )
         n_features = self.nfeatures_A
         if n_features_max is None:
             n_features_max = n_features
@@ -1329,6 +1368,9 @@ class DiffImbalance:
         """
         if self.l1_strength != 0.0:
             warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
+        assert self.params_groups is None, (
+            f"This method is not yet compatible with option 'params_groups'."
+        )
         assert self.params_final is not None, "First call the train() method!"
 
         n_features = self.nfeatures_A
@@ -1423,6 +1465,7 @@ class DiffImbalance:
                         k_final=self.k_final,
                         lambda_factor=self.lambda_factor,
                         params_init=params_init,
+                        params_groups=None,
                         optimizer_name=self.optimizer_name,
                         learning_rate=self.learning_rate,
                         learning_rate_decay=self.learning_rate_decay,
@@ -1498,6 +1541,7 @@ class DiffImbalance:
                 k_final=self.k_final,
                 lambda_factor=self.lambda_factor,
                 params_init=params_init,
+                params_groups=None,
                 optimizer_name=self.optimizer_name,
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
