@@ -242,6 +242,7 @@ class DiffImbalance:
             self.params_init = jnp.array(params_init, dtype=float)
         else:
             self.params_init = 0.1 * jnp.ones(self.nparams)
+        self.params_groups = params_groups
         if params_groups is not None:
             self.params_groups = tuple(params_groups)
         self.params_final = None
