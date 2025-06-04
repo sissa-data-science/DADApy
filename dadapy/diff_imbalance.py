@@ -23,6 +23,7 @@ The code can be runned on gpu using the command
 """
 
 import warnings
+from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -37,8 +38,10 @@ from tqdm.auto import tqdm
 
 
 # for feature selection
-@jax.jit
-def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=None):
+@partial(jax.jit, static_argnames="params_groups")
+def _compute_dist2_matrix_scaling(
+    params, batch_rows, batch_columns, periods=None, params_groups=None
+):
     """Computes the (squared) Euclidean distance matrix between points in 'batch_rows' and points in 'batch_columns'.
 
     The features of the points are scaled by the weights in 'params', such that the distance between
@@ -46,13 +49,15 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
         dist2_matrix[i,j] = ((batch_rows[i,:] - batch_columns[j,:])**2).sum(axis=-1)
 
     Args:
-        params (jnp.array(float)): array of shape (n_features,).
+        params (jnp.array(float)): array of shape (n_params,). If parmas_groups is None, n_params == n_features.
         batch_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features).
         batch_columns (jnp.array(float)): matrix of shape (n_points_columns, n_features).
         periods (jnp.array(float)): array of shape (n_features,) for computing distances between periodic
             features by applying PBCs. If only a subset of features is periodic, the entries of 'periods' for the
             nonperiodic features should be set to zero. Default is None, for which PBCs are not applied.
-
+        params_groups (jnp.array(int)): array of shape (n_params,) containing at position i the number of features
+            that share the same weight params[i], using the same order of the columns in batch_rows and batch_columns.
+            If params_groups is None, no weight sharing is enforced.
     Returns:
         dist2_matrix (jnp.array(float)): array of shape (n_points_rows, n_features) containing the square Euclidean
             distances between all points in 'batch_rows' and all points in 'batch_columns'.
@@ -64,7 +69,12 @@ def _compute_dist2_matrix_scaling(params, batch_rows, batch_columns, periods=Non
             jnp.round(diffs / jnp.where(periodic_mask, periods, 1.0)) * periods
         )
         diffs -= jnp.where(periodic_mask, periodic_shifts, 0.0)
-    diffs *= params[jnp.newaxis, jnp.newaxis, :]
+
+    params_repeated = +params
+    if params_groups is not None:
+        params_repeated = jnp.repeat(params, np.array(params_groups))
+
+    diffs *= params_repeated[jnp.newaxis, jnp.newaxis, :]
     dist2_matrix = jnp.sum(diffs * diffs, axis=-1)
     return dist2_matrix
 
@@ -104,6 +114,8 @@ class DiffImbalance:
     Attributes:
         data_A (np.array(float), jnp.array(float)): feature space A, matrix of shape (n_points, n_features_A).
         data_B (np.array(float), jnp.array(float)): feature space B, matrix of shape (n_points, n_features_B).
+        distances_B (np.array(float), jnp.array(float)): distance matrix in space B, of shape (n_points, n_points).
+            Default is None, for which distances are computed from the features in data_B.
         periods_A (np.array(float), jnp.array(float)): array of shape (n_features_A,), periods of features A.
             Default is None, which means that features A are treated as nonperiodic. If not all features are
             periodic, the entries of the nonperiodic ones should be set to 0.
@@ -124,8 +136,16 @@ class DiffImbalance:
         k_final (int): final rank of neighbors used to set lambda. If batches_per_epoch > 1, neighbors are
             recomputed within each mini-batch. Default is 1.
         lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
-        params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
-            values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
+        params_init (np.array(float), jnp.array(float)): array of shape (n_params,) containing the initial
+            values of the scaling weights to be optimized. If params_groups is set to None, each feature is
+            scaled by an independent optimization parameter, so n_params == n_features_A. If params_init is None,
+            the initial scaling parameters are set to [0.1, 0.1, ..., 0.1].
+        params_groups (np.array(int), jnp.array(int)): array of shape (n_params,) containing at position i the
+            number of features that share the same weight in params_init[i], using the same order of the columns
+            in data_A. If params_groups = [3, 2, 4], for example, the first 3 features in space A will share a
+            common weight, the following 2 features will share a second common weight, and the last 4 features
+            will also be scaled by a common optimization parameter. params_groups should satisfy the constraint
+            sum(params_groups) == n_features_A. If params_groups is None, no weight sharing is enforced.
         optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
             (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
             additional details.
@@ -143,6 +163,7 @@ class DiffImbalance:
         self,
         data_A,
         data_B,
+        distances_B=None,
         periods_A=None,
         periods_B=None,
         num_epochs=200,
@@ -154,6 +175,7 @@ class DiffImbalance:
         k_final=1,
         lambda_factor=0.1,
         params_init=None,
+        params_groups=None,
         optimizer_name="sgd",
         learning_rate=1e-2,
         learning_rate_decay=None,
@@ -161,11 +183,27 @@ class DiffImbalance:
     ):
         """Initialise the DiffImbalance class."""
         self.nfeatures_A = data_A.shape[1]
-        self.nfeatures_B = data_B.shape[1]
-        assert data_A.shape[0] == data_B.shape[0], (
-            f"Space A has {data_A.shape[0]} samples "
-            + f"while space B has {data_B.shape[0]} samples."
-        )
+        if distances_B is None:  # space B provided as features
+            self.nfeatures_B = data_B.shape[1]
+            assert data_A.shape[0] == data_B.shape[0], (
+                f"Space A has {data_A.shape[0]} samples "
+                + f"while space B has {data_B.shape[0]} samples."
+            )
+        else:  # space B provided as distances
+            if data_B is not None:
+                warnings.warn(
+                    f"Argument distances_B is not None; data_B will be ignored."
+                )
+            # self.distances_B = jnp.array(distances_B)
+            assert (
+                distances_B.shape[0] == distances_B.shape[1]
+            ), f"Argument distances_B should be a square matrix, while it has shape {distances_B.shape}"
+            assert data_A.shape[0] == distances_B.shape[0], (
+                f"Number of points in data_A ({data_A.shape[0]}) and distances_B ({distances_B.shape[0]})"
+                + f" do not match."
+            )
+        self.nparams = self.nfeatures_A if params_groups is None else len(params_groups)
+
         # initialize jax random generator
         self.key = jax.random.PRNGKey(seed)
         self.key, subkey = jax.random.split(self.key, num=2)
@@ -173,6 +211,7 @@ class DiffImbalance:
         # initialize spaces A and B
         self.data_A = data_A
         self.data_B = data_B
+        self.distances_B = distances_B
 
         # option to speed up DII calculation by decimating rows (rectangular distance matrices)
         if num_points_rows is not None:
@@ -195,8 +234,13 @@ class DiffImbalance:
 
         self.data_A_rows = data_A[indices_rows]
         self.data_A_columns = data_A[indices_columns]
-        self.data_B_rows = data_B[indices_rows]
-        self.data_B_columns = data_B[indices_columns]
+        if self.distances_B is None:  # space B provided as features
+            self.data_B_rows = data_B[indices_rows]
+            self.data_B_columns = data_B[indices_columns]
+        else:  # space B provided as distances
+            self.distances_B_subsampled = self.distances_B[indices_rows][
+                :, indices_columns
+            ]
 
         self.nrows = self.data_A_rows.shape[0]
         self.ncolumns = self.data_A_columns.shape[0]
@@ -205,11 +249,12 @@ class DiffImbalance:
             if periods_A is not None
             else periods_A
         )
-        self.periods_B = (
-            jnp.ones(self.nfeatures_B) * jnp.array(periods_B)
-            if periods_B is not None
-            else periods_B
-        )
+        if self.distances_B is None:  # space B provided as features
+            self.periods_B = (
+                jnp.ones(self.nfeatures_B) * jnp.array(periods_B)
+                if periods_B is not None
+                else periods_B
+            )
         self.num_epochs = num_epochs
         self.batches_per_epoch = batches_per_epoch
         self.l1_strength = l1_strength
@@ -218,9 +263,12 @@ class DiffImbalance:
         self.k_final = k_final
         self.lambda_factor = lambda_factor
         if params_init is not None:
-            self.params_init = jnp.array(params_init)
+            self.params_init = jnp.array(params_init, dtype=float)
         else:
-            self.params_init = 0.1 * jnp.ones(self.nfeatures_A)
+            self.params_init = 0.1 * jnp.ones(self.nparams)
+        self.params_groups = params_groups
+        if params_groups is not None:
+            self.params_groups = tuple(params_groups)
         self.params_final = None
         self.params_training = None
         self.imb_final = None
@@ -255,16 +303,29 @@ class DiffImbalance:
         assert isinstance(k_init, int) and isinstance(
             k_final, int
         ), f"'k_init' and 'k_final' must be positive integers."
+        if self.params_groups is not None:
+            n_vars = np.sum(self.params_groups)
+            assert n_vars == self.nfeatures_A, (
+                f"Number of elements in 'params_groups' ({n_vars}) does not match the number "
+                + f"of features in space A ({self.nfeatures_A})."
+            )
+        assert self.params_init.shape[0] == self.nparams, (
+            f"With your inputs ('data_A' and 'params_groups'), 'params_init' should contain {self.nparams} weights, "
+            + f"while it contains {self.params_init.shape[0]} weights."
+        )
 
         # create jitted functions
         self._create_functions()
 
         # pre-compute ranks B to speed up training
-        self.ranks_B = self._compute_rank_matrix(
-            batch_rows=self.data_B_rows,
-            batch_columns=self.data_B_columns,
-            periods=self.periods_B,
-        )
+        if self.distances_B is None:  # input B provided as features
+            self.ranks_B = self._compute_rank_matrix(
+                batch_rows=self.data_B_rows,
+                batch_columns=self.data_B_columns,
+                periods=self.periods_B,
+            )
+        else:  # input B provided as features
+            self.ranks_B = self.distances_B_subsampled.argsort(axis=1).argsort(axis=1)
 
         # set method to compute lambda (adaptive or point-adaptive)
         if point_adapt_lambda:
@@ -398,6 +459,7 @@ class DiffImbalance:
                 batch_rows=batch_A_rows,
                 batch_columns=batch_A_columns,
                 periods=self.periods_A,
+                params_groups=self.params_groups,
             )
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1] - 1
@@ -464,6 +526,7 @@ class DiffImbalance:
                 batch_rows=batch_A_rows,
                 batch_columns=batch_A_columns,
                 periods=self.periods_A,
+                params_groups=self.params_groups,
             )
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1]
@@ -517,6 +580,7 @@ class DiffImbalance:
                 batch_rows=batch_A_rows,
                 batch_columns=batch_A_columns,
                 periods=self.periods_A,
+                params_groups=self.params_groups,
             )
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1] - 1
@@ -815,7 +879,7 @@ class DiffImbalance:
         self._init_optimizer()
 
         # Construct output arrays and initialize them using inital weights
-        params_training = jnp.empty(shape=(self.num_epochs + 1, self.nfeatures_A))
+        params_training = jnp.empty(shape=(self.num_epochs + 1, self.nparams))
         imbs_training = jnp.empty(shape=(self.num_epochs + 1,))
         batch_indices = jnp.arange(self.nrows // self.batches_per_epoch)
 
@@ -905,14 +969,18 @@ class DiffImbalance:
         # case 1: compute final DII and its error, using different points for rows and columns
         if compute_error == True:
             # subsample data to remove neighbor correlations, with stride discard_close_ind+1
-            data_A = +self.data_A
-            data_B = +self.data_B
+            data_A = self.data_A
+            data_B = self.data_B
+            distances_B = self.distances_B
             if discard_close_ind != 0:
                 subsamples = jnp.arange(
                     0, self.data_A.shape[0], discard_close_ind + 1, dtype=int
                 )
                 data_A = data_A[subsamples]
-                data_B = data_B[subsamples]
+                if self.distances_B is None:
+                    data_B = data_B[subsamples]
+                else:
+                    distances_B = distances_B[subsamples][:, subsamples]
 
             # Split points in two groups, labelling rows and columns. The number of rows 'nrows'
             # comes from equations nrows / ncols = ratio_rows_columns and nrows + ncols = npoints.
@@ -925,14 +993,21 @@ class DiffImbalance:
             indices_columns = jnp.delete(jnp.arange(data_A.shape[0]), indices_rows)
 
             # compute final DII and its error
-            ranks_B = (
-                self._compute_rank_matrix(
-                    batch_rows=data_B[indices_rows],
-                    batch_columns=data_B[indices_columns],
-                    periods=self.periods_B,
+            if self.distances_B is None:  # space B provided as features
+                ranks_B = (
+                    self._compute_rank_matrix(
+                        batch_rows=data_B[indices_rows],
+                        batch_columns=data_B[indices_columns],
+                        periods=self.periods_B,
+                    )
+                    + 1
                 )
-                + 1
-            )
+            else:  # space B provided as distances
+                ranks_B = (
+                    (distances_B[indices_rows][:, indices_columns])
+                    .argsort(axis=1)
+                    .argsort(axis=1)
+                ) + 1
 
             # set k to keep same ration k/N used during DII training
             k = int(
@@ -961,11 +1036,15 @@ class DiffImbalance:
             self.mask = mask
 
             # compute final DII
-            ranks_B = self._compute_rank_matrix(
-                batch_rows=self.data_B,
-                batch_columns=self.data_B,
-                periods=self.periods_B,
-            )
+            if self.distances_B is None:  # space B provided as features
+                ranks_B = self._compute_rank_matrix(
+                    batch_rows=self.data_B,
+                    batch_columns=self.data_B,
+                    periods=self.periods_B,
+                )
+            else:  # space B provided as distances
+                ranks_B = self.distances_B.argsort(axis=1).argsort(axis=1)
+
             if mask is not None:
                 ranks_B = ranks_B[mask].reshape((ranks_B.shape[0], -1))
                 ranks_B = ranks_B.argsort(axis=1).argsort(axis=1) + 1
@@ -1030,6 +1109,9 @@ class DiffImbalance:
         """
         if self.l1_strength != 0.0:
             warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
+        assert (
+            self.params_groups is None
+        ), f"This method is not yet compatible with option 'params_groups'."
         n_features = self.nfeatures_A
         if n_features_max is None:
             n_features_max = n_features
@@ -1055,8 +1137,9 @@ class DiffImbalance:
 
             # Create a copy of the current object for training
             dii_copy = DiffImbalance(
-                self.data_A,
-                self.data_B,
+                data_A=self.data_A,
+                data_B=self.data_B,
+                distances_B=self.distances_B,
                 periods_A=self.periods_A,
                 periods_B=self.periods_B,
                 seed=seed,
@@ -1166,8 +1249,9 @@ class DiffImbalance:
 
                         # Create a copy of the current object for training
                         dii_copy = DiffImbalance(
-                            self.data_A,
-                            self.data_B,
+                            data_A=self.data_A,
+                            data_B=self.data_B,
+                            distances_B=self.distances_B,
                             periods_A=self.periods_A,
                             periods_B=self.periods_B,
                             seed=seed
@@ -1243,8 +1327,9 @@ class DiffImbalance:
             params_init = jnp.where(mask, 0.1, 0.0)
 
             dii_copy = DiffImbalance(
-                self.data_A,
-                self.data_B,
+                data_A=self.data_A,
+                data_B=self.data_B,
+                distances_B=self.distances_B,
                 periods_A=self.periods_A,
                 periods_B=self.periods_B,
                 seed=seed,
@@ -1329,6 +1414,9 @@ class DiffImbalance:
         """
         if self.l1_strength != 0.0:
             warnings.warn(f"The greedy search will run with l1 strength equal to 0.")
+        assert (
+            self.params_groups is None
+        ), f"This method is not yet compatible with option 'params_groups'."
         assert self.params_final is not None, "First call the train() method!"
 
         n_features = self.nfeatures_A
@@ -1410,8 +1498,9 @@ class DiffImbalance:
 
                     # Create a copy of the current object for training
                     dii_copy = DiffImbalance(
-                        self.data_A,
-                        self.data_B,
+                        data_A=self.data_A,
+                        data_B=self.data_B,
+                        distances_B=self.distances_B,
                         periods_A=self.periods_A,
                         periods_B=self.periods_B,
                         seed=training_seed,
@@ -1423,6 +1512,7 @@ class DiffImbalance:
                         k_final=self.k_final,
                         lambda_factor=self.lambda_factor,
                         params_init=params_init,
+                        params_groups=None,
                         optimizer_name=self.optimizer_name,
                         learning_rate=self.learning_rate,
                         learning_rate_decay=self.learning_rate_decay,
@@ -1485,8 +1575,9 @@ class DiffImbalance:
             mask = mask.at[jnp.array(best_feature_set)].set(True)
             params_init = jnp.where(mask, 0.1, 0.0)
             dii_copy = DiffImbalance(
-                self.data_A,
-                self.data_B,
+                data_A=self.data_A,
+                data_B=self.data_B,
+                distances_B=self.distances_B,
                 periods_A=self.periods_A,
                 periods_B=self.periods_B,
                 seed=seed,
@@ -1498,6 +1589,7 @@ class DiffImbalance:
                 k_final=self.k_final,
                 lambda_factor=self.lambda_factor,
                 params_init=params_init,
+                params_groups=None,
                 optimizer_name=self.optimizer_name,
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
