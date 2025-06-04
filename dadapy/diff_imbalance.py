@@ -980,7 +980,7 @@ class DiffImbalance:
                 if self.distances_B is None:
                     data_B = data_B[subsamples]
                 else:
-                    distances_B = distances_B[subsamples][:,subsamples]
+                    distances_B = distances_B[subsamples][:, subsamples]
 
             # Split points in two groups, labelling rows and columns. The number of rows 'nrows'
             # comes from equations nrows / ncols = ratio_rows_columns and nrows + ncols = npoints.

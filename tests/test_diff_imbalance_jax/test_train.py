@@ -272,6 +272,7 @@ def test_DiffImbalance_train5():
     assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
     assert error_final == pytest.approx(expected_error_final, abs=0.001)
 
+
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
 def test_DiffImbalance_train6():
     """Test DII train function."""
@@ -281,9 +282,9 @@ def test_DiffImbalance_train6():
     weights_ground_truth = np.array([10, 3, 100])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
-    distances_B = (
-        (data_B[np.newaxis,:,:] - data_B[:,np.newaxis,:])**2
-    ).sum(axis=-1)
+    distances_B = ((data_B[np.newaxis, :, :] - data_B[:, np.newaxis, :]) ** 2).sum(
+        axis=-1
+    )
 
     expected_weights = [0.1312, 0.05073, 0.10106]
     expected_imb = 0.0403795
