@@ -969,14 +969,18 @@ class DiffImbalance:
         # case 1: compute final DII and its error, using different points for rows and columns
         if compute_error == True:
             # subsample data to remove neighbor correlations, with stride discard_close_ind+1
-            data_A = +self.data_A
-            data_B = +self.data_B
+            data_A = self.data_A
+            data_B = self.data_B
+            distances_B = self.distances_B
             if discard_close_ind != 0:
                 subsamples = jnp.arange(
                     0, self.data_A.shape[0], discard_close_ind + 1, dtype=int
                 )
                 data_A = data_A[subsamples]
-                data_B = data_B[subsamples]
+                if self.distances_B is None:
+                    data_B = data_B[subsamples]
+                else:
+                    distances_B = distances_B[subsamples][:,subsamples]
 
             # Split points in two groups, labelling rows and columns. The number of rows 'nrows'
             # comes from equations nrows / ncols = ratio_rows_columns and nrows + ncols = npoints.
@@ -1000,10 +1004,10 @@ class DiffImbalance:
                 )
             else:  # space B provided as distances
                 ranks_B = (
-                    (self.distances_B[indices_rows][:, indices_columns])
+                    (distances_B[indices_rows][:, indices_columns])
                     .argsort(axis=1)
                     .argsort(axis=1)
-                )
+                ) + 1
 
             # set k to keep same ration k/N used during DII training
             k = int(
@@ -1133,8 +1137,9 @@ class DiffImbalance:
 
             # Create a copy of the current object for training
             dii_copy = DiffImbalance(
-                self.data_A,
-                self.data_B,
+                data_A=self.data_A,
+                data_B=self.data_B,
+                distances_B=self.distances_B,
                 periods_A=self.periods_A,
                 periods_B=self.periods_B,
                 seed=seed,
@@ -1244,8 +1249,9 @@ class DiffImbalance:
 
                         # Create a copy of the current object for training
                         dii_copy = DiffImbalance(
-                            self.data_A,
-                            self.data_B,
+                            data_A=self.data_A,
+                            data_B=self.data_B,
+                            distances_B=self.distances_B,
                             periods_A=self.periods_A,
                             periods_B=self.periods_B,
                             seed=seed
@@ -1321,8 +1327,9 @@ class DiffImbalance:
             params_init = jnp.where(mask, 0.1, 0.0)
 
             dii_copy = DiffImbalance(
-                self.data_A,
-                self.data_B,
+                data_A=self.data_A,
+                data_B=self.data_B,
+                distances_B=self.distances_B,
                 periods_A=self.periods_A,
                 periods_B=self.periods_B,
                 seed=seed,
@@ -1491,8 +1498,9 @@ class DiffImbalance:
 
                     # Create a copy of the current object for training
                     dii_copy = DiffImbalance(
-                        self.data_A,
-                        self.data_B,
+                        data_A=self.data_A,
+                        data_B=self.data_B,
+                        distances_B=self.distances_B,
                         periods_A=self.periods_A,
                         periods_B=self.periods_B,
                         seed=training_seed,
@@ -1567,8 +1575,9 @@ class DiffImbalance:
             mask = mask.at[jnp.array(best_feature_set)].set(True)
             params_init = jnp.where(mask, 0.1, 0.0)
             dii_copy = DiffImbalance(
-                self.data_A,
-                self.data_B,
+                data_A=self.data_A,
+                data_B=self.data_B,
+                distances_B=self.distances_B,
                 periods_A=self.periods_A,
                 periods_B=self.periods_B,
                 seed=seed,

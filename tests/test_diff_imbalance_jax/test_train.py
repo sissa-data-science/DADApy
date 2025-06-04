@@ -44,6 +44,7 @@ def test_DiffImbalance_train1():
     dii = DiffImbalance(
         data_A,  # matrix of shape (N,D_A)
         data_B,  # matrix of shape (N,D_B)
+        distances_B=None,
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -92,6 +93,7 @@ def test_DiffImbalance_train2():
     dii = DiffImbalance(
         data_A,
         data_B,
+        distances_B=None,
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -138,6 +140,7 @@ def test_DiffImbalance_train3():
     dii = DiffImbalance(
         data_A,
         data_B,
+        distances_B=None,
         periods_A=2 * np.pi,
         periods_B=2 * np.pi,
         seed=0,
@@ -187,6 +190,7 @@ def test_DiffImbalance_train4():
     dii = DiffImbalance(
         data_A,  # matrix of shape (N,D_A)
         data_B,  # matrix of shape (N,D_B)
+        distances_B=None,
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -238,6 +242,7 @@ def test_DiffImbalance_train5():
     dii = DiffImbalance(
         data_A,  # matrix of shape (N,D_A)
         data_B,  # matrix of shape (N,D_B)
+        distances_B=None,
         periods_A=None,
         periods_B=None,
         seed=0,
@@ -250,6 +255,58 @@ def test_DiffImbalance_train5():
         lambda_factor=1e-1,
         params_init=params_init,
         params_groups=params_groups,
+        optimizer_name="sgd",
+        learning_rate=1e-1,
+        learning_rate_decay="cos",
+        num_points_rows=50,
+    )
+    weights, imbs = dii.train()
+
+    # compute final DII
+    imb_final, error_final = dii.return_final_dii(
+        compute_error=True, ratio_rows_columns=0.5, seed=0, discard_close_ind=1
+    )
+
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
+    assert error_final == pytest.approx(expected_error_final, abs=0.001)
+
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
+def test_DiffImbalance_train6():
+    """Test DII train function."""
+    from dadapy import DiffImbalance  # noqa: E402
+
+    # generate test data
+    weights_ground_truth = np.array([10, 3, 100])
+    data_A = np.load(filename)
+    data_B = weights_ground_truth[np.newaxis, :] * data_A
+    distances_B = (
+        (data_B[np.newaxis,:,:] - data_B[:,np.newaxis,:])**2
+    ).sum(axis=-1)
+
+    expected_weights = [0.1312, 0.05073, 0.10106]
+    expected_imb = 0.0403795
+    expected_imb_final = 0.08504
+    expected_error_final = 0.01226
+
+    # train the DII to recover ground-truth metric
+    dii = DiffImbalance(
+        data_A,  # matrix of shape (N,D_A)
+        data_B=None,  # matrix of shape (N,D_B)
+        distances_B=distances_B,
+        periods_A=None,
+        periods_B=None,
+        seed=0,
+        num_epochs=10,
+        batches_per_epoch=1,
+        l1_strength=0.0,
+        point_adapt_lambda=False,
+        k_init=1,
+        k_final=1,
+        lambda_factor=1e-1,
+        params_init=None,
+        params_groups=None,
         optimizer_name="sgd",
         learning_rate=1e-1,
         learning_rate_decay="cos",
