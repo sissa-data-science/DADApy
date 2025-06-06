@@ -129,7 +129,8 @@ class DiffImbalance:
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
         l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
-        gradient_clip_value (float): maximum norm for gradient clipping. If 0, no clipping is applied. Default is 0.
+        gradient_clip_value (float): maximum norm for gradient clipping. If 0, no clipping is
+            applied. Default is 0.
         point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
             in the DII (if False), or a different parameter for each point (if True). Default is True.
         k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
@@ -855,7 +856,7 @@ class DiffImbalance:
         if self.gradient_clip_value > 0:
             optimizer = optax.chain(
                 optax.clip_by_global_norm(self.gradient_clip_value),
-                opt_class(self.lr_schedule)
+                opt_class(self.lr_schedule),
             )
         else:
             optimizer = opt_class(self.lr_schedule)
