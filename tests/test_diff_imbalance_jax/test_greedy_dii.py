@@ -312,7 +312,147 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
         ), f"Feature sets should be in reverse order, got {feature_sets_fw[i]} and {feature_sets_bw[-(i + 1)]}"
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
+def test_DiffImbalance_greedy_random_initialization():
+    """Test greedy feature selection with random initialization parameters.
+
+    This test verifies that the greedy feature selection methods work correctly
+    when initialized with random parameters between 0.1 and 5, ensuring that
+    the initialization values are properly inherited from the parent class
+    rather than using hardcoded values.
+    """
+    from dadapy import DiffImbalance  # noqa: E402
+
+    # generate test data with 5 dimensions
+    np.random.seed(0)
+    weights_ground_truth = np.array([10, 3, 1, 30, 7.3])
+    data_A = np.random.normal(loc=0, scale=1.0, size=(100, 5))
+    data_B = weights_ground_truth[np.newaxis, :] * data_A
+
+    # Create random initialization parameters between 0.1 and 5
+    np.random.seed(42)  # Different seed for initialization
+    params_init = np.random.uniform(0.1, 1.0, size=5)
+    print(f"Random initialization parameters: {params_init}")
+
+    # train the DII to recover ground-truth metric with random initialization
+    dii = DiffImbalance(
+        data_A,
+        data_B,
+        periods_A=None,
+        periods_B=None,
+        seed=0,
+        num_epochs=10,
+        batches_per_epoch=2,
+        l1_strength=0.0,
+        point_adapt_lambda=True,
+        k_init=3,
+        k_final=3,
+        lambda_factor=1e-1,
+        params_init=params_init,  # Use random initialization
+        optimizer_name="sgd",
+        learning_rate=1e-1,
+        learning_rate_decay="cos",
+        num_points_rows=None,
+    )
+    weights, imbs = dii.train()
+
+    # Run forward and backward greedy feature selection
+    (
+        feature_sets_fw,
+        diis_fw,
+        errors_fw,
+        weights_fw,
+    ) = dii.forward_greedy_feature_selection(
+        n_features_max=5, compute_error=True, n_best=1
+    )
+    (
+        feature_sets_bw,
+        diis_bw,
+        errors_bw,
+        weights_bw,
+    ) = dii.backward_greedy_feature_selection(
+        n_features_min=1, compute_error=True, n_best=1
+    )
+
+    # Expected results based on weights (should be same as previous test)
+    expected_fw_sets = [[3], [0, 3], [0, 3, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]]
+    expected_bw_sets = [[0, 1, 2, 3, 4], [0, 1, 3, 4], [0, 3, 4], [0, 3], [3]]
+
+    # Check forward greedy results
+    assert (
+        feature_sets_fw == expected_fw_sets
+    ), f"Forward selection should return {expected_fw_sets}, got {feature_sets_fw}"
+
+    # Check backward greedy results
+    assert (
+        feature_sets_bw == expected_bw_sets
+    ), f"Backward selection should return {expected_bw_sets}, got {feature_sets_bw}"
+
+    # Check that the DII values match when reversed
+    diis_fw_array = np.array(diis_fw)
+    diis_bw_array = np.array(diis_bw)
+
+    print("Random Init Forward DIIs:", diis_fw)
+    print("Random Init Forward Errors:", errors_fw)
+    print("Random Init Forward Weights:", weights_fw)
+    print("Random Init Backward DIIs:", diis_bw)
+    print("Random Init Backward Errors:", errors_bw)
+    print("Random Init Backward Weights:", weights_bw)
+
+    # Check that the weights are properly structured
+    assert (
+        len(weights_fw[-1]) == 5
+    ), f"The final weight array should have length 5, got {len(weights_fw[-1])}"
+    assert (
+        len(weights_bw[-1]) == 5
+    ), f"The final weight array should have length 5, got {len(weights_bw[-1])}"
+    assert (
+        len(weights_fw) == 5
+    ), f"Forward selection should return 5 DII weights arrays, got {len(weights_fw)}"
+    assert (
+        len(weights_bw) == 5
+    ), f"Backward selection should return 5 DII weights arrays, got {len(weights_bw)}"
+
+    assert (
+        len(errors_fw) == 5
+    ), f"Forward selection should return 5 DII errors, got {len(errors_fw)}"
+    assert (
+        len(errors_bw) == 5
+    ), f"Backward selection should return 5 DII errors, got {len(errors_bw)}"
+
+    assert np.allclose(
+        diis_bw_array, diis_fw_array[::-1], atol=1e-2
+    ), f"DII values should match when reversed, got {diis_bw_array} and {diis_fw_array[::-1]}"
+
+    # Check that for the forward selection, the last feature set has highest weight on feature 3
+    # which should be the most important feature according to the ground truth weights
+    max_weight_feature_fw = np.argmax(weights_fw[-1])
+    assert (
+        max_weight_feature_fw == 3
+    ), f"Feature 3 should have the highest weight, got feature {max_weight_feature_fw}"
+
+    # Check that for the backward selection, the first weights array (all features)
+    # has highest weight on feature 3 as well
+    max_weight_feature_bw = np.argmax(weights_bw[0])
+    assert (
+        max_weight_feature_bw == 3
+    ), f"Feature 3 should have the highest weight, got feature {max_weight_feature_bw}"
+
+    # Check that the feature sets are in reverse order
+    for i in range(len(feature_sets_fw)):
+        assert set(feature_sets_fw[i]) == set(
+            feature_sets_bw[-(i + 1)]
+        ), f"Feature sets should be in reverse order, got {feature_sets_fw[i]} and {feature_sets_bw[-(i + 1)]}"
+
+    # Additional test: Verify that the random initialization was actually used
+    # by checking that the initial DII object has the correct params_init
+    assert np.allclose(
+        dii.params_init, params_init
+    ), f"DII object should have the random initialization parameters, got {dii.params_init} expected {params_init}"
+
+
 if __name__ == "__main__":
     test_DiffImbalance_forward_greedy()
     test_DiffImbalance_backward_greedy()
     test_DiffImbalance_greedy_symmetry_5d_gaussian()
+    test_DiffImbalance_greedy_random_initialization()

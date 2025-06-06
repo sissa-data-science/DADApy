@@ -1132,8 +1132,8 @@ class DiffImbalance:
             mask = mask.at[feature].set(True)
 
             # Initialize weights for training (only this feature is active)
-            # 0.1 is the default value for initialization
-            params_init = jnp.where(mask, 0.1, 0.0)
+            # Use the corresponding value from self.params_init for this feature
+            params_init = jnp.where(mask, self.params_init, 0.0)
 
             # Create a copy of the current object for training
             dii_copy = DiffImbalance(
@@ -1199,7 +1199,9 @@ class DiffImbalance:
 
         # Store the optimal weights for the best single feature
         best_weights = np.zeros(n_features)
-        best_weights[best_feature[0]] = 0.1  # Initial value was 0.1
+        best_weights[best_feature[0]] = self.params_init[
+            best_feature[0]
+        ]  # Inherit from parent class
 
         # Add to weights list
         best_weights_list.append(best_weights)
@@ -1244,8 +1246,8 @@ class DiffImbalance:
                         mask = jnp.zeros(n_features, dtype=bool)
                         mask = mask.at[jnp.array(candidate_set)].set(True)
 
-                        # Initialize weights for training: 0.1 is chosen as the default value
-                        params_init = jnp.where(mask, 0.1, 0.0)
+                        # Initialize weights for training: inherit from parent class
+                        params_init = jnp.where(mask, self.params_init, 0.0)
 
                         # Create a copy of the current object for training
                         dii_copy = DiffImbalance(
@@ -1324,7 +1326,7 @@ class DiffImbalance:
             # (not saved before to avoid memory problems for large data sets)
             mask = jnp.zeros(n_features, dtype=bool)
             mask = mask.at[jnp.array(candidate_features[best_idx])].set(True)
-            params_init = jnp.where(mask, 0.1, 0.0)
+            params_init = jnp.where(mask, self.params_init, 0.0)
 
             dii_copy = DiffImbalance(
                 data_A=self.data_A,
@@ -1490,8 +1492,8 @@ class DiffImbalance:
                     mask = jnp.zeros(n_features, dtype=bool)
                     mask = mask.at[jnp.array(candidate_set)].set(True)
 
-                    # Initialize weights for training: 0.1 is chosen as the default value
-                    params_init = jnp.where(mask, 0.1, 0.0)
+                    # Initialize weights for training: inherit from parent class
+                    params_init = jnp.where(mask, self.params_init, 0.0)
 
                     # Reset the random seed for consistent mini-batch sequence
                     training_seed = seed + len(candidate_features)
@@ -1573,7 +1575,7 @@ class DiffImbalance:
             # (not saved before to avoid memory problems for large data sets)
             mask = jnp.zeros(n_features, dtype=bool)
             mask = mask.at[jnp.array(best_feature_set)].set(True)
-            params_init = jnp.where(mask, 0.1, 0.0)
+            params_init = jnp.where(mask, self.params_init, 0.0)
             dii_copy = DiffImbalance(
                 data_A=self.data_A,
                 data_B=self.data_B,
