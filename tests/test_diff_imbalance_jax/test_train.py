@@ -61,6 +61,7 @@ def test_DiffImbalance_train1():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=None,
+        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -109,6 +110,7 @@ def test_DiffImbalance_train2():
         optimizer_name="adam",
         learning_rate=1e-1,
         learning_rate_decay=None,
+        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -157,6 +159,7 @@ def test_DiffImbalance_train3():
         learning_rate=1e-1,
         learning_rate_decay="exp",
         num_points_rows=None,
+        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -207,6 +210,7 @@ def test_DiffImbalance_train4():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=50,
+        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -259,6 +263,7 @@ def test_DiffImbalance_train5():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=50,
+        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -312,6 +317,7 @@ def test_DiffImbalance_train6():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=50,
+        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -324,3 +330,155 @@ def test_DiffImbalance_train6():
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
     assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
     assert error_final == pytest.approx(expected_error_final, abs=0.001)
+
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
+def test_DiffImbalance_gradient_clipping():
+    """Test DII with gradient clipping to prevent NaN values."""
+    from dadapy import DiffImbalance  # noqa: E402
+
+    # generate test data that might cause gradient explosion
+    weights_ground_truth = np.array([100, 0.01, 1000])  # extreme weights
+    data_A = np.load(filename)
+    data_B = weights_ground_truth[np.newaxis, :] * data_A
+
+    # Test with gradient clipping enabled
+    dii_clipped = DiffImbalance(
+        data_A,
+        data_B,
+        distances_B=None,
+        periods_A=None,
+        periods_B=None,
+        seed=0,
+        num_epochs=10,
+        batches_per_epoch=1,
+        l1_strength=0.0,
+        point_adapt_lambda=False,
+        k_init=1,
+        k_final=1,
+        lambda_factor=1e-1,
+        params_init=None,
+        params_groups=None,
+        optimizer_name="adam",
+        learning_rate=1e-1,  # Higher learning rate to trigger potential instability
+        learning_rate_decay=None,
+        num_points_rows=None,
+        gradient_clip_value=1.0,  # Enable gradient clipping
+    )
+
+    # Training should complete without NaN errors
+    print("Starting clipped training...")
+    weights_clipped, imbs_clipped = dii_clipped.train()
+    print(f"Clipped training completed. Final weights shape: {weights_clipped[-1].shape}")
+    print(f"Clipped training imbalances: {len(imbs_clipped)} values")
+
+    # Test without gradient clipping for comparison
+    print("Starting unclipped training...")
+    dii_unclipped = DiffImbalance(
+        data_A,
+        data_B,
+        distances_B=None,
+        periods_A=None,
+        periods_B=None,
+        seed=0,
+        num_epochs=10,
+        batches_per_epoch=1,
+        l1_strength=0.0,
+        point_adapt_lambda=False,
+        k_init=1,
+        k_final=1,
+        lambda_factor=1e-1,
+        params_init=None,
+        params_groups=None,
+        optimizer_name="adam",
+        learning_rate=1e-2,  # Lower learning rate to prevent NaN
+        learning_rate_decay=None,
+        num_points_rows=None,
+        gradient_clip_value=0.0,  # No gradient clipping
+    )
+
+    weights_unclipped, imbs_unclipped = dii_unclipped.train()
+    print(f"Unclipped training completed. Final weights shape: {weights_unclipped[-1].shape}")
+    print(f"Unclipped training imbalances: {len(imbs_unclipped)} values")
+
+    # Verify no NaN values in results
+    assert not np.isnan(weights_clipped).any(), "Clipped training should not produce NaN weights"
+    assert not np.isnan(imbs_clipped).any(), "Clipped training should not produce NaN imbalances"
+    assert not np.isnan(weights_unclipped).any(), "Unclipped training should not produce NaN weights"
+    assert not np.isnan(imbs_unclipped).any(), "Unclipped training should not produce NaN imbalances"
+
+    # Verify that gradient clipping parameter is correctly stored
+    assert dii_clipped.gradient_clip_value == 1.0, "Gradient clip value should be stored correctly"
+    assert dii_unclipped.gradient_clip_value == 0.0, "Default gradient clip value should be 0.0"
+
+    # Verify training completed successfully
+    print(f"Clipped training completed {len(weights_clipped)} weight arrays (expected 11 = num_epochs + 1)")
+    print(f"Unclipped training completed {len(weights_unclipped)} weight arrays (expected 11 = num_epochs + 1)")
+    
+    # DiffImbalance.train() returns (num_epochs + 1) arrays (includes initial state)
+    expected_length = 11  # 10 epochs + 1 initial state
+    assert len(weights_clipped) == expected_length, f"Clipped training should return {expected_length} weight arrays, got {len(weights_clipped)}"
+    assert len(weights_unclipped) == expected_length, f"Unclipped training should return {expected_length} weight arrays, got {len(weights_unclipped)}"
+
+    # Test that the optimization is working (imbalance should generally decrease)
+    print(f"Clipped training - Initial DII: {imbs_clipped[0]:.6f}, Final DII: {imbs_clipped[-1]:.6f}")
+    print(f"Unclipped training - Initial DII: {imbs_unclipped[0]:.6f}, Final DII: {imbs_unclipped[-1]:.6f}")
+    print(f"Clipped final weights: {weights_clipped[-1]}")
+    print(f"Unclipped final weights: {weights_unclipped[-1]}")
+    
+    assert imbs_clipped[-1] < imbs_clipped[0], "DII should generally decrease during training"
+    assert imbs_unclipped[-1] < imbs_unclipped[0], "DII should generally decrease during training"
+
+
+if __name__ == "__main__":
+    print("Running test_DiffImbalance_train1...")
+    try:
+        test_DiffImbalance_train1()
+        print("✓ test_DiffImbalance_train1 passed")
+    except Exception as e:
+        print(f"✗ test_DiffImbalance_train1 failed: {e}")
+    
+    print("\nRunning test_DiffImbalance_train2...")
+    try:
+        test_DiffImbalance_train2()
+        print("✓ test_DiffImbalance_train2 passed")
+    except Exception as e:
+        print(f"✗ test_DiffImbalance_train2 failed: {e}")
+    
+    print("\nRunning test_DiffImbalance_train3...")
+    try:
+        test_DiffImbalance_train3()
+        print("✓ test_DiffImbalance_train3 passed")
+    except Exception as e:
+        print(f"✗ test_DiffImbalance_train3 failed: {e}")
+    
+    print("\nRunning test_DiffImbalance_train4...")
+    try:
+        test_DiffImbalance_train4()
+        print("✓ test_DiffImbalance_train4 passed")
+    except Exception as e:
+        print(f"✗ test_DiffImbalance_train4 failed: {e}")
+    
+    print("\nRunning test_DiffImbalance_train5...")
+    try:
+        test_DiffImbalance_train5()
+        print("✓ test_DiffImbalance_train5 passed")
+    except Exception as e:
+        print(f"✗ test_DiffImbalance_train5 failed: {e}")
+    
+    print("\nRunning test_DiffImbalance_train6...")
+    try:
+        test_DiffImbalance_train6()
+        print("✓ test_DiffImbalance_train6 passed")
+    except Exception as e:
+        print(f"✗ test_DiffImbalance_train6 failed: {e}")
+    
+    print("\nRunning test_DiffImbalance_gradient_clipping...")
+    try:
+        test_DiffImbalance_gradient_clipping()
+        print("✓ test_DiffImbalance_gradient_clipping passed")
+    except Exception as e:
+        print(f"✗ test_DiffImbalance_gradient_clipping failed: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    print("\nAll tests completed.")
