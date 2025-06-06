@@ -130,7 +130,8 @@ class DiffImbalance:
             partitions.
         l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
         gradient_clip_value (float): maximum norm for gradient clipping. If 0, no clipping is
-            applied. Default is 0.
+            applied. Default is 0. This is useful when weights are sometimes automatically set to NaN and
+            there can be gradient explosions.
         point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
             in the DII (if False), or a different parameter for each point (if True). Default is True.
         k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
