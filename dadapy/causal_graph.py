@@ -73,6 +73,7 @@ class CausalGraph(DiffImbalance):
         self.errors_final = None
         self.adj_matrix = None
         self.community_dictionary = None
+        self.cov = None
 
     def _check_and_initialize_args(self, periods):
         """Checks input arguments to constructor of CausalGraph object."""
@@ -222,6 +223,9 @@ class CausalGraph(DiffImbalance):
         compute_error=False,
         ratio_rows_columns=1,
         discard_close_ind=None,
+        langevin_steps=0,
+        early_stopping=0,
+        return_covariance=False
     ):
         """Iteratively optimizes the DII from the full space in the present to a target space in the future.
 
@@ -292,6 +296,9 @@ class CausalGraph(DiffImbalance):
                 with stride discard_close_ind + 1. If compute_error is False, distances between each point i and points
                 within the time window [i-discard_close_ind, i+discard_close_ind] are discarded. Default is 0, for which
                 no distances between points close in the time are discarded.
+            langevin_steps (int): number of Langevin steps to perform after minimization.
+            early_stopping (float): the threshold for the early stopping criterion. Default is 0, which means that no early stopping is performed.
+            return_covariance (bool): whether to return the covariance matrix of the weights, obtained after Langevin dynamics
 
         Returns:
             weights_final (np.array(float)): array of shape (n_target_variables, n_time_lags, D) containing the
@@ -361,9 +368,18 @@ class CausalGraph(DiffImbalance):
             target_variables = np.arange(self.num_variables)
 
         # initialize output variables
-        imbs_training = np.zeros(
+        imbs_temp = np.zeros(
             (len(target_variables), len(time_lags), num_epochs + 1)
         )
+        imbs_training = np.zeros(
+            (len(target_variables), len(time_lags), num_epochs + langevin_steps + 1)
+        )
+        if return_covariance:
+            covariance_matrix = np.zeros(
+               (len(target_variables), len(time_lags), self.num_variables * embedding_dim_present, self.num_variables * embedding_dim_present)
+            )
+
+
         if embedding_dim_present == 1:
             weights_final = np.zeros(
                 (len(target_variables), len(time_lags), self.num_variables)
@@ -373,7 +389,7 @@ class CausalGraph(DiffImbalance):
                     (
                         len(target_variables),
                         len(time_lags),
-                        num_epochs + 1,
+                        num_epochs + langevin_steps + 1,
                         self.num_variables,
                     )
                 )
@@ -391,7 +407,7 @@ class CausalGraph(DiffImbalance):
                     (
                         len(target_variables),
                         len(time_lags),
-                        num_epochs + 1,
+                        num_epochs + langevin_steps + 1,
                         self.num_variables,
                         embedding_dim_present,
                     )
@@ -443,8 +459,9 @@ class CausalGraph(DiffImbalance):
                     learning_rate=learning_rate,
                     learning_rate_decay=learning_rate_decay,
                     num_points_rows=num_points_rows,
+                    early_stopping=early_stopping
                 )
-                weights_temp, imbs_training[i_var, j_tau] = dii.train(
+                weights_temp, imbs_temp[i_var, j_tau] = dii.train(
                     bar_label=f"target_var={target_var}, tau={tau}"
                 )
 
@@ -460,20 +477,27 @@ class CausalGraph(DiffImbalance):
                     if compute_error:
                         errors_final[i_var, j_tau] = dii.error_final
 
+                if langevin_steps!=0:
+                    weights_langevin, imbs_langevin = dii.langevin(weights_temp[-1], n_epochs=langevin_steps, batch_size=int(len(coords_present)/batches_per_epoch), noise=np.mean(weights_temp[-1])*1e-1)
+                    weights_temp = np.concatenate([weights_temp, weights_langevin[1:]], axis=0)
+                    imbs_training[i_var, j_tau] = np.concatenate([imbs_temp[i_var, j_tau], imbs_langevin[1:]])
+                    if return_covariance:
+                        covariance_matrix[i_var, j_tau] = np.cov(weights_langevin[::10] ,rowvar=False)/len(weights_langevin[::10])
+
                 # save weights
                 if embedding_dim_present == 1:
-                    weights_final[i_var, j_tau] = weights_temp[-1]
+                    weights_final[i_var, j_tau] = np.abs(np.mean(weights_temp[-langevin_steps-1:], axis=0))
                     if save_weights is True:
                         weights_training[i_var, j_tau] = weights_temp.reshape(
-                            (num_epochs + 1, self.num_variables)
+                            (num_epochs + 1 + langevin_steps, self.num_variables)
                         )
                 elif embedding_dim_present > 1:
-                    weights_final[i_var, j_tau] = weights_temp[-1].reshape(
+                    weights_final[i_var, j_tau] = np.abs(np.mean(weights_temp[-langevin_steps-1:], axis=0)).reshape(
                         (self.num_variables, embedding_dim_present)
                     )
                     if save_weights is True:
                         weights_training[i_var, j_tau] = weights_temp.reshape(
-                            (num_epochs + 1, self.num_variables, embedding_dim_present)
+                            (num_epochs + 1 + langevin_steps + langevin_steps, self.num_variables, embedding_dim_present)
                         )
 
         self.weights_final = weights_final
@@ -482,6 +506,10 @@ class CausalGraph(DiffImbalance):
             self.weights_training = weights_training
         self.imbs_final = imbs_final
         self.errors_final = errors_final
+
+        if return_covariance == True:
+            self.cov = covariance_matrix
+            return weights_final, imbs_training, imbs_final, errors_final, covariance_matrix
         return weights_final, imbs_training, imbs_final, errors_final
 
     def compute_adj_matrix(self, weights, threshold=1e-1):
