@@ -7,7 +7,7 @@ cimport numpy as np
 DTYPE = np.int64
 floatTYPE = np.float64
 
-ctypedef np.int_t DTYPE_t
+ctypedef np.int64_t DTYPE_t
 ctypedef np.float64_t floatTYPE_t
 
 # ----------------------------------------------------------------------------------------------

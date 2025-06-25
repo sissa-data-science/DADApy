@@ -487,7 +487,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             redundancy = np.sqrt(k1 * k2)
 
             tmpvec = (
-                np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
+                np.ones(self.nspar, dtype=np.float64) / self.Fij_var_array / redundancy
             )
         elif delta_F_inv_cov == "LSDI":
             # self.compute_deltaFs_inv_cross_covariance()
@@ -495,7 +495,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             tmpvec = self.inv_deltaFs_cov
 
         elif delta_F_inv_cov == "identity":
-            tmpvec = np.ones(self.nspar, dtype=np.float_)
+            tmpvec = np.ones(self.nspar, dtype=np.float64)
 
         else:
             raise ValueError(
@@ -513,14 +513,14 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         A = sparse.csr_matrix(
             (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
             shape=(self.N, self.N),
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
         # compute coefficients vector
         supp_deltaF = sparse.csr_matrix(
             (self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
             shape=(self.N, self.N),
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
         # make A symmetric
