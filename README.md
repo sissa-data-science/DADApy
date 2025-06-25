@@ -61,6 +61,9 @@ overlap_labels = data.return_label_overlap(labels)
   > Denti et al., *Scientific Reports* (2022)
 - I3D estimator (for both continuous and discrete spaces)
   > Macocco et al., *Physical Review Letters* (2023)
+- BID estimator
+  > Acevedo et al., *Nature Communications Physics* (2025)
+  
 - Density estimators
     - 
 - kNN estimator

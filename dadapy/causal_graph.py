@@ -786,51 +786,32 @@ class CausalGraph(DiffImbalance):
                 communities_orders[order_idx].append(
                     community_dictionary[community_idx, order_idx]
                 )
+
             # draw edges
             for community_effect_idx, order_idx in keys:
                 if order_idx > 0:
                     # for each putative effect community at order >=1...
                     for community_effect in communities_orders[order_idx]:
                         community_name_effect = community_names[tuple(community_effect)]
-                        # ...loop over all putative causal communities at order -1, -2, ...
-                        for previous_order in range(1, order_idx + 1):
-                            for community_cause in communities_orders[
-                                order_idx - previous_order
-                            ]:
-                                community_name_cause = community_names[
-                                    tuple(community_cause)
-                                ]
-                                effect_ancestors_names = set(
-                                    nx.ancestors(G, community_name_effect)
-                                )
-                                effect_ancestors_set = [
-                                    from_names_to_communities[effect_ancestor_name]
-                                    for effect_ancestor_name in effect_ancestors_names
-                                ]
-                                effect_ancestors_set = set().union(
-                                    *effect_ancestors_set
-                                )
-                                community_cause_not_already_ancestor = set(
-                                    community_cause
-                                ).difference(effect_ancestors_set)
-                                # ...loop over all variables in each putative causal community,
-                                # avoiding communities that are already ancestors...
-                                for (
-                                    variable_cause
-                                ) in community_cause_not_already_ancestor:
-                                    # ...and draw an edge if at least a link is found
-                                    if adj_matrix[
-                                        variable_cause, community_effect
-                                    ].any():
-                                        G.add_edges_from(
-                                            [
-                                                (
-                                                    str(community_name_cause),
-                                                    str(community_name_effect),
-                                                )
-                                            ]
-                                        )
-                                        break
+                        # ...loop over all putative causal communities at order -1
+                        previous_order = order_idx - 1
+                        for community_cause in communities_orders[previous_order]:
+                            community_name_cause = community_names[
+                                tuple(community_cause)
+                            ]
+                            # ...loop over all variables in each putative causal community
+                            for variable_cause in community_cause:
+                                # ...and draw an edge if at least a link is found
+                                if adj_matrix[variable_cause, community_effect].any():
+                                    G.add_edges_from(
+                                        [
+                                            (
+                                                str(community_name_cause),
+                                                str(community_name_effect),
+                                            )
+                                        ]
+                                    )
+                                    break
             # show graph
             options = {
                 "node_color": "gray",

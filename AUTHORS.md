@@ -14,6 +14,7 @@
 
 - [Alessandro Laio](https://people.sissa.it/~laio/)
 - [Claudio Zeni](https://github.com/ClaudioZeni)
+- [Debarshi Banerjee](https://github.com/debarshibanerjee)
 - [Felix Wodaczek](https://github.com/FelixWodaczek)
 - [Marco Favorito](https://github.com/marcofavorito)
 - [Maria d'Errico](https://github.com/mariaderrico)

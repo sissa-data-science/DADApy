@@ -1,6 +1,6 @@
 [project]
 name = "dadapy"
-version = "0.3.2"
+version = "0.3.3"
 description = "Distance-based Analysis of DAta-manifolds in python"
 authors = [{ name = "DADApy author"}]
 license = {file = "LICENSE"}
