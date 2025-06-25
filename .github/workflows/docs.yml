@@ -6,6 +6,7 @@ on:
       - opensource
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test-notebooks-examples:
