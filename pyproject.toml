@@ -10,9 +10,9 @@ requires-python = ">=3.8"
 dependencies = ["numpy", "scipy", "scikit-learn", "matplotlib", 
                 "seaborn", "tqdm", "networkx",
                 'jax; python_version < "3.9"',
-                'jax==0.4.34; python_version >= "3.9"',
+                'jax==0.4.30; python_version >= "3.9"',
                 'jaxlib; python_version < "3.9"',
-                'jaxlib==0.4.34; python_version >= "3.9"',
+                'jaxlib==0.4.30; python_version >= "3.9"',
                 'flax==0.8.5; python_version >= "3.9"']
 
 [project.urls]

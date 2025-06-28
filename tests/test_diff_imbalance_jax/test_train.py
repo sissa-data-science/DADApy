@@ -167,8 +167,8 @@ def test_DiffImbalance_train3():
 
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
-    assert imb_final == pytest.approx(expected_imb_final, abs=0.002)
-    assert error_final == pytest.approx(expected_error_final, abs=0.002)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
+    assert error_final == pytest.approx(expected_error_final, abs=0.001)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
