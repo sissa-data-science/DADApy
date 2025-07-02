@@ -129,6 +129,9 @@ class DiffImbalance:
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
         l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
+        gradient_clip_value (float): maximum norm for gradient clipping. If 0, no clipping is
+            applied. Default is 0. This is useful when weights are sometimes automatically set to NaN and
+            there can be gradient explosions.
         point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
             in the DII (if False), or a different parameter for each point (if True). Default is True.
         k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
@@ -157,7 +160,6 @@ class DiffImbalance:
         num_points_rows (int): number of points sampled from the rows of rank and distance matrices. In case of large
             datasets, choosing num_points_rows < n_points can significantly speed up the training. The default is
             None, for which num_points_rows == n_points.
-        early_stopping (float): the threshold for the early stopping criterion. Default is 0, which means that no early stopping is performed.
     """
 
     def __init__(
@@ -182,7 +184,6 @@ class DiffImbalance:
         learning_rate_decay=None,
         num_points_rows=None,
         gradient_clip_value=0.0,
-        early_stopping=0,
     ):
         """Initialise the DiffImbalance class."""
         self.nfeatures_A = data_A.shape[1]
@@ -261,6 +262,7 @@ class DiffImbalance:
         self.num_epochs = num_epochs
         self.batches_per_epoch = batches_per_epoch
         self.l1_strength = l1_strength
+        self.gradient_clip_value = gradient_clip_value
         self.point_adapt_lambda = point_adapt_lambda
         self.k_init = k_init
         self.k_final = k_final
@@ -283,9 +285,7 @@ class DiffImbalance:
         self.num_points_rows = num_points_rows
         self.mask = None
 
-        self.early_stopping = early_stopping
         self.state = None
-        self.state_langevin = None
         self._distance_A = _compute_dist2_matrix_scaling  # TODO: assign other functions if other distances d_A are chosen
 
         # generic checks and warnings
@@ -853,7 +853,14 @@ class DiffImbalance:
             raise ValueError(
                 f'Unknown learning rate decay schedule "{self.learning_rate_decay}". Choose among None, "cos" and "exp".'
             )
-        optimizer = opt_class(self.lr_schedule)
+        # Set up optimizer with optional gradient clipping
+        if self.gradient_clip_value > 0:
+            optimizer = optax.chain(
+                optax.clip_by_global_norm(self.gradient_clip_value),
+                opt_class(self.lr_schedule),
+            )
+        else:
+            optimizer = opt_class(self.lr_schedule)
 
         # Initialize training state
         self.state = train_state.TrainState.create(
@@ -905,7 +912,7 @@ class DiffImbalance:
         #    batch_B_ranks=self.ranks_B[batch_indices],
         #    step=0,
         # )
-        params_training = params_training.at[0].set(self.params_init)
+        params_training = params_training.at[0].set(jnp.abs(self.params_init))
         imbs_training = imbs_training.at[0].set(imb_start)
 
         # Train over different epochs
@@ -915,15 +922,8 @@ class DiffImbalance:
         for epoch_idx in tqdm(range(1, self.num_epochs + 1), desc=desc):
             self.key, subkey = jax.random.split(self.key, num=2)
             params_now, imb_now = self._train_epoch(subkey)
-            params_training = params_training.at[epoch_idx].set(params_now)
+            params_training = params_training.at[epoch_idx].set(jnp.abs(params_now))
             imbs_training = imbs_training.at[epoch_idx].set(imb_now)
-            if self.early_stopping > 0:
-                if jnp.max(jnp.abs(params_training[epoch_idx]-params_training[epoch_idx-1])) < self.early_stopping:
-                    print('Early stopping criteria reached')
-                    params_training = params_training.at[epoch_idx:].set(params_now)
-                    imbs_training = imbs_training.at[epoch_idx:].set(imb_now)
-                    break
-
         self.params_final = params_training[-1]
         self.params_training = params_training
         self.imbs_training = imbs_training
@@ -1167,10 +1167,20 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 num_points_rows=self.num_points_rows,
+                gradient_clip_value=self.gradient_clip_value,
             )
 
             # Set initial parameters and train
-            _, _ = dii_copy.train()
+            try:
+                _, _ = dii_copy.train()
+            except AssertionError as e:
+                print(f"Training failed for feature [{feature}]: {str(e)}")
+                print(f"Skipping feature [{feature}] and continuing...")
+                single_feature_diis.append(
+                    float("inf")
+                )  # Use infinity as a large penalty
+                single_feature_errors.append(None)
+                continue
 
             # Compute DII on the full dataset
             if compute_error:
@@ -1197,9 +1207,18 @@ class DiffImbalance:
         # Convert to numpy arrays for easier manipulation
         single_feature_diis = np.array(single_feature_diis)
 
-        # Select the best n_best single features
-        n_best_actual = min(n_best, n_features)
-        selected_indices = np.argsort(single_feature_diis)[:n_best_actual]
+        # Check if we have any valid features (not infinity)
+        valid_features = np.isfinite(single_feature_diis)
+        if not np.any(valid_features):
+            print("ERROR: All single features failed during training!")
+            return [], [], [], []
+
+        # Select the best n_best single features (only from valid ones)
+        valid_indices = np.where(valid_features)[0]
+        valid_diis = single_feature_diis[valid_indices]
+        n_best_actual = min(n_best, len(valid_indices))
+        best_valid_indices = np.argsort(valid_diis)[:n_best_actual]
+        selected_indices = valid_indices[best_valid_indices]
 
         # Convert indices to lists for consistent processing
         selected_features = [[idx] for idx in selected_indices]
@@ -1282,10 +1301,24 @@ class DiffImbalance:
                             learning_rate=self.learning_rate,
                             learning_rate_decay=self.learning_rate_decay,
                             num_points_rows=self.num_points_rows,
+                            gradient_clip_value=self.gradient_clip_value,
                         )
 
                         # Set initial parameters and train
-                        _, _ = dii_copy.train()
+                        try:
+                            _, _ = dii_copy.train()
+                        except AssertionError as e:
+                            print(
+                                f"Training failed for feature set {candidate_set}: {str(e)}"
+                            )
+                            print(
+                                f"Skipping feature set {candidate_set} and continuing..."
+                            )
+                            candidate_diis.append(
+                                float("inf")
+                            )  # Use infinity as a large penalty
+                            candidate_errors.append(None)
+                            continue
 
                         # Compute DII on the full dataset
                         if compute_error:
@@ -1317,9 +1350,18 @@ class DiffImbalance:
             if not candidate_features:  # No more features to add
                 break
 
-            # Select the best n_best candidates for the next iteration
-            n_best_actual = min(n_best, len(candidate_features))
-            best_indices = np.argsort(candidate_diis)[:n_best_actual]
+            # Check if we have any valid candidates (not infinity)
+            valid_candidates = np.isfinite(candidate_diis)
+            if not np.any(valid_candidates):
+                print("ERROR: All candidate feature sets failed during training!")
+                break
+
+            # Select the best n_best candidates for the next iteration (only from valid ones)
+            valid_indices = np.where(valid_candidates)[0]
+            valid_diis = candidate_diis[valid_indices]
+            n_best_actual = min(n_best, len(valid_indices))
+            best_valid_indices = np.argsort(valid_diis)[:n_best_actual]
+            best_indices = valid_indices[best_valid_indices]
             selected_features = [candidate_features[i] for i in best_indices]
 
             # Print the best feature set information
@@ -1359,18 +1401,25 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 num_points_rows=self.num_points_rows,
+                gradient_clip_value=self.gradient_clip_value,
             )
 
             # Set initial parameters and train
-            _, _ = dii_copy.train()
+            try:
+                _, _ = dii_copy.train()
+                # Print and store optimal weights
+                print(
+                    f"\nOptimal weights for feature set {candidate_features[best_idx]}: {dii_copy.params_final}\n"
+                )
+                # Save optimal weights
+                best_weights = np.array(dii_copy.params_final)
+            except AssertionError as e:
+                print(
+                    f"Training failed for best feature set {candidate_features[best_idx]}: {str(e)}"
+                )
+                print(f"Using zero weights for this iteration...")
+                best_weights = np.zeros(n_features)
 
-            # Print and store optimal weights
-            print(
-                f"\nOptimal weights for feature set {candidate_features[best_idx]}: {dii_copy.params_final}\n"
-            )
-
-            # Save optimal weights
-            best_weights = np.array(dii_copy.params_final)
             best_weights_list.append(best_weights)
 
             # Print the best n-tuple information
@@ -1531,13 +1580,24 @@ class DiffImbalance:
                         learning_rate=self.learning_rate,
                         learning_rate_decay=self.learning_rate_decay,
                         num_points_rows=self.num_points_rows,
+                        gradient_clip_value=self.gradient_clip_value,
                     )
 
                     # Set initial parameters and train
-                    _, _ = dii_copy.train()
-
-                    # Store the trained weights
-                    trained_weights = dii_copy.params_final
+                    try:
+                        _, _ = dii_copy.train()
+                        # Store the trained weights
+                        trained_weights = dii_copy.params_final
+                    except AssertionError as e:
+                        print(
+                            f"Training failed for feature set {candidate_set}: {str(e)}"
+                        )
+                        print(f"Skipping feature set {candidate_set} and continuing...")
+                        candidate_diis.append(
+                            float("inf")
+                        )  # Use infinity as a large penalty
+                        candidate_errors.append(None)
+                        continue
 
                     # Use return_final_dii to compute DII on the full dataset
                     dii_copy.params_final = trained_weights
@@ -1572,9 +1632,18 @@ class DiffImbalance:
             # Convert to numpy arrays for easier manipulation
             candidate_diis = np.array(candidate_diis)
 
-            # Select the best n_best candidates
-            n_best_actual = min(n_best, len(candidate_features))
-            best_indices = np.argsort(candidate_diis)[:n_best_actual]
+            # Check if we have any valid candidates (not infinity)
+            valid_candidates = np.isfinite(candidate_diis)
+            if not np.any(valid_candidates):
+                print("ERROR: All candidate feature sets failed during training!")
+                break
+
+            # Select the best n_best candidates (only from valid ones)
+            valid_indices = np.where(valid_candidates)[0]
+            valid_diis = candidate_diis[valid_indices]
+            n_best_actual = min(n_best, len(valid_indices))
+            best_valid_indices = np.argsort(valid_diis)[:n_best_actual]
+            best_indices = valid_indices[best_valid_indices]
 
             # Update current features for the next iteration
             current_features = [candidate_features[i] for i in best_indices]
@@ -1608,13 +1677,21 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 num_points_rows=self.num_points_rows,
+                gradient_clip_value=self.gradient_clip_value,
             )
 
             # Set initial parameters and train
-            _, _ = dii_copy.train()
+            try:
+                _, _ = dii_copy.train()
+                # Save optimal weights
+                best_weights = dii_copy.params_final
+            except AssertionError as e:
+                print(
+                    f"Training failed for best feature set {best_feature_set}: {str(e)}"
+                )
+                print(f"Using zero weights for this iteration...")
+                best_weights = np.zeros(n_features)
 
-            # Save optimal weights
-            best_weights = dii_copy.params_final
             best_weights_list.append(best_weights)
 
             # Store results
@@ -1636,69 +1713,3 @@ class DiffImbalance:
             print("------------------------------------------------")
 
         return feature_sets, diis, errors, best_weights_list
-    
-    def langevin(self, initial_params, n_epochs=1000, batch_size=100, noise=0):
-        """
-        We consider Langevin dynamics as a method to estimate an error of the parameters 
-        This function overwrites self.batches_per_epoch
-        """
-        norm_init = jnp.sqrt((initial_params**2).sum())
-        
-        # First build the state and allocate memory for the imbs and params
-        opt_class = optax.sgd
-        optimizer = opt_class(optax.constant_schedule(value=self.learning_rate))
-
-        self.state_langevin = train_state.TrainState.create(
-            apply_fn=self._distance_A,
-            params=initial_params,
-            tx=optimizer,
-        )
-
-        params_langevin = jnp.empty(shape=(n_epochs + 1, self.nparams))
-        imbs_langevin = jnp.empty(shape=(n_epochs + 1,))
-        batch_indices = jnp.arange(batch_size)
-
-        imb_start = self._compute_training_diff_imbalance(
-            params=initial_params,
-            batch_A_rows=self.data_A_rows[batch_indices],
-            batch_A_columns=self.data_A_columns[batch_indices],
-            batch_B_ranks=self.ranks_B[batch_indices][:, batch_indices]
-            .argsort(axis=1)
-            .argsort(axis=1),
-            step=0
-        )
-
-        params_langevin= params_langevin.at[0].set(initial_params)
-        imbs_langevin = imbs_langevin.at[0].set(imb_start)
-
-        for epoch_idx in tqdm(range(1, n_epochs + 1), desc="Langevin epochs"):
-            if noise==0:
-                self.key, subkey = jax.random.split(self.key, num=2)
-            else:
-                self.key, subkey, noise_key = jax.random.split(self.key, num=3)
-                noise_vector = jax.random.normal(noise_key, shape=initial_params.shape) * noise
-            batch_indices = jax.random.choice(
-                subkey, jnp.arange(self.nrows), shape=(batch_size,), replace=False
-            )
-
-            self.state_langevin, imb_now = self._train_step(
-                    self.state_langevin,
-                    self.data_A_rows[batch_indices],
-                    self.data_A_columns[batch_indices],
-                    self.ranks_B[batch_indices][:, batch_indices]
-                    .argsort(axis=1)
-                    .argsort(axis=1),
-                )
-            
-            self.state_langevin = self.state_langevin.apply_gradients(grads=noise_vector) if noise > 0 else self.state_langevin
-            
-            norm_now = jnp.sqrt((self.state_langevin.params**2).sum())
-            # Scale weight vector to original norm
-            self.state_langevin = self.state_langevin.replace(params=norm_init / norm_now * self.state_langevin.params)
-
-            #params_now, imb_now = self._train_epoch(subkey)
-            params_langevin = params_langevin.at[epoch_idx].set(self.state_langevin.params)
-            imbs_langevin = imbs_langevin.at[epoch_idx].set(imb_now)
-
-        return np.array(params_langevin), np.array(imbs_langevin)
-        
