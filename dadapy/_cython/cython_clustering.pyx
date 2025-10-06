@@ -411,8 +411,9 @@ def _assign_cluster_ADP(np.ndarray [floatTYPE_t, ndim = 1] g_inter,
         
     cdef DTYPE_t idx_highest_density_neigh = 0
     for i in range(Nele):
-        # If no data with higher density is found in the neighbourhood, predict the cluster of the closest data point
-        highest_density_neigh = 0
+        # If no data with higher density is found in the neighbourhood
+        # predict the cluster of the closest data point
+        idx_highest_density_neigh = 0
         for j in range(Maxk):
             if(g[cross_dist_indices[i][j]] > g_inter[i]):
                 idx_highest_density_neigh = j
