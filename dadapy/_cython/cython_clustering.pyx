@@ -407,9 +407,9 @@ def _assign_cluster_ADP(floatTYPE_t[:] g_inter,
                          DTYPE_t Ncluster,
                          DTYPE_t Maxk): 
 
-    cdef DYTPE_t i, j, idx_highest_density_neigh
+    cdef DTYPE_t i, j, idx_highest_density_neigh
     cdef np.ndarray[DTYPE_t, ndim=2] cluster_probability_np = np.zeros((Nele, Ncluster), dtype=np.int64)
-    cdef DYTYPE_t[:, :] cluster_probability = cluster_probability_np # create view for efficiency
+    cdef DTYPE_t[:, :] cluster_probability = cluster_probability_np # create view for efficiency
 
     for i in range(Nele):
         # If no data with higher density is found in the neighbourhood
