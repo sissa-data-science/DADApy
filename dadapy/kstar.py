@@ -43,13 +43,20 @@ class KStar(IdEstimation):
     """
 
     def __init__(
-        self, coordinates=None, distances=None, maxk=None, verbose=False, n_jobs=cores
+        self,
+        coordinates=None,
+        distances=None,
+        maxk=None,
+        period=None,
+        verbose=False,
+        n_jobs=cores
     ):
         """Initialise the KStar class."""
         super().__init__(
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
+            period=period,
             verbose=verbose,
             n_jobs=n_jobs,
         )
