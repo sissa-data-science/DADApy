@@ -330,8 +330,6 @@ class Clustering(DensityEstimation):
             )
 
         log_den -= np.log(self.N)
-        self.pred_log_den = log_den
-        self.pred_log_den_err = log_den_err
 
         if self.verb:
             print("{0:0.2f} seconds to compute density.".format(time.time() - sec))
