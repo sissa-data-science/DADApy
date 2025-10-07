@@ -29,13 +29,15 @@ import scipy as sp
 from dadapy._cython import cython_clustering as cf
 from dadapy._cython import cython_clustering_v2 as cf2
 from dadapy._cython import cython_density as cd
-
-from dadapy.density_estimation import DensityEstimation
 from dadapy._utils.density_estimation import (
     return_not_normalised_density_kstarNN,
     return_not_normalised_density_PAk,
 )
-from dadapy._utils.utils import compute_cross_nn_distances, from_all_distances_to_nndistances
+from dadapy._utils.utils import (
+    compute_cross_nn_distances,
+    from_all_distances_to_nndistances,
+)
+from dadapy.density_estimation import DensityEstimation
 
 cores = multiprocessing.cpu_count()
 
@@ -259,7 +261,16 @@ class Clustering(DensityEstimation):
 
         return self.cluster_assignment
 
-    def predict_cluster_ADP(self, X_new, maxk, distances=None, Dthr=23.92812698, density_est="PAk", halo=False, n_jobs=None):
+    def predict_cluster_ADP(
+        self,
+        X_new,
+        maxk,
+        distances=None,
+        Dthr=23.92812698,
+        density_est="PAk",
+        halo=False,
+        n_jobs=None,
+    ):
         """Compute clustering for points outside the initialization set using PAk (or kstarNN) interpolator and DPA clustering algorithm.
 
         Args:
@@ -275,17 +286,21 @@ class Clustering(DensityEstimation):
             cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new
         """
         if distances is not None:
-            cross_distances, cross_dist_indices = from_all_distances_to_nndistances(distances, maxk)
+            cross_distances, cross_dist_indices = from_all_distances_to_nndistances(
+                distances, maxk
+            )
         else:
             if self.verb:
                 print("Estimation of the distances started")
             sec = time.time()
-            sec2=sec
+            sec2 = sec
             cross_distances, cross_dist_indices = compute_cross_nn_distances(
                 X_new, self.X, maxk, self.metric, self.period, n_jobs
             )
             if self.verb:
-                print("{0:0.2f} seconds to compute distances.".format(time.time() - sec))
+                print(
+                    "{0:0.2f} seconds to compute distances.".format(time.time() - sec)
+                )
 
         if self.verb:
             print("Estimation of kstar started")
@@ -307,10 +322,7 @@ class Clustering(DensityEstimation):
         sec = time.time()
         if density_est == "PAk":
             log_den, log_den_err, dc = return_not_normalised_density_PAk(
-                cross_distances,
-                self.intrinsic_dim,
-                kstar,
-                interpolation=True
+                cross_distances, self.intrinsic_dim, kstar, interpolation=True
             )
         elif density_est == "kstarNN":
             log_den, log_den_err, dc = return_not_normalised_density_kstarNN(
@@ -328,17 +340,17 @@ class Clustering(DensityEstimation):
             print("Prediction of cluster labels started")
 
         num_clusters = self.N_clusters + 1 if halo else self.N_clusters
-        
+
         cluster_probability = cf._assign_cluster_ADP(
-            log_den - log_den_err, 
-            self.log_den
-            - self.log_den_err,
+            log_den - log_den_err,
+            self.log_den - self.log_den_err,
             self.cluster_assignment,
             cross_dist_indices,
             len(X_new),
             num_clusters,
-            maxk)
-        
+            maxk,
+        )
+
         cluster_prediction = np.argmax(cluster_probability, axis=-1)
         if halo:
             cluster_prediction[cluster_prediction == self.N_clusters] = -1
@@ -1047,9 +1059,9 @@ class Clustering(DensityEstimation):
                             current_saddle = saddle_density[i, 0]
 
             if check == 1:
-                saddle_indices[
-                    to_remove, -1
-                ] = 0  # the couple center1, center2 is removed
+                saddle_indices[to_remove, -1] = (
+                    0  # the couple center1, center2 is removed
+                )
                 margin1 = max_a1 / max_sum_err1
                 margin2 = max_a2 / max_sum_err2
 
