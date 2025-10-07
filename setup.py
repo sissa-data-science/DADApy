@@ -21,7 +21,7 @@ ext_modules += [
         "dadapy._cython.cython_clustering",
         sources=["dadapy/_cython/cython_clustering.c"],
         include_dirs=[get_numpy_include()],
-        #define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         define_macros=[("NPY_NO_DEPRECATED_API",)],
     )
 ]
