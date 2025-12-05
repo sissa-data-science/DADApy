@@ -87,11 +87,11 @@ def compute_cross_nn_distances(
 ):
     """Compute distances, up to neighbour maxk, between points of X_new and points of X.
 
-    The element distances[i,j] represents the distance between point i in dataset X and its j-th neighbour in dataset
-    X_new, whose index is dist_indices[i,j]
+    The element distances[i,j] represents the distance between point i in dataset X_new and its j-th neighbour in dataset
+    X, whose index is dist_indices[i,j]
 
     Args:
-        X_new (np.array(float)): dataset from which distances are computed
+        X_new (np.array(float)): dataset (N points) from which distances are computed
         X (np.array(float)): starting dataset of points, from which distances are computed
         maxk (int): number of neighbours to save
         metric (str): metric used to compute the distances
