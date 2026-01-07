@@ -624,6 +624,7 @@ class CausalGraph(DiffImbalance):
         adj_matrix,
         type="community",
         savefig_name=None,
+        variable_names=None,
         **kwargs,
     ):
         """Shows a visual representation of the dynamical communities on a graph.
@@ -641,6 +642,8 @@ class CausalGraph(DiffImbalance):
                 with different colors in a graph with all the original D variables in the time series.
             savefig_name (str): path at which the picture of the final graph is saved in pdf format. If
                 None (default), the figure is not saved.
+            variable_names (np.array(str)): array of shape (D,) containing the names of the D variables.
+                Used only if type="community", to show the variable names in the printout of each community.
             **kwargs: customizable arguments used by the networkx library. If type="all-variable", these
                 include: 'scale','k1' and 'k2', 'cmap', 'width' and 'arrowsize'. If type="community", the
                 possible arguments are: 'node_color', 'node_size', 'width', 'arrowstyle', 'arrowsize'.
@@ -776,9 +779,14 @@ class CausalGraph(DiffImbalance):
             for community, key in zip(community_names, keys):
                 community_name = community_names[tuple(community)]
                 G.add_node(str(community_name))
-                print(
-                    f"Community {community_name} ({len(community)} variables, level {key[1]}): {community}"
-                )
+                if variable_names is None:
+                    print(
+                        f"Community {community_name} ({len(community)} variables, level {key[1]}): {community}"
+                    )
+                else:
+                    print(
+                        f"Community {community_name} ({len(community)} variables, level {key[1]}): {variable_names[list(community)]}"
+                    )
 
             # dictionary with keys: (order_idx) and values: list of communities at that order (list of list)
             communities_orders = {key[1]: [] for key in keys}
