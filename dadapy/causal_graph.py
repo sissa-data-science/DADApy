@@ -789,29 +789,33 @@ class CausalGraph(DiffImbalance):
 
             # draw edges
             for community_effect_idx, order_idx in keys:
-                if order_idx > 0:
-                    # for each putative effect community at order >=1...
-                    for community_effect in communities_orders[order_idx]:
-                        community_name_effect = community_names[tuple(community_effect)]
-                        # ...loop over all putative causal communities at order -1
-                        previous_order = order_idx - 1
+                if order_idx == 0:
+                    continue
+                # for each putative effect community at order >=1...
+                for community_effect in communities_orders[order_idx]:
+                    community_name_effect = community_names[tuple(community_effect)]
+                    # ...loop over all putative causal communities at previous orders
+                    for previous_order in range(0, order_idx):
                         for community_cause in communities_orders[previous_order]:
                             community_name_cause = community_names[
                                 tuple(community_cause)
                             ]
-                            # ...loop over all variables in each putative causal community
-                            for variable_cause in community_cause:
-                                # ...and draw an edge if at least a link is found
-                                if adj_matrix[variable_cause, community_effect].any():
-                                    G.add_edges_from(
-                                        [
-                                            (
-                                                str(community_name_cause),
-                                                str(community_name_effect),
-                                            )
-                                        ]
-                                    )
-                                    break
+                            # ...and draw an edge if at least a link is found
+                            if adj_matrix[
+                                np.ix_(community_cause, community_effect)
+                            ].any():
+                                G.add_edges_from(
+                                    [
+                                        (
+                                            str(community_name_cause),
+                                            str(community_name_effect),
+                                        )
+                                    ]
+                                )
+
+            # delete edges in presence of indirect paths
+            G = nx.transitive_reduction(G)
+
             # show graph
             options = {
                 "node_color": "gray",
