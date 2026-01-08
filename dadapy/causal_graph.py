@@ -20,6 +20,7 @@ The code can be runned on gpu using the command
     jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
 """
 
+import itertools
 import string
 import warnings
 
@@ -29,6 +30,14 @@ import numpy as np
 from tqdm.auto import tqdm
 
 from dadapy import DiffImbalance
+
+
+def symbol_generator():
+    """Generates the alphanumeric strings used to label the dynamical communities."""
+    yield from string.ascii_uppercase
+    for i in itertools.count(1):
+        for c in string.ascii_uppercase:
+            yield f"{c}{i}"
 
 
 class CausalGraph(DiffImbalance):
@@ -66,6 +75,8 @@ class CausalGraph(DiffImbalance):
         self.standardize = standardize
         self.num_variables, self.periods = self._check_and_initialize_args(periods)
         self.seed = seed
+
+        # outputs
         self.imbs_training = None
         self.weights_training = None
         self.weights_final = None
@@ -766,7 +777,9 @@ class CausalGraph(DiffImbalance):
             G = nx.DiGraph()
             keys = list(community_dictionary.keys())
             values = list(community_dictionary.values())
-            alphabet_string = list(string.ascii_uppercase)
+            alphabet_string = list(
+                itertools.islice(symbol_generator(), adj_matrix.shape[0])
+            )
             community_names = {
                 tuple(community): alphabet_string[i]
                 for i, community in enumerate(values)
