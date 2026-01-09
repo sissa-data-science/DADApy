@@ -183,7 +183,7 @@ class NeighGraph(KStar):
         if self.nind_list is None or self.nind_iptr is None:
             self.compute_neigh_indices()
 
-        dgraph = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+        dgraph = sparse.lil_matrix((self.N, self.N), dtype=np.float64)
 
         for ind_spar, indices in enumerate(self.nind_list):
             dgraph[indices[0], indices[1]] = self.neigh_dists[ind_spar]
@@ -334,7 +334,7 @@ class NeighGraph(KStar):
                 self.compute_neigh_similarity_index()
 
         # fill a sparse matrix from the neigh_similarity_index array
-        nsi_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+        nsi_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float64)
         for nspar, indices in enumerate(self.nind_list):
             i = indices[0]
             j = indices[1]

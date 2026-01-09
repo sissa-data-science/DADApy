@@ -7,7 +7,7 @@ license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.8"
 
-dependencies = ["numpy<2.0", "scipy", "scikit-learn", "matplotlib", 
+dependencies = ["numpy", "scipy", "scikit-learn", "matplotlib", 
                 "seaborn", "tqdm", "networkx",
                 'jax; python_version < "3.9"',
                 'jax==0.4.30; python_version >= "3.9"',
@@ -24,7 +24,7 @@ repository = "https://github.com/sissa-data-science/DADApy"
 dev = ["tox", "black", "isort", "pytest"]
 
 [build-system]
-requires = ["setuptools>=61", "numpy<2.0"]
+requires = ["setuptools>=61", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [tool.tox]
