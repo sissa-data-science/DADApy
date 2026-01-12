@@ -435,7 +435,8 @@ class DiffImbalance:
                     self.validation['ranks_B'] = jnp.where(self.validation["mask"], self.validation['ranks_B'], self.validation['ranks_B'].shape[1]+1)
                     self.validation['ranks_B'] = self.validation['ranks_B'].argsort(axis=1).argsort(axis=1)
                     self.validation['ranks_B'] = jnp.where(self.validation["mask"], self.validation['ranks_B'], 0)
-        
+        else:
+            self.validation = None
         if Theiler_window is not None:
             #assert independent_col_row==False, "Theiler_window can not be used with independent columns and rows."
             indices = jnp.abs(indices_rows[:, jnp.newaxis] - indices_columns[jnp.newaxis, :]) 
@@ -815,9 +816,12 @@ class DiffImbalance:
             values_average = (
                 2.0 / (max_rank + 1) * jnp.sum(batch_B_ranks * c_matrix, axis=1)
             )
-
-            closest_points = jnp.argpartition(dist2_matrix_A, k_predict)[:,:k_predict]
-
+            
+            if mask is not None:
+                closest_points = jnp.argpartition(jnp.where(mask, dist2_matrix_A, jnp.inf), k_predict)[:,:k_predict]
+            else:
+                closest_points = jnp.argpartition(dist2_matrix_A, k_predict)[:,:k_predict]
+            
             predicted_values = values_average[closest_points].mean(axis=1)
             
             return values_average, predicted_values # we return the true "ranks_B" and average "rank" of the closest points in A
@@ -1179,12 +1183,12 @@ class DiffImbalance:
             all_batch_indices = jnp.split(
                 jax.random.permutation(key, self.nrows), jnp.arange(self.nrows // self.batches_per_epoch, self.nrows - self.nrows // self.batches_per_epoch+1, self.nrows // self.batches_per_epoch)
             )
-
+            imb_all = jnp.zeros(self.batches_per_epoch)
             
             
             if self.fixed_batch_columns is not None: #Alternative method for mini-batch GD (only subsample rows)
 
-                for batch_indices in all_batch_indices:
+                for t, batch_indices in enumerate(all_batch_indices):
                     #ordered_column_indices = np.ravel(
                     #    np.delete(all_batch_indices, i_batch, axis=0)
                     #)
@@ -1213,8 +1217,10 @@ class DiffImbalance:
                             self.ranks_B[batch_indices][:, :],
                             mask=self.mask[batch_indices][:, :] if self.mask is not None else None,
                         )
+                    
+                    imb_all = imb_all.at[t].set(imb)
             else: # mini-batch GD (subsample both rows and columns)
-                for batch_indices in all_batch_indices:
+                for t, batch_indices in enumerate(all_batch_indices):
                     if self.Theiler_window is not None:    
                         self.state, imb = self._train_step(
                             self.state,
@@ -1233,6 +1239,8 @@ class DiffImbalance:
                             .argsort(axis=1),
                             mask=self.mask[batch_indices][:,batch_indices] if self.mask is not None else None,
                         )
+                    imb_all = imb_all.at[t].set(imb)
+            return self.state.params, imb_all
 
         # -----------------------------BATCH GD----------------------------
         else:
@@ -1342,7 +1350,7 @@ class DiffImbalance:
             val_error_training = val_error_training.at[0].set(val_error)
         # Construct output arrays and initialize them using inital weights
         params_training = jnp.empty(shape=(self.num_epochs + 1, self.nparams))
-        imbs_training = jnp.empty(shape=(self.num_epochs + 1,))
+        imbs_training = jnp.empty(shape=(self.num_epochs * self.batches_per_epoch + 1,))
         batch_indices = jnp.arange(self.nrows // self.batches_per_epoch)
 
         # DON'T DELETE: Alternative method for mini-batching (only sample rows)
@@ -1388,7 +1396,7 @@ class DiffImbalance:
             self.key, subkey = jax.random.split(self.key, num=2)
             params_now, imb_now = self._train_epoch(subkey)
             params_training = params_training.at[epoch_idx].set(params_now)
-            imbs_training = imbs_training.at[epoch_idx].set(imb_now)
+            imbs_training = imbs_training.at[1+(epoch_idx-1)*self.batches_per_epoch:epoch_idx*self.batches_per_epoch+1].set(imb_now)
 
             if self.validation is not None:
                     val_imb, val_error = self._compute_final_diff_imbalance_and_error(
@@ -1469,7 +1477,7 @@ class DiffImbalance:
                     if self._es_state["wait"] >= self._es_state["patience"]:
                         print('Early stopping criteria reached')
                         params_training = params_training.at[epoch_idx:].set(params_training[self._es_state["best_epoch"]])
-                        imbs_training = imbs_training.at[epoch_idx:].set(imbs_training[self._es_state["best_epoch"]])
+                        imbs_training = imbs_training.at[(epoch_idx-1)*self.batches_per_epoch+1:].set(imbs_training[self._es_state["best_epoch"]*self.batches_per_epoch])
                         val_training = val_training.at[epoch_idx:].set(val_training[self._es_state["best_epoch"]])
                         val_error_training = val_error_training.at[epoch_idx:].set(val_error_training[self._es_state["best_epoch"]])
                         break
