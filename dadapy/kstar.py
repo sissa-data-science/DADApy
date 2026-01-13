@@ -97,8 +97,9 @@ class KStar(IdEstimation):
         """Compute an optimal choice of the neighbourhood size k for each point.
 
         Args:
-            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-                to a p-value of 1e-6.
+            alpha (float): Likelihood ratio parameter used to compute optimal k.
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
 
         """
         if self.intrinsic_dim is None:
@@ -139,6 +140,7 @@ class KStar(IdEstimation):
         prefactor = math.exp(id_sel / 2.0 * math.log(math.pi) - gammaln((id_sel + 2.0) / 2.0))
         alpha_eff = alpha / Nele if bonferroni_deloc else alpha
         Dthr = chi2(1).isf(alpha_eff)
+        Dthr_loc_arr = np.array([chi2.isf(alpha_eff / (h+1), 1) for h in range(maxk)])
 
         for i in tqdm(range(Nele)):
             j = 4
@@ -151,21 +153,12 @@ class KStar(IdEstimation):
                     vvi = prefactor * (self.distances[i, ksel] ** id_sel)
                     vvj = prefactor * (self.distances[self.dist_indices[i, j], ksel] ** id_sel)
                     dL = -2.0 * ksel * (math.log(vvi) + math.log(vvj) - 2.0 * math.log(vvi + vvj) + math.log(4))
-                    dL_arr[h] = dL
                     h += 1
-                    Dthr_loc = chi2(1).isf(alpha_eff / h)
-                    all_pass = True
-                    for k in range(h):
-                        if dL_arr[k] > Dthr_loc:
-                            all_pass = False
-                            break
-                    if not all_pass:
+                    if dL > Dthr_loc_arr[h-1]:
                         break
-                    j += 1
-                if j == 4:
-                    kstar[i] = 3
-                else:
-                    kstar[i] = j - 2
+                    else:
+                        j+=1
+                kstar[i] = j - 1 # in this case j in incremented only if the test passes, so j-1 is fine
             else:
                 while j < maxk and dL < Dthr:
                     ksel = j - 1
@@ -173,8 +166,10 @@ class KStar(IdEstimation):
                     vvj = prefactor * (self.distances[self.dist_indices[i, j], ksel] ** id_sel)
                     dL = -2.0 * ksel * (math.log(vvi) + math.log(vvj) - 2.0 * math.log(vvi + vvj) + math.log(4))
                     j += 1
+                if i==1:
+                    print(dL)
                 if j == maxk:
                     kstar[i] = j - 1
                 else:
-                    kstar[i] = j - 2
+                    kstar[i] = j - 2 # need to subtract 2 because j increased also if the while loop was interrupted
         return kstar
