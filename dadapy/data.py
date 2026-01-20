@@ -46,6 +46,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         coordinates=None,
         distances=None,
         maxk=None,
+        period=None,
         verbose=False,
         n_jobs=cores,
         working_memory=1024,
@@ -67,6 +68,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
+            period=period,
             verbose=verbose,
             n_jobs=n_jobs,
         )
