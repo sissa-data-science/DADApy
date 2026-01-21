@@ -77,12 +77,14 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         """Return the id estimates of the Gride algorithm coupled with the kstar estimation of the scale.
 
         Args:
-            initial_id: initial estimate of the id default uses 2NN
-            n_iter: number of iteration
-            Dthr: threshold value for the kstar test
-            d0: minimum id value
-            d1: maximum id value
-            eps: threshold for the convergence of the Gride algorithm
+            initial_id (float): initial estimate of the id default uses 2NN
+            n_iter (int): number of iteration
+            alpha (float): threshold value for the kstar test
+            d0 (float): minimum id value
+            d1 (float): maximum id value
+            eps (float): threshold for the convergence of the Gride algorithm
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
 
         Returns:
             ids, ids_err, kstars, log_likelihoods
@@ -164,10 +166,12 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         Args:
             initial_id (float): initial estimate of the id default uses 2NN
             n_iter (int): number of iteration
-            Dthr (float): threshold value for the kstar test
-            r (float, default=None): parameter of binomial estimator, 0 < r < 1. If None, the optimal, adaptive one is
-             used
-            plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions
+            alpha (float): threshold value for the kstar test
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            r (float, default=None): parameter of binomial estimator, 0 < r < 1. If None, the optimal, adaptive one is used
+            plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions of the number of points in the shells
+            k_bootstrap (int, default=1): number of bootstrap resampling to estimate the pvalue of the ID estimation
 
         Returns:
             ids (np.ndarray(float)): intrinsic dimension across iterations

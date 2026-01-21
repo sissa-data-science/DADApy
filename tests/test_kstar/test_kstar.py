@@ -24,7 +24,7 @@ data = np.array([[0, 0], [0.1, 0], [0.2, 0], [4, 0], [4.1, 0], [4.2, 0]])
 
 
 # TODO: Matteo, are these correct?
-expected_kstar_low_Dthr = np.array([2, 2, 2, 2, 2, 2])
+expected_kstar_low_Dthr = np.array([3, 3, 3, 3, 3, 3])
 expected_kstar_high_Dthr = np.array([4, 4, 4, 4, 4, 4])
 
 
@@ -33,7 +33,7 @@ def test_compute_kstar_low_Dthr():
     # create the KStar object
     kstar = KStar(coordinates=data)
     # compute kstar
-    kstar.compute_kstar(Dthr=0.0)
+    kstar.compute_kstar(alpha=1.0)
     # check that the result is correct
     assert np.array_equal(kstar.kstar, expected_kstar_low_Dthr)
 
@@ -43,7 +43,7 @@ def test_compute_kstar_high_Dthr():
     # create the KStar object
     kstar = KStar(coordinates=data)
     # compute kstar
-    kstar.compute_kstar(Dthr=1e99)
+    kstar.compute_kstar(alpha=1e-300)
     # check that the result is correct
     assert np.array_equal(kstar.kstar, expected_kstar_high_Dthr)
 
