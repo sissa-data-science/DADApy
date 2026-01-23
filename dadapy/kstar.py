@@ -49,7 +49,7 @@ class KStar(IdEstimation):
         maxk=None,
         period=None,
         verbose=False,
-        n_jobs=cores
+        n_jobs=cores,
     ):
         """Initialise the KStar class."""
         super().__init__(

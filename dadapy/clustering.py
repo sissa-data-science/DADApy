@@ -38,11 +38,6 @@ from dadapy._utils.utils import (
     from_all_distances_to_nndistances,
 )
 from dadapy.density_estimation import DensityEstimation
-from dadapy._utils.density_estimation import (
-    return_not_normalised_density_kstarNN,
-    return_not_normalised_density_PAk,
-)
-from dadapy._utils.utils import compute_cross_nn_distances
 
 cores = multiprocessing.cpu_count()
 
@@ -75,7 +70,7 @@ class Clustering(DensityEstimation):
         maxk=None,
         period=None,
         verbose=False,
-        n_jobs=cores
+        n_jobs=cores,
     ):
         """Initialise the Clustering class."""
         super().__init__(
@@ -283,20 +278,22 @@ class Clustering(DensityEstimation):
         halo=False,
         n_jobs=None,
     ):
-        """Compute clustering for points outside the initialization set using PAk (or kstarNN) interpolator and DPA clustering algorithm.
+        """Predict cluster labels for points X_new outside the training set X coherently with DPA clustering algorithm.
+            Interpolated densities are estimated using PAk or kstarNN interpolators.
 
         Args:
-            X_new (np.ndarray(float)): the points for which to predict cluster assignment, of shape (N, dimension of embedding space)
-            Dthr (float, optional): likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-                to a p-value of 1e-6.
+            X_new (np.ndarray(float)): the points for which to predict cluster assignment, of shape (slef.N, self.dims)
+            Dthr (float, optional): likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92
+                corresponds to a p-value of 1e-6 (see compute_kstar).
             distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float))): Distance matrix (N x N),
-                                        or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
-            density_est (str, optional): chosen density estimator for interpolated densities. Currently implemented: "PAk" and "kstarNN"
-            halo (bool): use or not halo points
-            n_jobs (int): number of cores to be used
+                or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
+            density_est (str, optional): chosen density interpolator. Currently implemented: "PAk" and "kstarNN".
+            halo (bool): use or not halo points.
+            n_jobs (int): number of cores to be used.
         Returns:
             cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new
         """
+        
         if distances is not None:
             cross_distances, cross_dist_indices = from_all_distances_to_nndistances(
                 distances, maxk
@@ -1069,9 +1066,9 @@ class Clustering(DensityEstimation):
                             current_saddle = saddle_density[i, 0]
 
             if check == 1:
-                saddle_indices[to_remove, -1] = (
-                    0  # the couple center1, center2 is removed
-                )
+                saddle_indices[
+                    to_remove, -1
+                ] = 0  # the couple center1, center2 is removed
                 margin1 = max_a1 / max_sum_err1
                 margin2 = max_a2 / max_sum_err2
 

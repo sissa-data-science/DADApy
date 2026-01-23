@@ -73,7 +73,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         maxk=None,
         period=None,
         verbose=False,
-        n_jobs=cores
+        n_jobs=cores,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
