@@ -19,7 +19,6 @@ ctypedef np.float64_t floatTYPE_t
 @cython.cdivision(True)
 
 def _compute_clustering(floatTYPE_t                         Z,
-                        bint                                halo,
                         np.ndarray[DTYPE_t, ndim = 1]       kstar,
                         np.ndarray[DTYPE_t, ndim = 2]       dist_indices,
                         DTYPE_t                             maxk,
@@ -402,10 +401,6 @@ def _compute_clustering(floatTYPE_t                         Z,
             if log_den_c[k] < log_den_halo:
                 nh = nh + 1
                 Last_cls_halo[k] = -1
-    if halo:
-        cluster_assignment = Last_cls_halo
-    else:
-        cluster_assignment = Last_cls
 
     log_den_bord_m = np.copy(log_den_bord_m)
 
@@ -417,7 +412,8 @@ def _compute_clustering(floatTYPE_t                         Z,
     return (
         cluster_indices,
         N_clusters,
-        cluster_assignment,
+        Last_cls,
+        Last_cls_halo,
         cluster_centers,
         log_den_bord_m,
         log_den_bord_err_m,

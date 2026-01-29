@@ -20,7 +20,6 @@ ctypedef np.float64_t floatTYPE_t
 @cython.cdivision(True)
 
 def _compute_clustering(floatTYPE_t Z,
-                        bint halo,
                         np.ndarray[DTYPE_t, ndim = 1] kstar,
                         np.ndarray[DTYPE_t, ndim = 2] dist_indices,
                         DTYPE_t maxk,
@@ -385,10 +384,6 @@ def _compute_clustering(floatTYPE_t Z,
             if (Rho_c[k] < Rho_halo):
                 nh = nh + 1
                 Last_cls_halo[k] = -1
-    if (halo):
-        labels = Last_cls_halo
-    else:
-        labels = Last_cls
 
     out_bord = np.copy(Rho_bord_m)
 
@@ -397,7 +392,7 @@ def _compute_clustering(floatTYPE_t Z,
       print(f"Final operations: {lag} sec")
       sec = time.time()
 
-    return clstruct_m, Nclus_m, labels, centers_m, out_bord, Rho_bord_err_m, Point_bord_m
+    return clstruct_m, Nclus_m, Last_cls, Last_cls_halo, centers_m, out_bord, Rho_bord_err_m, Point_bord_m
 
 def _assign_cluster_ADP(floatTYPE_t[:] g_inter, 
                          floatTYPE_t[:] g, 

@@ -85,6 +85,7 @@ class Clustering(DensityEstimation):
         self.cluster_indices = None
         self.N_clusters = None
         self.cluster_assignment = None
+        self.cluster_assignment_halo = None
         self.cluster_centers = None
         self.log_den_bord_err = None
         self.log_den_bord = None
@@ -93,7 +94,7 @@ class Clustering(DensityEstimation):
         self.delta = None  # Minimum distance from an element with higher density
         self.ref = None  # Index of the nearest element with higher density
 
-    def compute_clustering_ADP(self, Z=1.65, halo=False, v2=False):
+    def compute_clustering_ADP(self, Z=1.65, v2=False):
         """Compute clustering according to the algorithm DPA.
 
         The only free parameter is the merging factor Z, which controls how the different density peaks are merged
@@ -102,10 +103,11 @@ class Clustering(DensityEstimation):
 
         Args:
             Z(float): merging parameter
-            halo (bool): compute (or not) the halo points
 
         Returns:
             cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
+            cluster_assignment_halo (np.ndarray(int)): assignment of points to specific cluster core sets, the rest are
+                considered halo points and are assigned label -1.
 
         References:
             M. d’Errico, E. Facco, A. Laio, A. Rodriguez, Automatic topography  of  high-dimensional  data  sets  by
@@ -144,7 +146,6 @@ class Clustering(DensityEstimation):
         if v2:
             out = cf2._compute_clustering(
                 Z,
-                halo,
                 self.kstar,
                 self.dist_indices.astype(int),
                 self.maxk,
@@ -157,7 +158,6 @@ class Clustering(DensityEstimation):
         else:
             out = cf._compute_clustering(
                 Z,
-                halo,
                 self.kstar,
                 self.dist_indices.astype(int),
                 self.maxk,
@@ -173,16 +173,17 @@ class Clustering(DensityEstimation):
         self.cluster_indices = out[0]
         self.N_clusters = out[1]
         self.cluster_assignment = out[2]
-        self.cluster_centers = out[3]
-        self.log_den_bord = out[4] + log_den_min - 1
-        self.log_den_bord_err = out[5]
-        self.bord_indices = out[6]
+        self.cluster_assignment_halo = out[3]
+        self.cluster_centers = out[4]
+        self.log_den_bord = out[5] + log_den_min - 1
+        self.log_den_bord_err = out[6]
+        self.bord_indices = out[7]
 
         if self.verb:
             print(f"Clustering finished, {self.N_clusters} clusters found")
             print(f"total time is, {secf - seci}")
 
-        return self.cluster_assignment
+        return self.cluster_assignment, self.cluster_assignment_halo
 
     def compute_DecGraph(self):
         """Compute the decision graph."""
