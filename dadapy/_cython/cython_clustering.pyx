@@ -397,6 +397,7 @@ def _compute_clustering(floatTYPE_t Z,
 def _assign_cluster_ADP(floatTYPE_t[:] g_inter, 
                          floatTYPE_t[:] g, 
                          DTYPE_t[:] cluster_assignment,  
+                         DTYPE_t[:] cluster_assignment_halo,  
                          DTYPE_t[:, :] cross_dist_indices,    
                          DTYPE_t Nele,      
                          DTYPE_t Ncluster,
@@ -404,6 +405,7 @@ def _assign_cluster_ADP(floatTYPE_t[:] g_inter,
 
     cdef DTYPE_t i, j, idx_highest_density_neigh
     cdef np.ndarray[DTYPE_t, ndim=2] cluster_probability_np = np.zeros((Nele, Ncluster), dtype=np.int64)
+    cdef np.ndarray[DTYPE_t, ndim=2] cluster_probability_halo_np = np.zeros((Nele, Ncluster+1), dtype=np.int64)
     cdef DTYPE_t[:, :] cluster_probability = cluster_probability_np # create view for efficiency
 
     for i in range(Nele):
@@ -416,4 +418,5 @@ def _assign_cluster_ADP(floatTYPE_t[:] g_inter,
                 break
     
         cluster_probability[i, cluster_assignment[cross_dist_indices[i, idx_highest_density_neigh]]] = 1
-    return cluster_probability_np
+        cluster_probability_halo_np[i, cluster_assignment_halo[cross_dist_indices[i, idx_highest_density_neigh]]] = 1
+    return cluster_probability_np, cluster_probability_halo_np

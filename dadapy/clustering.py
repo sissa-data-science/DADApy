@@ -276,7 +276,6 @@ class Clustering(DensityEstimation):
         distances=None,
         Dthr=23.92812698,
         density_est="PAk",
-        halo=False,
         n_jobs=None,
     ):
         """Predict cluster labels for points X_new outside the training set X coherently with DPA clustering algorithm.
@@ -289,12 +288,12 @@ class Clustering(DensityEstimation):
             distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float))): Distance matrix (N x N),
                 or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
             density_est (str, optional): chosen density interpolator. Currently implemented: "PAk" and "kstarNN".
-            halo (bool): use or not halo points.
             n_jobs (int): number of cores to be used.
         Returns:
-            cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new
+            cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new, no points assigned to halo
+            cluster_prediction_halo (np.ndarray(int)): predicted cluster labels for points X_new, with halo points
         """
-        
+
         if distances is not None:
             cross_distances, cross_dist_indices = from_all_distances_to_nndistances(
                 distances, maxk
@@ -347,38 +346,26 @@ class Clustering(DensityEstimation):
         if self.verb:
             print("Prediction of cluster labels started")
 
-        num_clusters = self.N_clusters + 1 if halo else self.N_clusters
-
-        if halo:
-            cluster_probability = cf._assign_cluster_ADP(
-                    log_den - log_den_err,
-                    self.log_den - self.log_den_err,
-                    self.cluster_assignment_halo,
-                    cross_dist_indices,
-                    len(X_new),
-                    num_clusters,
-                    maxk,
-                )
-        else:
-            cluster_probability = cf._assign_cluster_ADP(
-                    log_den - log_den_err,
-                    self.log_den - self.log_den_err,
-                    self.cluster_assignment,
-                    cross_dist_indices,
-                    len(X_new),
-                    num_clusters,
-                    maxk,
-                )
+        cluster_probability, cluster_probability_halo = cf._assign_cluster_ADP(
+            log_den - log_den_err,
+            self.log_den - self.log_den_err,
+            self.cluster_assignment,
+            self.cluster_assignment_halo,
+            cross_dist_indices,
+            len(X_new),
+            self.N_clusters,
+            maxk,
+        )
 
         cluster_prediction = np.argmax(cluster_probability, axis=-1)
-        if halo:
-            cluster_prediction[cluster_prediction == self.N_clusters] = -1
+        cluster_prediction_halo = np.argmax(cluster_probability_halo, axis=-1)
+        cluster_prediction_halo[cluster_prediction_halo == self.N_clusters+1] = -1
 
         if self.verb:
             print("{0:0.2f} seconds to predict clusters.".format(time.time() - sec))
             print("{0:0.2f} seconds total run time.".format(time.time() - sec2))
 
-        return cluster_prediction, cluster_probability
+        return cluster_prediction, cluster_prediction_halo, cluster_probability, cluster_probability_halo
 
     def compute_clustering_ADP_pure_python(  # noqa: C901
         self, Z=1.65, halo=False, v2=False
