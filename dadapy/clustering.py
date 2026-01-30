@@ -235,7 +235,7 @@ class Clustering(DensityEstimation):
             Science 344 (6191) (2014) 1492–1496.
         """
         assert self.delta is not None
-        ordered = np.argsort(-self.log_den))
+        ordered = np.argsort(-self.log_den)
         self.cluster_assignment = np.zeros(self.N, dtype="int")
         tt = np.arange(self.N)
         center_label = np.zeros(self.N, dtype="int")
