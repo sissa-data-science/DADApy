@@ -105,9 +105,9 @@ class Clustering(DensityEstimation):
             Z(float): merging parameter
 
         Returns:
-            cluster_assignment (np.ndarray(int)): assignment of points to specific clusters
+            cluster_assignment (np.ndarray(int)): assignment of points to specific clusters. Also saved in self.cluster_assignment.
             cluster_assignment_halo (np.ndarray(int)): assignment of points to specific cluster core sets, the rest are
-                considered halo points and are assigned label -1.
+                considered halo points and are assigned label -1. Also saved in self.cluster_assignment_halo.
 
         References:
             M. d’Errico, E. Facco, A. Laio, A. Rodriguez, Automatic topography  of  high-dimensional  data  sets  by
