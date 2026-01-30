@@ -349,15 +349,26 @@ class Clustering(DensityEstimation):
 
         num_clusters = self.N_clusters + 1 if halo else self.N_clusters
 
+        if halo:
         cluster_probability = cf._assign_cluster_ADP(
-            log_den - log_den_err,
-            self.log_den - self.log_den_err,
-            self.cluster_assignment,
-            cross_dist_indices,
-            len(X_new),
-            num_clusters,
-            maxk,
-        )
+                log_den - log_den_err,
+                self.log_den - self.log_den_err,
+                self.cluster_assignment_halo,
+                cross_dist_indices,
+                len(X_new),
+                num_clusters,
+                maxk,
+            )
+        else:
+        cluster_probability = cf._assign_cluster_ADP(
+                log_den - log_den_err,
+                self.log_den - self.log_den_err,
+                self.cluster_assignment,
+                cross_dist_indices,
+                len(X_new),
+                num_clusters,
+                maxk,
+            )
 
         cluster_prediction = np.argmax(cluster_probability, axis=-1)
         if halo:
