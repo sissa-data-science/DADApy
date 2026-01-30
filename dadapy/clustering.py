@@ -235,7 +235,7 @@ class Clustering(DensityEstimation):
             Science 344 (6191) (2014) 1492–1496.
         """
         assert self.delta is not None
-        ordered = np.argsort(-self.log_den)
+        ordered = np.argsort(-self.log_den))
         self.cluster_assignment = np.zeros(self.N, dtype="int")
         tt = np.arange(self.N)
         center_label = np.zeros(self.N, dtype="int")
@@ -282,7 +282,7 @@ class Clustering(DensityEstimation):
             Interpolated densities are estimated using PAk or kstarNN interpolators.
 
         Args:
-            X_new (np.ndarray(float)): the points for which to predict cluster assignment, of shape (slef.N, self.dims)
+            X_new (np.ndarray(float)): the points for which to predict cluster assignment, of shape (len(X_new), self.dims)
             Dthr (float, optional): likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92
                 corresponds to a p-value of 1e-6 (see compute_kstar).
             distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float))): Distance matrix (N x N),
@@ -292,6 +292,10 @@ class Clustering(DensityEstimation):
         Returns:
             cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new, no points assigned to halo
             cluster_prediction_halo (np.ndarray(int)): predicted cluster labels for points X_new, with halo points
+            cluster_probability (np.ndarray(float)): probability of each point in X_new to belong to each cluster
+                (currently implemented only 0/1), no points assigned to halo. Shape (len(X_new), self.N_clusters).
+            cluster_probability_halo (np.ndarray(float)): probability of each point in X_new to belong to each cluster
+                (currently implemented only 0/1), with halo points. Shape (len(X_new), self.N_clusters).
         """
 
         if distances is not None:
