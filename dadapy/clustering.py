@@ -363,7 +363,7 @@ class Clustering(DensityEstimation):
 
         cluster_prediction = np.argmax(cluster_probability, axis=-1)
         cluster_prediction_halo = np.argmax(cluster_probability_halo, axis=-1)
-        cluster_prediction_halo[cluster_prediction_halo == self.N_clusters+1] = -1
+        cluster_prediction_halo[cluster_prediction_halo == self.N_clusters] = -1
 
         if self.verb:
             print("{0:0.2f} seconds to predict clusters.".format(time.time() - sec))
