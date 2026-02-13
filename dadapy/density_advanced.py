@@ -396,7 +396,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 efficient) and a dense solvers are implemented:
                     'sp_direct' (default): scipy.sparse.linalg.spsolve. Performs a LU decomposition of the matrix and
                         then solves the linear system directly. More robust but less memory efficient than other
-                        implemented sparse solvers. Slower than iterative solvers for very sparse and large matrices.
+                        implemented sparse solvers. Slower than iterative solvers for very sparse and large matrices. 
+                        To be preferred when the matrix is not very sparse (e.g. often when the dimensionality is low).
                     'sp_cg': scipy.sparse.linalg.cg. This is the iterative conjugate gradient method. It might be
                         preferred to 'direct' for large and sparse matrices. If a log-density estimate is alredy stored
                         in self.log_den, it will be used as a guess for the solution for a great spedup. If this option
