@@ -225,14 +225,14 @@ class IdDiscrete(Base):
                         sum(self._weights[self.dist_indices[i][el]])
                         for i, el in enumerate(self.distances <= self.lk)
                     ],
-                    dtype=np.int,
+                    dtype=np.int64,
                 )
                 self.n = np.array(
                     [
                         sum(self._weights[self.dist_indices[i][el]])
                         for i, el in enumerate(self.distances <= self.ln)
                     ],
-                    dtype=np.int,
+                    dtype=np.int64,
                 )
 
             # checks-out
@@ -1157,9 +1157,9 @@ class IdDiscrete(Base):
 
         """
         assert len(w) == self.N and all(
-            [wi > 0 and isinstance(wi, (np.int, int))] for wi in w
+            [wi > 0 and isinstance(wi, (np.int64, int))] for wi in w
         ), "load proper integer weights"
-        self._weights = np.array(w, dtype=np.int)
+        self._weights = np.array(w, dtype=np.int64)
 
     # ----------------------------------------------------------------------------------------------
 

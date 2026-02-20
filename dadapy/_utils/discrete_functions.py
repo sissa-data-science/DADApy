@@ -58,11 +58,11 @@ def compute_discrete_volume(l, d, O1=False):
 
     # O1 (bool, default=False): first order approximation in the large L limit. Set to False in order to have the o(1/L) approx
     # if L is one dimensional make it an array
-    # if isinstance(L, (int, np.integer, float, np.float)):
+    # if isinstance(L, (int, np.int64, float, np.float64)):
     #     l = [l]
 
     # # explicit conversion to array of integers
-    # l = np.array(L, dtype=np.int)
+    # l = np.array(L, dtype=np.int64)
 
     # # exact formula for integer d, cannot be used for floating values
     # if isinstance(d, (int, np.integer)):
