@@ -131,7 +131,8 @@ class DensityEstimation(KStar):
         Args:
             alpha (float): Likelihood ratio parameter used to compute optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): estimated log density
@@ -179,7 +180,8 @@ class DensityEstimation(KStar):
         Args:
             alpha: Likelihood ratio parameter used to compute optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): estimated log density
@@ -234,7 +236,8 @@ class DensityEstimation(KStar):
         Args:
             alpha (float): Likelihood ratio parameter used to compute optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): estimated log density
@@ -359,7 +362,8 @@ class DensityEstimation(KStar):
             X_new (np.ndarray(float)): The points onto which the density should be computed
             alpha: Likelihood ratio parameter used to compute optimal k
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
@@ -406,7 +410,8 @@ class DensityEstimation(KStar):
             X_new (np.ndarray(float)): The points onto which the density should be computed
             alpha: Likelihood ratio parameter used to compute optimal k
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new

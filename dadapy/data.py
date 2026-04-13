@@ -92,7 +92,8 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             d1 (float): maximum id value
             eps (float): threshold for the convergence of the Gride algorithm
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+             at each iteration
 
         Returns:
             ids, ids_err, kstars, log_likelihoods
@@ -113,8 +114,8 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         log_likelihoods = [0]
 
         for i in range(n_iter):
-            # print("iteration ", i)
-            # print("id ", self.intrinsic_dim)
+            print("iteration ", i)
+            print("id ", self.intrinsic_dim)
 
             # compute n2 and n1 via kstar. If not even, make it even by adding one
             n2s = self.kstar
@@ -176,9 +177,12 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             n_iter (int): number of iteration
             alpha (float): threshold value for the kstar test
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
-            r (float, default=None): parameter of binomial estimator, 0 < r < 1. If None, the optimal, adaptive one is used
-            plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions of the number of points in the shells
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+             at each iteration
+            r (float, default=None): parameter of binomial estimator, 0 < r < 1.
+             If None, the optimal, adaptive one is used
+            plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions
+             of the number of points in the shells
             k_bootstrap (int, default=1): number of bootstrap resampling to estimate the pvalue of the ID estimation
 
         Returns:
@@ -202,8 +206,8 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         pvalues = [0]
 
         for i in range(n_iter):
-            # print("iteration ", i)
-            # print("id ", self.intrinsic_dim)
+            print("iteration ", i)
+            print("id ", self.intrinsic_dim)
 
             # set new ratio
             r_eff = min(0.975, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
