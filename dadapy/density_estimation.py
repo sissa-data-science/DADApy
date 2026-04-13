@@ -123,7 +123,9 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kstarNN(self, alpha=1e-6, bias=False, bonferroni_deloc=False, bonferroni_loc=False):
+    def compute_density_kstarNN(
+        self, alpha=1e-6, bias=False, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Compute the density of each point using a simple kNN estimator with an optimal choice of k.
 
         Args:
@@ -136,9 +138,11 @@ class DensityEstimation(KStar):
             log_den_err (np.ndarray(float)): estimated error on log density
         """
         if self.kstar is None:
-            self.compute_kstar(alpha=alpha,
-                               bonferroni_deloc=bonferroni_deloc,
-                               bonferroni_loc=bonferroni_loc)
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
 
         if self.verb:
             print("kstar-NN density estimation started")
@@ -165,7 +169,9 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kpeaks(self, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False):
+    def compute_density_kpeaks(
+        self, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Compute the density of each point as proportional to the optimal k value found for that point.
 
         This method is mostly useful for the kpeaks clustering algorithm.
@@ -180,9 +186,11 @@ class DensityEstimation(KStar):
             log_den_err (np.ndarray(float)): estimated error on log density
         """
         if self.kstar is None:
-            self.compute_kstar(alpha=alpha,
-                               bonferroni_deloc=bonferroni_deloc,
-                               bonferroni_loc=bonferroni_loc)
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
 
         if self.verb:
             print("Density estimation for k-peaks clustering started")
@@ -218,7 +226,9 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_PAk(self, alpha=1e-6, optimized=True, bonferroni_deloc=False, bonferroni_loc=False):
+    def compute_density_PAk(
+        self, alpha=1e-6, optimized=True, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Compute the density of each point using the PAk estimator.
 
         Args:
@@ -232,10 +242,12 @@ class DensityEstimation(KStar):
         """
         # compute optimal k
         if self.kstar is None:
-            self.compute_kstar(alpha=alpha,
-                               bonferroni_deloc=bonferroni_deloc,
-                               bonferroni_loc=bonferroni_loc)
-            
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
+
         elif len(np.unique(self.kstar)) == 1:
             warnings.warn(
                 "Found pointwise optimal k already computed and CONSTANT over the datapoints. \
@@ -338,7 +350,9 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_interpolated_density_kstarNN(self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False):
+    def return_interpolated_density_kstarNN(
+        self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Return the kstarNN density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
@@ -369,7 +383,7 @@ class DensityEstimation(KStar):
             cross_distances,
             self.distances,
             bonferroni_deloc,
-            bonferroni_loc
+            bonferroni_loc,
         )
 
         log_den, log_den_err, _ = return_not_normalised_density_kstarNN(
@@ -383,7 +397,9 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_interpolated_density_PAk(self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False):
+    def return_interpolated_density_PAk(
+        self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
@@ -414,7 +430,7 @@ class DensityEstimation(KStar):
             cross_distances,
             self.distances,
             bonferroni_deloc,
-            bonferroni_loc
+            bonferroni_loc,
         )
 
         log_den, log_den_err, _ = return_not_normalised_density_PAk(

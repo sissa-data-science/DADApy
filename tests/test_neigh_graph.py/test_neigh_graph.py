@@ -83,7 +83,7 @@ def test_compute_neigh_indices():
     neigh_graph = NeighGraph(coordinates=data)
     neigh_graph.compute_kstar(alpha=1.0)
     # need to manually correct the k_star because it would return a wrong number since not test is carried out
-    neigh_graph.set_kstar([2,2,2,2,2,2])
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
     # compute the indices of the neighbors
     neigh_graph.compute_neigh_indices()
     # check that the result is correct
@@ -98,7 +98,7 @@ def test_compute_neigh_dists():
     neigh_graph = NeighGraph(coordinates=data)
     neigh_graph.compute_kstar(alpha=1.0)
     # need to manually correct the k_star because it would return a wrong number since not test is carried out
-    neigh_graph.set_kstar([2,2,2,2,2,2])
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
     # compute the distances of the neighbors
     neigh_graph.compute_neigh_dists()
     # check that the result is correct
@@ -111,7 +111,7 @@ def test_return_sparse_distance_graph():
     neigh_graph = NeighGraph(coordinates=data)
     neigh_graph.compute_kstar(alpha=1.0)
     # need to manually correct the k_star because it would return a wrong number since not test is carried out
-    neigh_graph.set_kstar([2,2,2,2,2,2])
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
     graph = neigh_graph.return_sparse_distance_graph()
     # check that the result is correct
     assert np.allclose(graph.toarray(), expected_distance_graph)
@@ -123,7 +123,7 @@ def test_compute_neigh_vector_diffs():
     neigh_graph = NeighGraph(coordinates=data)
     neigh_graph.compute_kstar(alpha=1.0)
     # need to manually correct the k_star because it would return a wrong number since not test is carried out
-    neigh_graph.set_kstar([2,2,2,2,2,2])
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
     # compute the distances of the neighbors
     neigh_graph.compute_neigh_vector_diffs()
     # check that the result is correct

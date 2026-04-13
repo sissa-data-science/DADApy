@@ -19,14 +19,14 @@ The *kstar* module contains the *KStar* class.
 The computation of the optimal neighbourhood size (k*) is implemented in this class as the compute_kstar method.
 """
 
+import math
 import multiprocessing
 import time
 import warnings
 
 import numpy as np
-from scipy.stats import chi2
 from scipy.special import gammaln
-import math
+from scipy.stats import chi2
 from tqdm import tqdm
 
 from dadapy._cython import cython_density as cd
@@ -122,7 +122,7 @@ class KStar(IdEstimation):
             self.dist_indices.astype("int64"),
             self.distances.astype("float64"),
             bonferroni_deloc,
-            bonferroni_loc
+            bonferroni_loc,
         )
 
         self.set_kstar(kstar)

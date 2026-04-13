@@ -72,7 +72,15 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         )
 
     def return_ids_kstar_gride(
-        self, initial_id=None, n_iter=5, alpha=1e-6, d0=0.001, d1=1000, eps=1e-7, bonferroni_deloc=False, bonferroni_loc=False
+        self,
+        initial_id=None,
+        n_iter=5,
+        alpha=1e-6,
+        d0=0.001,
+        d1=1000,
+        eps=1e-7,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
     ):
         """Return the id estimates of the Gride algorithm coupled with the kstar estimation of the scale.
 
@@ -97,7 +105,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             if self.distances is None:
                 self.compute_distances()
         # compute kstar
-        self.compute_kstar(alpha,bonferroni_deloc,bonferroni_loc)
+        self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
         ids = [self.intrinsic_dim]
         ids_err = [self.intrinsic_dim_err]
@@ -126,7 +134,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             id, id_err = self._compute_id_gride_single_scale(d0, d1, mus, n1s, n2s, eps)
             self.set_id(id)
             log_lik = -ut._neg_loglik(self.dtype, id, mus, n1s, n2s)
-            self.compute_kstar(alpha,bonferroni_deloc,bonferroni_loc)
+            self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
             ids.append(id)
             ids_err.append(id_err)
@@ -186,7 +194,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             self.set_id(initial_id)
             if self.distances is None:
                 self.compute_distances()
-        self.compute_kstar(alpha,bonferroni_deloc,bonferroni_loc)
+        self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
         ids = [self.intrinsic_dim]
         ids_err = [self.intrinsic_dim_err]
@@ -194,8 +202,8 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         pvalues = [0]
 
         for i in range(n_iter):
-            #print("iteration ", i)
-            #print("id ", self.intrinsic_dim)
+            # print("iteration ", i)
+            # print("id ", self.intrinsic_dim)
 
             # set new ratio
             r_eff = min(0.975, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
@@ -210,7 +218,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             """
 
             # update the k*
-            self.compute_kstar(alpha,bonferroni_deloc,bonferroni_loc)
+            self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
             # store the obtained values
             ids.append(ide)
             ids_err.append(id_err)

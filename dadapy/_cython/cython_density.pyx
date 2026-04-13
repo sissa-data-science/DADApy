@@ -2,11 +2,11 @@
 
 import cython
 import numpy as np
+
 cimport numpy as np
 
-from scipy.stats import chi2
-
 from scipy.special import gammaln
+from scipy.stats import chi2
 
 from libc.math cimport exp, log, pi, pow
 
