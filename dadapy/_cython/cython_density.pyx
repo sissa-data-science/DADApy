@@ -92,7 +92,7 @@ def _compute_kstar_interp(floatTYPE_t id_sel,
     for i in range(Nele):
         j = 4
         dL = 0.0
-
+        h = 0
         while j < maxk:
             ksel = j - 1
             vvi = prefactor * pow(cross_distances[i, ksel], id_sel)
