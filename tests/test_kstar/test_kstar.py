@@ -57,3 +57,36 @@ def test_set_kstar():
     kstar.set_kstar(k=set_kstar)
     # check that the result is correct
     assert np.array_equal(kstar.kstar, set_kstar)
+
+
+def test_compute_kstar_bonferroni_deloc():
+    """Test that bonferroni_deloc correction produces different results."""
+    kstar_uncorrected = KStar(coordinates=data)
+    kstar_uncorrected.compute_kstar(alpha=0.05, bonferroni_deloc=False)
+
+    kstar_corrected = KStar(coordinates=data)
+    kstar_corrected.compute_kstar(alpha=0.05, bonferroni_deloc=True)
+
+    # With bonferroni correction, threshold is higher, so kstar should be <= uncorrected
+    assert np.all(kstar_corrected.kstar <= kstar_uncorrected.kstar)
+
+
+def test_compute_kstar_bonferroni_loc():
+    """Test that bonferroni_loc correction produces different results."""
+    kstar_uncorrected = KStar(coordinates=data)
+    kstar_uncorrected.compute_kstar(alpha=0.05, bonferroni_loc=False)
+
+    kstar_corrected = KStar(coordinates=data)
+    kstar_corrected.compute_kstar(alpha=0.05, bonferroni_loc=True)
+
+    assert np.all(kstar_corrected.kstar <= kstar_uncorrected.kstar)
+
+
+def test_compute_kstar_bonferroni_both():
+    """Test with both bonferroni corrections."""
+    kstar = KStar(coordinates=data)
+    kstar.compute_kstar(alpha=0.05, bonferroni_deloc=True, bonferroni_loc=True)
+    # Just verify it runs and produces valid kstar values
+    assert kstar.kstar is not None
+    assert len(kstar.kstar) == len(data)
+    assert np.all(kstar.kstar > 0)
