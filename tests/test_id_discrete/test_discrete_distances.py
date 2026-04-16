@@ -50,18 +50,25 @@ def test_manhattan_condensed():
     X = rng.integers(0, box, size=(N, d))
 
     # use PBC
-    I3D = IdDiscrete(X, condensed=True)
+    I3D = IdDiscrete(X, condensed=True, n_jobs=1)
     I3D.compute_distances(metric="manhattan", period=box, d_max=50)
 
     dist, _ = df.manhattan_distances_idx(X, d_max=50, maxk_ind=20, period=box)
+
+    print(I3D.distances[0])
+    print(dist[0])
+
     diff = sum([sum(dist[i] - I3D.distances[i]) for i in range(len(X))])
     assert diff == 0
 
     # without PBC
-    I3D = IdDiscrete(X, condensed=True)
+    I3D = IdDiscrete(X, condensed=True, n_jobs=1)
     I3D.compute_distances(metric="manhattan", d_max=80)
 
     dist, ind = df.manhattan_distances_idx(X, d_max=80, maxk_ind=20)
+
+    print(I3D.distances[0])
+    print(dist[0])
 
     diff = sum([sum(dist[i] - I3D.distances[i]) for i in range(len(X))])
     assert diff == 0

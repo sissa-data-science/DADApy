@@ -19,11 +19,15 @@ The *kstar* module contains the *KStar* class.
 The computation of the optimal neighbourhood size (k*) is implemented in this class as the compute_kstar method.
 """
 
+import math
 import multiprocessing
 import time
 import warnings
 
 import numpy as np
+from scipy.special import gammaln
+from scipy.stats import chi2
+from tqdm import tqdm
 
 from dadapy._cython import cython_density as cd
 from dadapy.id_estimation import IdEstimation
@@ -96,12 +100,13 @@ class KStar(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_kstar(self, Dthr=23.92812698):
+    def compute_kstar(self, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False):
         """Compute an optimal choice of the neighbourhood size k for each point.
 
         Args:
-            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-                to a p-value of 1e-6.
+            alpha (float): Likelihood ratio parameter used to compute optimal k, i.e. quantile for the unfirm density likelihood-ratio test.
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
 
         """
         if self.intrinsic_dim is None:
@@ -112,7 +117,7 @@ class KStar(IdEstimation):
             _ = self.compute_id_2NN()
 
         if self.verb:
-            print(f"kstar estimation started, Dthr = {Dthr}")
+            print(f"kstar estimation started, alpha = {alpha}")
 
         sec = time.time()
 
@@ -120,9 +125,11 @@ class KStar(IdEstimation):
             self.intrinsic_dim,
             self.N,
             self.maxk,
-            Dthr,
+            alpha,
             self.dist_indices.astype("int64"),
             self.distances.astype("float64"),
+            bonferroni_deloc,
+            bonferroni_loc,
         )
 
         self.set_kstar(kstar)
