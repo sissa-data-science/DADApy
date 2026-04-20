@@ -153,7 +153,7 @@ class IdDiscrete(Base):
                         f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
                     )
 
-            if ~isinstance(self.X[0, 0], int):
+            if not isinstance(self.X[0, 0], int):
                 print(
                     "N.B. the data will be passed to the routine to compute distances as integers"
                 )
@@ -316,7 +316,7 @@ class IdDiscrete(Base):
             w_eff = self._weights[mask]
 
         # check statistics before performing id estimation
-        if ~self._is_w:
+        if not self._is_w:
             e_n = n_eff.mean()
             if e_n == 0.0:
                 print(
