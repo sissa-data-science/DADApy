@@ -324,30 +324,3 @@ def test_DiffImbalance_train6():
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
     assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
     assert error_final == pytest.approx(expected_error_final, abs=0.001)
-
-
-def run_test(test_func, test_name):
-    """Run a test and print results."""
-    print(f"Running {test_name}...")
-    try:
-        test_func()
-        print(f"✓ {test_name} passed")
-    except Exception as e:
-        print(f"✗ {test_name} failed: {e}")
-
-
-if __name__ == "__main__":
-    tests = [
-        (test_DiffImbalance_train1, "test_DiffImbalance_train1"),
-        (test_DiffImbalance_train2, "test_DiffImbalance_train2"),
-        (test_DiffImbalance_train3, "test_DiffImbalance_train3"),
-        (test_DiffImbalance_train4, "test_DiffImbalance_train4"),
-        (test_DiffImbalance_train5, "test_DiffImbalance_train5"),
-        (test_DiffImbalance_train6, "test_DiffImbalance_train6"),
-    ]
-
-    for test_func, test_name in tests:
-        run_test(test_func, test_name)
-        print()
-
-    print("All tests completed.")
