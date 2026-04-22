@@ -69,7 +69,6 @@ def test_DiffImbalance_forward_greedy():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=None,
-        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -144,7 +143,6 @@ def test_DiffImbalance_backward_greedy():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=None,
-        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -222,7 +220,6 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=None,
-        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 
@@ -356,7 +353,6 @@ def test_DiffImbalance_greedy_random_initialization():
         learning_rate=1e-1,
         learning_rate_decay="cos",
         num_points_rows=None,
-        gradient_clip_value=0.0,
     )
     weights, imbs = dii.train()
 

@@ -129,9 +129,6 @@ class DiffImbalance:
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
         l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
-        gradient_clip_value (float): maximum norm for gradient clipping. If 0, no clipping is
-            applied. Default is 0. This is useful when weights are sometimes automatically set to NaN and
-            there can be gradient explosions.
         point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
             in the DII (if False), or a different parameter for each point (if True). Default is True.
         k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
@@ -183,7 +180,6 @@ class DiffImbalance:
         learning_rate=1e-2,
         learning_rate_decay=None,
         num_points_rows=None,
-        gradient_clip_value=0.0,
     ):
         """Initialise the DiffImbalance class."""
         self.nfeatures_A = data_A.shape[1]
@@ -262,7 +258,6 @@ class DiffImbalance:
         self.num_epochs = num_epochs
         self.batches_per_epoch = batches_per_epoch
         self.l1_strength = l1_strength
-        self.gradient_clip_value = gradient_clip_value
         self.point_adapt_lambda = point_adapt_lambda
         self.k_init = k_init
         self.k_final = k_final
@@ -853,14 +848,7 @@ class DiffImbalance:
             raise ValueError(
                 f'Unknown learning rate decay schedule "{self.learning_rate_decay}". Choose among None, "cos" and "exp".'
             )
-        # Set up optimizer with optional gradient clipping
-        if self.gradient_clip_value > 0:
-            optimizer = optax.chain(
-                optax.clip_by_global_norm(self.gradient_clip_value),
-                opt_class(self.lr_schedule),
-            )
-        else:
-            optimizer = opt_class(self.lr_schedule)
+        optimizer = opt_class(self.lr_schedule)
 
         # Initialize training state
         self.state = train_state.TrainState.create(
@@ -1167,7 +1155,6 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 num_points_rows=self.num_points_rows,
-                gradient_clip_value=self.gradient_clip_value,
             )
 
             # Set initial parameters and train
@@ -1301,7 +1288,6 @@ class DiffImbalance:
                             learning_rate=self.learning_rate,
                             learning_rate_decay=self.learning_rate_decay,
                             num_points_rows=self.num_points_rows,
-                            gradient_clip_value=self.gradient_clip_value,
                         )
 
                         # Set initial parameters and train
@@ -1401,7 +1387,6 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 num_points_rows=self.num_points_rows,
-                gradient_clip_value=self.gradient_clip_value,
             )
 
             # Set initial parameters and train
@@ -1580,7 +1565,6 @@ class DiffImbalance:
                         learning_rate=self.learning_rate,
                         learning_rate_decay=self.learning_rate_decay,
                         num_points_rows=self.num_points_rows,
-                        gradient_clip_value=self.gradient_clip_value,
                     )
 
                     # Set initial parameters and train
@@ -1677,7 +1661,6 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 num_points_rows=self.num_points_rows,
-                gradient_clip_value=self.gradient_clip_value,
             )
 
             # Set initial parameters and train
