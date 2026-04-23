@@ -457,7 +457,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         sec2 = time.time()
 
         if self.verb:
-            print("{0:0.2f} seconds to fill get linear system ready".format(sec2 - sec))
+            print("{0:0.2f} seconds to get linear system ready".format(sec2 - sec))
 
         # solve linear system
         log_den = self._solve_BMTI_reg_linar_system(
