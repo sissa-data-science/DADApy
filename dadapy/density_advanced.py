@@ -371,7 +371,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         comp_log_den_err=False,
         solver="sp_direct",
         sp_direct_perm_spec="NATURAL",
-        alpha=1,
+        alpha=1.0,
         log_den=None,
         log_den_err=None,
     ):
@@ -418,6 +418,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             log_den_err (np.ndarray(float)): size N. The array of the log-density errors of the regulariser.
 
         """
+        # assert alpha is between 0 and 1, if not raise an error
+        assert 0.0 <= alpha <= 1.0, "alpha must be between 0 and 1"
 
         # compute changes in free energy
         if self.Fij_array is None:
@@ -428,7 +430,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         if log_den is not None and log_den_err is not None:
             self.log_den = log_den
             self.log_den_err = log_den_err
-        else:
+        elif alpha < 1.0:
             log_den, log_den_err, _ = return_not_normalised_density_kstarNN(
                 self.distances,
                 self.intrinsic_dim,
@@ -536,21 +538,27 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # insert kstarNN with factor 1-alpha in the Gaussian approximation
         # ALREADY MULTIPLIED A BY ALPHA
-        diag = (
-            np.array(-A.sum(axis=1)).reshape((self.N,))
-            + (1.0 - alpha) / self.log_den_err**2
-        )
+        if alpha == 1.0:
+            diag = np.array(-A.sum(axis=1)).reshape((self.N,))
+        else:
+            diag = (
+                np.array(-A.sum(axis=1)).reshape((self.N,))
+                + (1.0 - alpha) / self.log_den_err**2
+            )
 
         A.setdiag(diag)
 
-        deltaFcum = (
-            alpha
-            * (
-                np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
-                - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
+        if alpha == 1.0:
+            deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
+        else:
+            deltaFcum = (
+                alpha
+                * (
+                    np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
+                    - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
+                )
+                + (1.0 - alpha) * self.log_den / self.log_den_err**2
             )
-            + (1.0 - alpha) * self.log_den / self.log_den_err**2
-        )
         if self.verb:
             print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec))
 
