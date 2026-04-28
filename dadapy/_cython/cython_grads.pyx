@@ -239,58 +239,75 @@ def return_cross_common_neighs( np.ndarray[DTYPE_t, ndim = 1] kstar,
         common_neighs_array[ind_spar] = count
 
     return common_neighs_array
+
+
 # ----------------------------------------------------------------------------------------------
 
 
 @cython.boundscheck(False)
+@cython.wraparound(False)
 @cython.cdivision(True)
-def return_diag_inv_deltaFs_cross_covariance_LSDI(long[:,:] nind_list,      # nspar x 2
-                                        double[:,:] p,                  # neigh_similarity_index matrix (NxN)
-                                        double[:] Fij_var_array,
-                                        double[:] seps0,
-                                        double[:] seps1
-                                        ):
-    cdef int nspar = nind_list.shape[0]
+def return_deltaFs_and_var_from_grads(
+    DTYPE_t[:, :] nind_list,
+    floatTYPE_t[:, :] grads,
+    floatTYPE_t[:, :, :] grads_covmat,
+    floatTYPE_t[:, :] neigh_vector_diffs,
+    floatTYPE_t[:] pearson_array,
+):
+    cdef Py_ssize_t nspar = nind_list.shape[0]
+    cdef Py_ssize_t dims = neigh_vector_diffs.shape[1]
+    cdef Py_ssize_t npoints = grads.shape[0]
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_array_nonview = np.zeros(
+        nspar, dtype=floatTYPE
+    )
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_var_array_nonview = np.zeros(
+        nspar, dtype=floatTYPE
+    )
+    cdef floatTYPE_t[::1] Fij_array = Fij_array_nonview
+    cdef floatTYPE_t[::1] Fij_var_array_local = Fij_var_array_nonview
 
-    inv_Gamma_nonview   = np.zeros(nspar, dtype=floatTYPE)       # inverse of diagonal of Gamma matrix
-    cdef double[::1] inv_Gamma = inv_Gamma_nonview
-    
-    #support
-    denom_nonview   = np.zeros(nspar, dtype=floatTYPE)
-    cdef double[::1] denom = denom_nonview
+    cdef Py_ssize_t ind_spar, dim, dim2, i, j
+    cdef double grad_dot, vari, varj, dx_dim, tmpi, tmpj
 
-    cdef double gamma, ptot, sgn
-    cdef int i,j,l,m,a,b  
+    if neigh_vector_diffs.shape[0] != nspar:
+        raise ValueError("nind_list and neigh_vector_diffs must have the same length")
+    if pearson_array.shape[0] != nspar:
+        raise ValueError("pearson_array length must match nind_list length")
+    if grads.shape[1] != dims:
+        raise ValueError("grads and neigh_vector_diffs must have the same dimension")
+    if grads_covmat.shape[0] != npoints:
+        raise ValueError("grads_covmat and grads must have the same number of points")
+    if grads_covmat.shape[1] != dims or grads_covmat.shape[2] != dims:
+        raise ValueError("grads_covmat shape must be (N, dims, dims)")
 
-    for a in range(nspar):
-        i = nind_list[a, 0]
-        j = nind_list[a, 1]
-        inv_Gamma[a] = Fij_var_array[a]
-        denom[a] += Fij_var_array[a]*Fij_var_array[a]
-        for b in range(a+1, nspar):
-            l = nind_list[b, 0]
-            m = nind_list[b, 1]
-            gamma = 0
-            ptot = 0
-            if p[i,l] != 0:
-                ptot += 1
-                gamma += p[i,l]*seps0[a]*seps0[b]
-            if p[i,m] != 0:
-                gamma += p[i,m]*seps0[a]*seps1[b]
-            if p[j,l] != 0:
-                ptot += 1
-                gamma += p[j,l]*seps1[a]*seps0[b]
-            if p[j,m] != 0:
-                gamma += p[j,m]*seps1[a]*seps1[b]
-            if ptot != 0:
-                denom[a] += gamma * gamma / 16.
-                denom[b] += gamma * gamma / 16.
-        
-    for a in range(nspar):
-        inv_Gamma[a] /= denom[a]
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
 
-    #return Gamma, inv_Gamma
-    return np.asarray(inv_Gamma)
+        grad_dot = 0.
+        vari = 0.
+        varj = 0.
+
+        for dim in range(dims):
+            dx_dim = neigh_vector_diffs[ind_spar, dim]
+            grad_dot += (grads[i, dim] + grads[j, dim]) * dx_dim
+
+        for dim in range(dims):
+            dx_dim = neigh_vector_diffs[ind_spar, dim]
+            tmpi = 0.
+            tmpj = 0.
+            for dim2 in range(dims):
+                tmpi += grads_covmat[i, dim, dim2] * neigh_vector_diffs[ind_spar, dim2]
+                tmpj += grads_covmat[j, dim, dim2] * neigh_vector_diffs[ind_spar, dim2]
+            vari += dx_dim * tmpi
+            varj += dx_dim * tmpj
+
+        Fij_array[ind_spar] = 0.5 * grad_dot
+        Fij_var_array_local[ind_spar] = 0.25 * (
+            vari + varj + 2. * pearson_array[ind_spar] * sqrt(vari * varj)
+        )
+
+    return np.asarray(Fij_array), np.asarray(Fij_var_array_local)
 
 
 # ----------------------------------------------------------------------------------------------
@@ -488,5 +505,57 @@ def return_grads_and_covmat_from_nnvecdiffs(np.ndarray[floatTYPE_t, ndim = 2] ne
                                   - grads[i, dim]*grads[i, dim2] / kifloat
 
     return grads, grads_covmat
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_diag_inv_deltaFs_cross_covariance_LSDI(long[:,:] nind_list,      # nspar x 2
+                                        double[:,:] p,                  # neigh_similarity_index matrix (NxN)
+                                        double[:] Fij_var_array,
+                                        double[:] seps0,
+                                        double[:] seps1
+                                        ):
+    cdef int nspar = nind_list.shape[0]
+
+    inv_Gamma_nonview   = np.zeros(nspar, dtype=floatTYPE)       # inverse of diagonal of Gamma matrix
+    cdef double[::1] inv_Gamma = inv_Gamma_nonview
+    
+    #support
+    denom_nonview   = np.zeros(nspar, dtype=floatTYPE)
+    cdef double[::1] denom = denom_nonview
+
+    cdef double gamma, ptot, sgn
+    cdef int i,j,l,m,a,b  
+
+    for a in range(nspar):
+        i = nind_list[a, 0]
+        j = nind_list[a, 1]
+        inv_Gamma[a] = Fij_var_array[a]
+        denom[a] += Fij_var_array[a]*Fij_var_array[a]
+        for b in range(a+1, nspar):
+            l = nind_list[b, 0]
+            m = nind_list[b, 1]
+            gamma = 0
+            ptot = 0
+            if p[i,l] != 0:
+                ptot += 1
+                gamma += p[i,l]*seps0[a]*seps0[b]
+            if p[i,m] != 0:
+                gamma += p[i,m]*seps0[a]*seps1[b]
+            if p[j,l] != 0:
+                ptot += 1
+                gamma += p[j,l]*seps1[a]*seps0[b]
+            if p[j,m] != 0:
+                gamma += p[j,m]*seps1[a]*seps1[b]
+            if ptot != 0:
+                denom[a] += gamma * gamma / 16.
+                denom[b] += gamma * gamma / 16.
+        
+    for a in range(nspar):
+        inv_Gamma[a] /= denom[a]
+
+    #return Gamma, inv_Gamma
+    return np.asarray(inv_Gamma)
 
 # ----------------------------------------------------------------------------------------------

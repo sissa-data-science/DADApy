@@ -243,45 +243,56 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         if self.grads_covmat is None:
             self.compute_grads(comp_covmat=True)
 
+        # check or compute common_neighs
+        if self.pearson_array is None:
+            self.compute_pearson(similarity_method=similarity_method)
+        
         if self.verb:
             print(
                 "Estimation of the gradient semisum (linear) corrections deltaFij to the log-density started"
             )
         sec = time.time()
 
-        Fij_array = np.zeros(self.nspar)
-        self.Fij_var_array = np.zeros(self.nspar)
+        if hasattr(cgr, "return_deltaFs_and_var_from_grads"):
+            self.Fij_array, self.Fij_var_array = cgr.return_deltaFs_and_var_from_grads(
+                self.nind_list,
+                self.grads,
+                self.grads_covmat,
+                self.neigh_vector_diffs,
+                self.pearson_array,
+            )
+        else:
+            # write warning about possible memory issues
+            warnings.warn(
+                "Using fallback method for computing deltaFs (not cython)." \
+                "This may lead to memory issues for large datasets."
+            )
+            g0 = self.grads[self.nind_list[:, 0]]
+            g1 = self.grads[self.nind_list[:, 1]]
+            g_var0 = self.grads_covmat[self.nind_list[:, 0]]
+            g_var1 = self.grads_covmat[self.nind_list[:, 1]]
 
-        g0 = self.grads[self.nind_list[:, 0]]
-        g1 = self.grads[self.nind_list[:, 1]]
-        g_var0 = self.grads_covmat[self.nind_list[:, 0]]
-        g_var1 = self.grads_covmat[self.nind_list[:, 1]]
-
-        # check or compute common_neighs
-        if self.pearson_array is None:
-            self.compute_pearson(similarity_method=similarity_method)
-
-        Fij_array = 0.5 * np.einsum("ij, ij -> i", g0 + g1, self.neigh_vector_diffs)
-        vari = np.einsum(
-            "ij, ij -> i",
-            self.neigh_vector_diffs,
-            np.einsum("ijk, ik -> ij", g_var0, self.neigh_vector_diffs),
-        )
-        varj = np.einsum(
-            "ij, ij -> i",
-            self.neigh_vector_diffs,
-            np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
-        )
-        self.Fij_var_array = 0.25 * (
-            vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj)
-        )
+            self.Fij_array = 0.5 * np.einsum(
+                "ij, ij -> i", g0 + g1, self.neigh_vector_diffs
+            )
+            vari = np.einsum(
+                "ij, ij -> i",
+                self.neigh_vector_diffs,
+                np.einsum("ijk, ik -> ij", g_var0, self.neigh_vector_diffs),
+            )
+            varj = np.einsum(
+                "ij, ij -> i",
+                self.neigh_vector_diffs,
+                np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
+            )
+            self.Fij_var_array = 0.25 * (
+                vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj)
+            )
 
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
 
-        self.Fij_array = Fij_array
-        self.Fij_var_array = self.Fij_var_array
 
     # ----------------------------------------------------------------------------------------------
 
