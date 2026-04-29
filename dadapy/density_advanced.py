@@ -542,7 +542,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         )
 
         # make A symmetric
-        A = alpha * sparse.lil_matrix(A + A.transpose())
+        A = alpha * (A + A.transpose())
 
         # insert kstarNN with factor 1-alpha in the Gaussian approximation
         # ALREADY MULTIPLIED A BY ALPHA
@@ -554,12 +554,16 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 + (1.0 - alpha) / self.log_den_err**2
             )
 
-        A.setdiag(diag)
+        A = A + sparse.diags(diag)
 
         # compute row and column sums of (Fij_array * tmpvec) without constructing full sparse matrix
         weighted_Fij = self.Fij_array * tmpvec
-        col_sums = np.bincount(self.nind_list[:, 1], weights=weighted_Fij, minlength=self.N)
-        row_sums = np.bincount(self.nind_list[:, 0], weights=weighted_Fij, minlength=self.N)
+        col_sums = np.bincount(
+            self.nind_list[:, 1], weights=weighted_Fij, minlength=self.N
+        )
+        row_sums = np.bincount(
+            self.nind_list[:, 0], weights=weighted_Fij, minlength=self.N
+        )
 
         if alpha == 1.0:
             deltaFcum = col_sums - row_sums
