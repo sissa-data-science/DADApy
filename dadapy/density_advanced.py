@@ -201,6 +201,11 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         # check or compute neigh_similarity_index
         if self.neigh_similarity_index is None:
             self.compute_neigh_similarity_index(method=similarity_method)
+
+        # check or compute vector_diffs
+        if self.neigh_vector_diffs is None:
+            self.compute_neigh_vector_diffs()
+
         # check or compute grads
         if self.grads is None:
             self.compute_grads()
