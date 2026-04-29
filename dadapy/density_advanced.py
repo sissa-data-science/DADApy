@@ -246,7 +246,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         # check or compute common_neighs
         if self.pearson_array is None:
             self.compute_pearson(similarity_method=similarity_method)
-        
+
         if self.verb:
             print(
                 "Estimation of the gradient semisum (linear) corrections deltaFij to the log-density started"
@@ -264,7 +264,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         else:
             # write warning about possible memory issues
             warnings.warn(
-                "Using fallback method for computing deltaFs (not cython)." \
+                "Using fallback method for computing deltaFs (not cython)."
                 "This may lead to memory issues for large datasets."
             )
             g0 = self.grads[self.nind_list[:, 0]]
@@ -292,7 +292,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds computing gradient corrections".format(sec2 - sec))
-
 
     # ----------------------------------------------------------------------------------------------
 
@@ -407,7 +406,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 efficient) and a dense solvers are implemented:
                     'sp_direct' (default): scipy.sparse.linalg.spsolve. Performs a LU decomposition of the matrix and
                         then solves the linear system directly. More robust but less memory efficient than other
-                        implemented sparse solvers. Slower than iterative solvers for very sparse and large matrices. 
+                        implemented sparse solvers. Slower than iterative solvers for very sparse and large matrices.
                         To be preferred when the matrix is not very sparse (e.g. often when the dimensionality is low).
                     'sp_cg': scipy.sparse.linalg.cg. This is the iterative conjugate gradient method. It might be
                         preferred to 'direct' for large and sparse matrices. If a log-density estimate is alredy stored
@@ -560,7 +559,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         A.setdiag(diag)
 
         if alpha == 1.0:
-            deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
+            deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(
+                supp_deltaF.sum(axis=1)
+            ).reshape((self.N,))
         else:
             deltaFcum = (
                 alpha

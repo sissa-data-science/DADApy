@@ -247,27 +247,22 @@ def return_cross_common_neighs( np.ndarray[DTYPE_t, ndim = 1] kstar,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def return_deltaFs_and_var_from_grads(
-    DTYPE_t[:, :] nind_list,
-    floatTYPE_t[:, :] grads,
-    floatTYPE_t[:, :, :] grads_covmat,
-    floatTYPE_t[:, :] neigh_vector_diffs,
-    floatTYPE_t[:] pearson_array,
+def return_deltaFs_and_var_from_grads(  np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                        np.ndarray[floatTYPE_t, ndim = 2] grads,
+                                        np.ndarray[floatTYPE_t, ndim = 3] grads_covmat,
+                                        np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                        np.ndarray[floatTYPE_t, ndim=1] pearson_array                                        
 ):
-    cdef Py_ssize_t nspar = nind_list.shape[0]
-    cdef Py_ssize_t dims = neigh_vector_diffs.shape[1]
-    cdef Py_ssize_t npoints = grads.shape[0]
-    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_array_nonview = np.zeros(
-        nspar, dtype=floatTYPE
-    )
-    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_var_array_nonview = np.zeros(
-        nspar, dtype=floatTYPE
-    )
-    cdef floatTYPE_t[::1] Fij_array = Fij_array_nonview
-    cdef floatTYPE_t[::1] Fij_var_array_local = Fij_var_array_nonview
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+    cdef DTYPE_t N = grads.shape[0]
 
-    cdef Py_ssize_t ind_spar, dim, dim2, i, j
-    cdef double grad_dot, vari, varj, dx_dim, tmpi, tmpj
+    cdef DTYPE_t ind_spar, dim, dim2, i, j
+    cdef floatTYPE_t grad_dot, vari, varj, dx_dim, tmpi, tmpj
+
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_array = np.zeros(nspar, dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_var_array = np.zeros(nspar, dtype=floatTYPE)
+        
 
     if neigh_vector_diffs.shape[0] != nspar:
         raise ValueError("nind_list and neigh_vector_diffs must have the same length")
@@ -275,11 +270,11 @@ def return_deltaFs_and_var_from_grads(
         raise ValueError("pearson_array length must match nind_list length")
     if grads.shape[1] != dims:
         raise ValueError("grads and neigh_vector_diffs must have the same dimension")
-    if grads_covmat.shape[0] != npoints:
+    if grads_covmat.shape[0] != N:
         raise ValueError("grads_covmat and grads must have the same number of points")
     if grads_covmat.shape[1] != dims or grads_covmat.shape[2] != dims:
         raise ValueError("grads_covmat shape must be (N, dims, dims)")
-
+    
     for ind_spar in range(nspar):
         i = nind_list[ind_spar, 0]
         j = nind_list[ind_spar, 1]
@@ -289,8 +284,7 @@ def return_deltaFs_and_var_from_grads(
         varj = 0.
 
         for dim in range(dims):
-            dx_dim = neigh_vector_diffs[ind_spar, dim]
-            grad_dot += (grads[i, dim] + grads[j, dim]) * dx_dim
+            grad_dot += (grads[i, dim] + grads[j, dim]) * neigh_vector_diffs[ind_spar, dim]
 
         for dim in range(dims):
             dx_dim = neigh_vector_diffs[ind_spar, dim]
@@ -303,11 +297,11 @@ def return_deltaFs_and_var_from_grads(
             varj += dx_dim * tmpj
 
         Fij_array[ind_spar] = 0.5 * grad_dot
-        Fij_var_array_local[ind_spar] = 0.25 * (
+        Fij_var_array[ind_spar] = 0.25 * (
             vari + varj + 2. * pearson_array[ind_spar] * sqrt(vari * varj)
         )
 
-    return np.asarray(Fij_array), np.asarray(Fij_var_array_local)
+    return Fij_array, Fij_var_array
 
 
 # ----------------------------------------------------------------------------------------------

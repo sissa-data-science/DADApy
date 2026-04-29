@@ -105,7 +105,8 @@ class Clustering(DensityEstimation):
             Z(float): merging parameter
 
         Returns:
-            cluster_assignment (np.ndarray(int)): assignment of points to specific clusters. Also saved in self.cluster_assignment.
+            cluster_assignment (np.ndarray(int)): assignment of points to specific clusters.
+                Also saved in self.cluster_assignment.
             cluster_assignment_halo (np.ndarray(int)): assignment of points to specific cluster core sets, the rest are
                 considered halo points and are assigned label -1. Also saved in self.cluster_assignment_halo.
 
@@ -278,11 +279,11 @@ class Clustering(DensityEstimation):
         density_est="PAk",
         n_jobs=None,
     ):
-        """Predict cluster labels for points X_new outside the training set X coherently with DPA clustering algorithm.
+        """Predict cluster labels for points X_new outside the training set X coherently with DPA clustering algorithm.\
             Interpolated densities are estimated using PAk or kstarNN interpolators.
 
         Args:
-            X_new (np.ndarray(float)): the points for which to predict cluster assignment, of shape (len(X_new), self.dims)
+            X_new (np.ndarray(float)): points for which to predict cluster assignment. Shape (len(X_new), self.dims)
             Dthr (float, optional): likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92
                 corresponds to a p-value of 1e-6 (see compute_kstar).
             distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float))): Distance matrix (N x N),
@@ -297,7 +298,6 @@ class Clustering(DensityEstimation):
             cluster_probability_halo (np.ndarray(float)): probability of each point in X_new to belong to each cluster
                 (currently implemented only 0/1), with halo points. Shape (len(X_new), self.N_clusters).
         """
-
         if distances is not None:
             cross_distances, cross_dist_indices = from_all_distances_to_nndistances(
                 distances, maxk
@@ -369,7 +369,12 @@ class Clustering(DensityEstimation):
             print("{0:0.2f} seconds to predict clusters.".format(time.time() - sec))
             print("{0:0.2f} seconds total run time.".format(time.time() - sec2))
 
-        return cluster_prediction, cluster_prediction_halo, cluster_probability, cluster_probability_halo
+        return (
+            cluster_prediction,
+            cluster_prediction_halo,
+            cluster_probability,
+            cluster_probability_halo,
+        )
 
     def compute_clustering_ADP_pure_python(  # noqa: C901
         self, Z=1.65, halo=False, v2=False
