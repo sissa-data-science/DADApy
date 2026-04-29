@@ -541,13 +541,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             dtype=np.float_,
         )
 
-        # compute coefficients vector
-        supp_deltaF = sparse.csr_matrix(
-            (self.Fij_array * tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
-            shape=(self.N, self.N),
-            dtype=np.float_,
-        )
-
         # make A symmetric
         A = alpha * sparse.lil_matrix(A + A.transpose())
 
@@ -563,17 +556,16 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         A.setdiag(diag)
 
+        # compute row and column sums of (Fij_array * tmpvec) without constructing full sparse matrix
+        weighted_Fij = self.Fij_array * tmpvec
+        col_sums = np.bincount(self.nind_list[:, 1], weights=weighted_Fij, minlength=self.N)
+        row_sums = np.bincount(self.nind_list[:, 0], weights=weighted_Fij, minlength=self.N)
+
         if alpha == 1.0:
-            deltaFcum = np.array(supp_deltaF.sum(axis=0)).reshape((self.N,)) - np.array(
-                supp_deltaF.sum(axis=1)
-            ).reshape((self.N,))
+            deltaFcum = col_sums - row_sums
         else:
             deltaFcum = (
-                alpha
-                * (
-                    np.array(supp_deltaF.sum(axis=0)).reshape((self.N,))
-                    - np.array(supp_deltaF.sum(axis=1)).reshape((self.N,))
-                )
+                alpha * (col_sums - row_sums)
                 + (1.0 - alpha) * self.log_den / self.log_den_err**2
             )
         if self.verb:
