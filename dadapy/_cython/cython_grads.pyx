@@ -240,9 +240,7 @@ def return_cross_common_neighs( np.ndarray[DTYPE_t, ndim = 1] kstar,
 
     return common_neighs_array
 
-
 # ----------------------------------------------------------------------------------------------
-
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -303,6 +301,41 @@ def return_deltaFs_and_var_from_grads(  np.ndarray[DTYPE_t, ndim = 2] nind_list,
 
     return Fij_array, Fij_var_array
 
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def return_deltaFs_from_grads(  np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                np.ndarray[floatTYPE_t, ndim = 2] grads,
+                                np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs
+):
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+
+    cdef DTYPE_t ind_spar, dim, i, j
+    cdef floatTYPE_t grad_dot
+
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_array = np.zeros(nspar, dtype=floatTYPE)
+        
+
+    if neigh_vector_diffs.shape[0] != nspar:
+        raise ValueError("nind_list and neigh_vector_diffs must have the same length")
+    if grads.shape[1] != dims:
+        raise ValueError("grads and neigh_vector_diffs must have the same dimension")
+    
+    for ind_spar in range(nspar):
+        i = nind_list[ind_spar, 0]
+        j = nind_list[ind_spar, 1]
+
+        grad_dot = 0.
+
+        for dim in range(dims):
+            grad_dot += (grads[i, dim] + grads[j, dim]) * neigh_vector_diffs[ind_spar, dim]
+
+        Fij_array[ind_spar] = 0.5 * grad_dot
+
+    return Fij_array
 
 # ----------------------------------------------------------------------------------------------
 

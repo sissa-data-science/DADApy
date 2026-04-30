@@ -91,6 +91,22 @@ def test_compute_deltaFs():
     assert np.allclose(da.Fij_var_array, expected_Fij_var_array)
 
 
+def test_compute_deltaFs_without_var():
+    """Test compute_deltaFs with variance computation disabled."""
+    expected_Fij_array = np.array(
+        [5.999999999999997, 0.0, 0.0, 0.0, 0.0, 3.0000000000000133]
+    )
+
+    da = DensityAdvanced(coordinates=data, maxk=2, verbose=True)
+    da.compute_distances()
+    da.set_id(1)
+    da.set_kstar(2)
+    da.compute_deltaFs(comp_Fij_var=False)
+
+    assert np.allclose(da.Fij_array, expected_Fij_array)
+    assert da.Fij_var_array is None
+
+
 expected_density_BMTI = np.array(
     [
         -1.744691095848123652,

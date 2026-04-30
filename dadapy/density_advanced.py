@@ -228,7 +228,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 )
             )
 
-    def compute_deltaFs(self, similarity_method="jaccard", comp_p_mat=False):
+    def compute_deltaFs(self, similarity_method="jaccard", comp_p_mat=False, comp_Fij_var=True):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
             a linear expansion with as slope the semisum of the average gradient of the log-density over
             the neighbourhood of points i and j.
@@ -242,15 +242,18 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         Args:
             similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
             comp_p_mat: see docs for compute_pearson function
-
+            comp_Fij_var: if False, Fij_var_array is set to None.
         """
 
         if self.grads_covmat is None:
             self.compute_grads(comp_covmat=True)
 
         # check or compute common_neighs
-        if self.pearson_array is None:
+        if comp_Fij_var is True and self.pearson_array is None:
             self.compute_pearson(similarity_method=similarity_method)
+
+        if comp_Fij_var is False:
+            self.Fij_var_array = None
 
         if self.verb:
             print(
@@ -258,13 +261,19 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )
         sec = time.time()
 
-        if hasattr(cgr, "return_deltaFs_and_var_from_grads"):
+        if comp_Fij_var is True and hasattr(cgr, "return_deltaFs_and_var_from_grads"):
             self.Fij_array, self.Fij_var_array = cgr.return_deltaFs_and_var_from_grads(
                 self.nind_list,
                 self.grads,
                 self.grads_covmat,
                 self.neigh_vector_diffs,
                 self.pearson_array,
+            )
+        elif comp_Fij_var is False and hasattr(cgr, "return_deltaFs_from_grads"):
+            self.Fij_array = cgr.return_deltaFs_from_grads(
+                self.nind_list,
+                self.grads,
+                self.neigh_vector_diffs,
             )
         else:
             # write warning about possible memory issues
@@ -274,25 +283,26 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )
             g0 = self.grads[self.nind_list[:, 0]]
             g1 = self.grads[self.nind_list[:, 1]]
-            g_var0 = self.grads_covmat[self.nind_list[:, 0]]
-            g_var1 = self.grads_covmat[self.nind_list[:, 1]]
 
             self.Fij_array = 0.5 * np.einsum(
                 "ij, ij -> i", g0 + g1, self.neigh_vector_diffs
             )
-            vari = np.einsum(
-                "ij, ij -> i",
-                self.neigh_vector_diffs,
-                np.einsum("ijk, ik -> ij", g_var0, self.neigh_vector_diffs),
-            )
-            varj = np.einsum(
-                "ij, ij -> i",
-                self.neigh_vector_diffs,
-                np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
-            )
-            self.Fij_var_array = 0.25 * (
-                vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj)
-            )
+            if comp_Fij_var is True:
+                g_var0 = self.grads_covmat[self.nind_list[:, 0]]
+                g_var1 = self.grads_covmat[self.nind_list[:, 1]]
+                vari = np.einsum(
+                    "ij, ij -> i",
+                    self.neigh_vector_diffs,
+                    np.einsum("ijk, ik -> ij", g_var0, self.neigh_vector_diffs),
+                )
+                varj = np.einsum(
+                    "ij, ij -> i",
+                    self.neigh_vector_diffs,
+                    np.einsum("ijk, ik -> ij", g_var1, self.neigh_vector_diffs),
+                )
+                self.Fij_var_array = 0.25 * (
+                    vari + varj + 2 * self.pearson_array * np.sqrt(vari * varj)
+                )
 
         sec2 = time.time()
         if self.verb:
