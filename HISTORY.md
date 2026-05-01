@@ -1,6 +1,20 @@
 Release History
 ===============
 
+0.3.4 (May 2026)
+------------------
+* Weight sharing and distances in space B by @vdeltatto in https://github.com/sissa-data-science/DADApy/pull/160
+* Causal graph dev by @vdeltatto in https://github.com/sissa-data-science/DADApy/pull/167
+* added the chance to inlcude bonferroni correction for multiple testing in the computation of kstar by @imacocco in https://github.com/sissa-data-science/DADApy/pull/169
+* Dii jax bug fix by @debarshibanerjee in https://github.com/sissa-data-science/DADApy/pull/161
+* Revert "Dii jax bug fix" by @debarshibanerjee in https://github.com/sissa-data-science/DADApy/pull/170
+* Revert "Revert "Dii jax bug fix"" by @debarshibanerjee in https://github.com/sissa-data-science/DADApy/pull/172
+* Dii jax bug fix by @debarshibanerjee in https://github.com/sissa-data-science/DADApy/pull/173
+
+
+**Full Changelog**: https://github.com/sissa-data-science/DADApy/compare/v0.3.3...v0.3.4
+
+
 0.3.3 (Apr 2025)
 ------------------
 * new toml for v.0.3.2 by @wildromi in https://github.com/sissa-data-science/DADApy/pull/147
