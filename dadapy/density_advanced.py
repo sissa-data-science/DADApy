@@ -133,7 +133,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         """Compute the gradient of the log density each point using kstar nearest neighbors and store
 
         Estimate the gradient using an improved version of the mean-shift gradient algorithm [Fukunaga1975] as
-        presented in [Carli2024].
+        presented in [Carli2025].
         Store the computed gradients in grads.
         Also compute the variance of the gradient and store it in grads_var.
         Optionally, the whole covariance matrix can be estimated for gradient
@@ -248,24 +248,28 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             If not defined, compute the Pearson coefficients p (see docs for pearson_array) by running
             compute_pearson.
             Then use these p in the estimate of the variances on the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where
-            E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2024]).
+            E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2025]).
             The log-density differences are stored Fij_array, their variances in Fij_array_var.
 
         Args:
-            similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
-            comp_p_mat: see docs for compute_pearson function
-            comp_Fij_var: if False, Fij_var_array is set to None.
+            similarity_method (str): see docs for neigh_graph.compute_neigh_similarity_index function
+            comp_p_mat (bool): see docs for compute_pearson function
+            comp_Fij_var (bool): if False, Fij_var_array is set to None and grads_covmat is not computed.
         """
-
-        if self.grads_covmat is None:
-            self.compute_grads(comp_covmat=True)
-
-        # check or compute common_neighs
-        if comp_Fij_var is True and self.pearson_array is None:
-            self.compute_pearson(similarity_method=similarity_method)
 
         if comp_Fij_var is False:
             self.Fij_var_array = None
+            if self.grads is None:
+                self.compute_grads(comp_covmat=False)
+
+        elif comp_Fij_var is True:
+            if self.grads_covmat is None:
+                self.compute_grads(comp_covmat=True)
+            # check or compute common_neighs
+            if self.pearson_array is None:
+                self.compute_pearson(similarity_method=similarity_method)
+        else:
+            raise ValueError("comp_Fij_var must be either True or False")
 
         if self.verb:
             print(
