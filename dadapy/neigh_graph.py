@@ -28,6 +28,14 @@ from scipy import sparse
 from dadapy._cython import cython_grads as cgr
 from dadapy.kstar import KStar
 
+try:
+    import jax.numpy as jnp
+
+    _HAS_JAX = True
+except ModuleNotFoundError:
+    jnp = None
+    _HAS_JAX = False
+
 cores = multiprocessing.cpu_count()
 
 
@@ -199,28 +207,102 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_vector_diffs(self):
+    def _compute_neigh_vector_diffs_jax(self, batch_size=None):
+        if not _HAS_JAX:
+            raise ModuleNotFoundError(
+                "JAX is required for backend='jax'. Install `jax` and `jaxlib`."
+            )
+
+        nspar = self.nind_list.shape[0]
+        if batch_size is None:
+            batch_size = nspar
+        batch_size = int(max(1, min(batch_size, nspar)))
+
+        x = jnp.asarray(self.X.astype(np.float64, copy=False))
+        nind = jnp.asarray(self.nind_list.astype(np.int64, copy=False))
+        period = None
+        half_period = None
+        if self.period is not None:
+            period = jnp.asarray(self.period.astype(np.float64, copy=False))
+            half_period = 0.5 * period
+
+        vec_diffs = np.empty((nspar, self.dims), dtype=np.float64)
+        for start in range(0, nspar, batch_size):
+            stop = min(start + batch_size, nspar)
+            pairs = nind[start:stop]
+            diffs = x[pairs[:, 1]] - x[pairs[:, 0]]
+            if period is not None:
+                diffs = jnp.where(diffs > half_period, diffs - period, diffs)
+                diffs = jnp.where(diffs < -half_period, diffs + period, diffs)
+            vec_diffs[start:stop] = np.asarray(diffs)
+
+        return vec_diffs
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_neigh_vector_diffs(
+        self, backend="auto", batch_size=None, n_jobs=None
+    ):
         """Compute the vector differences from each point to its kstar nearest neighbors.
 
         The resulting vectors are stored in neigh_vector_diffs.
+
+        Args:
+            backend (str): 'cython', 'jax', or 'auto' (prefer JAX if available).
+            batch_size (int, optional): batch size used by JAX backend.
+            n_jobs (int, optional): number of threads for Cython parallel backend.
 
         """
         # compute neighbour indices
         if self.nind_list is None:
             self.compute_neigh_indices()
 
+        if backend not in {"cython", "jax", "auto"}:
+            raise ValueError("backend must be one of {'cython', 'jax', 'auto'}")
+        backend_resolved = backend
+        if backend_resolved == "auto":
+            backend_resolved = "jax" if _HAS_JAX else "cython"
+
         if self.verb:
-            print("Computation of the vector differences started")
+            print(
+                f"Computation of the vector differences started (backend='{backend_resolved}')"
+            )
         sec = time.time()
 
-        if self.period is None:
-            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs(
-                self.X, self.nind_list
+        if backend_resolved == "jax":
+            self.neigh_vector_diffs = self._compute_neigh_vector_diffs_jax(
+                batch_size=batch_size
             )
         else:
-            self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_periodic(
-                self.X, self.nind_list, self.period
-            )
+            threads = self.n_jobs if n_jobs is None else n_jobs
+            if self.period is None:
+                if (
+                    threads is not None
+                    and threads > 1
+                    and hasattr(cgr, "return_neigh_vector_diffs_parallel")
+                ):
+                    self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_parallel(
+                        self.X, self.nind_list, int(threads)
+                    )
+                else:
+                    self.neigh_vector_diffs = cgr.return_neigh_vector_diffs(
+                        self.X, self.nind_list
+                    )
+            else:
+                if (
+                    threads is not None
+                    and threads > 1
+                    and hasattr(cgr, "return_neigh_vector_diffs_periodic_parallel")
+                ):
+                    self.neigh_vector_diffs = (
+                        cgr.return_neigh_vector_diffs_periodic_parallel(
+                            self.X, self.nind_list, self.period, int(threads)
+                        )
+                    )
+                else:
+                    self.neigh_vector_diffs = cgr.return_neigh_vector_diffs_periodic(
+                        self.X, self.nind_list, self.period
+                    )
 
         sec2 = time.time()
         if self.verb:

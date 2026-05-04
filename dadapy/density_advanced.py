@@ -35,6 +35,18 @@ from dadapy._utils.density_estimation import return_not_normalised_density_kstar
 from dadapy.density_estimation import DensityEstimation
 from dadapy.neigh_graph import NeighGraph
 
+try:
+    import jax
+    import jax.numpy as jnp
+    import jax.scipy as jsp
+
+    _HAS_JAX = True
+except ModuleNotFoundError:
+    jax = None
+    jnp = None
+    jsp = None
+    _HAS_JAX = False
+
 cores = multiprocessing.cpu_count()
 
 
@@ -399,6 +411,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         alpha=1.0,
         log_den=None,
         log_den_err=None,
+        solver_kwargs=None,
     ):
         """Compute the log-density for each point using BMTI.
 
@@ -432,6 +445,14 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                         settings where 'direct' performs better than 'cg', 'cg_precond' is likely to perform better
                         than 'spolve' and 'cg'. If 'cg' already performs better than 'direct', 'cg_precond' is likely
                         to perform worse than 'cg' alone.
+                    'sp_lsmr': scipy.sparse.linalg.lsmr. Robust iterative least-squares solver suitable for large
+                        sparse systems.
+                    'sp_lsqr': scipy.sparse.linalg.lsqr. Similar to 'sp_lsmr', often competitive on very large sparse
+                        systems.
+                    'sp_jax_cg': jax.scipy.sparse.linalg.cg matrix-free solver. Runs on CPU or GPU according to the
+                        selected JAX device.
+                    'sp_jax_spsolve': jax.experimental.sparse.linalg.spsolve CSR solver (GPU accelerated where
+                        available, CPU falls back to SciPy).
                     'dense': numpy.linalg.solve. Direct solver for dense matrices. O(N^3) complexity, O(N^2) memory
                         complexity. The solver automatically uses multiprocessing if available. This option is suited
                         for small datasets or when memory and cores are not an issue.
@@ -441,6 +462,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 alpha*L_BMTI + (1-alpha)*L_kstarNN. Setting alpha=1.0 corresponds to not reguarising BMTI.
             log_den (np.ndarray(float)): size N. The array of the log-densities of the regulariser.
             log_den_err (np.ndarray(float)): size N. The array of the log-density errors of the regulariser.
+            solver_kwargs (dict, optional): optional kwargs forwarded to the selected solver.
+                For 'sp_jax_cg', supported keys are 'tol', 'atol', 'maxiter', and 'device' ('cpu' or 'gpu').
+                For 'sp_jax_spsolve', supported keys are 'tol', 'reorder', and 'device' ('cpu' or 'gpu').
 
         """
         # assert alpha is between 0 and 1, if not raise an error
@@ -488,7 +512,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # solve linear system
         log_den = self._solve_BMTI_reg_linar_system(
-            A, deltaFcum, solver, sp_direct_perm_spec
+            A, deltaFcum, solver, sp_direct_perm_spec, solver_kwargs=solver_kwargs
         )
         self.log_den = log_den
 
@@ -587,20 +611,121 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         return A, deltaFcum
 
-    def _solve_BMTI_reg_linar_system(self, A, deltaFcum, solver, sp_direct_perm_spec):
+    def _solve_BMTI_reg_linear_system_jax_cg(
+        self, A, deltaFcum, x0=None, tol=1e-5, atol=0.0, maxiter=None, device=None
+    ):
+        if not _HAS_JAX:
+            raise ModuleNotFoundError(
+                "Solver 'sp_jax_cg' requires JAX. Install `jax` and `jaxlib`."
+            )
+
+        A_csr = A.tocsr()
+        data_np = np.asarray(A_csr.data, dtype=np.float64)
+        indices_np = np.asarray(A_csr.indices, dtype=np.int32)
+        indptr_np = np.asarray(A_csr.indptr, dtype=np.int32)
+        row_counts = np.diff(indptr_np)
+        row_ids_np = np.repeat(
+            np.arange(A_csr.shape[0], dtype=np.int32), row_counts.astype(np.int32)
+        )
+
+        b = jnp.asarray(np.asarray(deltaFcum, dtype=np.float64))
+        x0_jax = None
+        if x0 is not None:
+            x0_jax = jnp.asarray(np.asarray(x0, dtype=np.float64))
+
+        data = jnp.asarray(data_np)
+        indices = jnp.asarray(indices_np)
+        row_ids = jnp.asarray(row_ids_np)
+
+        def _matvec(x):
+            return jax.ops.segment_sum(
+                data * x[indices],
+                row_ids,
+                num_segments=A_csr.shape[0],
+                indices_are_sorted=True,
+            )
+
+        def _solve():
+            return jsp.sparse.linalg.cg(
+                _matvec, b, x0=x0_jax, tol=tol, atol=atol, maxiter=maxiter
+            )[0]
+
+        if device is None:
+            log_den = _solve()
+        else:
+            device_name = str(device).lower()
+            candidates = [dev for dev in jax.devices() if dev.platform == device_name]
+            if not candidates:
+                raise ValueError(
+                    f"Requested JAX device '{device_name}' is not available."
+                )
+            with jax.default_device(candidates[0]):
+                log_den = _solve()
+
+        return np.asarray(log_den)
+
+    def _solve_BMTI_reg_linear_system_jax_spsolve(
+        self, A, deltaFcum, tol=1.0e-6, reorder=1, device=None
+    ):
+        if not _HAS_JAX:
+            raise ModuleNotFoundError(
+                "Solver 'sp_jax_spsolve' requires JAX. Install `jax` and `jaxlib`."
+            )
+
+        try:
+            from jax.experimental import sparse as jsparse
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError(
+                "jax.experimental.sparse is not available in the installed JAX version."
+            ) from err
+
+        A_csr = A.tocsr()
+        data = jnp.asarray(np.asarray(A_csr.data, dtype=np.float64))
+        indices = jnp.asarray(np.asarray(A_csr.indices, dtype=np.int32))
+        indptr = jnp.asarray(np.asarray(A_csr.indptr, dtype=np.int32))
+        rhs = jnp.asarray(np.asarray(deltaFcum, dtype=np.float64))
+
+        def _solve():
+            return jsparse.linalg.spsolve(
+                data, indices, indptr, rhs, tol=tol, reorder=reorder
+            )
+
+        if device is None:
+            log_den = _solve()
+        else:
+            device_name = str(device).lower()
+            candidates = [dev for dev in jax.devices() if dev.platform == device_name]
+            if not candidates:
+                raise ValueError(
+                    f"Requested JAX device '{device_name}' is not available."
+                )
+            with jax.default_device(candidates[0]):
+                log_den = _solve()
+
+        return np.asarray(log_den)
+
+    def _solve_BMTI_reg_linar_system(
+        self, A, deltaFcum, solver, sp_direct_perm_spec, solver_kwargs=None
+    ):
+        solver_kwargs = {} if solver_kwargs is None else dict(solver_kwargs)
+        A_csr = A.tocsr()
+
         if solver == "dense":
             # dense solver O(N^3) complexity
             if self.verb:
                 print("Solving dense linear system")
-            log_den = np.linalg.solve(A.todense(), deltaFcum)
+            log_den = np.linalg.solve(A_csr.todense(), deltaFcum)
         elif solver == "sp_cg":
             # conjugate gradient without preconditioner
             if self.verb:
                 print(
                     "Solving by conjugate gradient sparse solver without preconditioner"
                 )
+            rtol = solver_kwargs.pop("rtol", 1.0e-5)
+            atol = solver_kwargs.pop("atol", 0.0)
+            maxiter = solver_kwargs.pop("maxiter", None)
             log_den = sparse.linalg.cg(
-                A.tocsr(), deltaFcum, x0=self.log_den, atol=0.0, maxiter=None
+                A_csr, deltaFcum, x0=self.log_den, rtol=rtol, atol=atol, maxiter=maxiter
             )[0]
         elif solver == "sp_cg_precond":
             # conjugate gradient with preconditioner
@@ -611,18 +736,67 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             # Create preconditioner
             sec = time.time()
             A_csc = sparse.csc_matrix(A)  # Ensure CSC format for spilu
-            M = sparse.linalg.spilu(A_csc)
+            fill_factor = solver_kwargs.pop("fill_factor", 10.0)
+            drop_tol = solver_kwargs.pop("drop_tol", 1.0e-4)
+            rtol = solver_kwargs.pop("rtol", 1.0e-5)
+            atol = solver_kwargs.pop("atol", 0.0)
+            maxiter = solver_kwargs.pop("maxiter", None)
+            M = sparse.linalg.spilu(A_csc, fill_factor=fill_factor, drop_tol=drop_tol)
             preconditioner = sparse.linalg.LinearOperator(A_csc.shape, matvec=M.solve)
             if self.verb:
                 print("{0:0.2f} seconds preconditioning".format(time.time() - sec))
             log_den = sparse.linalg.cg(
-                A.tocsr(),
+                A_csr,
                 deltaFcum,
                 M=preconditioner,
                 x0=self.log_den,
-                atol=0.0,
-                maxiter=None,
+                rtol=rtol,
+                atol=atol,
+                maxiter=maxiter,
             )[0]
+        elif solver == "sp_lsmr":
+            if self.verb:
+                print("Solving by sparse LSMR iterative solver")
+            atol = solver_kwargs.pop("atol", 1.0e-12)
+            btol = solver_kwargs.pop("btol", 1.0e-12)
+            maxiter = solver_kwargs.pop("maxiter", max(1000, 10 * self.N))
+            log_den = sparse.linalg.lsmr(
+                A_csr, deltaFcum, x0=self.log_den, atol=atol, btol=btol, maxiter=maxiter
+            )[0]
+        elif solver == "sp_lsqr":
+            if self.verb:
+                print("Solving by sparse LSQR iterative solver")
+            atol = solver_kwargs.pop("atol", 1.0e-12)
+            btol = solver_kwargs.pop("btol", 1.0e-12)
+            iter_lim = solver_kwargs.pop("iter_lim", max(1000, 10 * self.N))
+            log_den = sparse.linalg.lsqr(
+                A_csr, deltaFcum, x0=self.log_den, atol=atol, btol=btol, iter_lim=iter_lim
+            )[0]
+        elif solver == "sp_jax_cg":
+            if self.verb:
+                print("Solving by JAX sparse conjugate gradient solver")
+            tol = solver_kwargs.pop("tol", 1.0e-5)
+            atol = solver_kwargs.pop("atol", 0.0)
+            maxiter = solver_kwargs.pop("maxiter", None)
+            device = solver_kwargs.pop("device", None)
+            log_den = self._solve_BMTI_reg_linear_system_jax_cg(
+                A_csr,
+                deltaFcum,
+                x0=self.log_den,
+                tol=tol,
+                atol=atol,
+                maxiter=maxiter,
+                device=device,
+            )
+        elif solver == "sp_jax_spsolve":
+            if self.verb:
+                print("Solving by JAX CSR sparse solver")
+            tol = solver_kwargs.pop("tol", 1.0e-6)
+            reorder = solver_kwargs.pop("reorder", 1)
+            device = solver_kwargs.pop("device", None)
+            log_den = self._solve_BMTI_reg_linear_system_jax_spsolve(
+                A_csr, deltaFcum, tol=tol, reorder=reorder, device=device
+            )
         else:
             # default solver: sp_direct
             if solver != "sp_direct":
@@ -633,9 +807,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 print(
                     f"Solving with 'sp_direct' sparse solver with perm_spec='{sp_direct_perm_spec}'"
                 )
-            print("cast to csr")
             log_den = sparse.linalg.spsolve(
-                A.tocsr(), deltaFcum, permc_spec=sp_direct_perm_spec
+                A_csr, deltaFcum, permc_spec=sp_direct_perm_spec
+            )
+
+        if solver_kwargs:
+            warnings.warn(
+                f"Unused solver_kwargs entries for solver '{solver}': {sorted(solver_kwargs.keys())}"
             )
 
         return log_den

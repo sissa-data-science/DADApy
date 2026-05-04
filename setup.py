@@ -95,18 +95,24 @@ exts_parallel = [
     ),
 ]
 
-extra_compile_args = (["-fopenmp"],)
-extra_link_args = (["-fopenmp"],)
-
 # Check if the '-fopenmp' flag is supported
-command = 'gcc -fopenmp -E - < /dev/null > /dev/null 2>&1 && echo "OpenMP supported" || echo "OpenMP not supported"'
+command = "gcc -fopenmp -E - < /dev/null > /dev/null 2>&1"
 
-if os.system(command) == "OpenMP supported":
-    # If '-fopenmp' is supported, add the extra compile and link arguments
-    # Installing cython_distances using OpenMP
-    for ext_parallel in exts_parallel:
-        ext_parallel.extra_compile_args.append("-fopenmp")
-        ext_parallel.extra_link_args.append("-fopenmp")
+parallel_ext_names = {
+    "dadapy._cython.cython_density",
+    "dadapy._cython.cython_grads",
+    "dadapy._cython.cython_distances",
+    "dadapy._cython.cython_differentiable_imbalance",
+}
+
+if os.system(command) == 0:
+    # If '-fopenmp' is supported, add the extra compile and link arguments.
+    for ext in ext_modules + exts_parallel:
+        if ext.name in parallel_ext_names:
+            ext.extra_compile_args = list(ext.extra_compile_args or [])
+            ext.extra_link_args = list(ext.extra_link_args or [])
+            ext.extra_compile_args.append("-fopenmp")
+            ext.extra_link_args.append("-fopenmp")
 
 # If OpenMP is not available, the C extension to compute distances in discrete spaces will not run in parallel.
 

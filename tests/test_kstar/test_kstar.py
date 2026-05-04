@@ -16,8 +16,16 @@
 """Module for testing the KStar class."""
 
 import numpy as np
+import pytest
 
 from dadapy import KStar
+
+try:
+    import jax  # noqa: F401
+
+    HAS_JAX = True
+except ModuleNotFoundError:
+    HAS_JAX = False
 
 # define a basic dataset with 6 points
 data = np.array([[0, 0], [0.1, 0], [0.2, 0], [4, 0], [4.1, 0], [4.2, 0]])
@@ -57,3 +65,25 @@ def test_set_kstar():
     kstar.set_kstar(k=set_kstar)
     # check that the result is correct
     assert np.array_equal(kstar.kstar, set_kstar)
+
+
+def test_compute_kstar_auto_backend():
+    """Test that auto backend is consistent with cython backend."""
+    kstar = KStar(coordinates=data)
+    kstar.compute_kstar(Dthr=0.0, backend="cython")
+    expected = kstar.kstar.copy()
+    kstar.compute_kstar(Dthr=0.0, backend="auto")
+    assert np.array_equal(kstar.kstar, expected)
+
+
+def test_compute_kstar_jax_backend():
+    """Test the jax backend or the expected error if jax is unavailable."""
+    kstar = KStar(coordinates=data)
+    if HAS_JAX:
+        kstar.compute_kstar(Dthr=0.0, backend="cython")
+        expected = kstar.kstar.copy()
+        kstar.compute_kstar(Dthr=0.0, backend="jax")
+        assert np.array_equal(kstar.kstar, expected)
+    else:
+        with pytest.raises(ModuleNotFoundError):
+            kstar.compute_kstar(Dthr=0.0, backend="jax")

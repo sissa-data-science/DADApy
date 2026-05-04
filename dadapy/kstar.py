@@ -24,9 +24,18 @@ import time
 import warnings
 
 import numpy as np
+from scipy.special import gammaln
 
 from dadapy._cython import cython_density as cd
 from dadapy.id_estimation import IdEstimation
+
+try:
+    import jax.numpy as jnp
+
+    _HAS_JAX = True
+except ModuleNotFoundError:
+    jnp = None
+    _HAS_JAX = False
 
 cores = multiprocessing.cpu_count()
 
@@ -96,13 +105,93 @@ class KStar(IdEstimation):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_kstar(self, Dthr=23.92812698):
+    def compute_kstar(
+        self, Dthr=23.92812698,
+        backend="auto",
+        batch_size=None,
+        n_jobs=None
+    ):
         """Compute an optimal choice of the neighbourhood size k for each point.
 
         Args:
             Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
                 to a p-value of 1e-6.
+            backend (str): 'cython', 'jax', or 'auto' (prefer JAX if available).
+            batch_size (int, optional): batch size used by the JAX backend to reduce peak memory usage.
+            n_jobs (int, optional): number of threads for the Cython parallel backend.
 
+        """
+        return self._compute_kstar(
+            Dthr=Dthr,
+            backend=backend,
+            batch_size=batch_size,
+            n_jobs=n_jobs
+        )
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _compute_kstar_jax(self, Dthr=23.92812698, batch_size=None):
+        if not _HAS_JAX:
+            raise ModuleNotFoundError(
+                "JAX is required for backend='jax'. Install `jax` and `jaxlib`."
+            )
+
+        if self.maxk <= 1:
+            return np.ones(self.N, dtype=int)
+
+        if self.maxk <= 4:
+            return np.full(self.N, self.maxk - 1, dtype=int)
+
+        if batch_size is None:
+            batch_size = self.N
+        batch_size = int(max(1, min(batch_size, self.N)))
+
+        id_sel = float(self.intrinsic_dim)
+        prefactor = np.exp(
+            id_sel / 2.0 * np.log(np.pi) - gammaln((id_sel + 2.0) / 2.0)
+        )
+
+        dist_indices = jnp.asarray(self.dist_indices.astype(np.int64, copy=False))
+        distances = jnp.asarray(self.distances.astype(np.float64, copy=False))
+        j_values = jnp.arange(4, self.maxk, dtype=dist_indices.dtype)
+        ksels = j_values - 1
+
+        kstar = np.empty(self.N, dtype=np.int64)
+        for start in range(0, self.N, batch_size):
+            stop = min(start + batch_size, self.N)
+            rows = jnp.arange(start, stop, dtype=dist_indices.dtype)
+            row_grid = rows[:, None]
+
+            vvi = prefactor * jnp.power(distances[row_grid, ksels[None, :]], id_sel)
+            neigh_rows = dist_indices[row_grid, j_values[None, :]]
+            vvj = prefactor * jnp.power(distances[neigh_rows, ksels[None, :]], id_sel)
+
+            dL = -2.0 * ksels[None, :] * (
+                jnp.log(vvi)
+                + jnp.log(vvj)
+                - 2.0 * jnp.log(vvi + vvj)
+                + np.log(4.0)
+            )
+            reached = dL >= Dthr
+            first_reached = jnp.argmax(reached, axis=1)
+            has_reached = jnp.any(reached, axis=1)
+            batch_kstar = jnp.where(has_reached, first_reached + 2, self.maxk - 1)
+            kstar[start:stop] = np.asarray(batch_kstar, dtype=np.int64)
+
+        return kstar
+
+    # ----------------------------------------------------------------------------------------------
+
+    def _compute_kstar(
+        self, Dthr=23.92812698, backend="auto", batch_size=None, n_jobs=None
+    ):
+        """Compute an optimal choice of the neighbourhood size k for each point.
+
+        Args:
+            Dthr (float): likelihood-ratio threshold.
+            backend (str): 'cython', 'jax', or 'auto'.
+            batch_size (int or None): used only by backend='jax'.
+            n_jobs (int or None): used by backend='cython' if an OpenMP-enabled Cython kernel is available.
         """
         if self.intrinsic_dim is None:
             warnings.warn(
@@ -111,19 +200,52 @@ class KStar(IdEstimation):
             )
             _ = self.compute_id_2NN()
 
+        if self.distances is None or self.dist_indices is None:
+            self.compute_distances()
+
+        if backend not in {"cython", "jax", "auto"}:
+            raise ValueError("backend must be one of {'cython', 'jax', 'auto'}")
+
+        backend_resolved = backend
+        if backend_resolved == "auto":
+            backend_resolved = "jax" if _HAS_JAX else "cython"
+
         if self.verb:
-            print(f"kstar estimation started, Dthr = {Dthr}")
+            print(
+                f"kstar estimation started, Dthr = {Dthr}, backend = '{backend_resolved}'"
+            )
 
         sec = time.time()
 
-        kstar = cd._compute_kstar(
-            self.intrinsic_dim,
-            self.N,
-            self.maxk,
-            Dthr,
-            self.dist_indices.astype("int64"),
-            self.distances.astype("float64"),
-        )
+        if backend_resolved == "jax":
+            kstar = self._compute_kstar_jax(Dthr=Dthr, batch_size=batch_size)
+        else:
+            dist_indices = self.dist_indices.astype(np.int64, copy=False)
+            distances = self.distances.astype(np.float64, copy=False)
+            threads = self.n_jobs if n_jobs is None else n_jobs
+            if (
+                threads is not None
+                and threads > 1
+                and hasattr(cd, "_compute_kstar_parallel")
+            ):
+                kstar = cd._compute_kstar_parallel(
+                    self.intrinsic_dim,
+                    self.N,
+                    self.maxk,
+                    Dthr,
+                    dist_indices,
+                    distances,
+                    int(threads),
+                )
+            else:
+                kstar = cd._compute_kstar(
+                    self.intrinsic_dim,
+                    self.N,
+                    self.maxk,
+                    Dthr,
+                    dist_indices,
+                    distances,
+                )
 
         self.set_kstar(kstar)
 

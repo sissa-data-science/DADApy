@@ -4,6 +4,7 @@ import cython
 import numpy as np
 
 cimport numpy as np
+from cython.parallel cimport prange
 
 DTYPE = np.int_
 floatTYPE = np.float_
@@ -89,6 +90,31 @@ def return_neigh_vector_diffs(np.ndarray[floatTYPE_t, ndim = 2] X,
 
 # ----------------------------------------------------------------------------------------------
 
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_vector_diffs_parallel(np.ndarray[floatTYPE_t, ndim = 2] X,
+                                       np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                       DTYPE_t n_jobs):
+    cdef DTYPE_t dims = X.shape[1]
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims), dtype=floatTYPE)
+
+    cdef DTYPE_t i, j, ind_spar, dim
+    cdef floatTYPE_t[:, ::1] Xv = X
+    cdef DTYPE_t[:, ::1] nind_v = nind_list
+    cdef floatTYPE_t[:, ::1] vector_diffs_v = vector_diffs
+
+    with nogil:
+        for ind_spar in prange(nspar, schedule='static', num_threads=n_jobs):
+            i = nind_v[ind_spar, 0]
+            j = nind_v[ind_spar, 1]
+            for dim in range(dims):
+                vector_diffs_v[ind_spar, dim] = Xv[j, dim] - Xv[i, dim]
+
+    return vector_diffs
+
+# ----------------------------------------------------------------------------------------------
+
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
@@ -112,6 +138,41 @@ def return_neigh_vector_diffs_periodic(np.ndarray[floatTYPE_t, ndim = 2] X,
             if temp < -period[dim]/2:
                 temp += period[dim] 
             vector_diffs[ind_spar, dim] = temp
+
+    return vector_diffs
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_vector_diffs_periodic_parallel(np.ndarray[floatTYPE_t, ndim = 2] X,
+                                                np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                                np.ndarray[floatTYPE_t, ndim = 1] period,
+                                                DTYPE_t n_jobs):
+    cdef DTYPE_t dims = X.shape[1]
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] vector_diffs = np.ndarray((nspar, dims), dtype=floatTYPE)
+
+    cdef DTYPE_t i, j, ind_spar, dim
+    cdef floatTYPE_t temp, half_period, period_dim
+    cdef floatTYPE_t[:, ::1] Xv = X
+    cdef DTYPE_t[:, ::1] nind_v = nind_list
+    cdef floatTYPE_t[::1] period_v = period
+    cdef floatTYPE_t[:, ::1] vector_diffs_v = vector_diffs
+
+    with nogil:
+        for ind_spar in prange(nspar, schedule='static', num_threads=n_jobs):
+            i = nind_v[ind_spar, 0]
+            j = nind_v[ind_spar, 1]
+            for dim in range(dims):
+                temp = Xv[j, dim] - Xv[i, dim]
+                period_dim = period_v[dim]
+                half_period = period_dim / 2.0
+                if temp > half_period:
+                    temp = temp - period_dim
+                if temp < -half_period:
+                    temp = temp + period_dim
+                vector_diffs_v[ind_spar, dim] = temp
 
     return vector_diffs
 

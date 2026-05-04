@@ -16,8 +16,16 @@
 """Module for testing the NeighGraph class."""
 
 import numpy as np
+import pytest
 
 from dadapy import NeighGraph
+
+try:
+    import jax  # noqa: F401
+
+    HAS_JAX = True
+except ModuleNotFoundError:
+    HAS_JAX = False
 
 # define a basic dataset with 6 points
 data = np.array([[0, 0], [0.15, 0], [0.2, 0], [4, 0], [4.09, 0], [4.2, 0]])
@@ -120,6 +128,31 @@ def test_compute_neigh_vector_diffs():
     neigh_graph.compute_neigh_vector_diffs()
     # check that the result is correct
     assert np.allclose(neigh_graph.neigh_vector_diffs, neigh_vector_diffs)
+
+
+def test_compute_neigh_vector_diffs_auto_backend():
+    """Test that auto backend is consistent with cython backend."""
+    neigh_graph = NeighGraph(coordinates=data)
+    neigh_graph.compute_kstar(Dthr=0.0)
+    neigh_graph.compute_neigh_vector_diffs(backend="cython")
+    expected = neigh_graph.neigh_vector_diffs.copy()
+    neigh_graph.compute_neigh_vector_diffs(backend="auto")
+    assert np.allclose(neigh_graph.neigh_vector_diffs, expected)
+
+
+def test_compute_neigh_vector_diffs_jax_backend():
+    """Test the jax backend or the expected error if jax is unavailable."""
+    neigh_graph = NeighGraph(coordinates=data)
+    neigh_graph.compute_kstar(Dthr=0.0)
+
+    if HAS_JAX:
+        neigh_graph.compute_neigh_vector_diffs(backend="cython")
+        expected = neigh_graph.neigh_vector_diffs.copy()
+        neigh_graph.compute_neigh_vector_diffs(backend="jax")
+        assert np.allclose(neigh_graph.neigh_vector_diffs, expected)
+    else:
+        with pytest.raises(ModuleNotFoundError):
+            neigh_graph.compute_neigh_vector_diffs(backend="jax")
 
 
 def test_compute_common_neighs():

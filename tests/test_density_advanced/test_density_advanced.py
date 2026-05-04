@@ -18,8 +18,16 @@
 import os
 
 import numpy as np
+import pytest
 
 from dadapy import DensityAdvanced
+
+try:
+    import jax  # noqa: F401
+
+    HAS_JAX = True
+except ModuleNotFoundError:
+    HAS_JAX = False
 
 # define a basic dataset with 6 points
 data = np.array([[0, 0], [0.15, 0], [0.2, 0], [4, 0], [4.1, 0], [4.2, 0]])
@@ -150,3 +158,63 @@ def test_density_BMTI():
     da.compute_density_BMTI(alpha=0.99)
 
     assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+
+
+def test_density_BMTI_sp_lsmr():
+    """Test BMTI with sparse LSMR solver."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+    da.compute_density_BMTI(alpha=0.99, solver="sp_lsmr")
+
+    assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+
+
+def test_density_BMTI_sp_lsqr():
+    """Test BMTI with sparse LSQR solver."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+    da.compute_density_BMTI(alpha=0.99, solver="sp_lsqr")
+
+    assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+
+
+def test_density_BMTI_sp_jax_cg():
+    """Test the JAX-CG solver or expected error if JAX is unavailable."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+
+    if HAS_JAX:
+        da.compute_density_BMTI(alpha=0.99, solver="sp_jax_cg")
+        assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+    else:
+        with pytest.raises(ModuleNotFoundError):
+            da.compute_density_BMTI(alpha=0.99, solver="sp_jax_cg")
+
+
+def test_density_BMTI_sp_jax_spsolve():
+    """Test the JAX sparse-direct solver or expected error if JAX is unavailable."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+
+    if HAS_JAX:
+        da.compute_density_BMTI(alpha=0.99, solver="sp_jax_spsolve")
+        assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+    else:
+        with pytest.raises(ModuleNotFoundError):
+            da.compute_density_BMTI(alpha=0.99, solver="sp_jax_spsolve")
