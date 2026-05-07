@@ -75,9 +75,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             squared errors on the values in Fij_array
         inv_deltaFs_cov (np.array(float), optional): size nspar. Stores for each couple in nind_list the estimates of
             the inverse cross-covariance of the deltaFs, that is: cov [ deltaFij , deltaFlm ] .
-        A_BMTI (scipy.sparse.csr_matrix, optional): matrix of the linear system used in the latest
+        _A_BMTI (scipy.sparse.csr_matrix, optional): matrix of the linear system used in the latest
             compute_density_BMTI call.
-        b_BMTI (np.ndarray(float), optional): right-hand side vector of the linear system used in the latest
+        _b_BMTI (np.ndarray(float), optional): right-hand side vector of the linear system used in the latest
             compute_density_BMTI call.
 
     """
@@ -108,8 +108,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
-        self.A_BMTI = None
-        self.b_BMTI = None
+        self._A_BMTI = None
+        self._b_BMTI = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -132,8 +132,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
-        self.A_BMTI = None
-        self.b_BMTI = None
+        self._A_BMTI = None
+        self._b_BMTI = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -517,8 +517,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # define the likelihood covarince matrix
         A, b = self._get_BMTI_reg_linear_system(delta_F_inv_cov, alpha)
-        self.A_BMTI = A
-        self.b_BMTI = b
+        self._A_BMTI = A
+        self._b_BMTI = b
         sec2 = time.time()
 
         if self.verb:
