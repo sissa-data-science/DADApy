@@ -157,6 +157,10 @@ def test_density_BMTI():
     da.set_id(2)
     da.compute_density_BMTI(alpha=0.99)
 
+    assert da.A_BMTI is not None
+    assert da.b_BMTI is not None
+    assert da.A_BMTI.shape == (X.shape[0], X.shape[0])
+    assert da.b_BMTI.shape == (X.shape[0],)
     assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
 
 

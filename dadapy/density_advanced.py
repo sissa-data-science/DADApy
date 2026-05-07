@@ -75,6 +75,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             squared errors on the values in Fij_array
         inv_deltaFs_cov (np.array(float), optional): size nspar. Stores for each couple in nind_list the estimates of
             the inverse cross-covariance of the deltaFs, that is: cov [ deltaFij , deltaFlm ] .
+        A_BMTI (scipy.sparse.csr_matrix, optional): matrix of the linear system used in the latest
+            compute_density_BMTI call.
+        b_BMTI (np.ndarray(float), optional): right-hand side vector of the linear system used in the latest
+            compute_density_BMTI call.
 
     """
 
@@ -104,6 +108,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
+        self.A_BMTI = None
+        self.b_BMTI = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -126,6 +132,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         self.Fij_array = None
         self.Fij_var_array = None
         self.inv_deltaFs_cov = None
+        self.A_BMTI = None
+        self.b_BMTI = None
 
     # ----------------------------------------------------------------------------------------------
 
@@ -508,7 +516,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             sec = time.time()
 
         # define the likelihood covarince matrix
-        A, deltaFcum = self._get_BMTI_reg_linear_system(delta_F_inv_cov, alpha)
+        A, b = self._get_BMTI_reg_linear_system(delta_F_inv_cov, alpha)
+        self.A_BMTI = A
+        self.b_BMTI = b
         sec2 = time.time()
 
         if self.verb:
@@ -516,7 +526,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # solve linear system
         log_den = self._solve_BMTI_reg_linar_system(
-            A, deltaFcum, solver, sp_direct_perm_spec, solver_kwargs=solver_kwargs
+            A, b, solver, sp_direct_perm_spec, solver_kwargs=solver_kwargs
         )
         self.log_den = log_den
 
@@ -604,19 +614,19 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         )
 
         if alpha == 1.0:
-            deltaFcum = col_sums - row_sums
+            b = col_sums - row_sums
         else:
-            deltaFcum = (
+            b = (
                 alpha * (col_sums - row_sums)
                 + (1.0 - alpha) * self.log_den / self.log_den_err**2
             )
         if self.verb:
             print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec))
 
-        return A, deltaFcum
+        return A, b
 
     def _solve_BMTI_reg_linear_system_jax_cg(
-        self, A, deltaFcum, x0=None, tol=1e-5, atol=0.0, maxiter=None, device=None
+        self, A, b, x0=None, tol=1e-5, atol=0.0, maxiter=None, device=None
     ):
         if not _HAS_JAX:
             raise ModuleNotFoundError(
@@ -632,7 +642,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             np.arange(A_csr.shape[0], dtype=np.int32), row_counts.astype(np.int32)
         )
 
-        b = jnp.asarray(np.asarray(deltaFcum, dtype=np.float64))
+        b = jnp.asarray(np.asarray(b, dtype=np.float64))
         x0_jax = None
         if x0 is not None:
             x0_jax = jnp.asarray(np.asarray(x0, dtype=np.float64))
@@ -669,7 +679,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         return np.asarray(log_den)
 
     def _solve_BMTI_reg_linear_system_jax_spsolve(
-        self, A, deltaFcum, tol=1.0e-6, reorder=1, device=None
+        self, A, b, tol=1.0e-6, reorder=1, device=None
     ):
         if not _HAS_JAX:
             raise ModuleNotFoundError(
@@ -687,7 +697,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         data = jnp.asarray(np.asarray(A_csr.data, dtype=np.float64))
         indices = jnp.asarray(np.asarray(A_csr.indices, dtype=np.int32))
         indptr = jnp.asarray(np.asarray(A_csr.indptr, dtype=np.int32))
-        rhs = jnp.asarray(np.asarray(deltaFcum, dtype=np.float64))
+        rhs = jnp.asarray(np.asarray(b, dtype=np.float64))
 
         def _solve():
             return jsparse.linalg.spsolve(
@@ -709,7 +719,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         return np.asarray(log_den)
 
     def _solve_BMTI_reg_linar_system(
-        self, A, deltaFcum, solver, sp_direct_perm_spec, solver_kwargs=None
+        self, A, b, solver, sp_direct_perm_spec, solver_kwargs=None
     ):
         solver_kwargs = {} if solver_kwargs is None else dict(solver_kwargs)
         A_csr = A.tocsr()
@@ -718,7 +728,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             # dense solver O(N^3) complexity
             if self.verb:
                 print("Solving dense linear system")
-            log_den = np.linalg.solve(A_csr.todense(), deltaFcum)
+            log_den = np.linalg.solve(A_csr.todense(), b)
         elif solver == "sp_cg":
             # conjugate gradient without preconditioner
             if self.verb:
@@ -729,7 +739,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             atol = solver_kwargs.pop("atol", 0.0)
             maxiter = solver_kwargs.pop("maxiter", None)
             log_den = sparse.linalg.cg(
-                A_csr, deltaFcum, x0=self.log_den, rtol=rtol, atol=atol, maxiter=maxiter
+                A_csr, b, x0=self.log_den, rtol=rtol, atol=atol, maxiter=maxiter
             )[0]
         elif solver == "sp_cg_precond":
             # conjugate gradient with preconditioner
@@ -751,7 +761,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 print("{0:0.2f} seconds preconditioning".format(time.time() - sec))
             log_den = sparse.linalg.cg(
                 A_csr,
-                deltaFcum,
+                b,
                 M=preconditioner,
                 x0=self.log_den,
                 rtol=rtol,
@@ -765,7 +775,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             btol = solver_kwargs.pop("btol", 1.0e-12)
             maxiter = solver_kwargs.pop("maxiter", max(1000, 10 * self.N))
             log_den = sparse.linalg.lsmr(
-                A_csr, deltaFcum, x0=self.log_den, atol=atol, btol=btol, maxiter=maxiter
+                A_csr, b, x0=self.log_den, atol=atol, btol=btol, maxiter=maxiter
             )[0]
         elif solver == "sp_lsqr":
             if self.verb:
@@ -774,7 +784,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             btol = solver_kwargs.pop("btol", 1.0e-12)
             iter_lim = solver_kwargs.pop("iter_lim", max(1000, 10 * self.N))
             log_den = sparse.linalg.lsqr(
-                A_csr, deltaFcum, x0=self.log_den, atol=atol, btol=btol, iter_lim=iter_lim
+                A_csr, b, x0=self.log_den, atol=atol, btol=btol, iter_lim=iter_lim
             )[0]
         elif solver == "sp_jax_cg":
             if self.verb:
@@ -785,7 +795,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             device = solver_kwargs.pop("device", None)
             log_den = self._solve_BMTI_reg_linear_system_jax_cg(
                 A_csr,
-                deltaFcum,
+                b,
                 x0=self.log_den,
                 tol=tol,
                 atol=atol,
@@ -799,7 +809,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             reorder = solver_kwargs.pop("reorder", 1)
             device = solver_kwargs.pop("device", None)
             log_den = self._solve_BMTI_reg_linear_system_jax_spsolve(
-                A_csr, deltaFcum, tol=tol, reorder=reorder, device=device
+                A_csr, b, tol=tol, reorder=reorder, device=device
             )
         else:
             # default solver: sp_direct
@@ -812,7 +822,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                     f"Solving with 'sp_direct' sparse solver with perm_spec='{sp_direct_perm_spec}'"
                 )
             log_den = sparse.linalg.spsolve(
-                A_csr, deltaFcum, permc_spec=sp_direct_perm_spec
+                A_csr, b, permc_spec=sp_direct_perm_spec
             )
 
         if solver_kwargs:
