@@ -423,6 +423,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         alpha=1.0,
         log_den=None,
         log_den_err=None,
+        gauge_fixing="pin_node",
         solver_kwargs=None,
     ):
         """Compute the log-density for each point using BMTI.
@@ -468,12 +469,20 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                     'dense': numpy.linalg.solve. Direct solver for dense matrices. O(N^3) complexity, O(N^2) memory
                         complexity. The solver automatically uses multiprocessing if available. This option is suited
                         for small datasets or when memory and cores are not an issue.
+                Note: with gauge_fixing='zero_mean', the BMTI system is augmented with a zero-mean gauge constraint.
+                If a conjugate-gradient solver ('sp_cg', 'sp_cg_precond', 'sp_jax_cg') is selected, a warning is
+                emitted and a compatible fallback solver is used automatically.
             sp_direct_perm_spec (str): specify the permutation strategy to use when solving the linear system with the
                 'sp_direct' solver. See the scipy.sparse.linalg.spsolve documentation for more information.
             alpha (float): can take values from 0.0 to 1.0. Indicates the portion of BMTI in the sum of the likelihoods
                 alpha*L_BMTI + (1-alpha)*L_kstarNN. Setting alpha=1.0 corresponds to not reguarising BMTI.
             log_den (np.ndarray(float)): size N. The array of the log-densities of the regulariser.
             log_den_err (np.ndarray(float)): size N. The array of the log-density errors of the regulariser.
+            gauge_fixing (str): gauge-fixing strategy for the linear system. Options:
+                'pin_node' (default): pin the node with largest self.log_den to its self.log_den value.
+                    If self.log_den is None, self.compute_density_kstarNN() is called first.
+                'zero_mean': enforce sum_i log_den_i = 0 through an augmented system.
+                'None': do not apply gauge fixing and solve the original N x N system.
             solver_kwargs (dict, optional): optional kwargs forwarded to the selected solver.
                 For 'sp_jax_cg', supported keys are 'tol', 'atol', 'maxiter', and 'device' ('cpu' or 'gpu').
                 For 'sp_jax_spsolve', supported keys are 'tol', 'reorder', and 'device' ('cpu' or 'gpu').
@@ -481,6 +490,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         """
         # assert alpha is between 0 and 1, if not raise an error
         assert 0.0 <= alpha <= 1.0, "alpha must be between 0 and 1"
+
+        if gauge_fixing is None:
+            gauge_fixing = "None"
+        if gauge_fixing not in {"zero_mean", "pin_node", "None"}:
+            raise ValueError(
+                "gauge_fixing must be one of {'zero_mean', 'pin_node', 'None'}"
+            )
 
         # compute changes in free energy
         if self.Fij_array is None:
@@ -516,7 +532,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             sec = time.time()
 
         # define the likelihood covarince matrix
-        A, b = self._get_BMTI_reg_linear_system(delta_F_inv_cov, alpha)
+        A, b = self._get_BMTI_reg_linear_system(
+            delta_F_inv_cov, alpha, gauge_fixing=gauge_fixing
+        )
         self._A_BMTI = A
         self._b_BMTI = b
         sec2 = time.time()
@@ -525,10 +543,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             print("{0:0.2f} seconds to get linear system ready".format(sec2 - sec))
 
         # solve linear system
-        log_den = self._solve_BMTI_reg_linar_system(
+        solution = self._solve_BMTI_reg_linar_system(
             A, b, solver, sp_direct_perm_spec, solver_kwargs=solver_kwargs
         )
-        self.log_den = log_den
+        if solution.shape[0] == self.N + 1:
+            self.log_den = solution[: self.N]
+        else:
+            self.log_den = solution
 
         if self.verb:
             print("{0:0.2f} seconds to solve linear system".format(time.time() - sec2))
@@ -536,9 +557,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         # compute error
         if comp_log_den_err is True:
-            A = A.todense()
-            B = slin.pinvh(A)
-            self.log_den_err = np.sqrt(np.diag(B))
+            B = slin.pinvh(A.todense())
+            self.log_den_err = np.sqrt(np.asarray(np.diag(B)).reshape(-1)[: self.N])
 
             if self.verb:
                 print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
@@ -551,7 +571,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def _get_BMTI_reg_linear_system(self, delta_F_inv_cov, alpha):
+    def _get_BMTI_reg_linear_system(self, delta_F_inv_cov, alpha, gauge_fixing):
         sec = time.time()
         if delta_F_inv_cov == "uncorr":
             # define redundancy factor for each A matrix entry as the geometric mean of the 2 corresponding kstar
@@ -623,7 +643,43 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         if self.verb:
             print("{0:0.2f} seconds to fill sparse matrix".format(time.time() - sec))
 
+        if gauge_fixing == "zero_mean":
+            return self._apply_zero_mean_constraint(A, b)
+        if gauge_fixing == "pin_node":
+            return self._apply_pin_node_constraint(A, b)
         return A, b
+
+    def _apply_zero_mean_constraint(self, A, b):
+        """Augment the BMTI system with a zero-mean constraint on the solution.
+
+        Solve:
+            [A  1][x] = [b]
+            [1^T 0][λ]   [0]
+        """
+        ones = sparse.csr_matrix(np.ones((self.N, 1), dtype=np.float64))
+        zero = sparse.csr_matrix((1, 1), dtype=np.float64)
+        A_aug = sparse.bmat([[A, ones], [ones.T, zero]], format="csr")
+        b_aug = np.concatenate([np.asarray(b, dtype=np.float64), np.array([0.0])])
+        return A_aug, b_aug
+
+    def _apply_pin_node_constraint(self, A, b):
+        """Pin the highest-density node to fix the gauge in the original N x N system."""
+        if self.log_den is None:
+            self.compute_density_kstarNN()
+
+        log_den_ref = np.asarray(self.log_den, dtype=np.float64).reshape(-1)
+        pin_index = int(np.argmax(log_den_ref))
+        pin_value = float(log_den_ref[pin_index])
+
+        A_pin = A.tolil(copy=True)
+        A_pin[pin_index, :] = 0.0
+        A_pin[:, pin_index] = 0.0
+        A_pin[pin_index, pin_index] = 1.0
+        A_pin = A_pin.tocsr()
+
+        b_pin = np.asarray(b, dtype=np.float64).copy()
+        b_pin[pin_index] = pin_value
+        return A_pin, b_pin
 
     def _solve_BMTI_reg_linear_system_jax_cg(
         self, A, b, x0=None, tol=1e-5, atol=0.0, maxiter=None, device=None
@@ -723,12 +779,29 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     ):
         solver_kwargs = {} if solver_kwargs is None else dict(solver_kwargs)
         A_csr = A.tocsr()
+        augmented_system = A_csr.shape[0] == self.N + 1
+
+        if augmented_system and solver in {"sp_cg", "sp_cg_precond", "sp_jax_cg"}:
+            fallback_solver = "sp_jax_spsolve" if solver == "sp_jax_cg" else "sp_lsqr"
+            warnings.warn(
+                f"Solver '{solver}' is not compatible with the zero-mean constrained augmented system. "
+                f"Falling back to '{fallback_solver}'."
+            )
+            solver = fallback_solver
+
+        x0 = None
+        if self.log_den is not None:
+            x0 = np.asarray(self.log_den, dtype=np.float64).reshape(-1)
+            if augmented_system and x0.shape[0] == self.N:
+                x0 = np.concatenate([x0, np.array([0.0], dtype=np.float64)])
+            elif x0.shape[0] != A_csr.shape[0]:
+                x0 = None
 
         if solver == "dense":
             # dense solver O(N^3) complexity
             if self.verb:
                 print("Solving dense linear system")
-            log_den = np.linalg.solve(A_csr.todense(), b)
+            solution = np.asarray(np.linalg.solve(A_csr.todense(), b)).reshape(-1)
         elif solver == "sp_cg":
             # conjugate gradient without preconditioner
             if self.verb:
@@ -738,8 +811,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             rtol = solver_kwargs.pop("rtol", 1.0e-5)
             atol = solver_kwargs.pop("atol", 0.0)
             maxiter = solver_kwargs.pop("maxiter", None)
-            log_den = sparse.linalg.cg(
-                A_csr, b, x0=self.log_den, rtol=rtol, atol=atol, maxiter=maxiter
+            solution = sparse.linalg.cg(
+                A_csr, b, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
             )[0]
         elif solver == "sp_cg_precond":
             # conjugate gradient with preconditioner
@@ -759,11 +832,11 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             preconditioner = sparse.linalg.LinearOperator(A_csc.shape, matvec=M.solve)
             if self.verb:
                 print("{0:0.2f} seconds preconditioning".format(time.time() - sec))
-            log_den = sparse.linalg.cg(
+            solution = sparse.linalg.cg(
                 A_csr,
                 b,
                 M=preconditioner,
-                x0=self.log_den,
+                x0=x0,
                 rtol=rtol,
                 atol=atol,
                 maxiter=maxiter,
@@ -774,8 +847,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             atol = solver_kwargs.pop("atol", 1.0e-12)
             btol = solver_kwargs.pop("btol", 1.0e-12)
             maxiter = solver_kwargs.pop("maxiter", max(1000, 10 * self.N))
-            log_den = sparse.linalg.lsmr(
-                A_csr, b, x0=self.log_den, atol=atol, btol=btol, maxiter=maxiter
+            solution = sparse.linalg.lsmr(
+                A_csr, b, x0=x0, atol=atol, btol=btol, maxiter=maxiter
             )[0]
         elif solver == "sp_lsqr":
             if self.verb:
@@ -783,8 +856,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             atol = solver_kwargs.pop("atol", 1.0e-12)
             btol = solver_kwargs.pop("btol", 1.0e-12)
             iter_lim = solver_kwargs.pop("iter_lim", max(1000, 10 * self.N))
-            log_den = sparse.linalg.lsqr(
-                A_csr, b, x0=self.log_den, atol=atol, btol=btol, iter_lim=iter_lim
+            solution = sparse.linalg.lsqr(
+                A_csr, b, x0=x0, atol=atol, btol=btol, iter_lim=iter_lim
             )[0]
         elif solver == "sp_jax_cg":
             if self.verb:
@@ -793,10 +866,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             atol = solver_kwargs.pop("atol", 0.0)
             maxiter = solver_kwargs.pop("maxiter", None)
             device = solver_kwargs.pop("device", None)
-            log_den = self._solve_BMTI_reg_linear_system_jax_cg(
+            solution = self._solve_BMTI_reg_linear_system_jax_cg(
                 A_csr,
                 b,
-                x0=self.log_den,
+                x0=x0,
                 tol=tol,
                 atol=atol,
                 maxiter=maxiter,
@@ -808,7 +881,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             tol = solver_kwargs.pop("tol", 1.0e-6)
             reorder = solver_kwargs.pop("reorder", 1)
             device = solver_kwargs.pop("device", None)
-            log_den = self._solve_BMTI_reg_linear_system_jax_spsolve(
+            solution = self._solve_BMTI_reg_linear_system_jax_spsolve(
                 A_csr, b, tol=tol, reorder=reorder, device=device
             )
         else:
@@ -821,7 +894,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 print(
                     f"Solving with 'sp_direct' sparse solver with perm_spec='{sp_direct_perm_spec}'"
                 )
-            log_den = sparse.linalg.spsolve(
+            solution = sparse.linalg.spsolve(
                 A_csr, b, permc_spec=sp_direct_perm_spec
             )
 
@@ -830,4 +903,4 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 f"Unused solver_kwargs entries for solver '{solver}': {sorted(solver_kwargs.keys())}"
             )
 
-        return log_den
+        return np.asarray(solution, dtype=np.float64).reshape(-1)

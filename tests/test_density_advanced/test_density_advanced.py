@@ -144,6 +144,7 @@ expected_density_BMTI = np.array(
         -2.577608131196509778,
     ]
 )
+expected_density_BMTI_zero_mean = expected_density_BMTI - np.mean(expected_density_BMTI)
 
 
 def test_density_BMTI():
@@ -155,13 +156,106 @@ def test_density_BMTI():
     da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
     da.compute_distances()
     da.set_id(2)
-    da.compute_density_BMTI(alpha=0.99)
+    da.compute_density_BMTI(alpha=0.99, gauge_fixing="zero_mean")
 
-    assert da.A_BMTI is not None
-    assert da.b_BMTI is not None
-    assert da.A_BMTI.shape == (X.shape[0], X.shape[0])
-    assert da.b_BMTI.shape == (X.shape[0],)
+    assert da._A_BMTI is not None
+    assert da._b_BMTI is not None
+    assert da._A_BMTI.shape == (X.shape[0] + 1, X.shape[0] + 1)
+    assert da._b_BMTI.shape == (X.shape[0] + 1,)
+    assert abs(np.mean(da.log_den)) < 1e-10
+    assert np.allclose(
+        da.log_den, expected_density_BMTI_zero_mean, rtol=1e-05, atol=1e-01
+    )
+
+
+def test_density_BMTI_sp_cg_no_gauge_fixing():
+    """Test that CG remains available when gauge fixing is disabled."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+    da.compute_density_BMTI(alpha=0.99, solver="sp_cg", gauge_fixing="None")
+
+    assert da._A_BMTI.shape == (X.shape[0], X.shape[0])
+    assert da._b_BMTI.shape == (X.shape[0],)
     assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+
+
+def test_density_BMTI_sp_cg_no_gauge_fixing_none_literal():
+    """Test that gauge_fixing=None is accepted as alias of 'None'."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+    da.compute_density_BMTI(alpha=0.99, solver="sp_cg", gauge_fixing=None)
+
+    assert da._A_BMTI.shape == (X.shape[0], X.shape[0])
+    assert da._b_BMTI.shape == (X.shape[0],)
+
+
+def test_density_BMTI_sp_cg_pin_node():
+    """Test pin-node gauge fixing keeps NxN system and enables CG."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+    da.compute_density_kstarNN()
+    ref_log_den = da.log_den.copy()
+    pin_index = int(np.argmax(ref_log_den))
+    pin_value = float(ref_log_den[pin_index])
+
+    da.compute_density_BMTI(alpha=0.99, solver="sp_cg", gauge_fixing="pin_node")
+
+    assert da._A_BMTI.shape == (X.shape[0], X.shape[0])
+    assert da._b_BMTI.shape == (X.shape[0],)
+    assert np.isclose(da.log_den[pin_index], pin_value)
+
+    row = da._A_BMTI.getrow(pin_index).toarray().ravel()
+    col = da._A_BMTI.getcol(pin_index).toarray().ravel()
+    assert np.count_nonzero(row) == 1
+    assert np.count_nonzero(col) == 1
+    assert np.isclose(row[pin_index], 1.0)
+    assert np.isclose(col[pin_index], 1.0)
+
+
+def test_density_BMTI_default_matches_pin_node():
+    """Test that default gauge fixing is pin_node."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da_default = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da_default.compute_distances()
+    da_default.set_id(2)
+    da_default.compute_density_BMTI(alpha=0.99)
+
+    da_pin = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da_pin.compute_distances()
+    da_pin.set_id(2)
+    da_pin.compute_density_BMTI(alpha=0.99, gauge_fixing="pin_node")
+
+    assert da_default._A_BMTI.shape == (X.shape[0], X.shape[0])
+    assert da_default._b_BMTI.shape == (X.shape[0],)
+    assert np.allclose(da_default.log_den, da_pin.log_den, rtol=1e-10, atol=1e-10)
+
+
+def test_density_BMTI_pin_node_without_initial_log_den():
+    """Test pin-node gauge fixing computes a kstarNN reference when log_den is None."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+    da.compute_density_BMTI(alpha=0.99, solver="sp_lsqr", gauge_fixing="pin_node")
+
+    assert da._A_BMTI.shape == (X.shape[0], X.shape[0])
+    assert da._b_BMTI.shape == (X.shape[0],)
 
 
 def test_density_BMTI_sp_lsmr():
@@ -172,9 +266,12 @@ def test_density_BMTI_sp_lsmr():
     da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
     da.compute_distances()
     da.set_id(2)
-    da.compute_density_BMTI(alpha=0.99, solver="sp_lsmr")
+    da.compute_density_BMTI(alpha=0.99, solver="sp_lsmr", gauge_fixing="zero_mean")
 
-    assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+    assert abs(np.mean(da.log_den)) < 1e-9
+    assert np.allclose(
+        da.log_den, expected_density_BMTI_zero_mean, rtol=1e-05, atol=1e-01
+    )
 
 
 def test_density_BMTI_sp_lsqr():
@@ -185,9 +282,12 @@ def test_density_BMTI_sp_lsqr():
     da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
     da.compute_distances()
     da.set_id(2)
-    da.compute_density_BMTI(alpha=0.99, solver="sp_lsqr")
+    da.compute_density_BMTI(alpha=0.99, solver="sp_lsqr", gauge_fixing="zero_mean")
 
-    assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+    assert abs(np.mean(da.log_den)) < 1e-9
+    assert np.allclose(
+        da.log_den, expected_density_BMTI_zero_mean, rtol=1e-05, atol=1e-01
+    )
 
 
 def test_density_BMTI_sp_jax_cg():
@@ -200,8 +300,12 @@ def test_density_BMTI_sp_jax_cg():
     da.set_id(2)
 
     if HAS_JAX:
-        da.compute_density_BMTI(alpha=0.99, solver="sp_jax_cg")
-        assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+        with pytest.warns(UserWarning, match="Falling back to 'sp_jax_spsolve'"):
+            da.compute_density_BMTI(alpha=0.99, solver="sp_jax_cg", gauge_fixing="zero_mean")
+        assert abs(np.mean(da.log_den)) < 1e-6
+        assert np.allclose(
+            da.log_den, expected_density_BMTI_zero_mean, rtol=1e-05, atol=1e-01
+        )
     else:
         with pytest.raises(ModuleNotFoundError):
             da.compute_density_BMTI(alpha=0.99, solver="sp_jax_cg")
@@ -217,8 +321,11 @@ def test_density_BMTI_sp_jax_spsolve():
     da.set_id(2)
 
     if HAS_JAX:
-        da.compute_density_BMTI(alpha=0.99, solver="sp_jax_spsolve")
-        assert np.allclose(da.log_den, expected_density_BMTI, rtol=1e-05, atol=1e-01)
+        da.compute_density_BMTI(alpha=0.99, solver="sp_jax_spsolve", gauge_fixing="zero_mean")
+        assert abs(np.mean(da.log_den)) < 1e-6
+        assert np.allclose(
+            da.log_den, expected_density_BMTI_zero_mean, rtol=1e-05, atol=1e-01
+        )
     else:
         with pytest.raises(ModuleNotFoundError):
             da.compute_density_BMTI(alpha=0.99, solver="sp_jax_spsolve")
