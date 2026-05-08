@@ -529,6 +529,22 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         if self.verb:
             print("BMTI density estimation started")
+            if gauge_fixing == "pin_node":
+                print(
+                    "Gauge fixing: 'pin_node': the highest-density node is pinned to "
+                    "its current self.log_den value."
+                )
+            elif gauge_fixing == "zero_mean":
+                print(
+                    "Gauge fixing: 'zero_mean': solve an augmented system enforcing "
+                    "sum_i log_den_i = 0 (no special node)."
+                )
+            else:
+                warnings.warn(
+                    "Gauge fixing: 'None': solve the original system without gauge fixing."
+                    "The singularity of the A matrix is not handled. "
+                    "The linear system may be singular and the solution may be non-unique."
+                )
             sec = time.time()
 
         # define the likelihood covarince matrix
