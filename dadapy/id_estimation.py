@@ -18,6 +18,7 @@ The *id_estimation* module contains the *IdEstimation* class.
 
 The different algorithms of intrinsic dimension estimation are implemented as methods of this class.
 """
+
 import copy
 import math
 import multiprocessing
@@ -879,9 +880,7 @@ class IdEstimation(Base):
             print("select a proper method for id computation")
             return 0
 
-        ks, pv = bmv(
-            k, n, r**self.intrinsic_dim, plot=plot_mv, k_bootstrap=k_bootstrap
-        )
+        ks, pv = bmv(k, n, r**self.intrinsic_dim, plot=plot_mv, k_bootstrap=k_bootstrap)
 
         return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, pv
 

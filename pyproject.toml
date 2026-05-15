@@ -3,17 +3,19 @@ name = "dadapy"
 version = "0.3.4"
 description = "Distance-based Analysis of DAta-manifolds in python"
 authors = [{ name = "DADApy author"}]
-license = {file = "LICENSE"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 
-dependencies = ["numpy", "scipy", "scikit-learn", "matplotlib", 
+dependencies = ["numpy", "scipy", "scikit-learn", "matplotlib",
                 "seaborn", "tqdm", "networkx",
-                'jax; python_version < "3.9"',
-                'jax==0.4.30; python_version >= "3.9"',
-                'jaxlib; python_version < "3.9"',
-                'jaxlib==0.4.30; python_version >= "3.9"',
-                'flax==0.8.5; python_version >= "3.9"']
+                'jax==0.4.30; python_version < "3.13"',
+                'jax; python_version >= "3.13"',
+                'jaxlib==0.4.30; python_version < "3.13"',
+                'jaxlib; python_version >= "3.13"',
+                'flax==0.8.5; python_version < "3.13"',
+                'flax; python_version >= "3.13"']
 
 [project.urls]
 homepage = "https://github.com/sissa-data-science/DADApy"
@@ -24,8 +26,8 @@ repository = "https://github.com/sissa-data-science/DADApy"
 dev = ["tox", "black", "isort", "pytest"]
 
 [build-system]
-requires = ["setuptools>=61", "numpy"]
+requires = ["setuptools>=77", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [tool.tox]
-envlist = ["py38", "py39", "py310", "py311", "py312"]
+envlist = ["py310", "py311", "py312", "py313", "py314"]

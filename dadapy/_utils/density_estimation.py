@@ -83,10 +83,8 @@ def return_not_normalised_density_PAk(
         )
 
     if bias:
-        warnings.warn(
-            "bias contribution to the density error is an experimental \
-            feature and might change in the future"
-        )
+        warnings.warn("bias contribution to the density error is an experimental \
+            feature and might change in the future")
         log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
     dc = distances[np.arange(N), kstar]
