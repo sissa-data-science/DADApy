@@ -58,7 +58,9 @@ alphamin = 0  # + eps          # order of  min_quantile, to remove poorly sample
 alphamax = 1  # - eps          # order of max_quantile, to define r* (named rmax here)
 delta = 5e-4  # stochastic optimization step
 Nsteps = int(1e6)  # number of optimization steps
-optfolder0 = "./tests/test_hamming/results/opt/"  # folder where optimization results are saved
+optfolder0 = (
+    "./tests/test_hamming/results/opt/"  # folder where optimization results are saved
+)
 export_logKLs = 1  # flag to export the logKLs during optimization
 
 B = BID(

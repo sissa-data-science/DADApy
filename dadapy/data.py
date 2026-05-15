@@ -46,6 +46,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         coordinates=None,
         distances=None,
         maxk=None,
+        period=None,
         verbose=False,
         n_jobs=cores,
         working_memory=1024,
@@ -67,22 +68,34 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             coordinates=coordinates,
             distances=distances,
             maxk=maxk,
+            period=period,
             verbose=verbose,
             n_jobs=n_jobs,
         )
 
     def return_ids_kstar_gride(
-        self, initial_id=None, n_iter=5, Dthr=23.92812698, d0=0.001, d1=1000, eps=1e-7
+        self,
+        initial_id=None,
+        n_iter=5,
+        alpha=1e-6,
+        d0=0.001,
+        d1=1000,
+        eps=1e-7,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
     ):
         """Return the id estimates of the Gride algorithm coupled with the kstar estimation of the scale.
 
         Args:
-            initial_id: initial estimate of the id default uses 2NN
-            n_iter: number of iteration
-            Dthr: threshold value for the kstar test
-            d0: minimum id value
-            d1: maximum id value
-            eps: threshold for the convergence of the Gride algorithm
+            initial_id (float): initial estimate of the id default uses 2NN
+            n_iter (int): number of iteration
+            alpha (float): threshold value for the kstar test
+            d0 (float): minimum id value
+            d1 (float): maximum id value
+            eps (float): threshold for the convergence of the Gride algorithm
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+             at each iteration
 
         Returns:
             ids, ids_err, kstars, log_likelihoods
@@ -95,7 +108,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             if self.distances is None:
                 self.compute_distances()
         # compute kstar
-        self.compute_kstar(Dthr)
+        self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
         ids = [self.intrinsic_dim]
         ids_err = [self.intrinsic_dim_err]
@@ -124,7 +137,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             id, id_err = self._compute_id_gride_single_scale(d0, d1, mus, n1s, n2s, eps)
             self.set_id(id)
             log_lik = -ut._neg_loglik(self.dtype, id, mus, n1s, n2s)
-            self.compute_kstar(Dthr)
+            self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
             ids.append(id)
             ids_err.append(id_err)
@@ -152,7 +165,9 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         self,
         initial_id=None,
         n_iter=5,
-        Dthr=23.92812698,
+        alpha=1e-6,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
         r=None,
         plot_mv=False,
         k_bootstrap=1,
@@ -162,10 +177,15 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         Args:
             initial_id (float): initial estimate of the id default uses 2NN
             n_iter (int): number of iteration
-            Dthr (float): threshold value for the kstar test
-            r (float, default=None): parameter of binomial estimator, 0 < r < 1. If None, the optimal, adaptive one is
-             used
+            alpha (float): threshold value for the kstar test
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+             at each iteration
+            r (float, default=None): parameter of binomial estimator, 0 < r < 1.
+             If None, the optimal, adaptive one is used
             plot_mv (bool, default=False): if True, plots the observed and the theoretical distributions
+             of the number of points in the shells
+            k_bootstrap (int, default=1): number of bootstrap resampling to estimate the pvalue of the ID estimation
 
         Returns:
             ids (np.ndarray(float)): intrinsic dimension across iterations
@@ -180,7 +200,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             self.set_id(initial_id)
             if self.distances is None:
                 self.compute_distances()
-        self.compute_kstar(Dthr)
+        self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
         ids = [self.intrinsic_dim]
         ids_err = [self.intrinsic_dim_err]
@@ -204,7 +224,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             """
 
             # update the k*
-            self.compute_kstar(Dthr)
+            self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
             # store the obtained values
             ids.append(ide)
             ids_err.append(id_err)
