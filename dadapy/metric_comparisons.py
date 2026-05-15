@@ -448,11 +448,11 @@ class MetricComparisons(Base):
         best_one = selected_coords[0]
         best_tuples = [[int(b) for b in best_one]]  # start with the best 1-tuple
         best_imbalances = [
-        [
-            round(float(imbalances[0][best_one[0]]), 3),
-            round(float(imbalances[1][best_one[0]]), 3),
+            [
+                round(float(imbalances[0][best_one[0]]), 3),
+                round(float(imbalances[1][best_one[0]]), 3),
+            ]
         ]
-]
         all_imbalances = [
             [
                 [round(float(num1), 3) for num1 in imbalances[0]],
