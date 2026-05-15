@@ -137,7 +137,7 @@ class CausalGraph(DiffImbalance):
                 )
             num_variables = self.time_series.shape[1]
             if periods is not None:
-                periods = np.ones(time_series.shape[1]) * np.array(periods)
+                periods = np.ones(self.time_series.shape[1]) * np.array(periods)
             if (
                 self.standardize is False
                 and (
@@ -355,13 +355,13 @@ class CausalGraph(DiffImbalance):
             )
         elif self.coords_present is not None:
             if num_samples is not None:
-                warninings.warn(
+                warnings.warn(
                     f"Argument 'num_samples' will be ignored, as you already provided the independent "
                     + f"initial conditions through arguments 'coords_present' and 'coords_future'.\n "
                     + f"To suppress this warning, set 'num_samples' to None."
                 )
             if time_lags is not None:
-                warninings.warn(
+                warnings.warn(
                     f"Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
                     + f"are already read from the last dimension of 'coords_future'.\n "
                     + f"To suppress this warning, set 'time_lags' to None."
@@ -445,9 +445,9 @@ class CausalGraph(DiffImbalance):
                     data_A=coords_present,
                     data_B=coords_future,
                     periods_A=self.periods,
-                    periods_B=None
-                    if self.periods is None
-                    else self.periods[target_var],
+                    periods_B=(
+                        None if self.periods is None else self.periods[target_var]
+                    ),
                     seed=self.seed,
                     num_epochs=num_epochs,
                     batches_per_epoch=batches_per_epoch,
@@ -1084,12 +1084,12 @@ class CausalGraph(DiffImbalance):
 
                     # initialize output variables
                     nvars = 1 + embedding_dim_present + embedding_dim_present
-                    imbs_training[
-                        community_name_cause, community_name_effect
-                    ] = np.zeros((len(time_lags), num_epochs + 1))
-                    weights_final[
-                        community_name_cause, community_name_effect
-                    ] = np.zeros((len(time_lags), nvars))
+                    imbs_training[community_name_cause, community_name_effect] = (
+                        np.zeros((len(time_lags), num_epochs + 1))
+                    )
+                    weights_final[community_name_cause, community_name_effect] = (
+                        np.zeros((len(time_lags), nvars))
+                    )
                     communities_ordered = np.concatenate(
                         (
                             [community_name_cause],  # don't repeat (single slice)
@@ -1118,9 +1118,9 @@ class CausalGraph(DiffImbalance):
                         community_name_cause, community_name_effect
                     ] = [communities_ordered, lags_ordered]
                     if compute_imb_final:
-                        imbs_final[
-                            community_name_cause, community_name_effect
-                        ] = np.zeros(len(time_lags))
+                        imbs_final[community_name_cause, community_name_effect] = (
+                            np.zeros(len(time_lags))
+                        )
                         if compute_error:
                             errors_final[
                                 community_name_cause, community_name_effect
@@ -1151,13 +1151,13 @@ class CausalGraph(DiffImbalance):
                         ]  # has shape (num_samples, n_variables_t0)
                     elif self.coords_present is not None:
                         if num_samples is not None:
-                            warninings.warn(
+                            warnings.warn(
                                 f"Argument 'num_samples' will be ignored, as you already provided the independent "
                                 + f"initial conditions through arguments 'coords_present' and 'coords_future'.\n "
                                 + f"To suppress this warning, set 'num_samples' to None."
                             )
                         if time_lags is not None:
-                            warninings.warn(
+                            warnings.warn(
                                 f"Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
                                 + f"are already read from the last dimension of 'coords_future'.\n "
                                 + f"To suppress this warning, set 'time_lags' to None."
@@ -1247,7 +1247,7 @@ class CausalGraph(DiffImbalance):
                                 :, community_effect, j_tau
                             ]
                             coords_cond = self.coords_future[
-                                :, mediator_vars, j_tau - 1 : jtau + 1
+                                :, mediator_vars, j_tau - 1 : j_tau + 1
                             ]
 
                         coords_A = np.concatenate(
@@ -1286,12 +1286,16 @@ class CausalGraph(DiffImbalance):
                         dii = DiffImbalance(
                             data_A=coords_A,
                             data_B=coords_future,
-                            periods_A=None
-                            if self.periods is None
-                            else self.periods[variables_A],
-                            periods_B=None
-                            if self.periods is None
-                            else self.periods[community_effect],
+                            periods_A=(
+                                None
+                                if self.periods is None
+                                else self.periods[variables_A]
+                            ),
+                            periods_B=(
+                                None
+                                if self.periods is None
+                                else self.periods[community_effect]
+                            ),
                             seed=self.seed,
                             num_epochs=num_epochs,
                             batches_per_epoch=batches_per_epoch,
