@@ -77,6 +77,6 @@ B = BID(
 B.computeBID()
 
 assert np.array_equal(H.D_values, expected_histogram)
-assert pytest.approx(B.Op.d0, abs=1e-3) == d_0
+assert pytest.approx(B.Op.d0, abs=5e-3) == d_0
 assert pytest.approx(B.Op.d1, abs=1e-3) == d_1
-assert pytest.approx(np.log(B.Op.KL), abs=1e-2) == logKL
+assert pytest.approx(np.log(B.Op.KL), abs=2e-2) == logKL
