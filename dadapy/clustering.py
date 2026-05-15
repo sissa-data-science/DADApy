@@ -197,9 +197,7 @@ class Clustering(DensityEstimation):
                 else:
                     ncalls = ncalls + 1
                     dd = self.X[((self.log_den > self.log_den[i]) & (tt != i))]
-                    ds = np.transpose(
-                        sp.spatial.distance.cdist([np.transpose(self.X[i, :])], dd)
-                    )
+                    ds = sp.spatial.distance.cdist([self.X[i]], dd).ravel()
                     j = np.argmin(ds)
                     self.ref[i] = ll[j]
                     self.delta[i] = ds[j]

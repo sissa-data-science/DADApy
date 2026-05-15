@@ -5,11 +5,11 @@ import numpy as np
 
 cimport numpy as np
 
-DTYPE = np.int_
-floatTYPE = np.float_
-boolTYPE = np.bool_
+DTYPE = np.int64
+floatTYPE = np.float64
+boolTYPE = np.bool
 
-ctypedef np.int_t DTYPE_t
+ctypedef np.int64_t DTYPE_t
 ctypedef np.float64_t floatTYPE_t
 
 from libc.math cimport exp, fabs, nearbyint, sqrt  # c FUNCTIONS FASTER THAN NUMPY

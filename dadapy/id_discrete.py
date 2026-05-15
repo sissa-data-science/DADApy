@@ -153,7 +153,7 @@ class IdDiscrete(Base):
                         f"'period' must be either a float scalar or a numpy array of floats of shape ({self.dims},)"
                     )
 
-            if ~isinstance(self.X[0, 0], int):
+            if not isinstance(self.X[0, 0], int):
                 print(
                     "N.B. the data will be passed to the routine to compute distances as integers"
                 )
@@ -225,14 +225,14 @@ class IdDiscrete(Base):
                         sum(self._weights[self.dist_indices[i][el]])
                         for i, el in enumerate(self.distances <= self.lk)
                     ],
-                    dtype=np.int,
+                    dtype=np.int64,
                 )
                 self.n = np.array(
                     [
                         sum(self._weights[self.dist_indices[i][el]])
                         for i, el in enumerate(self.distances <= self.ln)
                     ],
-                    dtype=np.int,
+                    dtype=np.int64,
                 )
 
             # checks-out
@@ -316,7 +316,7 @@ class IdDiscrete(Base):
             w_eff = self._weights[mask]
 
         # check statistics before performing id estimation
-        if ~self._is_w:
+        if not self._is_w:
             e_n = n_eff.mean()
             if e_n == 0.0:
                 print(
@@ -1157,9 +1157,9 @@ class IdDiscrete(Base):
 
         """
         assert len(w) == self.N and all(
-            [wi > 0 and isinstance(wi, (np.int, int))] for wi in w
+            [wi > 0 and isinstance(wi, (np.int64, int))] for wi in w
         ), "load proper integer weights"
-        self._weights = np.array(w, dtype=np.int)
+        self._weights = np.array(w, dtype=np.int64)
 
     # ----------------------------------------------------------------------------------------------
 

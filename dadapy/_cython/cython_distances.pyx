@@ -11,11 +11,7 @@ from libc.math cimport (  # absolute values for floats, needed when using PBC
 )
 from libc.stdlib cimport abs  # absolute value for integers
 
-#DTYPE = int
-#floatTYPE = np.float
-#boolTYPE = np.bool
-
-ctypedef np.int_t DTYPE_t
+ctypedef np.int64_t DTYPE_t
 ctypedef np.float64_t floatTYPE_t
 
 #------------------------------------------------------------------------------------------
