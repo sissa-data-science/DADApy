@@ -31,3 +31,13 @@ build-backend = "setuptools.build_meta"
 
 [tool.tox]
 envlist = ["py310", "py311", "py312", "py313", "py314"]
+
+[tool.coverage.run]
+source_pkgs = ["dadapy"]
+omit = ["dadapy/plot.py"]
+
+[tool.coverage.paths]
+source = [
+    "dadapy/",
+    "*/site-packages/dadapy/",
+]
