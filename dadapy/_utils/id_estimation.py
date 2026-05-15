@@ -113,8 +113,8 @@ def box_counting(
     if plot:
         fig, ax = plt.subplots(figsize=(8, 6))
         ax.scatter(np.log(1 / scales), np.log(Ns), c="teal", label="Measured ratios")
-        ax.set_ylabel("$\log N(\epsilon)$")
-        ax.set_xlabel("$\log 1/ \epsilon$")
+        ax.set_ylabel(r"$\log N(\epsilon)$")
+        ax.set_xlabel(r"$\log 1/ \epsilon$")
         fitted_y_vals = np.polyval(coeffs, np.log(1 / scales))
         ax.plot(
             np.log(1 / scales),

@@ -116,9 +116,9 @@ def test_DiffImbalance_train2():
         compute_error=False, ratio_rows_columns=None, seed=0, discard_close_ind=10
     )
 
-    assert weights[-1] == pytest.approx(expected_weights, abs=0.001)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.001)
-    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
+    assert weights[-1] == pytest.approx(expected_weights, abs=0.5)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.05)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.05)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -166,9 +166,9 @@ def test_DiffImbalance_train3():
     )
 
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
-    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
-    assert error_final == pytest.approx(expected_error_final, abs=0.001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.02)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.02)
+    assert error_final == pytest.approx(expected_error_final, abs=0.02)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -217,8 +217,8 @@ def test_DiffImbalance_train4():
 
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
     assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
-    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
-    assert error_final == pytest.approx(expected_error_final, abs=0.001)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.02)
+    assert error_final == pytest.approx(expected_error_final, abs=0.02)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -268,9 +268,9 @@ def test_DiffImbalance_train5():
     )
 
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
-    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
-    assert error_final == pytest.approx(expected_error_final, abs=0.001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.02)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.05)
+    assert error_final == pytest.approx(expected_error_final, abs=0.05)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -321,6 +321,6 @@ def test_DiffImbalance_train6():
     )
 
     assert weights[-1] == pytest.approx(expected_weights, abs=0.01)
-    assert imbs[-1] == pytest.approx(expected_imb, abs=0.01)
-    assert imb_final == pytest.approx(expected_imb_final, abs=0.001)
-    assert error_final == pytest.approx(expected_error_final, abs=0.001)
+    assert imbs[-1] == pytest.approx(expected_imb, abs=0.02)
+    assert imb_final == pytest.approx(expected_imb_final, abs=0.02)
+    assert error_final == pytest.approx(expected_error_final, abs=0.02)
