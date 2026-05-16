@@ -45,8 +45,10 @@ from dadapy.base import Base
 cores = multiprocessing.cpu_count()
 
 
+# TODO: remove when this works with different maxk
 def check_maxk(func):
-    # TODO: remove when this works with different maxk
+    """Warn once that maxk is not yet supported by FeatureWeighting and reset it."""
+
     @wraps(func)
     def with_check(*args, **kwargs):
         feature_selector: type[FeatureWeighting] = args[0]
@@ -64,6 +66,8 @@ def check_maxk(func):
 
 
 class FeatureWeighting(Base):
+    """Feature weighting via the Differentiable Information Imbalance."""
+
     def __init__(
         self,
         coordinates=None,
@@ -73,6 +77,7 @@ class FeatureWeighting(Base):
         verbose=False,
         n_jobs=cores,
     ):
+        """Initialise the FeatureWeighting object."""
         super().__init__(
             coordinates=coordinates,
             distances=distances,
@@ -92,6 +97,7 @@ class FeatureWeighting(Base):
 
     @property
     def full_distance_matrix(self):
+        """Return the full pairwise distance matrix, computing it lazily on first access."""
         if self._full_distance_matrix is None:
             self._full_distance_matrix = _return_full_dist_matrix(
                 data=self.X,
@@ -164,8 +170,10 @@ class FeatureWeighting(Base):
 
     @check_maxk
     def return_optimal_lambda(self, fraction: float = 1.0):
-        """Computes the optimal softmax scaling parameter lambda for the DII optimization.
+        """Compute the optimal softmax scaling parameter lambda for the DII optimization.
+
         This parameter represents a reasonable scale of distances of the data points in the input data set.
+
         Args:
             fraction (float): Zoom in or out from the optimal distance scale.
                 Default: 1.0. Suggested to keep it at default.
@@ -188,7 +196,8 @@ class FeatureWeighting(Base):
         decaying_lr: str = "exp",
         trial_learning_rates: np.ndarray = None,
     ):
-        """Find the optimal learning rate for the optimization of the DII by testing several on a reduced set
+        """Find the optimal learning rate for the optimization of the DII by testing several on a reduced set.
+
         Args:
             target_data: FeatureWeighting object, containing the
                 groundtruth data (D_groundtruth x N array, period (optional)) to be compared to.
@@ -200,7 +209,8 @@ class FeatureWeighting(Base):
             decaying_lr (string): Default: "exp".
                 "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
                 lrate = l_rate_initial * 2**(-i_epoch/10),
-                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                or "cos" for cosine decaying learning rate:
+                lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
                 "static" for no decay in the learning rate.
             trial_learning_rates (np.ndarray or list or None): learning rates to try.
                 If None are given, a sensible set of learning rates is tested.
@@ -275,8 +285,9 @@ class FeatureWeighting(Base):
 
     @check_maxk
     def return_dii(self, target_data: Type[Base], lambd: float = None):
-        """Computes the DII between two FeatureWeighting objects based
-            on distances of input data and rank information of groundtruth data.
+        """Compute the DII between two FeatureWeighting objects.
+
+        Uses distances of input data and rank information of groundtruth data.
 
         Args:
             target_data: FeatureWeighting object,
@@ -313,8 +324,10 @@ class FeatureWeighting(Base):
     def return_dii_gradient(
         self, target_data: Type[Base], weights: np.ndarray, lambd: float = None
     ):
-        """Computes the gradient of the DII between two FeatureWeighting objects
-            (input object and ground truth object (= target_data)) with respect to the weights of the input features.
+        """Compute the gradient of the DII with respect to the weights of the input features.
+
+        The DII is computed between two FeatureWeighting objects (input object and ground truth
+        object (= target_data)).
 
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
@@ -370,8 +383,9 @@ class FeatureWeighting(Base):
         l1_penalty: float = 0.0,
         decaying_lr: str = "exp",
     ):
-        """Optimize the differentiable information imbalance using gradient descent
-            of the DII between input data object A and groundtruth data object B.
+        """Optimize the differentiable information imbalance using gradient descent.
+
+        Optimizes the DII between input data object A and groundtruth data object B.
 
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
@@ -394,7 +408,8 @@ class FeatureWeighting(Base):
             decaying_lr (string): Default: "exp".
                 "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
                 lrate = l_rate_initial * 2**(-i_epoch/10),
-                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                or "cos" for cosine decaying learning rate:
+                lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
                 "static" for no decay in the learning rate.
         Returns:
             final_weights: np.ndarray, shape (D). Array of the optmized weights.
@@ -460,8 +475,10 @@ class FeatureWeighting(Base):
         constrain: bool = False,
         decaying_lr: str = "exp",
     ):
-        """Do a stepwise backward elimination of feature weights, always eliminating the lowest weight;
-            after each elimination the DII is optimized by gradient descent using the remaining features
+        """Do a stepwise backward elimination of feature weights.
+
+        Always eliminates the lowest weight; after each elimination the DII is optimized by
+        gradient descent using the remaining features.
 
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
@@ -476,7 +493,8 @@ class FeatureWeighting(Base):
             decaying_lr (string): Default: "exp".
                 "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
                 lrate = l_rate_initial * 2**(-i_epoch/10),
-                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                or "cos" for cosine decaying learning rate:
+                lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
                 "static" for no decay in the learning rate.
 
         Returns:
@@ -582,7 +600,8 @@ class FeatureWeighting(Base):
         refine: bool = False,
         plotlasso: bool = True,
     ):
-        """Search the number of resulting non-zero weights and the optimized DII for several l1-regularization strengths
+        """Search non-zero-weight counts and optimized DII over several l1-regularization strengths.
+
         Args:
             target_data: FeatureWeighting object, containing the groundtruth data
                 (D_groundtruth x N array, period (optional)) to be compared to.
@@ -601,7 +620,8 @@ class FeatureWeighting(Base):
             decaying_lr (string): Default: "exp".
                 "exp" for exponentially decaying learning rate (cut in half every 10 epochs):
                 lrate = l_rate_initial * 2**(-i_epoch/10),
-                or "cos" for cosine decaying learning rate: lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
+                or "cos" for cosine decaying learning rate:
+                lrate = l_rate_initial * 0.5 * (1+ cos((pi * i_epoch)/n_epochs)).
                 "static" for no decay in the learning rate.
             refine (bool): default: False. If True, the l1-penalties are added in between penalties
                 where the number of non-zero weights changes by more than one.

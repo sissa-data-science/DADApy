@@ -402,7 +402,7 @@ class IdDiscrete(Base):
                 import numpy as np
                 import matplotlib.pyplot as plt
                 rng = np.random.default_rng(12345)
-                from dadapy.id_discrete import IdDiscrete
+                from dadapy import IdDiscrete
 
                 #uniformly sampled points on 5d lattice
 

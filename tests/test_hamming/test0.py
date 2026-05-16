@@ -22,7 +22,7 @@ import pytest
 
 # this environmental variable must be set <before> the BID imports
 os.environ["JAX_ENABLE_X64"] = "True"
-from dadapy.hamming import BID, Hamming  # noqa: E402
+from dadapy import BID, Hamming  # noqa: E402
 
 # EXPECTED OUTPUT
 d_0 = 99.855

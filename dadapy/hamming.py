@@ -1,3 +1,5 @@
+"""Hamming distances and Binary Intrinsic Dimension (BID) estimation for Ising-like data."""
+
 import os
 from time import time
 
@@ -10,7 +12,7 @@ from jax import random
 from jax.scipy.special import gammaln
 from jax.tree_util import register_pytree_node
 
-# from jax.experimental.host_callback import call
+# from jax.experimental.host_callback import call  # noqa: E800
 
 jdevices("cpu")[0]  # to run JAX on CPU
 eps = 1e-7  # good old small epsilon
@@ -18,6 +20,8 @@ config.update("jax_enable_x64", True)  # enable jnp.float64 dtype
 
 
 class Hamming:
+    """Compute and store pairwise Hamming distances and their empirical histogram."""
+
     def __init__(
         self,
         q=2,  # number of states: 2 for binary spins. In the future we can think of extending this to q>2.
@@ -26,6 +30,7 @@ class Hamming:
         crossed_distances=0,  # 0 means we have one dataset with N samples and N(N-1)/2 (correlated) distances.
         verbose=True,  #
     ):
+        """Initialise the Hamming object."""
         self.q = q
         self.coordinates = coordinates
         self.distances = distances
@@ -45,9 +50,10 @@ class Hamming:
         sort=False,
         check_format=True,
     ):
-        """
-        Computes all to all distances in dataset and stores them
-        in the matrix "self.distances" of shape (Ns,Ns), where Ns is the number of samples
+        """Compute all-to-all distances in the dataset and store them.
+
+        Distances are stored in the matrix self.distances of shape (Ns,Ns), where Ns is
+        the number of samples.
         """
         if self.q == 2:
             self.distances = jcompute_distances(
@@ -67,9 +73,9 @@ class Hamming:
         resultsfolder="results/hist/",
         filename="counts.txt",
     ):
-        """
-        Given the computed distances, this routine computes the histogram (Pemp).
-        It defines
+        """Compute the empirical histogram (Pemp) of the previously computed distances.
+
+        Defines:
         - self.D_values, a vector containing the sampled distances
         - self.D_counts, a vector containing how many times each distance was sampled
         - self.D_probs, self.counts normalized by the total number of counts observed.
@@ -108,13 +114,11 @@ class Hamming:
             self.D_probs = self.D_counts / np.sum(self.D_counts)
 
     def set_r_quantile(self, alpha, round=True, precision=10):
-        """
-        Defines
+        """Define self.r as the quantile of order alpha of self.D_probs.
 
-        - self.r as the quantile of order alpha of self.D_probs,
-        which can be used for rmax or rmin,
-        to discard distances larger than rmax or smaller than rmin, respectively.
-        - self.r_idx as the index of self.r in self.D_values
+        - self.r can be used for rmax or rmin, to discard distances larger than rmax or
+          smaller than rmin, respectively.
+        - self.r_idx is the index of self.r in self.D_values.
         """
         if round:
             alpha = np.round(alpha, precision)
@@ -130,14 +134,13 @@ class Hamming:
         return
 
     def compute_moments(self):
-        """
-        computes the empirical mean and variance of H.D_probs
-        """
+        """Compute the empirical mean and variance of H.D_probs."""
         self.D_mu_emp = np.dot(self.D_probs, self.D_values)
         self.D_var_emp = np.dot(self.D_probs, self.D_values**2) - self.D_mu_emp**2
 
 
 def check_data_format(X):
+    """Assert that X contains only -1/+1 spin values."""
     e1, e2 = np.unique(X)
     assert (
         e1 == -1 and e2 == 1
@@ -151,7 +154,10 @@ def jcompute_distances(
     check_format=True,
     sort=False,
 ):
-    """This routine works for Ising spins variables defined as +-1 (this is faster than scipy)"""
+    """Compute pairwise Hamming distances for Ising spin variables defined as +-1.
+
+    Faster than scipy for this input format.
+    """
     X1 = jnp.array(X1).astype(jnp.int32)
     X2 = jnp.array(X2).astype(jnp.int32)
 
@@ -189,9 +195,7 @@ def jcompute_distances(
 
 @jit
 def _jcompute_distances(idx, pytree):
-    """
-    for each data sample indexed by "sample_idx" (row), computes the distance between it and the rest
-    """
+    """Compute the distance between sample row ``idx`` and the rest of the data."""
     pytree["sample_idx"] = idx
     pytree = lax.cond(
         pytree["crossed_distances"], _set_lower_idx_true, _set_lower_idx_false, pytree
@@ -206,26 +210,20 @@ def _jcompute_distances(idx, pytree):
 
 
 def _set_lower_idx_true(pytree):
-    """
-    if we have two datasets, we have Ns1 * Ns2 distances to compute.
-    """
+    """Set lower bound to 0: with two datasets we have Ns1 * Ns2 distances to compute."""
     pytree["lower_idx"] = 0
     return pytree
 
 
 def _set_lower_idx_false(pytree):
-    """
-    if we have one dataset, we have Ns(Ns-1)/2 distances to compute (the upper triangular part of "distances")
-    """
+    """Set lower bound to sample_idx+1: with one dataset compute the upper triangle of distances."""
     pytree["lower_idx"] = pytree["sample_idx"] + 1
     return pytree
 
 
 @jit
 def compute_row_distances(_idx, pytree):
-    """
-    for each data sample indexed by "sample_idx", computes the distance between it and the rest
-    """
+    """Compute the distance between sample row ``sample_idx`` and the rest of the data."""
     pytree["D"] = (
         pytree["D"]
         .at[pytree["sample_idx"], _idx]
@@ -245,9 +243,7 @@ def compute_row_distances(_idx, pytree):
 
 
 class Optimizer:
-    """
-    Stochastic optimization
-    """
+    """Stochastic optimizer state for BID fitting."""
 
     def __init__(
         self,
@@ -257,20 +253,21 @@ class Optimizer:
         d1=0.0,  # slope
         d1_r=0.0,  # slope + random pertubation (*** used by compute_Pmodel instead of d1...)
         delta=0.0,  # optimization step size
-        KL=jnp.double(0.0),  # KL divergence between Pemp(r) and Pmodel(r)
+        KL=jnp.double(0.0),  # noqa: B008  KL divergence between Pemp(r) and Pmodel(r)
         KL_aux=jnp.inf,  # auxiliary variable to check when KL decreases
         remp=None,  # vector with empirical Hamming distances
         Pemp=None,  # vector with empirical probabilities
         Pmodel=None,  # vector with model probabilities
         Nsteps=0,  # Number of steps for the optimization
         accepted=0,  # Accepted moves
-        acc_ratio=jnp.double(1.0),  # Acceptance ratio
+        acc_ratio=jnp.double(1.0),  # noqa: B008  Acceptance ratio
         save_logKLs_flag=0,  # Flag to save logKLs during optimization
         logKLs=None,  # Vector with logKLs during optimization
         idx=0,  # Auxiliary index
         mod_divisor=0,  # Auxiliary variable to export the log KL
         Nsteps_max=1000,  # Total number of saved steps (subsample of the total number of steps)
     ):
+        """Initialise the Optimizer state."""
         self.key = key
         self.d0 = d0
         self.d0_r = d0_r
@@ -326,9 +323,7 @@ register_pytree_node(Optimizer, Optimizer._tree_flatten, Optimizer._tree_unflatt
 
 
 def _compute_Pmodel(idx, Op):
-    """
-    note that this routine uses Op.d0_r and Op.d1_r to compute Pmodel
-    """
+    """Compute Pmodel at index ``idx`` using Op.d0_r and Op.d1_r."""
     ID = Op.d0_r + Op.d1_r * Op.remp[idx]
     Op.Pmodel = Op.Pmodel.at[idx].set(
         jnp.exp(
@@ -338,12 +333,13 @@ def _compute_Pmodel(idx, Op):
             - ID * jnp.log(jnp.double(2))
         )
     )
-    #  call(lambda x: print(f'{x}'),Op.Pmodel[idx])
+    #  call(lambda x: print(f'{x}'),Op.Pmodel[idx])  # noqa: E800
     return Op
 
 
 @jit
 def compute_Pmodel(Op):
+    """Compute the full model probability vector for the current (d0_r, d1_r) and normalize it."""
     Op = lax.fori_loop(
         lower=0, upper=Op.Pmodel.shape[0], body_fun=_compute_Pmodel, init_val=Op
     )
@@ -353,6 +349,7 @@ def compute_Pmodel(Op):
 
 @jit
 def step(idx, Op):
+    """Perform a single Metropolis step of the BID optimization."""
     Op.key, subkey = random.split(Op.key, num=2)
     r = random.uniform(subkey, dtype=jnp.float64)
     Op.d0_r = Op.d0 * (1 + Op.delta * (r - jnp.double(0.5)))
@@ -373,12 +370,14 @@ def step(idx, Op):
 
 @jit
 def compute_KLd(Op):
+    """Compute the KL divergence between Pemp and Pmodel and store it in Op.KL."""
     Op.KL = jnp.sum(Op.Pemp * jnp.log(Op.Pemp / Op.Pmodel))
     return Op
 
 
 @jit
 def update_state(Op):
+    """Accept the current trial state into the optimizer."""
     Op.d0 = Op.d0_r
     Op.d1 = Op.d1_r
     Op.KL_aux = Op.KL
@@ -388,11 +387,13 @@ def update_state(Op):
 
 @jit
 def do_nothing(Op):
+    """Return the optimizer unchanged (no-op branch for lax.cond)."""
     return Op
 
 
 @jit
 def save_logKL(Op):
+    """Append the current log(KL) to Op.logKLs."""
     Op.logKLs = Op.logKLs.at[Op.idx].set(jnp.log(Op.KL))
     Op.idx += 1
     return Op
@@ -400,6 +401,7 @@ def save_logKL(Op):
 
 @jit
 def minimize_KL(Op):
+    """Run the BID KL-minimization loop and return the updated optimizer state."""
     Op.logKLs = jnp.empty(shape=(Op.Nsteps_max), dtype=jnp.double)
     Op.mod_divisor = Op.Nsteps // Op.Nsteps_max
 
@@ -415,17 +417,19 @@ def minimize_KL(Op):
 
 
 class BID:
+    """Binary Intrinsic Dimension (BID) estimator built on a Hamming distance histogram."""
+
     def __init__(
         self,
-        H=Hamming(),  # instance of Hamming class defined above
+        H=Hamming(),  # noqa: B008  instance of Hamming class defined above
         Op=None,  # instance of Optimizer class defined above
         alphamin=0.0,
         alphamax=0.2,
         seed=1,
-        d0=jnp.double(0),  # BID \equiv d(r=0)  (see paper)
-        d1=jnp.double(0),  # slope of d(r) at r=0
-        d00=jnp.double(0),  # initial value of d0
-        d10=jnp.double(0),  # initial value of d1
+        d0=jnp.double(0),  # noqa: B008  BID \equiv d(r=0)  (see paper)
+        d1=jnp.double(0),  # noqa: B008  slope of d(r) at r=0
+        d00=jnp.double(0),  # noqa: B008  initial value of d0
+        d10=jnp.double(0),  # noqa: B008  initial value of d1
         delta=5e-4,
         Nsteps=1e6,
         optfolder0="results/opt/",
@@ -435,6 +439,7 @@ class BID:
         export_logKLs=0,  # To export the curve of logKLs during optimization
         L=0,  # Number of bits / Ising spins
     ):
+        """Initialise the BID estimator."""
         self.H = H
         self.Op = Op
         self.alphamin = alphamin
@@ -464,12 +469,14 @@ class BID:
     def load_initial_condition(
         self,
     ):
+        """Load initial d0/d1 values from a previously saved optimization result."""
         self.set_filepaths()
         _, self.d00, self.d10, _ = self.load_results()
 
     def set_filepaths(
         self,
     ):
+        """Build the paths used to save and load the optimization results."""
         self.optfolder = self.optfolder0
         self.optfolder += f"alphamin{self.alphamin:.5f}/"
         self.optfolder += f"alphamax{self.alphamax:.5f}/"
@@ -483,6 +490,7 @@ class BID:
     def set_idmin(
         self,
     ):
+        """Set the lower index/cut-off rmin for the distance histogram."""
         if self.regularize is False:
             self.idmin = 0
             self.rmin = self.H.D_values[0]
@@ -496,6 +504,7 @@ class BID:
     def set_idmax(
         self,
     ):
+        """Set the upper index/cut-off rmax for the distance histogram."""
         self.H.set_r_quantile(self.alphamax)
         self.rmax = self.H.r
         self.idmax = self.H.r_idx
@@ -503,6 +512,7 @@ class BID:
         self.H.r_idx = None
 
     def truncate_hist(self):
+        """Truncate the empirical distance histogram to the [idmin, idmax] range."""
         self.remp = jnp.array(
             self.H.D_values[self.idmin : self.idmax + 1], dtype=jnp.float64
         )
@@ -513,6 +523,7 @@ class BID:
         self.Pmodel = jnp.zeros(shape=self.Pemp.shape, dtype=jnp.float64)
 
     def test_initial_condition(self, d0, d1):
+        """Evaluate the KL divergence for a candidate (d0, d1) initial condition."""
         self.Op.d0_r = jnp.double(d0)
         self.Op.d1_r = jnp.double(d1)
         self.Op = compute_Pmodel(self.Op)
@@ -520,6 +531,7 @@ class BID:
         return np.log(self.Op.KL)
 
     def set_initial_condition(self, d00min=0.05, d00max=0.95, d00step=0.05):
+        """Pick initial (d0, d1) by scanning a list of candidates and keeping the best."""
         # our home-made guess:
         d00_guess_list = jnp.array([jnp.double(self.Op.remp[-1])])
         d10_guess_list = jnp.array([jnp.double(1)])
@@ -545,10 +557,10 @@ class BID:
                     d10_guess_list[i],
                 )
             )
-        # print(f'{logKLs0=}')
+        # print(f'{logKLs0=}')  # noqa: E800
         i0 = jnp.nanargmin(logKLs0)
-        # print(f'{i0=}')
-        # print(f'{logKLs0[i0]=}')
+        # print(f'{i0=}')  # noqa: E800
+        # print(f'{logKLs0[i0]=}')  # noqa: E800
         self.d00 = d00_guess_list[i0]  # ; print(f'{self.d00=}')
         self.d10 = d10_guess_list[i0]  # ; print(f'{self.d10=}')
         self.Op.d0 = self.d00
@@ -558,6 +570,7 @@ class BID:
     def computeBID(
         self,
     ):
+        """Run the full BID estimation pipeline and optionally export the results."""
         self.set_idmin()
         self.set_idmax()
         self.truncate_hist()
@@ -613,17 +626,20 @@ class BID:
     def load_results(
         self,
     ):
+        """Load the saved (acceptance, d0, d1, logKL) record from optfile."""
         self.set_filepaths()
         return np.loadtxt(self.optfile, unpack=True, delimiter=",")
 
     def load_fit(
         self,
     ):
+        """Load the saved (remp, Pemp, Pmodel) model-validation record from valfile."""
         self.set_filepaths()
         return np.loadtxt(self.valfile, unpack=True)
 
     def load_logKLs_opt(
         self,
     ):
+        """Load the saved logKL trace from KLfile."""
         self.set_filepaths()
         return np.loadtxt(self.KLfile)
