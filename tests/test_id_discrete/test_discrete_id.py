@@ -19,7 +19,7 @@ import matplotlib
 import numpy as np
 import pytest
 
-from dadapy.id_discrete import IdDiscrete
+from dadapy import IdDiscrete
 
 
 def test_distances():
