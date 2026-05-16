@@ -21,7 +21,10 @@ ext_modules += [
         "dadapy._cython.cython_clustering",
         sources=["dadapy/_cython/cython_clustering.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     )
 ]
 
@@ -30,7 +33,10 @@ ext_modules += [
         "dadapy._cython.cython_clustering_v2",
         sources=["dadapy/_cython/cython_clustering_v2.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     )
 ]
 
@@ -39,7 +45,10 @@ ext_modules += [
         "dadapy._cython.cython_maximum_likelihood_opt",
         sources=["dadapy/_cython/cython_maximum_likelihood_opt.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     )
 ]
 
@@ -48,7 +57,10 @@ ext_modules += [
         "dadapy._cython.cython_maximum_likelihood_opt_full",
         sources=["dadapy/_cython/cython_maximum_likelihood_opt_full.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     )
 ]
 
@@ -58,7 +70,10 @@ ext_modules += [
         "dadapy._cython.cython_density",
         sources=["dadapy/_cython/cython_density.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     )
 ]
 
@@ -67,7 +82,10 @@ ext_modules += [
         "dadapy._cython.cython_overlap",
         sources=["dadapy/_cython/cython_overlap.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     )
 ]
 
@@ -76,7 +94,10 @@ ext_modules += [
         "dadapy._cython.cython_grads",
         sources=["dadapy/_cython/cython_grads.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     )
 ]
 
@@ -85,13 +106,19 @@ exts_parallel = [
         "dadapy._cython.cython_distances",
         sources=["dadapy/_cython/cython_distances.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     ),
     Extension(
         "dadapy._cython.cython_differentiable_imbalance",
         sources=["dadapy/_cython/cython_differentiable_imbalance.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        define_macros=[
+            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+        ],
     ),
 ]
 
