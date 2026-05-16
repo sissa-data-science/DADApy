@@ -29,7 +29,7 @@ import networkx as nx
 import numpy as np
 from tqdm.auto import tqdm
 
-from dadapy import DiffImbalance
+from dadapy.diff_imbalance import DiffImbalance
 
 
 def symbol_generator():
