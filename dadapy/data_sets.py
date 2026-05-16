@@ -58,7 +58,8 @@ class DataSets:
         Args:
             d1 (Data): The first dataset
             d2 (Data): The second dataset
-            file_name (str, optional): The file where the imbalances are saved. Defaults to "jackknife.txt". Set to "None" to avoid saving.
+            file_name (str, optional): The file where the imbalances are saved. Defaults to
+                "jackknife.txt". Set to "None" to avoid saving.
             n (_type_, optional): Number of Jackknife repetitions. Defaults to the number of dataset points.
             k (int, optional): The number of neighbours for the imbalance computations. Defaults to 1.
 
@@ -66,12 +67,11 @@ class DataSets:
             mean and standard deviation of the imbalance estimates from d1 to d2.
         """
         assert len(d1.X) == len(d2.X)
-        if n == None:
+        if n is None:
             n = len(d1.X)
 
         if file_name is not None:
             print("Saving imbalances in " + file_name)
-            file_object = open(file_name, "a")
         else:
             print("Not saving imbalances")
 

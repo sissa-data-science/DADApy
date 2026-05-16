@@ -19,15 +19,11 @@ The *kstar* module contains the *KStar* class.
 The computation of the optimal neighbourhood size (k*) is implemented in this class as the compute_kstar method.
 """
 
-import math
 import multiprocessing
 import time
 import warnings
 
 import numpy as np
-from scipy.special import gammaln
-from scipy.stats import chi2
-from tqdm import tqdm
 
 from dadapy._cython import cython_density as cd
 from dadapy.id_estimation import IdEstimation
@@ -90,7 +86,8 @@ class KStar(IdEstimation):
         # raise warning if self.intrinsic_dim is None using the warning module
         if self.intrinsic_dim is None:
             warnings.warn(
-                "Setting the k value but, be careful: the intrinsic dimension is not defined!"
+                "Setting the k value but, be careful: the intrinsic dimension is not defined!",
+                stacklevel=2,
             )
 
         if isinstance(k, np.ndarray):
@@ -104,15 +101,19 @@ class KStar(IdEstimation):
         """Compute an optimal choice of the neighbourhood size k for each point.
 
         Args:
-            alpha (float): Likelihood ratio parameter used to compute optimal k, i.e. quantile for the unfirm density likelihood-ratio test.
-            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
-            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold at each iteration
+            alpha (float): Likelihood ratio parameter used to compute optimal k, i.e. quantile
+                for the unfirm density likelihood-ratio test.
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across
+                the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting
+                the threshold at each iteration
 
         """
         if self.intrinsic_dim is None:
             warnings.warn(
                 "Careful! The intrinsic dimension is not defined. "
-                "Computing it unsupervisedly with 'compute_id_2NN()' method"
+                "Computing it unsupervisedly with 'compute_id_2NN()' method",
+                stacklevel=2,
             )
             _ = self.compute_id_2NN()
 
