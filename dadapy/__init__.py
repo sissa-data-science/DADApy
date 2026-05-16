@@ -15,6 +15,6 @@ from .metric_comparisons import MetricComparisons
 from .neigh_graph import NeighGraph
 
 if sys.version_info >= (3, 9):
-    from .diff_imbalance import DiffImbalance
     from .causal_graph import CausalGraph
+    from .diff_imbalance import DiffImbalance
     from .hamming import BID, Hamming
