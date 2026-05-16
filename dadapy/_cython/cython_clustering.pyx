@@ -81,12 +81,11 @@ def _compute_clustering(floatTYPE_t Z,
                         to_remove[len_to_remove, 0] = _centers_[k]
                         t=1
 
-                        if max_rho <0:
-                            len_to_remove += 1
-
                         if g[i]>max_rho:
                             max_rho=g[i]
                             to_remove[len_to_remove, 1] = i
+        if t == 1:
+            len_to_remove += 1
 
     if verb:
       lag = time.time() - sec
