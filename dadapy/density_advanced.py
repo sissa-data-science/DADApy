@@ -118,7 +118,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     # ----------------------------------------------------------------------------------------------
 
     def compute_grads(self, comp_covmat=False):
-        """Compute the gradient of the log density each point using kstar nearest neighbors and store
+        """Compute the gradient of the log density each point using kstar nearest neighbors and store it.
 
         Estimate the gradient using an improved version of the mean-shift gradient algorithm [Fukunaga1975] as
         presented in [Carli2024].
@@ -185,8 +185,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     # ----------------------------------------------------------------------------------------------
 
     def compute_pearson(self, similarity_method="jaccard"):
-        """
-        Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
+        """Compute Pearson correlation coefficient for the directed deltaFij of neighbour pairs.
+
+        For any couple (i,j) of points connected on the directed neighbourhood graph, estimate the
         Pearson correlation coefficient between the directed deltaFij computed with the gradients in i and in j, namely
         between dot(g_i,(x_j-x_i)) and dot(g_j,(x_j-x_i)). These are needed in order to compute the errors on the
         deltaFs. They are estimated as the neighbourhood similarity index (see documentation for
@@ -197,7 +198,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             similarity_method (str): similarity_method to compute the neighbourhood similarity index (see documentation
                 for compute_neigh_similarity_index).
         """
-
         # check or compute neigh_similarity_index
         if self.neigh_similarity_index is None:
             self.compute_neigh_similarity_index(method=similarity_method)
@@ -224,22 +224,22 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )
 
     def compute_deltaFs(self, similarity_method="jaccard", comp_p_mat=False):
-        """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
-            a linear expansion with as slope the semisum of the average gradient of the log-density over
-            the neighbourhood of points i and j.
+        """Compute deviations deltaFij to standard kNN log-densities at neighbour pairs.
 
-            If not defined, compute the Pearson coefficients p (see docs for pearson_array) by running
-            compute_pearson.
-            Then use these p in the estimate of the variances on the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where
-            E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2024]).
-            The log-density differences are stored Fij_array, their variances in Fij_array_var.
+        At point j as seen from point i, use a linear expansion with as slope the semisum of the
+        average gradient of the log-density over the neighbourhood of points i and j.
+
+        If not defined, compute the Pearson coefficients p (see docs for pearson_array) by running
+        compute_pearson.
+        Then use these p in the estimate of the variances on the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where
+        E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2024]).
+        The log-density differences are stored Fij_array, their variances in Fij_array_var.
 
         Args:
             similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
             comp_p_mat: see docs for compute_pearson function
 
         """
-
         if self.grads_covmat is None:
             self.compute_grads(comp_covmat=True)
 
@@ -288,13 +288,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     def compute_diag_inv_deltaFs_cross_covariance_LSDI(
         self, similarity_method="jaccard"
     ):
-        """Compute the diagonal of the appoximate inverse of the deltaFs cross-covariance cov[deltaFij,deltaFlm] using
-        the LSDI approximation (see compute_density_BMTI docs)
+        """Compute the diagonal of the appoximate inverse of the deltaFs cross-covariance.
+
+        Targets cov[deltaFij,deltaFlm] using the LSDI approximation (see compute_density_BMTI docs).
 
         Args:
             similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
         """
-
         # check for deltaFs
         if self.neigh_similarity_index_mat is None:
             self.compute_neigh_similarity_index_mat(method=similarity_method)
@@ -417,7 +417,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             log_den_err (np.ndarray(float)): size N. The array of the log-density errors of the regulariser.
 
         """
-
         # compute changes in free energy
         if self.Fij_array is None:
             self.compute_deltaFs()
@@ -444,7 +443,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         if self.N > 10000 and solver == "dense":
             warnings.warn(
                 "The number of points is large and you are not using a memory efficient option. \
-                If you run into memory issues, consider using other options."
+                If you run into memory issues, consider using other options.",
+                stacklevel=2,
             )
 
         if self.verb:
@@ -497,7 +497,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 np.ones(self.nspar, dtype=np.float64) / self.Fij_var_array / redundancy
             )
         elif delta_F_inv_cov == "LSDI":
-            # self.compute_deltaFs_inv_cross_covariance()
             self.compute_diag_inv_deltaFs_cross_covariance_LSDI()
             tmpvec = self.inv_deltaFs_cov
 
@@ -595,7 +594,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             # default solver: sp_direct
             if solver != "sp_direct":
                 warnings.warn(
-                    f"The solver '{solver}' selected is not among the options. Using 'sp_direct' instead."
+                    f"The solver '{solver}' selected is not among the options. Using 'sp_direct' instead.",
+                    stacklevel=2,
                 )
             if self.verb:
                 print(
