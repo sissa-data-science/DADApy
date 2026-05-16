@@ -627,6 +627,7 @@ class DiffImbalance:
                 state_new (flax.training.train_state.TrainState object): new training state after optimizer step
                 imb (flat): new value of the DII after optimizer step.
             """
+
             def loss_fn(params):
                 return _compute_training_diff_imbalance(
                     params=params,
