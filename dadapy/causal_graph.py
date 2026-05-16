@@ -27,13 +27,12 @@ import warnings
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from tqdm.auto import tqdm
 
 from dadapy.diff_imbalance import DiffImbalance
 
 
 def symbol_generator():
-    """Generates the alphanumeric strings used to label the dynamical communities."""
+    """Generate the alphanumeric strings used to label the dynamical communities."""
     yield from string.ascii_uppercase
     for i in itertools.count(1):
         for c in string.ascii_uppercase:
@@ -69,6 +68,7 @@ class CausalGraph(DiffImbalance):
         standardize=True,
         seed=0,
     ):
+        """Initialise the CausalGraph object."""
         self.time_series = time_series
         self.coords_present = coords_present
         self.coords_future = coords_future
@@ -93,7 +93,7 @@ class CausalGraph(DiffImbalance):
         self.errors_final_refine = None
 
     def _check_and_initialize_args(self, periods):
-        """Checks input arguments to constructor of CausalGraph object."""
+        """Check input arguments to constructor of CausalGraph object."""
         num_variables = None
         periods = periods
         if (
@@ -103,14 +103,13 @@ class CausalGraph(DiffImbalance):
         ):
             assert len(self.coords_future.shape) == 3, (
                 f"Coords_future has shape {self.coords_future.shape}, while the expected shape "
-                + f"is (N_samples, D_features, n_lags).\nIf you want to test a single time lag, "
-                + f"provide as input coords_future[:,:,np.newaxis]."
+                + "is (N_samples, D_features, n_lags).\nIf you want to test a single time lag, "
+                + "provide as input coords_future[:,:,np.newaxis]."
             )
-            n_lags = self.coords_future.shape[2]
             assert self.coords_present.shape == self.coords_future.shape[:2], (
                 "Arguments coords_present and coords_future should have shapes (N_samples, D_features) "
-                + f"and (N_samples, D_features, n_lags),\n but the number of samples and/or the "
-                + f"number of features do not match."
+                + "and (N_samples, D_features, n_lags),\n but the number of samples and/or the "
+                + "number of features do not match."
             )
             num_variables = self.coords_present.shape[1]
             if periods is not None:
@@ -123,7 +122,8 @@ class CausalGraph(DiffImbalance):
                 ).any()
             ):
                 warnings.warn(
-                    f"The {num_variables} variables in 'coords_present' are not standardized."
+                    f"The {num_variables} variables in 'coords_present' are not standardized.",
+                    stacklevel=2,
                 )
             if self.standardize is True:
                 self.coords_present /= np.std(
@@ -132,12 +132,13 @@ class CausalGraph(DiffImbalance):
         elif self.time_series is not None:
             if self.coords_present is not None or self.coords_future is not None:
                 warnings.warn(
-                    f"You passed the whole time series as input; the arguments coords_present and "
-                    + f"coords_future will be ignored"
+                    "You passed the whole time series as input; the arguments coords_present and "
+                    + "coords_future will be ignored",
+                    stacklevel=2,
                 )
             num_variables = self.time_series.shape[1]
             if periods is not None:
-                periods = np.ones(time_series.shape[1]) * np.array(periods)
+                periods = np.ones(self.time_series.shape[1]) * np.array(periods)
             if (
                 self.standardize is False
                 and (
@@ -145,7 +146,8 @@ class CausalGraph(DiffImbalance):
                 ).any()
             ):
                 warnings.warn(
-                    f"Warning: the {num_variables} variables of the input time series are not standardized."
+                    f"Warning: the {num_variables} variables of the input time series are not standardized.",
+                    stacklevel=2,
                 )
             if self.standardize is True:
                 self.time_series /= np.std(
@@ -162,10 +164,11 @@ class CausalGraph(DiffImbalance):
         embedding_time=1,
         discard_close_ind=None,
     ):
-        """Returns the indices of the nearest neighbor of each point.
+        """Return the indices of the nearest neighbor of each point.
 
         Args:
-            variables (list, jnp.array(int)): array of the coordinates used to build the distance space (with weights 1).
+            variables (list, jnp.array(int)): array of the coordinates used to build the distance space
+                (with weights 1).
             num_samples (int): number of samples harvested from the full time series.
             time_lags (list(int), np.array(int)): tested time lags between 'present' and 'future'.
             embedding_dim (int): dimension of the time-delay embedding vector built on each variable. Default is 1,
@@ -176,8 +179,8 @@ class CausalGraph(DiffImbalance):
                 point i, distances between i and points within [i-discard_close_ind, i+discard_close_ind] are discarded.
 
         Returns:
-            nn_indices (np.array(float)): array of the nearest neighbors indices: nn_indices[i] is the index of the column
-                with value 1 in the rank matrix.
+            nn_indices (np.array(float)): array of the nearest neighbors indices: nn_indices[i] is the
+                index of the column with value 1 in the rank matrix.
         """
         assert (
             self.time_series is not None
@@ -215,7 +218,7 @@ class CausalGraph(DiffImbalance):
         nn_indices = dii._return_nn_indices(discard_close_ind=discard_close_ind)
         return np.array(nn_indices)
 
-    def optimize_present_to_future(
+    def optimize_present_to_future(  # noqa: C901
         self,
         num_samples,
         time_lags,
@@ -241,7 +244,7 @@ class CausalGraph(DiffImbalance):
         ratio_rows_columns=1,
         discard_close_ind=None,
     ):
-        """Iteratively optimizes the DII from the full space in the present to a target space in the future.
+        """Optimize the DII iteratively from the full space in the present to a target space in the future.
 
         Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
         are read only when data are provided to the CausalGraph object through the argument 'time_series'.
@@ -289,9 +292,9 @@ class CausalGraph(DiffImbalance):
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), exponential
                 decay ("exp"; the initial learning rate is halved every 10 steps), or constant learning rate (None).
                 Default is None (constant learning rate).
-            num_points_rows (int): number of points sampled from the rows of rank and distance matrices. In case of large
-                datasets, choosing num_points_rows < n_points can significantly speed up the training. The default is
-                None, for which num_points_rows == n_points.
+            num_points_rows (int): number of points sampled from the rows of rank and distance matrices.
+                In case of large datasets, choosing num_points_rows < n_points can significantly speed
+                up the training. The default is None, for which num_points_rows == n_points.
             compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
                 specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
                 which those arguments are ignored.
@@ -321,17 +324,18 @@ class CausalGraph(DiffImbalance):
             imbs_final (np.array(float)): array of shape (n_target_variables, n_time_lags) containing the DII at
                 the end of each training computed over the full data set. If 'compute_imb_final' is False, imbs_final
                 is set to None. Also accessible as attribute of the CausalGraph object.
-            errors_final (np.array(float)): array of shape (n_target_variables, n_time_lags) containing the errors
-                of the DII at the end of each training, computed over the full data set. If 'compute_imb_final' is False,
-                or if 'compute_imb_final' is True and 'compute_error' is False, errors_final is set to None. Also
-                accessible as attribute of the CausalGraph object.
+            errors_final (np.array(float)): array of shape (n_target_variables, n_time_lags) containing
+                the errors of the DII at the end of each training, computed over the full data set.
+                If 'compute_imb_final' is False, or if 'compute_imb_final' is True and 'compute_error'
+                is False, errors_final is set to None. Also accessible as attribute of the
+                CausalGraph object.
         """
         coords_present = None
         if self.time_series is not None:
             assert num_samples <= self.time_series.shape[0] - max(time_lags), (
                 f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial "
                 + f"samples, if the maximum time lag is {np.max(time_lags)}.\nChoose a smaller value of "
-                + f"num_samples."
+                + "num_samples."
             )
 
             t0s = np.linspace(
@@ -355,16 +359,18 @@ class CausalGraph(DiffImbalance):
             )
         elif self.coords_present is not None:
             if num_samples is not None:
-                warninings.warn(
-                    f"Argument 'num_samples' will be ignored, as you already provided the independent "
-                    + f"initial conditions through arguments 'coords_present' and 'coords_future'.\n "
-                    + f"To suppress this warning, set 'num_samples' to None."
+                warnings.warn(
+                    "Argument 'num_samples' will be ignored, as you already provided the independent "
+                    + "initial conditions through arguments 'coords_present' and 'coords_future'.\n "
+                    + "To suppress this warning, set 'num_samples' to None.",
+                    stacklevel=2,
                 )
             if time_lags is not None:
-                warninings.warn(
-                    f"Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
-                    + f"are already read from the last dimension of 'coords_future'.\n "
-                    + f"To suppress this warning, set 'time_lags' to None."
+                warnings.warn(
+                    "Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
+                    + "are already read from the last dimension of 'coords_future'.\n "
+                    + "To suppress this warning, set 'time_lags' to None.",
+                    stacklevel=2,
                 )
             num_samples = self.coords_present.shape[0]
             time_lags = np.arange(1, self.coords_future.shape[2] + 1)
@@ -372,7 +378,7 @@ class CausalGraph(DiffImbalance):
         else:
             print(
                 "To call this method, provide either a time series or directly the present and future samples "
-                + f"while initializing the CausalGraph class."
+                + "while initializing the CausalGraph class."
             )
 
         if target_variables == "all":
@@ -503,7 +509,7 @@ class CausalGraph(DiffImbalance):
         return weights_final, imbs_training, imbs_final, errors_final
 
     def compute_adj_matrix(self, weights, threshold=1e-1):
-        """Computes the adjacency matrix from the optimal weights returned by optimize_present_to_future.
+        """Compute the adjacency matrix from the optimal weights returned by optimize_present_to_future.
 
         As a preliminary step before applying the threshold, the maximum weight over the tested time lags is
         taken for each pair X_i(0) -> X_j(tau) (i,j=1,...,D). If the weights are referred to time-delay
@@ -524,16 +530,16 @@ class CausalGraph(DiffImbalance):
                 CausalGraph object.
         """
         assert weights is not None, (
-            f"To call this method, provide the weights obtained with the method optimize_present_to_future, "
-            + f"with the option target_variables='all'"
+            "To call this method, provide the weights obtained with the method optimize_present_to_future, "
+            + "with the option target_variables='all'"
         )
         assert len(weights.shape) == 3 or len(weights.shape) == 4, (
             "The array of weight must have shape (D,n_time_lags,D), or (D,n_time_lags,D,embedding_dim_present). "
-            + f"If you are testing a single time lag, reshape this input as weights[:,np.newaxis,:]."
+            + "If you are testing a single time lag, reshape this input as weights[:,np.newaxis,:]."
         )
         assert weights.shape[0] == weights.shape[2], (
             "The array of weight must have shape (D,n_time_lags,D), or (D,n_time_lags,D,embedding_dim_present), "
-            + f"where D is the number of variables."
+            + "where D is the number of variables."
         )
         if len(weights.shape) == 3:
             weights_max = np.max(weights, axis=1)  # maximum over all tested time lags
@@ -549,7 +555,7 @@ class CausalGraph(DiffImbalance):
         return adj_matrix
 
     def _ancestors(self, adj_matrix):
-        """Finds ancestors of each node in the directed graph described by the input adjacency matrix.
+        """Find ancestors of each node in the directed graph described by the input adjacency matrix.
 
         Args:
             adj_matrix (np.ndarray(float)): binary matrix of shape (D,D) defining the links of a directed
@@ -566,7 +572,7 @@ class CausalGraph(DiffImbalance):
         return auto_sets
 
     def find_communities(self, adj_matrix):
-        """Finds dynamical communities, i.e. groups of variables defining single nodes in the community causal graph.
+        """Find dynamical communities, i.e. groups of variables defining single nodes in the community causal graph.
 
         Args:
             adj_matrix (np.ndarray(float)): binary matrix of shape (D,D) defining the links of a directed
@@ -636,7 +642,7 @@ class CausalGraph(DiffImbalance):
         self.community_dictionary = community_dictionary
         return community_dictionary
 
-    def community_graph_visualization(
+    def community_graph_visualization(  # noqa: C901
         self,
         community_dictionary,
         adj_matrix,
@@ -645,7 +651,7 @@ class CausalGraph(DiffImbalance):
         variable_names=None,
         **kwargs,
     ):
-        """Shows a visual representation of the dynamical communities on a graph.
+        """Show a visual representation of the dynamical communities on a graph.
 
         This function makes use of the library networkx (https://networkx.org/documentation/stable/index.html)
 
@@ -698,7 +704,7 @@ class CausalGraph(DiffImbalance):
 
             assert (
                 len(communities) != 1
-            ), f"Only one community is present. Try plotting with a standard function of networkx."
+            ), "Only one community is present. Try plotting with a standard function of networkx."
 
             G = nx.DiGraph()
             for comm in communities:
@@ -791,9 +797,6 @@ class CausalGraph(DiffImbalance):
                 tuple(community): alphabet_string[i]
                 for i, community in enumerate(values)
             }
-            from_names_to_communities = {
-                community_names[key]: key for key in community_names.keys()
-            }
 
             # convert communities into names and add them to graph as nodes
             for community, key in zip(community_names, keys):
@@ -806,7 +809,8 @@ class CausalGraph(DiffImbalance):
                     )
                 else:
                     print(
-                        f"Community {community_name} ({len(community)} variables, level {key[1]}): {variable_names[list(community)]}"
+                        f"Community {community_name} ({len(community)} variables, "
+                        f"level {key[1]}): {variable_names[list(community)]}"
                     )
 
             # dictionary with keys: (order_idx) and values: list of communities at that order (list of list)
@@ -817,7 +821,7 @@ class CausalGraph(DiffImbalance):
                 )
 
             # draw edges
-            for community_effect_idx, order_idx in keys:
+            for _community_effect_idx, order_idx in keys:
                 if order_idx == 0:
                     continue
                 # for each putative effect community at order >=1...
@@ -862,7 +866,7 @@ class CausalGraph(DiffImbalance):
             # return networkx object
             return G
 
-    def find_direct_links_communities(
+    def find_direct_links_communities(  # noqa: C901
         self,
         adj_matrix,
         community_graph,
@@ -888,12 +892,13 @@ class CausalGraph(DiffImbalance):
         ratio_rows_columns=1,
         discard_close_ind=None,
     ):
-        """Implements the refinement step to distinguish direct and indirect links between nonconsecutive communities.
+        """Implement the refinement step to distinguish direct and indirect links between nonconsecutive communities.
 
         Whenever a pattern A->C->B is found in the community causal graph, the loss
             DII(w * [A(0), B(tau-1), C(tau-1),..., B(tau-E), C(tau-E)] -> B(tau))
-        is optimized for all input time lags 'tau'. All variables within the same community are scaled by the same weight.
-        The number of previous time steps E included in the optimization is given by the argument 'embedding_dim_present'.
+        is optimized for all input time lags 'tau'. All variables within the same community are scaled
+        by the same weight. The number of previous time steps E included in the optimization is given
+        by the argument 'embedding_dim_present'.
 
         Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
         are read only when data are provided to the CausalGraph object through the argument 'time_series'.
@@ -947,9 +952,9 @@ class CausalGraph(DiffImbalance):
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), exponential
                 decay ("exp"; the initial learning rate is halved every 10 steps), or constant learning rate (None).
                 Default is None (constant learning rate).
-            num_points_rows (int): number of points sampled from the rows of rank and distance matrices. In case of large
-                datasets, choosing num_points_rows < n_points can significantly speed up the training. The default is
-                None, for which num_points_rows == n_points.
+            num_points_rows (int): number of points sampled from the rows of rank and distance matrices.
+                In case of large datasets, choosing num_points_rows < n_points can significantly speed
+                up the training. The default is None, for which num_points_rows == n_points.
             compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
                 specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
                 which those arguments are ignored.
@@ -970,19 +975,23 @@ class CausalGraph(DiffImbalance):
                 no distances between points close in the time are discarded.
 
         Returns:
-            weights_final (dict): dictionary containing the final optimization weights for each pair of communities
-                linked through indirect paths in the community causal graph. The keys are tuples (community_name_cause,
-                community_name_effect), while the values are np.arrays of shape (n_time_lags, n_weights), where n_weights
-                is equal to 1 + E + E (1 weight for the cause community, E weights for the effect community, and E weights
+            weights_final (dict): dictionary containing the final optimization weights for each pair
+                of communities linked through indirect paths in the community causal graph. The keys
+                are tuples (community_name_cause, community_name_effect), while the values are
+                np.arrays of shape (n_time_lags, n_weights), where n_weights is equal to 1 + E + E
+                (1 weight for the cause community, E weights for the effect community, and E weights
                 for the mediator communities), and E=embedding_dim_present.
-            communities_and_lags (dict): dictionary containing as keys the tuples (community_name_cause, community_name_effect),
-                and as values the a list of communities and corresponding lags
-            imbs_training (dict): dictionary containing as keys the tuples (community_name_cause, community_name_effect), and
-                as values the DIIs during the trainings.
-            imbs_final (dict): dictionary containing as keys the tuples (community_name_cause, community_name_effect), and as
-                values the final DIIs.
-            errors_final (dict): dictionary containing as keys the tuples (community_name_cause, community_name_effect), and as
-                values the errors of the final DIIs.
+            communities_and_lags (dict): dictionary containing as keys the tuples
+                (community_name_cause, community_name_effect), and as values a list of communities
+                and corresponding lags.
+            imbs_training (dict): dictionary containing as keys the tuples
+                (community_name_cause, community_name_effect), and as values the DIIs during the
+                trainings.
+            imbs_final (dict): dictionary containing as keys the tuples
+                (community_name_cause, community_name_effect), and as values the final DIIs.
+            errors_final (dict): dictionary containing as keys the tuples
+                (community_name_cause, community_name_effect), and as values the errors of the
+                final DIIs.
         """
 
         def find_mediators(graph, node_start, node_end):
@@ -1033,8 +1042,8 @@ class CausalGraph(DiffImbalance):
         errors_final = {}
         communities_and_lags = {}
 
-        ############# identify all pairs of indirectly linked communities, and mediator communities #############
-        for community_effect_idx, order_idx in keys:
+        # identify all pairs of indirectly linked communities, and mediator communities #############
+        for _community_effect_idx, order_idx in keys:
             if order_idx < 2:
                 continue
             # for each putative effect community at order >=2...
@@ -1045,10 +1054,6 @@ class CausalGraph(DiffImbalance):
                 effect_ancestors_names = set(
                     nx.ancestors(community_graph, community_name_effect)
                 )
-                effect_ancestors_sets = [
-                    from_names_to_communities[effect_ancestor_name]
-                    for effect_ancestor_name in effect_ancestors_names
-                ]
 
                 # ...and take each ancestor (not a parent!) community as putative cause...
                 for community_name_cause in list(
@@ -1068,7 +1073,8 @@ class CausalGraph(DiffImbalance):
                         ).all()
                     ):
                         print(
-                            f"Communities {community_name_cause}->{community_name_effect}: not linked according to adjacency matrix, test skipped."
+                            f"Communities {community_name_cause}->{community_name_effect}: "
+                            "not linked according to adjacency matrix, test skipped."
                         )
                         continue
 
@@ -1126,7 +1132,7 @@ class CausalGraph(DiffImbalance):
                                 community_name_cause, community_name_effect
                             ] = np.zeros(len(time_lags))
 
-                    ########### compute DII((cause(t=0), effect(t=tau-1), ... , mediator(t=tau-1), ...) -> effect(t=tau))
+                    # compute DII((cause(t=0), effect(t=tau-1), ... , mediator(t=tau-1), ...) -> effect(t=tau))
                     coords_present = None
                     variables_t0 = community_cause
                     if self.time_series is not None:
@@ -1135,7 +1141,7 @@ class CausalGraph(DiffImbalance):
                         ), (
                             f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial "
                             + f"samples, if the maximum time lag is {np.max(time_lags)}.\nChoose a smaller value of "
-                            + f"num_samples."
+                            + "num_samples."
                         )
 
                         t0s = np.linspace(
@@ -1151,27 +1157,29 @@ class CausalGraph(DiffImbalance):
                         ]  # has shape (num_samples, n_variables_t0)
                     elif self.coords_present is not None:
                         if num_samples is not None:
-                            warninings.warn(
-                                f"Argument 'num_samples' will be ignored, as you already provided the independent "
-                                + f"initial conditions through arguments 'coords_present' and 'coords_future'.\n "
-                                + f"To suppress this warning, set 'num_samples' to None."
+                            warnings.warn(
+                                "Argument 'num_samples' will be ignored, as you already provided the independent "
+                                + "initial conditions through arguments 'coords_present' and 'coords_future'.\n "
+                                + "To suppress this warning, set 'num_samples' to None.",
+                                stacklevel=2,
                             )
                         if time_lags is not None:
-                            warninings.warn(
-                                f"Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
-                                + f"are already read from the last dimension of 'coords_future'.\n "
-                                + f"To suppress this warning, set 'time_lags' to None."
+                            warnings.warn(
+                                "Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
+                                + "are already read from the last dimension of 'coords_future'.\n "
+                                + "To suppress this warning, set 'time_lags' to None.",
+                                stacklevel=2,
                             )
                         num_samples = self.coords_present.shape[0]
                         time_lags = np.arange(1, self.coords_future.shape[2] + 1)
                         coords_present = self.coords_present[:, variables_t0]
                     else:
                         print(
-                            "To call this method, provide either a time series or directly the present and future samples "
-                            + f"while initializing the CausalGraph class."
+                            "To call this method, provide either a time series or directly the "
+                            "present and future samples while initializing the CausalGraph class."
                         )
 
-                    ############# LOOP OVER TAU #############
+                    # LOOP OVER TAU #############
                     for j_tau, tau in enumerate(time_lags):
                         indices_future = (  # for space B: effect(t=tau)
                             np.array(
@@ -1246,8 +1254,11 @@ class CausalGraph(DiffImbalance):
                             coords_future = self.coords_future[
                                 :, community_effect, j_tau
                             ]
-                            coords_cond = self.coords_future[
-                                :, mediator_vars, j_tau - 1 : jtau + 1
+                            # TODO: this branch was unreachable due to a typo (jtau) and the
+                            # resulting array is currently unused downstream; revisit when the
+                            # else-branch path is exercised.
+                            coords_cond = self.coords_future[  # noqa: F841
+                                :, mediator_vars, j_tau - 1 : j_tau + 1
                             ]
 
                         coords_A = np.concatenate(
@@ -1361,7 +1372,7 @@ class CausalGraph(DiffImbalance):
         savefig_name=None,
         **kwargs,
     ):
-        """Shows a visual representation of the dynamical communities on a graph, after the refinement step.
+        """Show a visual representation of the dynamical communities on a graph, after the refinement step.
 
         This function makes use of the library networkx (https://networkx.org/documentation/stable/index.html)
 
@@ -1397,9 +1408,6 @@ class CausalGraph(DiffImbalance):
         community_names = {
             tuple(community): alphabet_string[i] for i, community in enumerate(values)
         }
-        from_names_to_communities = {
-            community_names[key]: key for key in community_names.keys()
-        }
 
         # print conversion labels - communities
         print("Conversion labels - communities:")
@@ -1411,7 +1419,8 @@ class CausalGraph(DiffImbalance):
                 )
             else:
                 print(
-                    f"Community {community_name} ({len(community)} variables, level {key[1]}): {variable_names[list(community)]}"
+                    f"Community {community_name} ({len(community)} variables, "
+                    f"level {key[1]}): {variable_names[list(community)]}"
                 )
 
         # extract pairs of communities tested for direct vs indirect links
