@@ -762,61 +762,6 @@ class MetricComparisons(Base):
 
         return overlaps
 
-    def return_label_overlap_coords(self, labels, coords, k=30):
-        """Return the neighbour overlap between a selection of coordinates and a set of labels.
-
-        An overlap of 1 means that all neighbours of a point have the same label as the central point.
-
-        Args:
-            labels (np.ndarray): the labels with respect to which the overlap is computed
-            coords (list(int)): a list of coordinates to consider for the distance computation
-            k (int): the number of neighbours considered for the overlap
-
-        Returns:
-            (float): the neighbour overlap of the points
-        """
-        raise AssertionError(
-            """This function is outdated and will be removed in a future version of the package. \
-        Use "return_label_overlap" instead."""
-        )
-
-    def return_overlap_coords(self, coords1, coords2, k=30):
-        """Return the neighbour overlap between two subspaces defined by two sets of coordinates.
-
-        An overlap of 1 means that in the two subspaces all points have an identical neighbourhood.
-
-        Args:
-            coords1 (list(int)): the list of coordinates defining the first subspace
-            coords2 (list(int)): the list of coordinates defining the second subspace
-            k (int): the number of neighbours considered for the overlap
-
-        Returns:
-            (float): the neighbour overlap of the two subspaces
-        """
-        raise AssertionError(
-            """This function is a wrong implementation of the overlap between two \
-            sets of coordinates and will be removed in a future version of the package. \
-            Use "return_data_overlap" instead."""
-        )
-
-    def return_label_overlap_selected_coords(self, labels, coord_list, k=30):
-        """Return a list of neighbour overlaps computed on a list of selected coordinates.
-
-        An overlap of 1 means that all neighbours of a point have the same label as the central point.
-
-        Args:
-            labels (np.ndarray): the labels with respect to which the overlap is computed
-            coord_list (list(list(int))): a list of lists, with each sublist representing a set of coordinates
-            k: the number of neighbours considered for the overlap
-
-        Returns:
-            (list(float)): a list of neighbour overlaps of the points
-        """
-        raise AssertionError(
-            """This function is outdated and will be removed in a future version of the package. \
-        Use "return_label_overlap" instead."""
-        )
-
     def return_inf_imb_causality(
         self,
         cause_present,
