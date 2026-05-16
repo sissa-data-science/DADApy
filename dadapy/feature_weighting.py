@@ -45,9 +45,10 @@ from dadapy.base import Base
 cores = multiprocessing.cpu_count()
 
 
+# TODO: remove when this works with different maxk
 def check_maxk(func):
     """Warn once that maxk is not yet supported by FeatureWeighting and reset it."""
-    # TODO: remove when this works with different maxk
+
     @wraps(func)
     def with_check(*args, **kwargs):
         feature_selector: type[FeatureWeighting] = args[0]
