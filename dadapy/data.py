@@ -143,7 +143,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             log_lik = -ut._neg_loglik(self.dtype, gride_id, mus, n1s, n2s)
             self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
-            ids.append(id)
+            ids.append(gride_id)
             ids_err.append(id_err)
             kstars.append(self.kstar)
             log_likelihoods.append(log_lik)

@@ -42,7 +42,7 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
 
     x_, y_ = np.atleast_2d(x[:Nele_eff]).T, y[:Nele_eff]
 
-    slope, residuals, rank, s = np.linalg.lstsq(
+    slope, residuals, _, _ = np.linalg.lstsq(
         x_, y_, rcond=None
     )  # x[:Nele_eff, None]?
 
@@ -87,7 +87,7 @@ def plot_SLAn(Data, linkage="single"):
     else:
         print("ERROR: select a valid linkage criterion")
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)  # create figure & 1 axis
+    plt.subplots(nrows=1, ncols=1)  # create figure & 1 axis
     sp.cluster.hierarchy.dendrogram(DD)
     plt.show()
 
@@ -104,7 +104,7 @@ def plot_MDS(Data, cmap="viridis", savefig=""):
     for i in range(Data.N_clusters):
         d_dis[i][i] = 0.0
     out = model.fit_transform(d_dis)
-    fig, ax = plt.subplots(nrows=1, ncols=1)
+    _, ax = plt.subplots(nrows=1, ncols=1)
     s = []
     col = []
     for i in range(Data.N_clusters):
@@ -141,7 +141,6 @@ def plot_MDS(Data, cmap="viridis", savefig=""):
     rr = np.amax(Rho_bord_m)
     if rr > 0.0:
         Rho_bord_m = Rho_bord_m / rr * 100.0
-    start_idx, end_idx = np.where(out)
     segments = [
         [out[i, :], out[j, :]] for i in range(len(out)) for j in range(len(out))
     ]
@@ -164,7 +163,7 @@ def plot_matrix(Data, savefig=""):
     for j in range(Data.N_clusters):
         topography[j, j] = Data.log_den[Data.cluster_centers[j]]
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)
+    plt.subplots(nrows=1, ncols=1)
     plt.imshow(topography, cmap="gray_r", interpolation=None)
     plt.xticks(np.arange(0, Data.N_clusters, step=1))
     plt.yticks(np.arange(0, Data.N_clusters, step=1))
@@ -261,16 +260,16 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):  # noqa: C9
         e1new = []
         e2new = []
         d12new = []
-        for j in unt:
+        for u in unt:
             t = 0
             dmin = 9.9e99
             for _ in d12:
-                if (e1[t] == j) | (e2[t] == j):
+                if (e1[t] == u) | (e2[t] == u):
                     if (e1[t] == fe) | (e2[t] == fe) | (e1[t] == fs) | (e2[t] == fs):
                         if d12[t] < dmin:
                             dmin = d12[t]
                 t = t + 1
-            e1new.append(j)
+            e1new.append(u)
             e2new.append(newname)
             d12new.append(dmin)
 
@@ -505,7 +504,7 @@ def plot_id_pv(x, idd, pv, title, xlabel, fileout):
         fileout (string, optional): path to save the plot
 
     """
-    fig, ax1 = plt.subplots()
+    _, ax1 = plt.subplots()
 
     c_left = "firebrick"
     c_right = "navy"

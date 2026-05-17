@@ -46,9 +46,7 @@ def _return_ranks(dist_indices_1, dist_indices_2, rng, k=1):
 
         for k_neighbor in range(k):
             if len(wr[k_neighbor]) == 0:
-                conditional_ranks[i, k_neighbor] = rng.integers(
-                    low=maxk_2, high=N, size=1
-                )
+                conditional_ranks[i, k_neighbor] = rng.integers(low=maxk_2, high=N)
             else:
                 conditional_ranks[i, k_neighbor] = wr[k_neighbor][0]
 
