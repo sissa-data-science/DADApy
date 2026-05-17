@@ -20,16 +20,14 @@ Such a class is useful to manipulate multiple different datasets at the same tim
 between datasets, such as the information imbalance.
 """
 
-import multiprocessing
 import os
 
 import numpy as np
 
 from dadapy._utils.metric_comparisons import _return_imbalance
-from dadapy._utils.utils import compute_nn_distances
+from dadapy._utils.utils import compute_nn_distances, cores
 from dadapy.data import Data
 
-cores = multiprocessing.cpu_count()
 np.set_printoptions(precision=2)
 os.getcwd()
 

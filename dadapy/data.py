@@ -20,18 +20,17 @@ Such a class inherits from all other classes defined in the package and as such 
 all the algorithms implemented in Dadapy.
 """
 
-import multiprocessing
 import os
 
 import numpy as np
 
 from dadapy._utils import utils as ut
+from dadapy._utils.utils import cores
 from dadapy.clustering import Clustering
 from dadapy.density_advanced import DensityAdvanced
 from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons
 
-cores = multiprocessing.cpu_count()
 np.set_printoptions(precision=2)
 os.getcwd()
 

@@ -19,7 +19,6 @@ The *density_estimation* module contains the *DensityEstimation* class.
 The different algorithms of density estimation are implemented as methods of this class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -31,10 +30,8 @@ from dadapy._utils.density_estimation import (
     return_not_normalised_density_PAk,
     return_not_normalised_density_PAk_optimized,
 )
-from dadapy._utils.utils import compute_cross_nn_distances
+from dadapy._utils.utils import compute_cross_nn_distances, cores
 from dadapy.kstar import KStar
-
-cores = multiprocessing.cpu_count()
 
 
 class DensityEstimation(KStar):

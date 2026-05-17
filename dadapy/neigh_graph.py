@@ -19,16 +19,14 @@ The *neighbourhood_graph* module contains the *NeighGraph* class.
 It contains different methods and attributes which allow to exploit the structure of the directed neighbourhood graph.
 """
 
-import multiprocessing
 import time
 
 import numpy as np
 from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
+from dadapy._utils.utils import cores
 from dadapy.kstar import KStar
-
-cores = multiprocessing.cpu_count()
 
 
 class NeighGraph(KStar):
