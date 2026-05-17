@@ -232,7 +232,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):  # noqa: C9
     # Obtain the dendrogram in form of links
     nlinks = 0
     clnew = Data.N_clusters
-    for j in range(Data.N_clusters - 1):
+    for _ in range(Data.N_clusters - 1):
         aa = np.argmin(d12)
         nlinks = nlinks + 1
         L.append(clnew + nlinks)
