@@ -42,9 +42,7 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
 
     x_, y_ = np.atleast_2d(x[:Nele_eff]).T, y[:Nele_eff]
 
-    slope, residuals, _, _ = np.linalg.lstsq(
-        x_, y_, rcond=None
-    )  # x[:Nele_eff, None]?
+    slope, residuals, _, _ = np.linalg.lstsq(x_, y_, rcond=None)  # x[:Nele_eff, None]?
 
     plt.plot(x, y, "o")
     plt.plot(x[:Nele_eff], y[:Nele_eff], "o")

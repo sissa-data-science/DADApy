@@ -434,7 +434,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 self.intrinsic_dim,
                 self.kstar,
                 interpolation=False,
-                bias=False,
             )
             # Normalise density
             log_den -= np.log(self.N)
