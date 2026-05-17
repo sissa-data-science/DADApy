@@ -42,6 +42,7 @@ class InformationImbalance(Base):
     def __init__(
         self,
         coordinates=None,
+        other=None,
         distances=None,
         maxk=None,
         period=None,
@@ -51,8 +52,15 @@ class InformationImbalance(Base):
     ):
         """Class with methods to compare metric spaces using the information imbalance.
 
+        When ``other`` is provided, :meth:`return_information_imbalace` will use it
+        as the second dataset by default, enabling the symmetric call pattern
+        ``InformationImbalance(X1, X2).return_information_imbalace(k=1)``.
+
         Args:
             coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            other (np.ndarray(float), optional): a second dataset of shape (N, D') used as the
+                comparison space in :meth:`return_information_imbalace`. Stored on
+                ``self.X_other``.
             distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
@@ -69,14 +77,21 @@ class InformationImbalance(Base):
             n_jobs=n_jobs,
             rng_seed=rng_seed,
         )
+        # Set after super() so that, in the MetricComparisons facade MRO
+        # (InformationImbalance -> NeighborhoodOverlap), this assignment is
+        # authoritative for X_other while labels set by NeighborhoodOverlap
+        # remain in place.
+        self.X_other = other
 
     def return_information_imbalace(
-        self, coordinates, k=1, subset_size=2000, repeats=None, avg=True
+        self, coordinates=None, k=1, subset_size=2000, repeats=None, avg=True
     ):
         """Return the imbalance with another dataset X.
 
         Args:
-            coordinates (np.ndarray(float)): the coordinates of the othe dataset (N , dimension of embedding space).
+            coordinates (np.ndarray(float)): the coordinates of the other dataset
+                (N , dimension of embedding space). If ``None``, falls back to
+                ``self.X_other`` set at construction time.
             k (int): order of nearest neighbour considered for the calculation of the imbalance, default is 1,
             subset_size (int): size of the subsets on which the information imbalance is computed.
             repeats (int): the number of repetitions for the information imbalance calculation.
@@ -84,6 +99,12 @@ class InformationImbalance(Base):
             (np.array, np.array): the information imbalances their standard error
         """
         assert self.X is not None, "information imbalance requires coordinate matrix."
+        if coordinates is None:
+            coordinates = self.X_other
+        assert coordinates is not None, (
+            "no second dataset provided: pass `coordinates=` or construct with "
+            "`InformationImbalance(X1, X2)`."
+        )
         assert (
             self.X.shape[0] == coordinates.shape[0]
         ), "the two datasets must have the same number of samples"

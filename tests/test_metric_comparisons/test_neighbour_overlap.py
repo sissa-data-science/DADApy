@@ -54,3 +54,41 @@ def test_return_data_overlap():
     mc = NeighborhoodOverlap(coordinates=X)
     ov_data = mc.return_data_overlap(coordinates=X[:, 1:], k=30, avg=True)
     assert pytest.approx(0.78, 0.001) == ov_data
+
+
+def test_constructor_other_data_overlap():
+    """Two-dataset constructor: NeighborhoodOverlap(X1, X2).return_data_overlap()."""
+    X = np.load(filename)
+    mc = NeighborhoodOverlap(X, X[:, 1:])
+    ov_data = mc.return_data_overlap(k=30, avg=True)
+    assert pytest.approx(0.78, 0.001) == ov_data
+
+
+def test_constructor_labels_label_overlap():
+    """Constructor labels: NeighborhoodOverlap(X, labels=y).return_label_overlap()."""
+    X = np.load(filename)
+    labels = np.ones(X.shape[0], dtype=int)
+    labels[X[:, 0] < 0] = 0
+    mc = NeighborhoodOverlap(X, labels=labels)
+    overlap = mc.return_label_overlap(k=5, avg=True)
+    assert overlap == pytest.approx(1.0, 0.001)
+
+
+def test_constructor_both_other_and_labels():
+    """Constructor accepts both `other` and `labels` on the same instance."""
+    X = np.load(filename)
+    labels = np.ones(X.shape[0], dtype=int)
+    labels[X[:, 0] < 0] = 0
+    mc = NeighborhoodOverlap(X, other=X[:, 1:], labels=labels)
+    assert pytest.approx(0.78, 0.001) == mc.return_data_overlap(k=30, avg=True)
+    assert pytest.approx(1.0, 0.001) == mc.return_label_overlap(k=5, avg=True)
+
+
+def test_constructor_missing_inputs_raise():
+    """Calls without a second dataset / labels raise a clear error."""
+    X = np.load(filename)
+    mc = NeighborhoodOverlap(coordinates=X)
+    with pytest.raises(AssertionError, match="no second dataset provided"):
+        mc.return_data_overlap(k=30)
+    with pytest.raises(AssertionError, match="no labels provided"):
+        mc.return_label_overlap(k=5)

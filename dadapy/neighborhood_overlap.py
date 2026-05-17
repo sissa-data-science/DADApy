@@ -37,6 +37,8 @@ class NeighborhoodOverlap(Base):
     def __init__(
         self,
         coordinates=None,
+        other=None,
+        labels=None,
         distances=None,
         maxk=None,
         period=None,
@@ -46,8 +48,20 @@ class NeighborhoodOverlap(Base):
     ):
         """Class with methods to compare metric spaces using neighbour overlap.
 
+        When ``other`` and/or ``labels`` are provided, methods such as
+        :meth:`return_data_overlap` and :meth:`return_label_overlap` use them as
+        defaults, enabling the symmetric call patterns
+        ``NeighborhoodOverlap(X1, X2).return_data_overlap(k=30)`` and
+        ``NeighborhoodOverlap(X, labels=y).return_label_overlap(k=5)``. Both can
+        be set on the same instance.
+
         Args:
             coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
+            other (np.ndarray(float), optional): a second dataset of shape (N, D') used as
+                the comparison space in :meth:`return_data_overlap`. Stored on
+                ``self.X_other``.
+            labels (np.ndarray, optional): labels used by :meth:`return_label_overlap`.
+                Stored on ``self.labels``.
             distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
             period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
@@ -64,6 +78,8 @@ class NeighborhoodOverlap(Base):
             n_jobs=n_jobs,
             rng_seed=rng_seed,
         )
+        self.X_other = other
+        self.labels = labels
 
     def _label_imbalance_helper(self, labels, k, class_fraction):
         if k is not None:
@@ -93,7 +109,13 @@ class NeighborhoodOverlap(Base):
         return k_per_sample, sample_weights, max_k
 
     def return_label_overlap(
-        self, labels, k=None, avg=True, coords=None, class_fraction=None, weighted=True
+        self,
+        labels=None,
+        k=None,
+        avg=True,
+        coords=None,
+        class_fraction=None,
+        weighted=True,
     ):
         """Return the neighbour overlap between the full space and a set of labels.
 
@@ -101,6 +123,7 @@ class NeighborhoodOverlap(Base):
 
         Args:
             labels (list): the labels with respect to which the overlap is computed.
+                If ``None``, falls back to ``self.labels`` set at construction time.
             k (int): the number of neighbours considered for the overlap.
             coords (array): subset of indices on which the overlap is computed.
             class_fraction (float): number of nearest neighbor considered expressed \
@@ -115,6 +138,12 @@ class NeighborhoodOverlap(Base):
         assert (
             k is not None or class_fraction is not None
         ), "k and class fraction are None. set al least one of them."
+        if labels is None:
+            labels = self.labels
+        assert labels is not None, (
+            "no labels provided: pass `labels=` or construct with "
+            "`NeighborhoodOverlap(X, labels=y)`."
+        )
         labels = labels.astype(int)
         k_per_sample, sample_weights, max_k = self._label_imbalance_helper(
             labels, k, class_fraction
@@ -166,7 +195,9 @@ class NeighborhoodOverlap(Base):
         An overlap of 1 means that all neighbours of a point are the same in the two spaces.
 
         Args:
-            coordinates (np.ndarray(float)): the data set to compare, of shape (N , dimension of embedding space)
+            coordinates (np.ndarray(float)): the data set to compare, of shape (N , dimension of embedding space).
+                If ``coordinates``, ``distances`` and ``dist_indices`` are all ``None``,
+                falls back to ``self.X_other`` set at construction time.
             distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float)) ):
                                         Distance matrix (see base class for shape explanation)
             k (int): the number of neighbours considered for the overlap
@@ -178,10 +209,12 @@ class NeighborhoodOverlap(Base):
             var is not None for var in [self.X, self.distances, self.dist_indices]
         ), "NeighborhoodOverlap should be initialized with a dataset."
 
-        assert any(
-            var is not None for var in [coordinates, distances, dist_indices]
-        ), "The overlap with data requires a second dataset. \
-            Provide at least one of coordinates, distances, dist_indices."
+        if coordinates is None and distances is None and dist_indices is None:
+            assert self.X_other is not None, (
+                "no second dataset provided: pass one of `coordinates`/`distances`/"
+                "`dist_indices` or construct with `NeighborhoodOverlap(X1, X2)`."
+            )
+            coordinates = self.X_other
 
         dist_indices_base, k_base = _get_nn_indices(
             self.X,
