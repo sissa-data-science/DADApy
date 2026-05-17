@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 import multiprocessing
-import os
 import warnings
 
 import numpy as np
@@ -25,10 +24,8 @@ from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
 # Cap default thread count to avoid OpenBLAS's 128-thread build limit on
-# many-core machines. Users can override per-call via the n_jobs argument
-# or globally via the OPENBLAS_NUM_THREADS environment variable.
-_openblas_limit = int(os.environ.get("OPENBLAS_NUM_THREADS", 128))
-cores = min(multiprocessing.cpu_count(), _openblas_limit)
+# many-core machines. Users can override per-call via the n_jobs argument.
+cores = min(multiprocessing.cpu_count(), 128)
 
 
 def compute_all_distances(X, n_jobs=cores, metric="euclidean"):
