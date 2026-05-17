@@ -30,10 +30,10 @@ data = Data(X)
 data.compute_distances(maxk=100)
 
 # compute the intrinsic dimension using 2nn estimator
-id, id_error, id_distance = data.compute_id_2NN()
+id_twonn, id_error, id_distance = data.compute_id_2NN()
 
 # compute the intrinsic dimension up to the 64th nearest neighbors using Gride
-id_list, id_error_list, id_distance_list = data.return_id_scaling_gride(range_max=64)
+id_gride_list, id_error_list, id_distance_list = data.return_id_scaling_gride(range_max=64)
 
 # compute the density using PAk, a point adaptive kNN estimator
 log_den, log_den_error = data.compute_density_PAk()
@@ -45,11 +45,54 @@ cluster_assignment = data.compute_clustering_ADP()
 X2 = np.random.normal(0, 1, (1000, 5))
 overlap_x2 = data.return_data_overlap(X2)
 
+# compute the information imbalance with another dataset
+ii_x2 = data.return_information_imbalance(X2)
+
 # compute the neighborhood overlap with a set of labels
 labels = np.repeat(np.arange(10), 100)
-overlap_labels = data.return_label_overlap(labels)
+overlap_labels = data.return_label_overlap(labels, k=10)
+```
+
+The Data class is just container of classes. If you need to work with a specific module  
+you can equivalently import it directly. 
+
+```python
+import numpy as np
+from dadapy import IdEstimation
+
+# Generate a simple 3D gaussian dataset
+X = np.random.normal(0, 1, (1000, 3))
+
+# initialize the "Data" class with the set of coordinates
+ie = IdEstimation(X)
+
+# compute the intrinsic dimension up to the 64th nearest neighbors using Gride
+id_list, id_error_list, id_distance_list = ie.return_id_scaling_gride(range_max=64)
 
 ```
+
+This allows to work more naturally with data comparison methods.
+
+```python
+import numpy as np
+from dadapy import NeighborhoodOverlap
+
+# Generate a simple 3D gaussian dataset
+X = np.random.normal(0, 1, (1000, 3))
+X2 = np.random.normal(0, 1, (1000, 5))
+labels = np.repeat(np.arange(10), 100)
+
+# compute the neighborhood overlap with another dataset
+no = NeighborhoodOverlap(X, X2)
+overlap_x2 = no.return_data_overlap()
+
+# compute the neighborhood overlap with a set of labels
+no = NeighborhoodOverlap(X, labels = labels)
+overlap_x2 = no.return_label_overlap(k=10)
+
+```
+
+
 
 # Currently implemented algorithms
 

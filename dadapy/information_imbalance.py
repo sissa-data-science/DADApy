@@ -52,14 +52,14 @@ class InformationImbalance(Base):
     ):
         """Class with methods to compare metric spaces using the information imbalance.
 
-        When ``other`` is provided, :meth:`return_information_imbalace` will use it
+        When ``other`` is provided, :meth:`return_information_imbalance` will use it
         as the second dataset by default, enabling the symmetric call pattern
-        ``InformationImbalance(X1, X2).return_information_imbalace(k=1)``.
+        ``InformationImbalance(X1, X2).return_information_imbalance(k=1)``.
 
         Args:
             coordinates (np.ndarray(float)): the data points loaded, of shape (N , dimension of embedding space)
             other (np.ndarray(float), optional): a second dataset of shape (N, D') used as the
-                comparison space in :meth:`return_information_imbalace`. Stored on
+                comparison space in :meth:`return_information_imbalance`. Stored on
                 ``self.X_other``.
             distances (np.ndarray(float)): A matrix of dimension N x mask containing distances between points
             maxk (int): maximum number of neighbours to be considered for the calculation of distances
@@ -83,7 +83,7 @@ class InformationImbalance(Base):
         # remain in place.
         self.X_other = other
 
-    def return_information_imbalace(
+    def return_information_imbalance(
         self, coordinates=None, k=1, subset_size=2000, repeats=None, avg=True
     ):
         """Return the imbalance with another dataset X.

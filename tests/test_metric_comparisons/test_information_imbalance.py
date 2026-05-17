@@ -254,10 +254,10 @@ def test_constructor_other_matches_method_arg():
     X2 = X[:, [1, 2]]
 
     via_ctor = InformationImbalance(X1, X2, maxk=X1.shape[0] - 1)
-    out_ctor = via_ctor.return_information_imbalace(k=1, subset_size=X1.shape[0])
+    out_ctor = via_ctor.return_information_imbalance(k=1, subset_size=X1.shape[0])
 
     via_arg = InformationImbalance(coordinates=X1, maxk=X1.shape[0] - 1)
-    out_arg = via_arg.return_information_imbalace(X2, k=1, subset_size=X1.shape[0])
+    out_arg = via_arg.return_information_imbalance(X2, k=1, subset_size=X1.shape[0])
 
     assert np.allclose(out_ctor[0], out_arg[0])
     assert np.allclose(out_ctor[1], out_arg[1])
@@ -268,4 +268,4 @@ def test_constructor_missing_other_raises():
     X = np.load(filename)
     ii = InformationImbalance(coordinates=X, maxk=X.shape[0] - 1)
     with pytest.raises(AssertionError, match="no second dataset provided"):
-        ii.return_information_imbalace(k=1, subset_size=X.shape[0])
+        ii.return_information_imbalance(k=1, subset_size=X.shape[0])
