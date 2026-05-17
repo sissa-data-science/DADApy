@@ -255,7 +255,7 @@ class IdDiscrete(Base):
                         + " points, the counting of k could be wrong, "
                         + "as more points might be present within the selected Rk. In order not to affect "
                         + "the statistics a mask is provided to remove them from the calculation of the "
-                        + "likelihood or posterior.\nConsiself.kder recomputing NN with higher maxk or lowering Rk."
+                        + "likelihood or posterior.\nConsider recomputing NN with higher maxk or lowering Rk."
                     )
         if self.verb:
             print("n and k computed")
