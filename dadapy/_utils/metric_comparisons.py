@@ -13,7 +13,86 @@
 # limitations under the License.
 # ==============================================================================
 
+import warnings
+
 import numpy as np
+
+from dadapy._utils.utils import compute_nn_distances
+
+
+def _get_nn_indices(
+    coordinates,
+    distances,
+    dist_indices,
+    k,
+    maxk,
+    metric,
+    period,
+    init_distances_fn,
+    coords=None,
+    force_computation=False,
+):
+    """Resolve nearest-neighbour indices from whatever combination of inputs is available.
+
+    Args:
+        coordinates (np.ndarray): coordinate matrix, may be None
+        distances (np.ndarray): precomputed distance matrix, may be None
+        dist_indices (np.ndarray): precomputed nearest-neighbour indices, may be None
+        k (int): number of nearest neighbours requested
+        maxk (int): largest k already available in ``dist_indices``
+        metric (str): distance metric to use if recomputation is needed
+        period (float, np.ndarray, None): periodicity for periodic distance computation
+        init_distances_fn (callable): bound ``self._init_distances`` method used to
+            extract nearest-neighbour indices from a square distance matrix
+        coords (list(int)): subset of coordinate columns to use; requires ``coordinates``
+        force_computation (bool): if True, always recompute from ``coordinates``
+
+    Returns:
+        (np.ndarray(int), int): the nearest-neighbour indices and the effective k.
+    """
+    if force_computation:
+        _, dist_indices = compute_nn_distances(coordinates, k, metric, period)
+        return dist_indices, k
+
+    if coords is not None:
+        assert (
+            coordinates is not None
+        ), "when coords is not None the coordinate matrix coordinates must be defined."
+        X_ = coordinates[:, coords]
+        _, dist_indices = compute_nn_distances(X_, k)
+        return dist_indices, k
+
+    if k > maxk:
+        if dist_indices is None and distances is not None:
+            # if we are given only a distance matrix without indices we expect it to be in square form
+            assert distances.shape[0] == distances.shape[1]
+            _, dist_indices, _, _ = init_distances_fn(distances, k)
+            return dist_indices, k
+        elif coordinates is not None:
+            # if coordinates are available and k > maxk distances should be recomputed
+            # and nearest neighbors idenitified up to k.
+            _, dist_indices = compute_nn_distances(coordinates, k, metric, period)
+            return dist_indices, k
+        else:
+            # we must set k=self.maxk and continue the compuation
+            warnings.warn(
+                f"Chosen k = {k} is greater than max available number of\
+                nearest neighbors = {maxk}. Setting k = {maxk}",
+                stacklevel=2,
+            )
+            k = maxk
+
+    if dist_indices is not None:
+        # if nearest neighbors are available (up to maxk) return them
+        return dist_indices, k
+    elif distances is not None:
+        # otherwise if distance matrix in square form is available find the first k nearest neighbors
+        _, dist_indices, _, _ = init_distances_fn(distances, k)
+        return dist_indices, k
+    else:
+        # otherwise compute distances and nearest neighbors up to k.
+        _, dist_indices = compute_nn_distances(coordinates, k, metric, period)
+        return dist_indices, k
 
 
 def _return_ranks(dist_indices_1, dist_indices_2, rng, k=1):
