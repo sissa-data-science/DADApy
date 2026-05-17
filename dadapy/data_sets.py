@@ -25,7 +25,7 @@ import os
 import numpy as np
 
 from dadapy._utils.metric_comparisons import _return_imbalance
-from dadapy._utils.utils import compute_nn_distances, cores
+from dadapy._utils.utils import compute_nn_distances
 from dadapy.data import Data
 
 np.set_printoptions(precision=2)
