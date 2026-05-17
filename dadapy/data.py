@@ -28,13 +28,20 @@ from dadapy._utils.utils import cores
 from dadapy.clustering import Clustering
 from dadapy.density_advanced import DensityAdvanced
 from dadapy.feature_weighting import FeatureWeighting
-from dadapy.metric_comparisons import MetricComparisons
+from dadapy.information_imbalance import InformationImbalance
+from dadapy.neighborhood_overlap import NeighborhoodOverlap
 
 np.set_printoptions(precision=2)
 os.getcwd()
 
 
-class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
+class Data(
+    Clustering,
+    DensityAdvanced,
+    InformationImbalance,
+    NeighborhoodOverlap,
+    FeatureWeighting,
+):
     """Data class."""
 
     def __init__(

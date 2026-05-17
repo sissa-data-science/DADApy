@@ -20,7 +20,7 @@ import os
 import numpy as np
 import pytest
 
-from dadapy import MetricComparisons
+from dadapy import InformationImbalance
 
 filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
 filename_traj = os.path.join(
@@ -32,7 +32,7 @@ def test_information_imbalance_basics():
     """Test the information imbalance operations work correctly."""
     X = np.load(filename)
 
-    mc = MetricComparisons(coordinates=X)
+    mc = InformationImbalance(coordinates=X)
 
     mc.compute_distances()
 
@@ -71,7 +71,7 @@ def test_greedy_feature_selection_full():
 
     X = np.load(filename)
 
-    mc = MetricComparisons(coordinates=X, maxk=X.shape[0] - 1)
+    mc = InformationImbalance(coordinates=X, maxk=X.shape[0] - 1)
 
     selected_coords, best_imbalances, all_imbalances = mc.greedy_feature_selection_full(
         n_coords=2
@@ -88,7 +88,7 @@ def test_return_inf_imb_matrix_of_coords():
 
     expected_matrix = np.array([[0.0, 1.02], [0.99, 0.0]])
 
-    mc = MetricComparisons(coordinates=X, maxk=X.shape[0] - 1)
+    mc = InformationImbalance(coordinates=X, maxk=X.shape[0] - 1)
 
     matrix = mc.return_inf_imb_matrix_of_coords()
 
@@ -99,7 +99,7 @@ def test_return_inf_imb_two_selected_coords():
     """Test information imbalance between selected coordinates."""
     X = np.load(filename)
 
-    mc = MetricComparisons(coordinates=X, maxk=X.shape[0] - 1)
+    mc = InformationImbalance(coordinates=X, maxk=X.shape[0] - 1)
 
     imbalances = mc.return_inf_imb_two_selected_coords([0], [0, 1])
 
@@ -118,7 +118,7 @@ def test_return_inf_imb_causality():
 
     expected_imbalances = [0.06198, 0.053285, 0.04880, 0.04934, 0.05225]
 
-    mc = MetricComparisons(maxk=X0.shape[0] - 1)
+    mc = InformationImbalance(maxk=X0.shape[0] - 1)
 
     imbalances = mc.return_inf_imb_causality(
         cause_present=X0, effect_present=Y0, effect_future=Ytau, weights=weights, k=k
@@ -139,7 +139,7 @@ def test_return_inf_imb_causality_input_rank():
 
     expected_imbalances = [0.05328, 0.06816]
 
-    mc = MetricComparisons(maxk=X0.shape[0] - 1)
+    mc = InformationImbalance(maxk=X0.shape[0] - 1)
 
     ranks_present = mc.return_ranks_present_for_all_weights(
         cause_present=X0,
@@ -189,7 +189,7 @@ def test_return_inf_imb_causality_conditioning():
     expected_imbs_no_cause = [0.06198, 0.06198]
     expected_imbs_with_cause = [0.05812, 0.05339, 0.05820, 0.053423]
 
-    mc = MetricComparisons(maxk=X0.shape[0] - 1)
+    mc = InformationImbalance(maxk=X0.shape[0] - 1)
 
     imbs_no_cause, imbs_with_cause = mc.return_inf_imb_causality_conditioning(
         cause_present=X0,
@@ -227,7 +227,7 @@ def test_return_inf_imb_causality_conditioning_pbcs():
     expected_imbs_no_cause = [0.06198, 0.06198]
     expected_imbs_with_cause = [0.05812, 0.11494, 0.06197, 0.05215]
 
-    mc = MetricComparisons(maxk=X0.shape[0] - 1)
+    mc = InformationImbalance(maxk=X0.shape[0] - 1)
 
     imbs_no_cause, imbs_with_cause = mc.return_inf_imb_causality_conditioning(
         cause_present=X0,

@@ -605,7 +605,7 @@ class InformationImbalance(Base):
         """
         if self.period is not None:
             print(
-                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                f"WARNING: the period argument {self.period} set in the InformationImbalance class will be "
                 + "ignored.\nSet the periodicity of the features using instead the keywords "
                 + "'period_cause' and 'period_effect'."
             )
@@ -793,7 +793,7 @@ class InformationImbalance(Base):
         """
         if self.period is not None:
             print(
-                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                f"WARNING: the period argument {self.period} set in the InformationImbalance class will be "
                 + "ignored.\nSet the periodicity of the features using instead the keyword "
                 + "'period_present'."
             )
@@ -841,7 +841,7 @@ class InformationImbalance(Base):
         """
         if self.period is not None:
             print(
-                f"WARNING: the period argument {self.period} set in the MetricComparisons class will be "
+                f"WARNING: the period argument {self.period} set in the InformationImbalance class will be "
                 + "ignored.\nSet the periodicity of the features using instead the keyword "
                 + "'period_effect'."
             )

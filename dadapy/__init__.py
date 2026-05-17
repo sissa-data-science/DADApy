@@ -12,9 +12,11 @@ from .density_estimation import DensityEstimation
 from .feature_weighting import FeatureWeighting
 from .id_discrete import IdDiscrete
 from .id_estimation import IdEstimation
+from .information_imbalance import InformationImbalance
 from .kstar import KStar
 from .metric_comparisons import MetricComparisons
 from .neigh_graph import NeighGraph
+from .neighborhood_overlap import NeighborhoodOverlap
 
 __all__ = [
     "Base",
@@ -26,9 +28,11 @@ __all__ = [
     "FeatureWeighting",
     "IdDiscrete",
     "IdEstimation",
+    "InformationImbalance",
     "KStar",
     "MetricComparisons",
     "NeighGraph",
+    "NeighborhoodOverlap",
 ]
 
 if sys.version_info >= (3, 9):

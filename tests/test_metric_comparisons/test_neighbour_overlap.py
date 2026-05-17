@@ -20,7 +20,7 @@ import os
 import numpy as np
 import pytest
 
-from dadapy import MetricComparisons
+from dadapy import NeighborhoodOverlap
 
 filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d_overlap.npy")
 
@@ -29,7 +29,7 @@ def test_return_label_overlap():
     """Test that the label overlap works correctly."""
     X = np.load(filename)
 
-    mc = MetricComparisons(coordinates=X)
+    mc = NeighborhoodOverlap(coordinates=X)
     labels = np.ones(X.shape[0], dtype=int)
     # 20 points centerd in -1 are labeled = 0, 20 points centered in 1 are labeled 1
     labels[X[:, 0] < 0] = 0
@@ -51,6 +51,6 @@ def test_return_label_overlap():
 def test_return_data_overlap():
     """Test that the label overlap works correctly."""
     X = np.load(filename)
-    mc = MetricComparisons(coordinates=X)
+    mc = NeighborhoodOverlap(coordinates=X)
     ov_data = mc.return_data_overlap(coordinates=X[:, 1:], k=30, avg=True)
     assert pytest.approx(0.78, 0.001) == ov_data

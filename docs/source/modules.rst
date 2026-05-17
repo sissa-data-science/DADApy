@@ -16,6 +16,8 @@ The package contains the following modules:
    causal_graph
    clustering
    id_discrete
+   information_imbalance
+   neighborhood_overlap
    metric_comparisons
    feature_weighting
    hamming
