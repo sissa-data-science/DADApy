@@ -543,9 +543,7 @@ if __name__ == "__main__":
     from dadapy import Data
 
     rng = np.random.default_rng(0)
-    X = np.vstack(
-        (rng.normal(0, 1, size=(1000, 5)), rng.normal(5, 1, size=(1000, 5)))
-    )
+    X = np.vstack((rng.normal(0, 1, size=(1000, 5)), rng.normal(5, 1, size=(1000, 5))))
 
     data = Data(X)
 

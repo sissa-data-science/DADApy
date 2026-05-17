@@ -881,7 +881,12 @@ class IdEstimation(Base):
             return 0
 
         _, pv = bmv(
-            k, n, r**self.intrinsic_dim, self.rng, plot=plot_mv, k_bootstrap=k_bootstrap
+            k,
+            n,
+            r**self.intrinsic_dim,
+            self.rng,
+            plot=plot_mv,
+            k_bootstrap=k_bootstrap,
         )
 
         return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, pv
