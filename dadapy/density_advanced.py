@@ -74,6 +74,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -83,6 +84,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.grads = None
@@ -476,8 +478,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
             if self.verb:
                 print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
-
-            sec2 = time.time()
 
         sec2 = time.time()
         if self.verb:

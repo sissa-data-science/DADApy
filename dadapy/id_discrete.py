@@ -31,7 +31,6 @@ from dadapy import plot as ddp
 from dadapy.base import Base
 
 cores = multiprocessing.cpu_count()
-rng = np.random.default_rng()
 
 
 class IdDiscrete(Base):
@@ -63,6 +62,7 @@ class IdDiscrete(Base):
         weights=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Instantiate the IdDiscrete object.
 
@@ -78,6 +78,7 @@ class IdDiscrete(Base):
             weights (np.ndarray(int), default=None): keeps into account explicitly possible repetitions of datapoints
             verbose (bool): whether you want the code to speak or shut up
             n_jobs (int): number of cores to be used
+            rng_seed (int): seed used to build ``self.rng``.
 
         """
         super().__init__(
@@ -86,6 +87,7 @@ class IdDiscrete(Base):
             maxk=maxk,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.central_point = 0 if is_network else 1
@@ -1067,15 +1069,18 @@ class IdDiscrete(Base):
             replicas = int(artificial_samples / self.n.shape[0])
             if isinstance(self.ln, np.ndarray):
                 n_model = np.array(
-                    [rng.binomial(ki, pi, size=replicas) for ki, pi in zip(k_eff, p)]
+                    [
+                        self.rng.binomial(ki, pi, size=replicas)
+                        for ki, pi in zip(k_eff, p)
+                    ]
                 ).reshape(-1)
             else:
                 n_model = np.array(
-                    [rng.binomial(ki, p, size=replicas) for ki in k_eff]
+                    [self.rng.binomial(ki, p, size=replicas) for ki in k_eff]
                 ).reshape(-1)
 
         else:
-            n_model = rng.binomial(k_eff, p)
+            n_model = self.rng.binomial(k_eff, p)
 
         if self.central_point == 0:
             n_model = n_model[n_model > 0]
@@ -1225,6 +1230,7 @@ class IdDiscrete(Base):
 
 
 if __name__ == "__main__":
+    rng = np.random.default_rng(0)
     X = rng.integers(0, 20, size=(1000, 2))
     ide = IdDiscrete(coordinates=X)
     ide.compute_distances(maxk=30, metric="manhattan", period=20)

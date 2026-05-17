@@ -28,7 +28,7 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
     mus = Data.distances[:, 2] / Data.distances[:, 1]
 
     idx = np.arange(mus.shape[0])
-    idx = np.random.choice(
+    idx = Data.rng.choice(
         idx, size=(int(np.around(Data.N * decimation))), replace=False
     )
     mus = mus[idx]
@@ -542,8 +542,9 @@ if __name__ == "__main__":
     # basic tests for plotting functions
     from dadapy import Data
 
+    rng = np.random.default_rng(0)
     X = np.vstack(
-        (np.random.normal(0, 1, size=(1000, 5)), np.random.normal(5, 1, size=(1000, 5)))
+        (rng.normal(0, 1, size=(1000, 5)), rng.normal(5, 1, size=(1000, 5)))
     )
 
     data = Data(X)

@@ -76,6 +76,7 @@ class FeatureWeighting(Base):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the FeatureWeighting object."""
         super().__init__(
@@ -85,6 +86,7 @@ class FeatureWeighting(Base):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         # This is quite useful for debugging

@@ -76,6 +76,7 @@ class NeighGraph(KStar):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -85,6 +86,7 @@ class NeighGraph(KStar):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.nspar = None

@@ -57,6 +57,7 @@ class DensityEstimation(KStar):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -66,6 +67,7 @@ class DensityEstimation(KStar):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.log_den = None
