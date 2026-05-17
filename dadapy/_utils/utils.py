@@ -98,8 +98,8 @@ def compute_cross_nn_distances(
         period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
 
     Returns:
-        distances (np.ndarray(int)): N x maxk matrix, indices of the neighbours of each point
-        dist_indices (np.ndarray(float)): N x maxk matrix, distances of the neighbours of each point
+        distances (np.ndarray(float)): N x maxk matrix, distances of the neighbours of each point
+        dist_indices (np.ndarray(int)): N x maxk matrix, indices of the neighbours of each point
 
     """
 
@@ -138,8 +138,8 @@ def compute_nn_distances(X, maxk, metric="euclidean", period=None, n_jobs=None):
         period (float, np.ndarray(float)): sizes of PBC walls. Single value is interpreted as cubic box.
 
     Returns:
-        distances (np.ndarray(int)): N x maxk matrix, indices of the neighbours of each point
-        dist_indices (np.ndarray(float)): N x maxk matrix, distances of the neighbours of each point
+        distances (np.ndarray(float)): N x maxk matrix, distances of the neighbours of each point
+        dist_indices (np.ndarray(int)): N x maxk matrix, indices of the neighbours of each point
 
     """
 
