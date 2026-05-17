@@ -34,9 +34,6 @@ np.set_printoptions(precision=2)
 os.getcwd()
 
 
-rng = np.random.default_rng(42)
-
-
 class DataSets:
     """DataSets class."""
 
@@ -51,7 +48,7 @@ class DataSets:
 
     @staticmethod
     def return_inf_imb_jackknife_d1_to_d2(
-        d1: Data, d2: Data, file_name="jackknife.txt", n=None, k=1
+        d1: Data, d2: Data, file_name="jackknife.txt", n=None, k=1, rng=None
     ):
         """Return the mean and the standard deviation of the information imbalalce using the Jackknife method.
 
@@ -62,6 +59,8 @@ class DataSets:
                 "jackknife.txt". Set to "None" to avoid saving.
             n (_type_, optional): Number of Jackknife repetitions. Defaults to the number of dataset points.
             k (int, optional): The number of neighbours for the imbalance computations. Defaults to 1.
+            rng (np.random.Generator, optional): random number generator used for the jackknife
+                resampling. Defaults to ``d1.rng``.
 
         Returns:
             mean and standard deviation of the imbalance estimates from d1 to d2.
@@ -69,6 +68,8 @@ class DataSets:
         assert len(d1.X) == len(d2.X)
         if n is None:
             n = len(d1.X)
+        if rng is None:
+            rng = d1.rng
 
         if file_name is not None:
             print("Saving imbalances in " + file_name)

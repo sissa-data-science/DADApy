@@ -31,8 +31,6 @@ from dadapy.density_advanced import DensityAdvanced
 from dadapy.feature_weighting import FeatureWeighting
 from dadapy.metric_comparisons import MetricComparisons
 
-rng = np.random.default_rng()
-
 cores = multiprocessing.cpu_count()
 np.set_printoptions(precision=2)
 os.getcwd()
@@ -50,6 +48,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
         verbose=False,
         n_jobs=cores,
         working_memory=1024,
+        rng_seed=42,
     ):
         """Initialise a Data object, container of all DADApy methods.
 
@@ -63,6 +62,8 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             verbose (bool): whether you want the code to speak or shut up
             n_jobs (int): number of cores to be used
             working_memory (int): working memory (TODO: currently unused)
+            rng_seed (int): seed used to build ``self.rng``. Setting this makes every randomised
+                method called on the instance reproducible.
         """
         super().__init__(
             coordinates=coordinates,
@@ -71,6 +72,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
     def return_ids_kstar_gride(
@@ -134,9 +136,11 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
                 ]
             )
             # compute the id using Gride
-            id, id_err = self._compute_id_gride_single_scale(d0, d1, mus, n1s, n2s, eps)
-            self.set_id(id)
-            log_lik = -ut._neg_loglik(self.dtype, id, mus, n1s, n2s)
+            gride_id, id_err = self._compute_id_gride_single_scale(
+                d0, d1, mus, n1s, n2s, eps
+            )
+            self.set_id(gride_id)
+            log_lik = -ut._neg_loglik(self.dtype, gride_id, mus, n1s, n2s)
             self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
 
             ids.append(id)
@@ -155,7 +159,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             id_scale += self.distances[i, n2]
         id_scale /= 2 * self.N
 
-        self.intrinsic_dim = id
+        self.intrinsic_dim = gride_id
         self.intrinsic_dim_err = id_err
         self.intrinsic_dim_scale = id_scale
 
@@ -214,7 +218,7 @@ class Data(Clustering, DensityAdvanced, MetricComparisons, FeatureWeighting):
             # set new ratio
             r_eff = min(0.975, 0.2032 ** (1.0 / self.intrinsic_dim)) if r is None else r
             # compute id using the k*
-            ide, id_err, scale, pv = self.compute_id_binomial_k(
+            ide, id_err, _, pv = self.compute_id_binomial_k(
                 self.kstar, r_eff, bayes=False, plot_mv=plot_mv, k_bootstrap=k_bootstrap
             )
             # compute likelihood

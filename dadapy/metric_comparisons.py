@@ -50,6 +50,7 @@ class MetricComparisons(Base):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Class containing several methods to compare metric spaces obtained using subsets of the data features.
 
@@ -63,6 +64,7 @@ class MetricComparisons(Base):
             period (np.array(float), optional): array containing the periodicity of each coordinate. Default is None
             verbose (bool): whether you want the code to speak or shut up
             n_jobs (int): number of cores to be used
+            rng_seed (int): seed used to build ``self.rng``.
         """
         super().__init__(
             coordinates=coordinates,
@@ -71,6 +73,7 @@ class MetricComparisons(Base):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
     def return_information_imbalace(

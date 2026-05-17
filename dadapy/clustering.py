@@ -62,6 +62,7 @@ class Clustering(DensityEstimation):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the Clustering class."""
         super().__init__(
@@ -71,6 +72,7 @@ class Clustering(DensityEstimation):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.cluster_indices = None

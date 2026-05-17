@@ -16,8 +16,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-rng = np.random.default_rng()
-
 # from scipy.stats import epps_singleton_2samp as es2s
 from scipy.stats import ks_2samp
 
@@ -192,7 +190,7 @@ def correlation_integral(dists, scales, cond=False, plot=True):
 
 
 def _binomial_model_validation(
-    k, n, p, artificial_samples=100000, k_bootstrap=20, plot=False
+    k, n, p, rng, artificial_samples=100000, k_bootstrap=20, plot=False
 ):
     """Perform the model validation for the binomial estimator. To this aim, an artificial set of binomially distributed
     points is extracted and compared to the observed ones. The quantitative test should be performed by means of the 2-samples Epps-Singleton tests,
@@ -205,6 +203,7 @@ def _binomial_model_validation(
         k (int or np.ndarray(int)): Observed points in outer shells.
         n (np.ndarray(int)): Observed points in the inner shells.
         p (float): Tested Binomial parameter
+        rng (np.random.Generator): random number generator used to sample the artificial ensemble.
         artificial_samples (int, default=1000000): number of theoretical samples to be compared with the observed ones.
         k_bootstrap (int, default=1): number of bootstrap resampling in order to obtain more reliable p-values
         plot (bool, default=False): flag that, if se to True, allows to plot the observed vs theoretical distributions

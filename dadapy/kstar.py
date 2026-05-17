@@ -50,6 +50,7 @@ class KStar(IdEstimation):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the KStar class."""
         super().__init__(
@@ -59,6 +60,7 @@ class KStar(IdEstimation):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.kstar = None

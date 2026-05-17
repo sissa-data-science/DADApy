@@ -195,7 +195,7 @@ class DiffImbalance:
                     "Argument distances_B is not None; data_B will be ignored.",
                     stacklevel=2,
                 )
-            # self.distances_B = jnp.array(distances_B)  # noqa: E800
+
             assert (
                 distances_B.shape[0] == distances_B.shape[1]
             ), f"Argument distances_B should be a square matrix, while it has shape {distances_B.shape}"
