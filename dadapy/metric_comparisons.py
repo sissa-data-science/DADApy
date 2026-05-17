@@ -19,7 +19,6 @@ The *metric_comparisons* module contains the *MetricComparisons* class.
 Algorithms for comparing different spaces are implemented as methods of this class.
 """
 
-import multiprocessing
 import warnings
 from collections import Counter
 
@@ -33,10 +32,8 @@ from dadapy._utils.metric_comparisons import (
     _return_period_mixed,
     _return_period_present,
 )
-from dadapy._utils.utils import compute_nn_distances
+from dadapy._utils.utils import compute_nn_distances, cores
 from dadapy.base import Base
-
-cores = multiprocessing.cpu_count()
 
 
 class MetricComparisons(Base):

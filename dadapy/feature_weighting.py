@@ -19,7 +19,6 @@ The *feature_weighting* module contains the *FeatureWeighting* class.
 This class uses Differentiable Information Imbalance
 """
 
-import multiprocessing
 import time
 import warnings
 from functools import wraps
@@ -40,9 +39,8 @@ from dadapy._utils.differentiable_imbalance import (
     _return_full_rank_matrix,
     _return_optimal_lambda_from_distances,
 )
+from dadapy._utils.utils import cores
 from dadapy.base import Base
-
-cores = multiprocessing.cpu_count()
 
 
 # TODO: remove when this works with different maxk

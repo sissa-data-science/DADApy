@@ -19,16 +19,14 @@ The *kstar* module contains the *KStar* class.
 The computation of the optimal neighbourhood size (k*) is implemented in this class as the compute_kstar method.
 """
 
-import multiprocessing
 import time
 import warnings
 
 import numpy as np
 
 from dadapy._cython import cython_density as cd
+from dadapy._utils.utils import cores
 from dadapy.id_estimation import IdEstimation
-
-cores = multiprocessing.cpu_count()
 
 
 class KStar(IdEstimation):

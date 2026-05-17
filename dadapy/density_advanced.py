@@ -22,7 +22,6 @@ the methods in the DensityAdvanced class are based on the sparse neighbourhood g
 in the NeighGraph class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -32,10 +31,9 @@ from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
 from dadapy._utils.density_estimation import return_not_normalised_density_kstarNN
+from dadapy._utils.utils import cores
 from dadapy.density_estimation import DensityEstimation
 from dadapy.neigh_graph import NeighGraph
-
-cores = multiprocessing.cpu_count()
 
 
 class DensityAdvanced(DensityEstimation, NeighGraph):

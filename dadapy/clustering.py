@@ -19,7 +19,6 @@ The *clustering* module contains the *Clustering* class.
 Density-based clustering algorithms are implemented as methods of this class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -28,9 +27,8 @@ import scipy as sp
 
 from dadapy._cython import cython_clustering as cf
 from dadapy._cython import cython_clustering_v2 as cf2
+from dadapy._utils.utils import cores
 from dadapy.density_estimation import DensityEstimation
-
-cores = multiprocessing.cpu_count()
 
 
 class Clustering(DensityEstimation):

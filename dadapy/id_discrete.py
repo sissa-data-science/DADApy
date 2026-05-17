@@ -20,17 +20,14 @@ The different algorithms of intrinsic dimension estimation for discrete spaces
   are implemented as methods of this class.
 """
 
-import multiprocessing
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import ks_2samp as KS
 
 import dadapy._utils.discrete_functions as df
 from dadapy import plot as ddp
+from dadapy._utils.utils import cores
 from dadapy.base import Base
-
-cores = multiprocessing.cpu_count()
 
 
 class IdDiscrete(Base):

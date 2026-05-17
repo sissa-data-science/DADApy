@@ -21,7 +21,6 @@ The different algorithms of intrinsic dimension estimation are implemented as me
 
 import copy
 import math
-import multiprocessing
 import warnings
 from functools import partial
 
@@ -31,10 +30,8 @@ from sklearn.metrics import pairwise_distances_chunked
 
 from dadapy._utils import utils as ut
 from dadapy._utils.id_estimation import _binomial_model_validation as bmv
-from dadapy._utils.utils import compute_nn_distances
+from dadapy._utils.utils import compute_nn_distances, cores
 from dadapy.base import Base
-
-cores = multiprocessing.cpu_count()
 
 
 class IdEstimation(Base):
