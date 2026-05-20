@@ -241,14 +241,14 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_neigh_vector_diffs(
-        self, backend="auto", batch_size=None, n_jobs=None
+        self, backend="cython", batch_size=None, n_jobs=None
     ):
         """Compute the vector differences from each point to its kstar nearest neighbors.
 
         The resulting vectors are stored in neigh_vector_diffs.
 
         Args:
-            backend (str): 'cython', 'jax', or 'auto' (prefer JAX if available).
+            backend (str): 'cython' (default), 'jax', or 'auto' (prefer JAX if available).
             batch_size (int, optional): batch size used by JAX backend.
             n_jobs (int, optional): number of threads for Cython parallel backend.
 

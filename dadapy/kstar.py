@@ -107,7 +107,7 @@ class KStar(IdEstimation):
 
     def compute_kstar(
         self, Dthr=23.92812698,
-        backend="auto",
+        backend="cython",
         batch_size=None,
         n_jobs=None
     ):
@@ -116,7 +116,7 @@ class KStar(IdEstimation):
         Args:
             Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
                 to a p-value of 1e-6.
-            backend (str): 'cython', 'jax', or 'auto' (prefer JAX if available).
+            backend (str): 'cython' (default), 'jax', or 'auto' (prefer JAX if available).
             batch_size (int, optional): batch size used by the JAX backend to reduce peak memory usage.
             n_jobs (int, optional): number of threads for the Cython parallel backend.
 
@@ -183,7 +183,7 @@ class KStar(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def _compute_kstar(
-        self, Dthr=23.92812698, backend="auto", batch_size=None, n_jobs=None
+        self, Dthr=23.92812698, backend="cython", batch_size=None, n_jobs=None
     ):
         """Compute an optimal choice of the neighbourhood size k for each point.
 
