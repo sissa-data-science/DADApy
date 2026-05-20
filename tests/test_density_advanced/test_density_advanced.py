@@ -311,6 +311,27 @@ def test_density_BMTI_sp_jax_cg():
             da.compute_density_BMTI(alpha=0.99, solver="sp_jax_cg")
 
 
+def test_density_BMTI_sp_jax_gmres():
+    """Test the JAX-GMRES solver or expected error if JAX is unavailable."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+
+    da = DensityAdvanced(coordinates=X, maxk=10, verbose=True)
+    da.compute_distances()
+    da.set_id(2)
+
+    if HAS_JAX:
+        da.compute_density_BMTI(alpha=0.99, solver="sp_jax_gmres", gauge_fixing="zero_mean")
+        assert np.all(np.isfinite(da.log_den))
+        assert abs(np.mean(da.log_den)) < 2e-2
+        assert np.allclose(
+            da.log_den, expected_density_BMTI_zero_mean, rtol=1e-05, atol=1e-01
+        )
+    else:
+        with pytest.raises(ModuleNotFoundError):
+            da.compute_density_BMTI(alpha=0.99, solver="sp_jax_gmres")
+
+
 def test_density_BMTI_sp_jax_spsolve():
     """Test the JAX sparse-direct solver or expected error if JAX is unavailable."""
     filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")

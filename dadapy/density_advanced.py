@@ -449,6 +449,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                         then solves the linear system directly. More robust but less memory efficient than other
                         implemented sparse solvers. Slower than iterative solvers for very sparse and large matrices.
                         To be preferred when the matrix is not very sparse (e.g. often when the dimensionality is low).
+                    'sp_jax_direct': same as 'sp_direct' but using JAX's experimental sparse.linalg.spsolve CSR solver
+                        (GPU accelerated where available, CPU falls back to SciPy).
                     'sp_cg': scipy.sparse.linalg.cg. This is the iterative conjugate gradient method. It might be
                         preferred to 'direct' for large and sparse matrices. If a log-density estimate is alredy stored
                         in self.log_den, it will be used as a guess for the solution for a great spedup. If this option
@@ -458,14 +460,14 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                         settings where 'direct' performs better than 'cg', 'cg_precond' is likely to perform better
                         than 'spolve' and 'cg'. If 'cg' already performs better than 'direct', 'cg_precond' is likely
                         to perform worse than 'cg' alone.
+                    'sp_jax_cg': same as 'sp_cg', but uses jax implementation jax.scipy.sparse.linalg.cg. Runs on CPU
+                        or GPU according to the selected JAX device.
                     'sp_lsmr': scipy.sparse.linalg.lsmr. Robust iterative least-squares solver suitable for large
                         sparse systems.
                     'sp_lsqr': scipy.sparse.linalg.lsqr. Similar to 'sp_lsmr', often competitive on very large sparse
                         systems.
-                    'sp_jax_cg': jax.scipy.sparse.linalg.cg matrix-free solver. Runs on CPU or GPU according to the
-                        selected JAX device.
-                    'sp_jax_spsolve': jax.experimental.sparse.linalg.spsolve CSR solver (GPU accelerated where
-                        available, CPU falls back to SciPy).
+                    'sp_jax_gmres': jax.scipy.sparse.linalg.gmres solver. Runs on CPU or GPU according to the selected
+                        JAX device and supports non-symmetric systems.
                     'dense': numpy.linalg.solve. Direct solver for dense matrices. O(N^3) complexity, O(N^2) memory
                         complexity. The solver automatically uses multiprocessing if available. This option is suited
                         for small datasets or when memory and cores are not an issue.
@@ -484,8 +486,16 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 'zero_mean': enforce sum_i log_den_i = 0 through an augmented system.
                 'None': do not apply gauge fixing and solve the original N x N system.
             solver_kwargs (dict, optional): optional kwargs forwarded to the selected solver.
+                For 'sp_direct', no keys are consumed from solver_kwargs. Use sp_direct_perm_spec for permutations.
+                For 'sp_jax_direct', supported keys are 'tol', 'reorder', and 'device' ('cpu' or 'gpu').
+                For 'sp_cg', supported keys are 'rtol', 'atol', and 'maxiter'.
+                For 'sp_cg_precond', supported keys are 'fill_factor', 'drop_tol', 'rtol', 'atol', and 'maxiter'.
                 For 'sp_jax_cg', supported keys are 'tol', 'atol', 'maxiter', and 'device' ('cpu' or 'gpu').
-                For 'sp_jax_spsolve', supported keys are 'tol', 'reorder', and 'device' ('cpu' or 'gpu').
+                For 'sp_lsmr', supported keys are 'atol', 'btol', and 'maxiter'.
+                For 'sp_lsqr', supported keys are 'atol', 'btol', and 'iter_lim'.
+                For 'sp_jax_gmres', supported keys are 'tol', 'atol', 'restart', 'maxiter', 'solve_method', and
+                'device' ('cpu' or 'gpu').
+                For 'dense', no keys are consumed from solver_kwargs.
 
         """
         # assert alpha is between 0 and 1, if not raise an error
@@ -750,12 +760,87 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         return np.asarray(log_den)
 
+    def _solve_BMTI_reg_linear_system_jax_gmres(
+        self,
+        A,
+        b,
+        x0=None,
+        tol=1e-5,
+        atol=0.0,
+        restart=20,
+        maxiter=None,
+        solve_method="batched",
+        device=None,
+    ):
+        if not _HAS_JAX:
+            raise ModuleNotFoundError(
+                "Solver 'sp_jax_gmres' requires JAX. Install `jax` and `jaxlib`."
+            )
+
+        A_csr = A.tocsr()
+        data_np = np.asarray(A_csr.data, dtype=np.float64)
+        indices_np = np.asarray(A_csr.indices, dtype=np.int32)
+        indptr_np = np.asarray(A_csr.indptr, dtype=np.int32)
+        row_counts = np.diff(indptr_np)
+        row_ids_np = np.repeat(
+            np.arange(A_csr.shape[0], dtype=np.int32), row_counts.astype(np.int32)
+        )
+
+        b = jnp.asarray(np.asarray(b, dtype=np.float64))
+        x0_jax = None
+        if x0 is not None:
+            x0_jax = jnp.asarray(np.asarray(x0, dtype=np.float64))
+
+        data = jnp.asarray(data_np)
+        indices = jnp.asarray(indices_np)
+        row_ids = jnp.asarray(row_ids_np)
+
+        def _matvec(x):
+            return jax.ops.segment_sum(
+                data * x[indices],
+                row_ids,
+                num_segments=A_csr.shape[0],
+                indices_are_sorted=True,
+            )
+
+        def _solve():
+            return jsp.sparse.linalg.gmres(
+                _matvec,
+                b,
+                x0=x0_jax,
+                tol=tol,
+                atol=atol,
+                restart=restart,
+                maxiter=maxiter,
+                solve_method=solve_method,
+            )
+
+        if device is None:
+            log_den, info = _solve()
+        else:
+            device_name = str(device).lower()
+            candidates = [dev for dev in jax.devices() if dev.platform == device_name]
+            if not candidates:
+                raise ValueError(
+                    f"Requested JAX device '{device_name}' is not available."
+                )
+            with jax.default_device(candidates[0]):
+                log_den, info = _solve()
+
+        info_int = int(np.asarray(info))
+        if info_int != 0:
+            warnings.warn(
+                f"JAX GMRES returned non-zero info={info_int}. The solution may be inaccurate."
+            )
+
+        return np.asarray(log_den)
+
     def _solve_BMTI_reg_linear_system_jax_spsolve(
         self, A, b, tol=1.0e-6, reorder=1, device=None
     ):
         if not _HAS_JAX:
             raise ModuleNotFoundError(
-                "Solver 'sp_jax_spsolve' requires JAX. Install `jax` and `jaxlib`."
+                "Solver 'sp_jax_direct' requires JAX. Install `jax` and `jaxlib`."
             )
 
         try:
@@ -798,7 +883,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         augmented_system = A_csr.shape[0] == self.N + 1
 
         if augmented_system and solver in {"sp_cg", "sp_cg_precond", "sp_jax_cg"}:
-            fallback_solver = "sp_jax_spsolve" if solver == "sp_jax_cg" else "sp_lsqr"
+            fallback_solver = "sp_jax_direct" if solver == "sp_jax_cg" else "sp_lsqr"
             warnings.warn(
                 f"Solver '{solver}' is not compatible with the zero-mean constrained augmented system. "
                 f"Falling back to '{fallback_solver}'."
@@ -891,7 +976,27 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 maxiter=maxiter,
                 device=device,
             )
-        elif solver == "sp_jax_spsolve":
+        elif solver == "sp_jax_gmres":
+            if self.verb:
+                print("Solving by JAX sparse GMRES solver")
+            tol = solver_kwargs.pop("tol", 1.0e-5)
+            atol = solver_kwargs.pop("atol", 0.0)
+            restart = solver_kwargs.pop("restart", 20)
+            maxiter = solver_kwargs.pop("maxiter", None)
+            solve_method = solver_kwargs.pop("solve_method", "batched")
+            device = solver_kwargs.pop("device", None)
+            solution = self._solve_BMTI_reg_linear_system_jax_gmres(
+                A_csr,
+                b,
+                x0=x0,
+                tol=tol,
+                atol=atol,
+                restart=restart,
+                maxiter=maxiter,
+                solve_method=solve_method,
+                device=device,
+            )
+        elif solver == "sp_jax_direct":
             if self.verb:
                 print("Solving by JAX CSR sparse solver")
             tol = solver_kwargs.pop("tol", 1.0e-6)
