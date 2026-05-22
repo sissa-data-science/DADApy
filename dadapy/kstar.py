@@ -27,6 +27,7 @@ import numpy as np
 from scipy.special import gammaln
 
 from dadapy._cython import cython_density as cd
+from dadapy._utils.utils import resolve_backend
 from dadapy.id_estimation import IdEstimation
 
 try:
@@ -203,12 +204,9 @@ class KStar(IdEstimation):
         if self.distances is None or self.dist_indices is None:
             self.compute_distances()
 
-        if backend not in {"cython", "jax", "auto"}:
-            raise ValueError("backend must be one of {'cython', 'jax', 'auto'}")
-
-        backend_resolved = backend
-        if backend_resolved == "auto":
-            backend_resolved = "jax" if _HAS_JAX else "cython"
+        backend_resolved = resolve_backend(
+            backend=backend, has_jax=_HAS_JAX, default_backend="cython"
+        )
 
         if self.verb:
             print(

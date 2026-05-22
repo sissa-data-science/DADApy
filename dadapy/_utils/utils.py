@@ -166,6 +166,27 @@ def cast_to64(myarray):
     return myarray
 
 
+def resolve_backend(backend, has_jax, default_backend="cython"):
+    """Resolve an execution backend with optional JAX preference.
+
+    Args:
+        backend (str): one of {'cython', 'jax', 'auto'}.
+        has_jax (bool): whether JAX is importable in the current environment.
+        default_backend (str): backend used when backend='auto' and JAX is unavailable.
+
+    Returns:
+        str: resolved backend, either 'cython' or 'jax'.
+    """
+    valid_backends = {"cython", "jax", "auto"}
+    if backend not in valid_backends:
+        raise ValueError("backend must be one of {'cython', 'jax', 'auto'}")
+
+    if backend == "auto":
+        return "jax" if has_jax else default_backend
+
+    return backend
+
+
 # --------------------------------------------------------------------------------------
 # Helper functions
 

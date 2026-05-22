@@ -66,6 +66,40 @@ def test_compute_grads():
     assert np.allclose(da.grads_var, expected_grad_vars)
 
 
+def test_compute_grads_auto_backend():
+    """Test that auto backend is consistent with cython backend."""
+    da = DensityAdvanced(coordinates=data, maxk=3, verbose=True)
+    da.compute_distances()
+    da.set_id(1)
+    da.set_kstar(3)
+    da.compute_grads(comp_covmat=False, backend="cython")
+    expected_grads = da.grads.copy()
+    expected_grads_var = da.grads_var.copy()
+    da.compute_grads(comp_covmat=False, backend="auto")
+
+    assert np.allclose(da.grads, expected_grads)
+    assert np.allclose(da.grads_var, expected_grads_var)
+
+
+def test_compute_grads_jax_backend():
+    """Test the jax backend or the expected error if jax is unavailable."""
+    da = DensityAdvanced(coordinates=data, maxk=3, verbose=True)
+    da.compute_distances()
+    da.set_id(1)
+    da.set_kstar(3)
+
+    if HAS_JAX:
+        da.compute_grads(comp_covmat=False, backend="cython")
+        expected_grads = da.grads.copy()
+        expected_grads_var = da.grads_var.copy()
+        da.compute_grads(comp_covmat=False, backend="jax")
+        assert np.allclose(da.grads, expected_grads)
+        assert np.allclose(da.grads_var, expected_grads_var)
+    else:
+        with pytest.raises(ModuleNotFoundError):
+            da.compute_grads(comp_covmat=False, backend="jax")
+
+
 expected_pearson_array = np.array([1.0 / 3.0, -1.0, -1.0, -1.0, -1.0, 1.0 / 3.0])
 
 
@@ -300,7 +334,7 @@ def test_density_BMTI_sp_jax_cg():
     da.set_id(2)
 
     if HAS_JAX:
-        with pytest.warns(UserWarning, match="Falling back to 'sp_jax_spsolve'"):
+        with pytest.warns(UserWarning, match="Falling back to 'sp_jax_direct'"):
             da.compute_density_BMTI(alpha=0.99, solver="sp_jax_cg", gauge_fixing="zero_mean")
         assert abs(np.mean(da.log_den)) < 1e-6
         assert np.allclose(

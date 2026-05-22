@@ -414,6 +414,7 @@ def return_grads_and_var_from_coords(  np.ndarray[floatTYPE_t, ndim = 2] X,
     cdef DTYPE_t kstar_max = np.max(kstar)
     cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
     cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 1] rk_sq_arr = np.zeros((N,), dtype=floatTYPE)
     
     cdef DTYPE_t i, j, dim, ki, dim2
     cdef DTYPE_t ind_j
@@ -546,6 +547,67 @@ def return_grads_and_var_from_nnvecdiffs(   np.ndarray[floatTYPE_t, ndim = 2] ne
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
+def return_grads_and_var_from_nnvecdiffs_parallel(np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                                   np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                                   np.ndarray[DTYPE_t, ndim = 1] nind_iptr,
+                                                   np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                                   floatTYPE_t id_selected,
+                                                   DTYPE_t n_jobs):
+
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads_var = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 1] rk_sq_arr = np.zeros((N,), dtype=floatTYPE)
+
+    cdef DTYPE_t i, j, dim, ki
+    cdef DTYPE_t ind_j
+    cdef floatTYPE_t rk_sq, kifloat, scale, diff
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+    cdef floatTYPE_t[:, ::1] neigh_v = neigh_vector_diffs
+    cdef DTYPE_t[::1] nind_iptr_v = nind_iptr
+    cdef DTYPE_t[::1] kstar_v = kstar
+    cdef floatTYPE_t[:, ::1] grads_v = grads
+    cdef floatTYPE_t[:, ::1] grads_var_v = grads_var
+    cdef floatTYPE_t[::1] rk_sq_arr_v = rk_sq_arr
+
+    for i in range(N):
+        rk_sq = 0.
+        for dim in range(dims):
+            diff = neigh_v[nind_iptr_v[i + 1] - 1, dim]
+            rk_sq += diff * diff
+        rk_sq_arr_v[i] = rk_sq
+
+    with nogil:
+        for i in prange(N, schedule='static', num_threads=n_jobs):
+            ki = kstar_v[i] - 1
+            if ki <= 0:
+                continue
+
+            kifloat = <floatTYPE_t>ki
+            rk_sq = rk_sq_arr_v[i]
+            scale = dp2 / rk_sq
+
+            for dim in range(dims):
+                for j in range(ki):
+                    ind_j = nind_iptr_v[i] + j
+                    diff = neigh_v[ind_j, dim]
+                    grads_v[i, dim] += diff
+                    grads_var_v[i, dim] += diff * diff
+
+                grads_v[i, dim] = grads_v[i, dim] / kifloat * scale
+                grads_var_v[i, dim] = (
+                    grads_var_v[i, dim] / (kifloat * kifloat) * scale * scale
+                    - grads_v[i, dim] * grads_v[i, dim] / kifloat
+                )
+
+    return grads, grads_var
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
 def return_grads_and_covmat_from_nnvecdiffs(np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
                                             np.ndarray[DTYPE_t, ndim = 2] nind_list,
                                             np.ndarray[DTYPE_t, ndim = 1] nind_iptr,
@@ -557,6 +619,7 @@ def return_grads_and_covmat_from_nnvecdiffs(np.ndarray[floatTYPE_t, ndim = 2] ne
     cdef DTYPE_t kstar_max = np.max(kstar)
     cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
     cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 1] rk_sq_arr = np.zeros((N,), dtype=floatTYPE)
 
     cdef DTYPE_t i, j, dim, ki, dim2
     cdef DTYPE_t ind_j
@@ -591,6 +654,74 @@ def return_grads_and_covmat_from_nnvecdiffs(np.ndarray[floatTYPE_t, ndim = 2] ne
 
                 grads_covmat[i, dim, dim2] = grads_covmat[i, dim, dim2] / kifloat / kifloat * dp2/rk_sq * dp2/rk_sq \
                                   - grads[i, dim]*grads[i, dim2] / kifloat
+
+    return grads, grads_covmat
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_grads_and_covmat_from_nnvecdiffs_parallel(np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                                     np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                                     np.ndarray[DTYPE_t, ndim = 1] nind_iptr,
+                                                     np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                                     floatTYPE_t id_selected,
+                                                     DTYPE_t n_jobs):
+
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+    cdef np.ndarray[floatTYPE_t, ndim = 2] grads = np.zeros((N, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 3] grads_covmat = np.zeros((N, dims, dims), dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim = 1] rk_sq_arr = np.zeros((N,), dtype=floatTYPE)
+
+    cdef DTYPE_t i, j, dim, dim2, ki
+    cdef DTYPE_t ind_j
+    cdef floatTYPE_t rk_sq, kifloat, scale, diff_dim, diff_dim2
+    cdef floatTYPE_t dp2 = id_selected + 2.
+
+    cdef floatTYPE_t[:, ::1] neigh_v = neigh_vector_diffs
+    cdef DTYPE_t[::1] nind_iptr_v = nind_iptr
+    cdef DTYPE_t[::1] kstar_v = kstar
+    cdef floatTYPE_t[:, ::1] grads_v = grads
+    cdef floatTYPE_t[:, :, ::1] grads_covmat_v = grads_covmat
+    cdef floatTYPE_t[::1] rk_sq_arr_v = rk_sq_arr
+
+    for i in range(N):
+        rk_sq = 0.
+        for dim in range(dims):
+            diff_dim = neigh_v[nind_iptr_v[i + 1] - 1, dim]
+            rk_sq += diff_dim * diff_dim
+        rk_sq_arr_v[i] = rk_sq
+
+    with nogil:
+        for i in prange(N, schedule='static', num_threads=n_jobs):
+            ki = kstar_v[i] - 1
+            if ki <= 0:
+                continue
+
+            kifloat = <floatTYPE_t>ki
+            rk_sq = rk_sq_arr_v[i]
+            scale = dp2 / rk_sq
+
+            for dim in range(dims):
+                for j in range(ki):
+                    ind_j = nind_iptr_v[i] + j
+                    grads_v[i, dim] += neigh_v[ind_j, dim]
+
+                grads_v[i, dim] = grads_v[i, dim] / kifloat * scale
+
+            for dim in range(dims):
+                for dim2 in range(dims):
+                    for j in range(ki):
+                        ind_j = nind_iptr_v[i] + j
+                        diff_dim = neigh_v[ind_j, dim]
+                        diff_dim2 = neigh_v[ind_j, dim2]
+                        grads_covmat_v[i, dim, dim2] += diff_dim * diff_dim2
+
+                    grads_covmat_v[i, dim, dim2] = (
+                        grads_covmat_v[i, dim, dim2] / (kifloat * kifloat) * scale * scale
+                        - grads_v[i, dim] * grads_v[i, dim2] / kifloat
+                    )
 
     return grads, grads_covmat
 

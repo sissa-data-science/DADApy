@@ -32,6 +32,7 @@ from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
 from dadapy._utils.density_estimation import return_not_normalised_density_kstarNN
+from dadapy._utils.utils import resolve_backend
 from dadapy.density_estimation import DensityEstimation
 from dadapy.neigh_graph import NeighGraph
 
@@ -137,7 +138,95 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_grads(self, comp_covmat=False):
+    def _compute_grads_jax(self, comp_covmat=False, batch_size=None):
+        if not _HAS_JAX:
+            raise ModuleNotFoundError(
+                "JAX is required for backend='jax'. Install `jax` and `jaxlib`."
+            )
+
+        nspar, dims = self.neigh_vector_diffs.shape
+        if batch_size is None:
+            batch_size = self.N
+        batch_size = int(max(1, min(batch_size, self.N)))
+
+        neigh_vector_diffs = jnp.asarray(
+            np.asarray(self.neigh_vector_diffs, dtype=np.float64)
+        )
+        nind_iptr = np.asarray(self.nind_iptr, dtype=np.int64)
+        starts = jnp.asarray(nind_iptr[:-1])
+        kis = jnp.asarray(np.asarray(self.kstar, dtype=np.int64) - 1)
+
+        max_ki = int(np.max(np.asarray(kis)))
+        if max_ki <= 0:
+            raise ValueError(
+                "kstar must be > 1 for all points to compute gradients."
+            )
+
+        dp2 = float(self.intrinsic_dim) + 2.0
+        offsets = jnp.arange(max_ki, dtype=starts.dtype)
+
+        grads = np.zeros((self.N, dims), dtype=np.float64)
+        grads_covmat = (
+            np.zeros((self.N, dims, dims), dtype=np.float64) if comp_covmat else None
+        )
+        grads_var = np.zeros((self.N, dims), dtype=np.float64) if not comp_covmat else None
+
+        for start in range(0, self.N, batch_size):
+            stop = min(start + batch_size, self.N)
+            batch_starts = starts[start:stop]
+            batch_kis = kis[start:stop]
+            kifloat = batch_kis.astype(neigh_vector_diffs.dtype)
+
+            edge_indices = batch_starts[:, None] + offsets[None, :]
+            edge_indices = jnp.minimum(edge_indices, nspar - 1)
+            valid_mask = offsets[None, :] < batch_kis[:, None]
+            valid_mask_3d = valid_mask[:, :, None]
+
+            local_diffs = neigh_vector_diffs[edge_indices]
+            local_diffs = jnp.where(valid_mask_3d, local_diffs, 0.0)
+
+            sum_diffs = jnp.sum(local_diffs, axis=1)
+            rk_indices = batch_starts + batch_kis - 1
+            rk_vecs = neigh_vector_diffs[rk_indices]
+            rk_sq = jnp.sum(rk_vecs * rk_vecs, axis=1)
+            scale = dp2 / rk_sq
+
+            grads_batch = sum_diffs / kifloat[:, None] * scale[:, None]
+            grads[start:stop] = np.asarray(grads_batch)
+
+            if comp_covmat:
+                second_moment = jnp.einsum("bkd,bke->bde", local_diffs, local_diffs)
+                grads_cov_batch = (
+                    second_moment
+                    / (kifloat[:, None, None] * kifloat[:, None, None])
+                    * (scale[:, None, None] * scale[:, None, None])
+                    - jnp.einsum("bd,be->bde", grads_batch, grads_batch)
+                    / kifloat[:, None, None]
+                )
+                grads_covmat[start:stop] = np.asarray(grads_cov_batch)
+            else:
+                second_moment_diag = jnp.sum(local_diffs * local_diffs, axis=1)
+                grads_var_batch = (
+                    second_moment_diag
+                    / (kifloat[:, None] * kifloat[:, None])
+                    * (scale[:, None] * scale[:, None])
+                    - grads_batch * grads_batch / kifloat[:, None]
+                )
+                grads_var[start:stop] = np.asarray(grads_var_batch)
+
+        if comp_covmat:
+            return grads, grads_covmat
+        return grads, grads_var
+
+    # ----------------------------------------------------------------------------------------------
+
+    def compute_grads(
+        self,
+        comp_covmat=False,
+        backend="cython",
+        batch_size=None,
+        n_jobs=None,
+    ):
         """Compute the gradient of the log density each point using kstar nearest neighbors and store
 
         Estimate the gradient using an improved version of the mean-shift gradient algorithm [Fukunaga1975] as
@@ -148,7 +237,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         Args:
             comp_covmat (bool): if True, the whole covariance matrix is computed for each gradient and stored in
-            grads_covmat
+                grads_covmat.
+            backend (str): 'cython' (default), 'jax', or 'auto' (prefer JAX if available).
+            batch_size (int, optional): batch size used by JAX backend to reduce peak memory usage.
+            n_jobs (int, optional): number of threads for Cython parallel backend.
 
         """
         # compute optimal k
@@ -162,41 +254,109 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         if self.verb:
             print("Estimation of the density gradient started")
 
+        backend_resolved = resolve_backend(
+            backend=backend, has_jax=_HAS_JAX, default_backend="cython"
+        )
+
         sec = time.time()
-        if comp_covmat is False:
-            self.grads, self.grads_var = cgr.return_grads_and_var_from_nnvecdiffs(
-                self.neigh_vector_diffs,
-                self.nind_list,
-                self.nind_iptr,
-                self.kstar,
-                self.intrinsic_dim,
-            )
-            self.grads_var = np.einsum(
-                "ij, i -> ij", self.grads_var, self.kstar / (self.kstar - 1)
-            )  # Bessel's correction for the unbiased sample variance estimator
+        if backend_resolved == "jax":
+            if comp_covmat is False:
+                self.grads, self.grads_var = self._compute_grads_jax(
+                    comp_covmat=False, batch_size=batch_size
+                )
+                self.grads_var = np.einsum(
+                    "ij, i -> ij", self.grads_var, self.kstar / (self.kstar - 1)
+                )  # Bessel's correction for the unbiased sample variance estimator
+            else:
+                self.grads, self.grads_covmat = self._compute_grads_jax(
+                    comp_covmat=True, batch_size=batch_size
+                )
 
+                # Bessel's correction for the unbiased sample variance estimator
+                self.grads_covmat = np.einsum(
+                    "ijk, i -> ijk", self.grads_covmat, self.kstar / (self.kstar - 1)
+                )
+                smallnumber = 1.0e-10
+                self.grads_covmat += smallnumber * np.tile(
+                    np.eye(self.dims), (self.N, 1, 1)
+                )
+
+                # get diagonal elements of the covariance matrix
+                self.grads_var = np.zeros((self.N, self.dims))
+                for i in range(self.N):
+                    self.grads_var[i, :] = np.diag(self.grads_covmat[i, :, :])
         else:
-            self.grads, self.grads_covmat = cgr.return_grads_and_covmat_from_nnvecdiffs(
-                self.neigh_vector_diffs,
-                self.nind_list,
-                self.nind_iptr,
-                self.kstar,
-                self.intrinsic_dim,
-            )
+            threads = self.n_jobs if n_jobs is None else n_jobs
+            if comp_covmat is False:
+                if (
+                    threads is not None
+                    and threads > 1
+                    and hasattr(cgr, "return_grads_and_var_from_nnvecdiffs_parallel")
+                ):
+                    self.grads, self.grads_var = (
+                        cgr.return_grads_and_var_from_nnvecdiffs_parallel(
+                            self.neigh_vector_diffs,
+                            self.nind_list,
+                            self.nind_iptr,
+                            self.kstar,
+                            self.intrinsic_dim,
+                            int(threads),
+                        )
+                    )
+                else:
+                    self.grads, self.grads_var = (
+                        cgr.return_grads_and_var_from_nnvecdiffs(
+                            self.neigh_vector_diffs,
+                            self.nind_list,
+                            self.nind_iptr,
+                            self.kstar,
+                            self.intrinsic_dim,
+                        )
+                    )
+                self.grads_var = np.einsum(
+                    "ij, i -> ij", self.grads_var, self.kstar / (self.kstar - 1)
+                )  # Bessel's correction for the unbiased sample variance estimator
 
-            # Bessel's correction for the unbiased sample variance estimator
-            self.grads_covmat = np.einsum(
-                "ijk, i -> ijk", self.grads_covmat, self.kstar / (self.kstar - 1)
-            )
-            smallnumber = 1.0e-10
-            self.grads_covmat += smallnumber * np.tile(
-                np.eye(self.dims), (self.N, 1, 1)
-            )
+            else:
+                if (
+                    threads is not None
+                    and threads > 1
+                    and hasattr(cgr, "return_grads_and_covmat_from_nnvecdiffs_parallel")
+                ):
+                    self.grads, self.grads_covmat = (
+                        cgr.return_grads_and_covmat_from_nnvecdiffs_parallel(
+                            self.neigh_vector_diffs,
+                            self.nind_list,
+                            self.nind_iptr,
+                            self.kstar,
+                            self.intrinsic_dim,
+                            int(threads),
+                        )
+                    )
+                else:
+                    self.grads, self.grads_covmat = (
+                        cgr.return_grads_and_covmat_from_nnvecdiffs(
+                            self.neigh_vector_diffs,
+                            self.nind_list,
+                            self.nind_iptr,
+                            self.kstar,
+                            self.intrinsic_dim,
+                        )
+                    )
 
-            # get diagonal elements of the covariance matrix
-            self.grads_var = np.zeros((self.N, self.dims))
-            for i in range(self.N):
-                self.grads_var[i, :] = np.diag(self.grads_covmat[i, :, :])
+                # Bessel's correction for the unbiased sample variance estimator
+                self.grads_covmat = np.einsum(
+                    "ijk, i -> ijk", self.grads_covmat, self.kstar / (self.kstar - 1)
+                )
+                smallnumber = 1.0e-10
+                self.grads_covmat += smallnumber * np.tile(
+                    np.eye(self.dims), (self.N, 1, 1)
+                )
+
+                # get diagonal elements of the covariance matrix
+                self.grads_var = np.zeros((self.N, self.dims))
+                for i in range(self.N):
+                    self.grads_var[i, :] = np.diag(self.grads_covmat[i, :, :])
 
         sec2 = time.time()
         if self.verb:
