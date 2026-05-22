@@ -98,6 +98,16 @@ def test_compute_neigh_indices():
     assert neigh_graph.nspar == expected_nspar
 
 
+def test_compute_neigh_indices_parallel():
+    """Test the compute_neigh_indices method with Cython parallel backend."""
+    neigh_graph = NeighGraph(coordinates=data, n_jobs=2)
+    neigh_graph.compute_kstar(Dthr=0.0)
+    neigh_graph.compute_neigh_indices(n_jobs=2)
+    assert np.array_equal(neigh_graph.nind_list, expected_nint_list)
+    assert np.array_equal(neigh_graph.nind_iptr, expected_nind_iprt)
+    assert neigh_graph.nspar == expected_nspar
+
+
 def test_compute_neigh_dists():
     """Test the compute_neigh_dists method."""
     # create the NeighGraph object
@@ -106,6 +116,14 @@ def test_compute_neigh_dists():
     # compute the distances of the neighbors
     neigh_graph.compute_neigh_dists()
     # check that the result is correct
+    assert np.allclose(neigh_graph.neigh_dists, expected_neigh_dists)
+
+
+def test_compute_neigh_dists_parallel():
+    """Test the compute_neigh_dists method with Cython parallel backend."""
+    neigh_graph = NeighGraph(coordinates=data, n_jobs=2)
+    neigh_graph.compute_kstar(Dthr=0.0)
+    neigh_graph.compute_neigh_dists(n_jobs=2)
     assert np.allclose(neigh_graph.neigh_dists, expected_neigh_dists)
 
 
@@ -168,6 +186,19 @@ def test_compute_common_neighs():
 
     neigh_graph.compute_common_neighs(comp_common_neighs_mat=True)
     print(neigh_graph.common_neighs_mat)
+    assert np.array_equal(neigh_graph.common_neighs_mat, expected_common_neighs_mat)
+
+
+def test_compute_common_neighs_parallel():
+    """Test compute_common_neighs with Cython parallel backend."""
+    neigh_graph = NeighGraph(coordinates=data, n_jobs=2)
+    neigh_graph.compute_distances()
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
+
+    neigh_graph.compute_common_neighs(comp_common_neighs_mat=False, n_jobs=2)
+    assert np.array_equal(neigh_graph.common_neighs_array, expected_common_neighs_array)
+
+    neigh_graph.compute_common_neighs(comp_common_neighs_mat=True, n_jobs=2)
     assert np.array_equal(neigh_graph.common_neighs_mat, expected_common_neighs_mat)
 
 

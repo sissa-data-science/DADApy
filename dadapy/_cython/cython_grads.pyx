@@ -49,6 +49,43 @@ def return_neigh_ind(np.ndarray[DTYPE_t, ndim = 2] dist_indices,
 
 @cython.boundscheck(False)
 @cython.cdivision(True)
+def return_neigh_ind_parallel(np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                              np.ndarray[DTYPE_t, ndim = 1] kstar,
+                              DTYPE_t n_jobs):
+    cdef DTYPE_t N = kstar.shape[0]
+    cdef DTYPE_t nspar = kstar.sum() - N
+    cdef np.ndarray[DTYPE_t, ndim = 2] nind_list = np.ndarray((nspar, 2), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim = 1] nind_iptr = np.ndarray(shape=(N + 1,), dtype=DTYPE)
+
+    cdef DTYPE_t i, j, k, ki, ind_spar, row_start
+    cdef DTYPE_t[::1] kstar_v = kstar
+    cdef DTYPE_t[:, ::1] dist_indices_v = dist_indices
+    cdef DTYPE_t[:, ::1] nind_list_v = nind_list
+    cdef DTYPE_t[::1] nind_iptr_v = nind_iptr
+
+    ind_spar = 0
+    for i in range(N):
+        nind_iptr_v[i] = ind_spar
+        ind_spar += kstar_v[i] - 1
+    nind_iptr_v[N] = nspar
+
+    assert (ind_spar == nspar)
+
+    with nogil:
+        for i in prange(N, schedule='static', num_threads=n_jobs):
+            row_start = nind_iptr_v[i]
+            ki = kstar_v[i] - 1
+            for k in range(ki):
+                j = dist_indices_v[i, k + 1]
+                nind_list_v[row_start + k, 0] = i
+                nind_list_v[row_start + k, 1] = j
+
+    return nind_list, nind_iptr
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
 def return_neigh_distances_array(   np.ndarray[floatTYPE_t, ndim = 2] distances,
                                     np.ndarray[DTYPE_t, ndim = 2] dist_indices,
                                     np.ndarray[DTYPE_t, ndim = 1] kstar):
@@ -65,6 +102,42 @@ def return_neigh_distances_array(   np.ndarray[floatTYPE_t, ndim = 2] distances,
             ind_spar += 1
 
     assert (ind_spar == nspar)
+
+    return distarray
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+def return_neigh_distances_array_parallel(np.ndarray[floatTYPE_t, ndim = 2] distances,
+                                          np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                          np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                          DTYPE_t n_jobs):
+    cdef DTYPE_t N = len(kstar)
+    cdef DTYPE_t nspar = kstar.sum() - N
+    cdef np.ndarray[floatTYPE_t, ndim = 1] distarray = np.ndarray((nspar,), dtype=floatTYPE)
+    cdef np.ndarray[DTYPE_t, ndim = 1] starts = np.ndarray((N,), dtype=DTYPE)
+
+    cdef DTYPE_t i, j, ind_spar
+    cdef DTYPE_t[::1] kstar_v = kstar
+    cdef floatTYPE_t[:, ::1] distances_v = distances
+    cdef floatTYPE_t[::1] distarray_v = distarray
+    cdef DTYPE_t[::1] starts_v = starts
+    cdef DTYPE_t start_i, ki
+
+    ind_spar = 0
+    for i in range(N):
+        starts_v[i] = ind_spar
+        ind_spar += kstar_v[i] - 1
+
+    assert (ind_spar == nspar)
+
+    with nogil:
+        for i in prange(N, schedule='static', num_threads=n_jobs):
+            start_i = starts_v[i]
+            ki = kstar_v[i]
+            for j in range(1, ki):
+                distarray_v[start_i + j - 1] = distances_v[i, j]
 
     return distarray
 
@@ -217,6 +290,47 @@ def return_common_neighs(np.ndarray[DTYPE_t, ndim = 1] kstar,
 # ----------------------------------------------------------------------------------------------
 
 @cython.boundscheck(False)
+@cython.wraparound(False)
+def return_common_neighs_parallel(np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                  np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                  np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                  DTYPE_t n_jobs):
+
+    cdef DTYPE_t nspar = nind_list.shape[0]
+
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=DTYPE)
+
+    cdef DTYPE_t[::1] kstar_v = kstar
+    cdef DTYPE_t[:, ::1] dist_indices_v = dist_indices
+    cdef DTYPE_t[:, ::1] nind_v = nind_list
+    cdef DTYPE_t[::1] common_v = common_neighs_array
+
+    with nogil:
+        for ind_spar in prange(nspar, schedule='static', num_threads=n_jobs):
+            i = nind_v[ind_spar, 0]
+            j = nind_v[ind_spar, 1]
+
+            kstar_i = kstar_v[i]
+            kstar_j = kstar_v[j]
+
+            count = 0
+
+            for idx in range(kstar_i):
+                val_i = dist_indices_v[i, idx]
+                for idx2 in range(kstar_j):
+                    val_j = dist_indices_v[j, idx2]
+                    if val_i == val_j:
+                        count = count + 1
+                        break
+
+            common_v[ind_spar] = count
+
+    return common_neighs_array
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
 @cython.cdivision(True)
 def return_common_neighs_comp_mat(np.ndarray[DTYPE_t, ndim = 1] kstar,
                          np.ndarray[DTYPE_t, ndim = 2] dist_indices,
@@ -305,6 +419,51 @@ def return_cross_common_neighs( np.ndarray[DTYPE_t, ndim = 1] kstar,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def return_cross_common_neighs_parallel(np.ndarray[DTYPE_t, ndim = 1] kstar,
+                                        np.ndarray[DTYPE_t, ndim = 1] kstar_test,
+                                        np.ndarray[DTYPE_t, ndim = 2] dist_indices,
+                                        np.ndarray[DTYPE_t, ndim = 2] cross_dist_indices,
+                                        np.ndarray[DTYPE_t, ndim = 2] cross_nind_list,
+                                        DTYPE_t n_jobs):
+
+    cdef DTYPE_t nspar = cross_nind_list.shape[0]
+
+    cdef DTYPE_t i, j, ind_spar, count, kstar_i, kstar_j, idx, idx2, val_i, val_j
+    cdef np.ndarray[DTYPE_t, ndim=1] common_neighs_array = np.zeros(nspar, dtype=DTYPE)
+
+    cdef DTYPE_t[::1] kstar_v = kstar
+    cdef DTYPE_t[::1] kstar_test_v = kstar_test
+    cdef DTYPE_t[:, ::1] dist_indices_v = dist_indices
+    cdef DTYPE_t[:, ::1] cross_dist_indices_v = cross_dist_indices
+    cdef DTYPE_t[:, ::1] cross_nind_v = cross_nind_list
+    cdef DTYPE_t[::1] common_v = common_neighs_array
+
+    with nogil:
+        for ind_spar in prange(nspar, schedule='static', num_threads=n_jobs):
+            i = cross_nind_v[ind_spar, 0]
+            j = cross_nind_v[ind_spar, 1]
+
+            kstar_i = kstar_test_v[i]
+            kstar_j = kstar_v[j]
+
+            count = 0
+
+            for idx in range(kstar_i):
+                val_i = cross_dist_indices_v[i, idx]
+                for idx2 in range(kstar_j):
+                    val_j = dist_indices_v[j, idx2]
+                    if val_i == val_j:
+                        count = count + 1
+                        break
+
+            common_v[ind_spar] = count
+
+    return common_neighs_array
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 @cython.cdivision(True)
 def return_deltaFs_and_var_from_grads(  np.ndarray[DTYPE_t, ndim = 2] nind_list,
                                         np.ndarray[floatTYPE_t, ndim = 2] grads,
@@ -367,6 +526,75 @@ def return_deltaFs_and_var_from_grads(  np.ndarray[DTYPE_t, ndim = 2] nind_list,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
+def return_deltaFs_and_var_from_grads_parallel(np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                               np.ndarray[floatTYPE_t, ndim = 2] grads,
+                                               np.ndarray[floatTYPE_t, ndim = 3] grads_covmat,
+                                               np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                               np.ndarray[floatTYPE_t, ndim=1] pearson_array,
+                                               DTYPE_t n_jobs):
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+    cdef DTYPE_t N = grads.shape[0]
+
+    cdef DTYPE_t ind_spar, dim, dim2, i, j
+    cdef floatTYPE_t grad_dot, vari, varj, dx_dim, tmpi, tmpj
+
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_array = np.zeros(nspar, dtype=floatTYPE)
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_var_array = np.zeros(nspar, dtype=floatTYPE)
+
+    cdef DTYPE_t[:, ::1] nind_v = nind_list
+    cdef floatTYPE_t[:, ::1] grads_v = grads
+    cdef floatTYPE_t[:, :, ::1] grads_cov_v = grads_covmat
+    cdef floatTYPE_t[:, ::1] neigh_v = neigh_vector_diffs
+    cdef floatTYPE_t[::1] pearson_v = pearson_array
+    cdef floatTYPE_t[::1] fij_v = Fij_array
+    cdef floatTYPE_t[::1] fij_var_v = Fij_var_array
+
+    if neigh_vector_diffs.shape[0] != nspar:
+        raise ValueError("nind_list and neigh_vector_diffs must have the same length")
+    if pearson_array.shape[0] != nspar:
+        raise ValueError("pearson_array length must match nind_list length")
+    if grads.shape[1] != dims:
+        raise ValueError("grads and neigh_vector_diffs must have the same dimension")
+    if grads_covmat.shape[0] != N:
+        raise ValueError("grads_covmat and grads must have the same number of points")
+    if grads_covmat.shape[1] != dims or grads_covmat.shape[2] != dims:
+        raise ValueError("grads_covmat shape must be (N, dims, dims)")
+
+    with nogil:
+        for ind_spar in prange(nspar, schedule='static', num_threads=n_jobs):
+            i = nind_v[ind_spar, 0]
+            j = nind_v[ind_spar, 1]
+
+            grad_dot = 0.
+            vari = 0.
+            varj = 0.
+
+            for dim in range(dims):
+                grad_dot = grad_dot + (grads_v[i, dim] + grads_v[j, dim]) * neigh_v[ind_spar, dim]
+
+            for dim in range(dims):
+                dx_dim = neigh_v[ind_spar, dim]
+                tmpi = 0.
+                tmpj = 0.
+                for dim2 in range(dims):
+                    tmpi = tmpi + grads_cov_v[i, dim, dim2] * neigh_v[ind_spar, dim2]
+                    tmpj = tmpj + grads_cov_v[j, dim, dim2] * neigh_v[ind_spar, dim2]
+                vari = vari + dx_dim * tmpi
+                varj = varj + dx_dim * tmpj
+
+            fij_v[ind_spar] = 0.5 * grad_dot
+            fij_var_v[ind_spar] = 0.25 * (
+                vari + varj + 2. * pearson_v[ind_spar] * sqrt(vari * varj)
+            )
+
+    return Fij_array, Fij_var_array
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
 def return_deltaFs_from_grads(  np.ndarray[DTYPE_t, ndim = 2] nind_list,
                                 np.ndarray[floatTYPE_t, ndim = 2] grads,
                                 np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs
@@ -395,6 +623,47 @@ def return_deltaFs_from_grads(  np.ndarray[DTYPE_t, ndim = 2] nind_list,
             grad_dot += (grads[i, dim] + grads[j, dim]) * neigh_vector_diffs[ind_spar, dim]
 
         Fij_array[ind_spar] = 0.5 * grad_dot
+
+    return Fij_array
+
+# ----------------------------------------------------------------------------------------------
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def return_deltaFs_from_grads_parallel(np.ndarray[DTYPE_t, ndim = 2] nind_list,
+                                       np.ndarray[floatTYPE_t, ndim = 2] grads,
+                                       np.ndarray[floatTYPE_t, ndim = 2] neigh_vector_diffs,
+                                       DTYPE_t n_jobs):
+    cdef DTYPE_t nspar = nind_list.shape[0]
+    cdef DTYPE_t dims = neigh_vector_diffs.shape[1]
+
+    cdef DTYPE_t ind_spar, dim, i, j
+    cdef floatTYPE_t grad_dot
+
+    cdef np.ndarray[floatTYPE_t, ndim=1] Fij_array = np.zeros(nspar, dtype=floatTYPE)
+
+    cdef DTYPE_t[:, ::1] nind_v = nind_list
+    cdef floatTYPE_t[:, ::1] grads_v = grads
+    cdef floatTYPE_t[:, ::1] neigh_v = neigh_vector_diffs
+    cdef floatTYPE_t[::1] fij_v = Fij_array
+
+    if neigh_vector_diffs.shape[0] != nspar:
+        raise ValueError("nind_list and neigh_vector_diffs must have the same length")
+    if grads.shape[1] != dims:
+        raise ValueError("grads and neigh_vector_diffs must have the same dimension")
+
+    with nogil:
+        for ind_spar in prange(nspar, schedule='static', num_threads=n_jobs):
+            i = nind_v[ind_spar, 0]
+            j = nind_v[ind_spar, 1]
+
+            grad_dot = 0.
+
+            for dim in range(dims):
+                grad_dot = grad_dot + (grads_v[i, dim] + grads_v[j, dim]) * neigh_v[ind_spar, dim]
+
+            fij_v[ind_spar] = 0.5 * grad_dot
 
     return Fij_array
 

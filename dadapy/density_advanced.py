@@ -408,7 +408,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 )
             )
 
-    def compute_deltaFs(self, similarity_method="jaccard", comp_p_mat=False, comp_Fij_var=True):
+    def compute_deltaFs(
+        self,
+        similarity_method="jaccard",
+        comp_p_mat=False,
+        comp_Fij_var=True,
+        n_jobs=None,
+    ):
         """Compute deviations deltaFij to standard kNN log-densities at point j as seen from point i using
             a linear expansion with as slope the semisum of the average gradient of the log-density over
             the neighbourhood of points i and j.
@@ -423,6 +429,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             similarity_method (str): see docs for neigh_graph.compute_neigh_similarity_index function
             comp_p_mat (bool): see docs for compute_pearson function
             comp_Fij_var (bool): if False, Fij_var_array is set to None and grads_covmat is not computed.
+            n_jobs (int, optional): number of threads for Cython parallel backend.
         """
 
         if comp_Fij_var is False:
@@ -445,7 +452,37 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             )
         sec = time.time()
 
-        if comp_Fij_var is True and hasattr(cgr, "return_deltaFs_and_var_from_grads"):
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
+        if (
+            comp_Fij_var is True
+            and threads is not None
+            and threads > 1
+            and hasattr(cgr, "return_deltaFs_and_var_from_grads_parallel")
+        ):
+            self.Fij_array, self.Fij_var_array = (
+                cgr.return_deltaFs_and_var_from_grads_parallel(
+                    self.nind_list,
+                    self.grads,
+                    self.grads_covmat,
+                    self.neigh_vector_diffs,
+                    self.pearson_array,
+                    int(threads),
+                )
+            )
+        elif (
+            comp_Fij_var is False
+            and threads is not None
+            and threads > 1
+            and hasattr(cgr, "return_deltaFs_from_grads_parallel")
+        ):
+            self.Fij_array = cgr.return_deltaFs_from_grads_parallel(
+                self.nind_list,
+                self.grads,
+                self.neigh_vector_diffs,
+                int(threads),
+            )
+        elif comp_Fij_var is True and hasattr(cgr, "return_deltaFs_and_var_from_grads"):
             self.Fij_array, self.Fij_var_array = cgr.return_deltaFs_and_var_from_grads(
                 self.nind_list,
                 self.grads,

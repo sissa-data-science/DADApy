@@ -133,6 +133,25 @@ def test_compute_deltaFs():
     assert np.allclose(da.Fij_var_array, expected_Fij_var_array)
 
 
+def test_compute_deltaFs_parallel():
+    """Test the compute_deltaFs method with Cython parallel backend."""
+    expected_Fij_array = np.array(
+        [5.999999999999997, 0.0, 0.0, 0.0, 0.0, 3.0000000000000133]
+    )
+    expected_Fij_var_array = np.array(
+        [1.5017050605028698e-12, 0.0, 0.0, 0.0, 0.0, 6.666666666666738e-13]
+    )
+
+    da = DensityAdvanced(coordinates=data, maxk=2, verbose=True, n_jobs=2)
+    da.compute_distances()
+    da.set_id(1)
+    da.set_kstar(2)
+    da.compute_deltaFs(n_jobs=2)
+
+    assert np.allclose(da.Fij_array, expected_Fij_array)
+    assert np.allclose(da.Fij_var_array, expected_Fij_var_array)
+
+
 def test_compute_deltaFs_without_var():
     """Test compute_deltaFs with variance computation disabled."""
     expected_Fij_array = np.array(
@@ -144,6 +163,22 @@ def test_compute_deltaFs_without_var():
     da.set_id(1)
     da.set_kstar(2)
     da.compute_deltaFs(comp_Fij_var=False)
+
+    assert np.allclose(da.Fij_array, expected_Fij_array)
+    assert da.Fij_var_array is None
+
+
+def test_compute_deltaFs_without_var_parallel():
+    """Test compute_deltaFs without variance using Cython parallel backend."""
+    expected_Fij_array = np.array(
+        [5.999999999999997, 0.0, 0.0, 0.0, 0.0, 3.0000000000000133]
+    )
+
+    da = DensityAdvanced(coordinates=data, maxk=2, verbose=True, n_jobs=2)
+    da.compute_distances()
+    da.set_id(1)
+    da.set_kstar(2)
+    da.compute_deltaFs(comp_Fij_var=False, n_jobs=2)
 
     assert np.allclose(da.Fij_array, expected_Fij_array)
     assert da.Fij_var_array is None

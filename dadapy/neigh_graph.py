@@ -131,11 +131,14 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_indices(self):
+    def compute_neigh_indices(self, n_jobs=None):
         """
         Compute indices of all couples [i,j] where j is a neighbour of i up to k*-th nearest (excluded).
         The couples of indices are stored in nind_list.
         Also compute and fill the attributes nspar (the 0-th shape of nind_list) nind_iptr.
+
+        Args:
+            n_jobs (int, optional): number of threads for Cython parallel backend.
         """
 
         if self.kstar is None:
@@ -146,9 +149,19 @@ class NeighGraph(KStar):
 
         sec = time.time()
 
-        self.nind_list, self.nind_iptr = cgr.return_neigh_ind(
-            self.dist_indices, self.kstar
-        )
+        threads = self.n_jobs if n_jobs is None else n_jobs
+        if (
+            threads is not None
+            and threads > 1
+            and hasattr(cgr, "return_neigh_ind_parallel")
+        ):
+            self.nind_list, self.nind_iptr = cgr.return_neigh_ind_parallel(
+                self.dist_indices, self.kstar, int(threads)
+            )
+        else:
+            self.nind_list, self.nind_iptr = cgr.return_neigh_ind(
+                self.dist_indices, self.kstar
+            )
 
         self.nspar = len(self.nind_list)
 
@@ -158,10 +171,13 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_neigh_dists(self):
+    def compute_neigh_dists(self, n_jobs=None):
         """Compute the (directed) neighbour distances graph using kstar[i] neighbours for each point i.
 
         Distances are stored in the neigh_dists array.
+
+        Args:
+            n_jobs (int, optional): number of threads for Cython parallel backend.
 
         """
 
@@ -176,9 +192,19 @@ class NeighGraph(KStar):
 
         sec = time.time()
 
-        self.neigh_dists = cgr.return_neigh_distances_array(
-            self.distances, self.dist_indices, self.kstar
-        )
+        threads = self.n_jobs if n_jobs is None else n_jobs
+        if (
+            threads is not None
+            and threads > 1
+            and hasattr(cgr, "return_neigh_distances_array_parallel")
+        ):
+            self.neigh_dists = cgr.return_neigh_distances_array_parallel(
+                self.distances, self.dist_indices, self.kstar, int(threads)
+            )
+        else:
+            self.neigh_dists = cgr.return_neigh_distances_array(
+                self.distances, self.dist_indices, self.kstar
+            )
 
         sec2 = time.time()
         if self.verb:
@@ -309,12 +335,16 @@ class NeighGraph(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_common_neighs(self, comp_common_neighs_mat=False):
+    def compute_common_neighs(self, comp_common_neighs_mat=False, n_jobs=None):
         """Compute the common number of neighbours between the couple of points (i,j) such that j is
         in the neighbourhod of i.
 
         The numbers are stored in common_neighs_array.
         If the flag comp_common_neighs_mat has value True, also the symmetric matrix common_neighs_mat is computed.
+
+        Args:
+            comp_common_neighs_mat (bool): if True, also compute the symmetric matrix common_neighs_mat.
+            n_jobs (int, optional): number of threads for Cython parallel backend.
 
         """
 
@@ -326,17 +356,33 @@ class NeighGraph(KStar):
             print("Computation of the numbers of common neighbours started")
 
         sec = time.time()
-        if comp_common_neighs_mat is True:
-            (
-                self.common_neighs_array,
-                self.common_neighs_mat,
-            ) = cgr.return_common_neighs_comp_mat(
-                self.kstar, self.dist_indices, self.nind_list
+        threads = self.n_jobs if n_jobs is None else n_jobs
+        if (
+            threads is not None
+            and threads > 1
+            and hasattr(cgr, "return_common_neighs_parallel")
+        ):
+            self.common_neighs_array = cgr.return_common_neighs_parallel(
+                self.kstar, self.dist_indices, self.nind_list, int(threads)
             )
+            if comp_common_neighs_mat is True:
+                self.common_neighs_mat = np.zeros((self.N, self.N), dtype=np.int_)
+                ii = self.nind_list[:, 0]
+                jj = self.nind_list[:, 1]
+                self.common_neighs_mat[ii, jj] = self.common_neighs_array
+                self.common_neighs_mat[jj, ii] = self.common_neighs_array
         else:
-            self.common_neighs_array = cgr.return_common_neighs(
-                self.kstar, self.dist_indices, self.nind_list
-            )
+            if comp_common_neighs_mat is True:
+                (
+                    self.common_neighs_array,
+                    self.common_neighs_mat,
+                ) = cgr.return_common_neighs_comp_mat(
+                    self.kstar, self.dist_indices, self.nind_list
+                )
+            else:
+                self.common_neighs_array = cgr.return_common_neighs(
+                    self.kstar, self.dist_indices, self.nind_list
+                )
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds to carry out the computation.".format(sec2 - sec))
