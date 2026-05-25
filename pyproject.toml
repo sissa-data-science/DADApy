@@ -9,13 +9,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 
 dependencies = ["numpy>=1.22", "scipy", "scikit-learn", "matplotlib",
-                "seaborn", "tqdm", "networkx",
-                'jax==0.4.30; python_version < "3.13"',
-                'jax; python_version >= "3.13"',
-                'jaxlib==0.4.30; python_version < "3.13"',
-                'jaxlib; python_version >= "3.13"',
-                'flax==0.8.5; python_version < "3.13"',
-                'flax; python_version >= "3.13"']
+                "seaborn", "tqdm", "networkx", "jax", "flax", "optax"]
 
 [project.urls]
 homepage = "https://github.com/sissa-data-science/DADApy"
