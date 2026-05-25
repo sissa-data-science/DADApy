@@ -1234,7 +1234,7 @@ class DiffImbalance:
         selected_indices = valid_indices[best_valid_indices]
 
         # Convert indices to lists for consistent processing
-        selected_features = [[idx] for idx in selected_indices]
+        selected_features = [[int(idx)] for idx in selected_indices]
 
         # Add the best single feature to results
         best_feature = selected_features[0]

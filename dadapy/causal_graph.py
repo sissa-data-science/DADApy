@@ -567,7 +567,7 @@ class CausalGraph(DiffImbalance):
         """
         G = nx.DiGraph(adj_matrix)
         auto_sets = []
-        for var in np.arange(adj_matrix.shape[0]):
+        for var in range(adj_matrix.shape[0]):
             auto_sets.append(sorted(nx.ancestors(G, var) | {var}))
         return auto_sets
 
