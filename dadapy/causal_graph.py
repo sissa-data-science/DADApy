@@ -17,7 +17,7 @@
 The *causal_graph* module contains the *CausalGraph* class, which inherits from the *DiffImbalance* class.
 
 The code can be runned on gpu using the command
-    jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
+    jax.config.update('jax_platforms', 'gpu') # set 'cpu' or 'gpu'
 """
 
 import itertools

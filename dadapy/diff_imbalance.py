@@ -19,7 +19,7 @@ The *diff_imbalance* module contains the *DiffImbalance* class, implemented with
 The only method supposed to be called by the user is 'train', which carries out the automatic optimization ot the
 Differential Information as a function of the weights of the features in the first distance space.
 The code can be runned on gpu using the command
-    jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
+    jax.config.update('jax_platforms', 'gpu') # set 'cpu' or 'gpu'
 """
 
 import warnings
