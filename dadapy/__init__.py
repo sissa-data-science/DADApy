@@ -1,7 +1,5 @@
 """DADApy: a Python package for Distance-based Analysis of DAta-manifolds."""
 
-import sys
-
 from ._utils.utils import *  # noqa: F401,F403
 from .base import Base
 from .clustering import Clustering
@@ -38,7 +36,7 @@ try:
 
     __all__ += ["CausalGraph", "DiffImbalance", "BID", "Hamming"]
 except (ImportError, RuntimeError):
-    # JAX-dependent classes unavailable (e.g., this exception is raised in 
-    # joblib worker subprocesses where GPU context cannot be re-initialized 
+    # JAX-dependent classes unavailable (e.g., this exception is raised in
+    # joblib worker subprocesses where GPU context cannot be re-initialized
     # from the parent process).
     pass
