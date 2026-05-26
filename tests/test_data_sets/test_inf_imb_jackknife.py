@@ -20,7 +20,7 @@ import os
 import numpy as np
 
 from dadapy import DataSets
-from dadapy.metric_comparisons import MetricComparisons
+from dadapy.information_imbalance import InformationImbalance
 
 filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
 
@@ -29,8 +29,8 @@ def test_information_imbalance_jackknife():
     """Test the correct functioning of the inf_imb_jackknife method."""
     X = np.load(filename)[:100, :]
 
-    d1 = MetricComparisons(coordinates=X[:, [0]], maxk=X.shape[0] - 1)
-    d2 = MetricComparisons(
+    d1 = InformationImbalance(coordinates=X[:, [0]], maxk=X.shape[0] - 1)
+    d2 = InformationImbalance(
         coordinates=X[
             :,
             [
