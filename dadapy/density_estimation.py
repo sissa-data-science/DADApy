@@ -19,7 +19,6 @@ The *density_estimation* module contains the *DensityEstimation* class.
 The different algorithms of density estimation are implemented as methods of this class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -31,10 +30,8 @@ from dadapy._utils.density_estimation import (
     return_not_normalised_density_PAk,
     return_not_normalised_density_PAk_optimized,
 )
-from dadapy._utils.utils import compute_cross_nn_distances
+from dadapy._utils.utils import compute_cross_nn_distances, cores
 from dadapy.kstar import KStar
-
-cores = multiprocessing.cpu_count()
 
 
 class DensityEstimation(KStar):
@@ -57,6 +54,7 @@ class DensityEstimation(KStar):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -66,6 +64,7 @@ class DensityEstimation(KStar):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.log_den = None
@@ -90,7 +89,7 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kNN(self, k=10, bias=False):
+    def compute_density_kNN(self, k=10):
         """Compute the density of each point using a simple kNN estimator.
 
         Args:
@@ -113,7 +112,6 @@ class DensityEstimation(KStar):
             self.intrinsic_dim,
             self.kstar,
             interpolation=False,
-            bias=bias,
         )
 
         # Normalise density
@@ -131,7 +129,7 @@ class DensityEstimation(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_density_kstarNN(
-        self, alpha=1e-6, bias=False, bonferroni_deloc=False, bonferroni_loc=False
+        self, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
     ):
         """Compute the density of each point using a simple kNN estimator with an optimal choice of k.
 
@@ -160,7 +158,6 @@ class DensityEstimation(KStar):
             self.intrinsic_dim,
             self.kstar,
             interpolation=False,
-            bias=bias,
         )
 
         # Normalise density
@@ -446,7 +443,7 @@ class DensityEstimation(KStar):
         )
 
         log_den, log_den_err, _ = return_not_normalised_density_PAk(
-            cross_distances, self.intrinsic_dim, kstar, self.maxk, interpolation=True
+            cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
 
         # Normalise density

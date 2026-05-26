@@ -15,10 +15,6 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-rng = np.random.default_rng()
-
-# from scipy.stats import epps_singleton_2samp as es2s
 from scipy.stats import ks_2samp
 
 from ..plot import plot_cdf
@@ -59,11 +55,11 @@ def box_counting(
     sup = box_boundaries[1]
 
     # count the minimum amount of boxes touched
-    Ns = []
+    ns = []
     # loop over all scales
     for scale in input_scales:
         bin_temp = np.array(
-            [np.arange(inf, sup + 2 * scale, scale) for i in range(data.shape[1])]
+            [np.arange(inf, sup + 2 * scale, scale) for _ in range(data.shape[1])]
         )
         touched = []
         if n_offsets == 0:
@@ -78,41 +74,40 @@ def box_counting(
                     for x in bin_temp
                 ]
             )
-            H1, e = np.histogramdd(data, bins=bin_edges)
+            H1, _ = np.histogramdd(data, bins=bin_edges)
             touched.append(np.sum(H1 > 0))
-        Ns.append(touched)
-    Ns = np.array(Ns)
+        ns.append(touched)
+    ns = np.array(ns)
     if verb:
-        print(Ns)
+        print(ns)
     # From all sets N found, keep the smallest one at each scale
-    Ns = Ns.min(axis=1)
-    # Only keep scales at which Ns changed
-    scales = np.array([np.min(input_scales[Ns == x]) for x in np.unique(Ns)])
-    Ns = np.unique(Ns)
-    Ns = Ns[Ns > 0]
-    scales = scales[: len(Ns)]
+    ns = ns.min(axis=1)
+    # Only keep scales at which ns changed
+    scales = np.array([np.min(input_scales[ns == x]) for x in np.unique(ns)])
+    ns = np.unique(ns)
+    ns = ns[ns > 0]
+    scales = scales[: len(ns)]
     ind = np.argsort(scales)
     scales = scales[ind]
-    Ns = Ns[ind]
+    ns = ns[ind]
     if verb:
-        print("effective scales: ", scales, Ns)
+        print("effective scales: ", scales, ns)
     # perform fit with growing number of boxes
     cfs = []
     start = 1
     for i in range(start, len(scales)):
         coeffs = np.polyfit(
-            np.log(1 / scales[start - 1 : i + 1]), np.log(Ns[start - 1 : i + 1]), 1
+            np.log(1 / scales[start - 1 : i + 1]), np.log(ns[start - 1 : i + 1]), 1
         )
         cfs.append(coeffs[0])
 
-    # print(scales,cfs)
-    coeffs = np.polyfit(np.log(1 / scales), np.log(Ns), 1)
+    coeffs = np.polyfit(np.log(1 / scales), np.log(ns), 1)
     if verb:
-        print(np.log(Ns) / np.log(1 / scales[::-1]))
+        print(np.log(ns) / np.log(1 / scales[::-1]))
     # make plot
     if plot:
-        fig, ax = plt.subplots(figsize=(8, 6))
-        ax.scatter(np.log(1 / scales), np.log(Ns), c="teal", label="Measured ratios")
+        _, ax = plt.subplots(figsize=(8, 6))
+        ax.scatter(np.log(1 / scales), np.log(ns), c="teal", label="Measured ratios")
         ax.set_ylabel(r"$\log N(\epsilon)$")
         ax.set_xlabel(r"$\log 1/ \epsilon$")
         fitted_y_vals = np.polyval(coeffs, np.log(1 / scales))
@@ -192,7 +187,7 @@ def correlation_integral(dists, scales, cond=False, plot=True):
 
 
 def _binomial_model_validation(
-    k, n, p, artificial_samples=100000, k_bootstrap=20, plot=False
+    k, n, p, rng, artificial_samples=100000, k_bootstrap=20, plot=False
 ):
     """Perform the model validation for the binomial estimator. To this aim, an artificial set of binomially distributed
     points is extracted and compared to the observed ones. The quantitative test should be performed by means of the 2-samples Epps-Singleton tests,
@@ -205,6 +200,7 @@ def _binomial_model_validation(
         k (int or np.ndarray(int)): Observed points in outer shells.
         n (np.ndarray(int)): Observed points in the inner shells.
         p (float): Tested Binomial parameter
+        rng (np.random.Generator): random number generator used to sample the artificial ensemble.
         artificial_samples (int, default=1000000): number of theoretical samples to be compared with the observed ones.
         k_bootstrap (int, default=1): number of bootstrap resampling in order to obtain more reliable p-values
         plot (bool, default=False): flag that, if se to True, allows to plot the observed vs theoretical distributions
@@ -232,16 +228,14 @@ def _binomial_model_validation(
     if plot:
         plot_cdf(n - 1, n_samp)
 
-    # es_d, es_pv = es2s(n_samp, n - 1)
     ks_d, ks_pv = ks_2samp(n_samp, n - 1)
 
     # possibly test against re-sampled distribution using bootstrap
     if k_bootstrap > 1:
         kss = [ks_d]
         pvs = [ks_pv]
-        for ki in range(k_bootstrap):
+        for _ in range(k_bootstrap):
             n_temp = rng.choice(n, size=len(n), replace=True)
-            # es_d, es_pv = es2s(n_samp, n_temp - 1)
             ks_d, ks_pv = ks_2samp(n_samp, n_temp - 1)
             kss.append(ks_d)
             pvs.append(ks_pv)

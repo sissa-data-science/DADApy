@@ -14,121 +14,43 @@ class get_numpy_include(object):
         return numpy.get_include()
 
 
-ext_modules = []
+NUMPY_MACROS = [
+    ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+    ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
+]
 
-ext_modules += [
-    Extension(
-        "dadapy._cython.cython_clustering",
-        sources=["dadapy/_cython/cython_clustering.c"],
+
+def cython_extension(name):
+    return Extension(
+        f"dadapy._cython.{name}",
+        sources=[f"dadapy/_cython/{name}.c"],
         include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
+        define_macros=NUMPY_MACROS,
     )
+
+
+serial_modules = [
+    "cython_clustering",
+    "cython_clustering_v2",
+    "cython_maximum_likelihood_opt",
+    "cython_maximum_likelihood_opt_full",
+    "cython_density",
+    "cython_overlap",
+    "cython_grads",
 ]
 
-ext_modules += [
-    Extension(
-        "dadapy._cython.cython_clustering_v2",
-        sources=["dadapy/_cython/cython_clustering_v2.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    )
+parallel_modules = [
+    "cython_distances",
+    "cython_differentiable_imbalance",
 ]
 
-ext_modules += [
-    Extension(
-        "dadapy._cython.cython_maximum_likelihood_opt",
-        sources=["dadapy/_cython/cython_maximum_likelihood_opt.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    )
-]
-
-ext_modules += [
-    Extension(
-        "dadapy._cython.cython_maximum_likelihood_opt_full",
-        sources=["dadapy/_cython/cython_maximum_likelihood_opt_full.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    )
-]
-
-
-ext_modules += [
-    Extension(
-        "dadapy._cython.cython_density",
-        sources=["dadapy/_cython/cython_density.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    )
-]
-
-ext_modules += [
-    Extension(
-        "dadapy._cython.cython_overlap",
-        sources=["dadapy/_cython/cython_overlap.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    )
-]
-
-ext_modules += [
-    Extension(
-        "dadapy._cython.cython_grads",
-        sources=["dadapy/_cython/cython_grads.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    )
-]
-
-exts_parallel = [
-    Extension(
-        "dadapy._cython.cython_distances",
-        sources=["dadapy/_cython/cython_distances.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    ),
-    Extension(
-        "dadapy._cython.cython_differentiable_imbalance",
-        sources=["dadapy/_cython/cython_differentiable_imbalance.c"],
-        include_dirs=[get_numpy_include()],
-        define_macros=[
-            ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
-            ("NPY_TARGET_VERSION", "NPY_1_22_API_VERSION"),
-        ],
-    ),
-]
-
-extra_compile_args = (["-fopenmp"],)
-extra_link_args = (["-fopenmp"],)
+ext_modules = [cython_extension(name) for name in serial_modules]
+exts_parallel = [cython_extension(name) for name in parallel_modules]
 
 # Check if the '-fopenmp' flag is supported
-command = 'gcc -fopenmp -E - < /dev/null > /dev/null 2>&1 && echo "OpenMP supported" || echo "OpenMP not supported"'
+openmp_supported = os.system("gcc -fopenmp -E - < /dev/null > /dev/null 2>&1") == 0
 
-if os.system(command) == "OpenMP supported":
+if openmp_supported:
     # If '-fopenmp' is supported, add the extra compile and link arguments
     # Installing cython_distances using OpenMP
     for ext_parallel in exts_parallel:

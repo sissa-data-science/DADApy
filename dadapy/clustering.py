@@ -19,7 +19,6 @@ The *clustering* module contains the *Clustering* class.
 Density-based clustering algorithms are implemented as methods of this class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -28,9 +27,8 @@ import scipy as sp
 
 from dadapy._cython import cython_clustering as cf
 from dadapy._cython import cython_clustering_v2 as cf2
+from dadapy._utils.utils import cores
 from dadapy.density_estimation import DensityEstimation
-
-cores = multiprocessing.cpu_count()
 
 
 class Clustering(DensityEstimation):
@@ -49,7 +47,7 @@ class Clustering(DensityEstimation):
             the estimated log density of the saddle point between each couple of peaks.
         log_den_bord_err (np.ndarray(float)): A matrix of dimensions N_clusters x N_clusters containing
             the estimated error on the log density of the saddle point between each couple of peaks.
-        bord_indices (np.ndarray(float)): A matrix of dimensions N_clusters x N_clusters containing the indices of
+        bord_indices (np.ndarray(int)): A matrix of dimensions N_clusters x N_clusters containing the indices of
             the saddle point between each couple of peaks.
 
     """
@@ -62,6 +60,7 @@ class Clustering(DensityEstimation):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the Clustering class."""
         super().__init__(
@@ -71,6 +70,7 @@ class Clustering(DensityEstimation):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.cluster_indices = None

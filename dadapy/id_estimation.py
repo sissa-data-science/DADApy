@@ -21,7 +21,6 @@ The different algorithms of intrinsic dimension estimation are implemented as me
 
 import copy
 import math
-import multiprocessing
 import warnings
 from functools import partial
 
@@ -31,10 +30,8 @@ from sklearn.metrics import pairwise_distances_chunked
 
 from dadapy._utils import utils as ut
 from dadapy._utils.id_estimation import _binomial_model_validation as bmv
-from dadapy._utils.utils import compute_nn_distances
+from dadapy._utils.utils import compute_nn_distances, cores
 from dadapy.base import Base
-
-cores = multiprocessing.cpu_count()
 
 
 class IdEstimation(Base):
@@ -770,7 +767,7 @@ class IdEstimation(Base):
             print("Select a proper method for id computation")
             return 0
 
-        ks, pv = bmv(k_eff, n_eff, r**self.intrinsic_dim, plot=plot_mv)
+        _, pv = bmv(k_eff, n_eff, r**self.intrinsic_dim, self.rng, plot=plot_mv)
 
         return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, pv
 
@@ -880,7 +877,14 @@ class IdEstimation(Base):
             print("select a proper method for id computation")
             return 0
 
-        ks, pv = bmv(k, n, r**self.intrinsic_dim, plot=plot_mv, k_bootstrap=k_bootstrap)
+        _, pv = bmv(
+            k,
+            n,
+            r**self.intrinsic_dim,
+            self.rng,
+            plot=plot_mv,
+            k_bootstrap=k_bootstrap,
+        )
 
         return self.intrinsic_dim, self.intrinsic_dim_err, self.intrinsic_dim_scale, pv
 

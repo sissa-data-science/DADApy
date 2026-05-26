@@ -22,7 +22,6 @@ the methods in the DensityAdvanced class are based on the sparse neighbourhood g
 in the NeighGraph class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -32,10 +31,9 @@ from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
 from dadapy._utils.density_estimation import return_not_normalised_density_kstarNN
+from dadapy._utils.utils import cores
 from dadapy.density_estimation import DensityEstimation
 from dadapy.neigh_graph import NeighGraph
-
-cores = multiprocessing.cpu_count()
 
 
 class DensityAdvanced(DensityEstimation, NeighGraph):
@@ -74,6 +72,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -83,6 +82,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.grads = None
@@ -432,7 +432,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 self.intrinsic_dim,
                 self.kstar,
                 interpolation=False,
-                bias=False,
             )
             # Normalise density
             log_den -= np.log(self.N)
@@ -476,8 +475,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
             if self.verb:
                 print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
-
-            sec2 = time.time()
 
         sec2 = time.time()
         if self.verb:

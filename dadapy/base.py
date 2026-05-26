@@ -19,15 +19,16 @@ The *base* module contains the *Base* class.
 This class contains essential methods and attributes needed for all other classes.
 """
 
-import multiprocessing
 import time
 import warnings
 
 import numpy as np
 
-from dadapy._utils.utils import compute_nn_distances, from_all_distances_to_nndistances
-
-cores = multiprocessing.cpu_count()
+from dadapy._utils.utils import (
+    compute_nn_distances,
+    cores,
+    from_all_distances_to_nndistances,
+)
 
 
 class Base:
@@ -55,13 +56,13 @@ class Base:
             njobs (int): number of cores to be used
         """
         self.X = coordinates
-        self.maxk = maxk  # remove from here
+        self.maxk = maxk
         self.verb = verbose
         self.n_jobs = n_jobs
         self.dims = None
         self.N = None
-        self.metric = "euclidean"  # remove from here
-        self.period = period  # remove from here
+        self.metric = "euclidean"
+        self.period = period
         self.rng = np.random.default_rng(rng_seed)
 
         if self.X is not None:
@@ -84,7 +85,7 @@ class Base:
             self.dims = coordinates.shape[1]
             self.distances = None
             self.dist_indices = None
-            if self.maxk is None:  # remove from here
+            if self.maxk is None:
                 self.maxk = min(100, self.N - 1)
 
         if distances is not None:
