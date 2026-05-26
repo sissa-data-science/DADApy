@@ -237,7 +237,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
 
         Args:
             comp_covmat (bool): if True, the whole covariance matrix is computed for each gradient and stored in
-                grads_covmat.
+                grads_covmat. Default is 'False'.
             backend (str): 'cython' (default), 'jax', or 'auto' (prefer JAX if available).
             batch_size (int, optional): batch size used by JAX backend to reduce peak memory usage.
             n_jobs (int, optional): number of threads for Cython parallel backend.
@@ -252,7 +252,10 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             self.compute_neigh_vector_diffs()
 
         if self.verb:
-            print("Estimation of the density gradient started")
+            print(
+                "Estimation of the density gradient started "
+                f"(backend requested='{backend}', backend selected='{backend_resolved}')"
+            )
 
         backend_resolved = resolve_backend(
             backend=backend, has_jax=_HAS_JAX, default_backend="cython"

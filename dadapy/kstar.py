@@ -210,7 +210,9 @@ class KStar(IdEstimation):
 
         if self.verb:
             print(
-                f"kstar estimation started, Dthr = {Dthr}, backend = '{backend_resolved}'"
+                "kstar estimation started, "
+                f"Dthr = {Dthr}, backend requested = '{backend}', "
+                f"backend selected = '{backend_resolved}'"
             )
 
         sec = time.time()

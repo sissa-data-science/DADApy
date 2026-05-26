@@ -290,7 +290,8 @@ class NeighGraph(KStar):
 
         if self.verb:
             print(
-                f"Computation of the vector differences started (backend='{backend_resolved}')"
+                "Computation of the vector differences started "
+                f"(backend requested='{backend}', backend selected='{backend_resolved}')"
             )
         sec = time.time()
 
