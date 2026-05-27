@@ -3,17 +3,13 @@ name = "dadapy"
 version = "0.3.4"
 description = "Distance-based Analysis of DAta-manifolds in python"
 authors = [{ name = "DADApy author"}]
-license = {file = "LICENSE"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 
 dependencies = ["numpy>=1.22", "scipy", "scikit-learn", "matplotlib",
-                "seaborn", "tqdm", "networkx",
-                'jax; python_version < "3.9"',
-                'jax==0.4.30; python_version >= "3.9"',
-                'jaxlib; python_version < "3.9"',
-                'jaxlib==0.4.30; python_version >= "3.9"',
-                'flax==0.8.5; python_version >= "3.9"']
+                "seaborn", "tqdm", "networkx", "jax", "flax", "optax"]
 
 [project.urls]
 homepage = "https://github.com/sissa-data-science/DADApy"
@@ -24,8 +20,18 @@ repository = "https://github.com/sissa-data-science/DADApy"
 dev = ["tox", "black", "isort", "pytest"]
 
 [build-system]
-requires = ["setuptools>=61", "numpy>=2.0"]
+requires = ["setuptools>=77", "numpy>=2.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.tox]
-envlist = ["py38", "py39", "py310", "py311", "py312"]
+envlist = ["py310", "py311", "py312", "py313", "py314"]
+
+[tool.coverage.run]
+source_pkgs = ["dadapy"]
+omit = ["dadapy/plot.py"]
+
+[tool.coverage.paths]
+source = [
+    "dadapy/",
+    "*/site-packages/dadapy/",
+]

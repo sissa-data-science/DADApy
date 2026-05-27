@@ -17,7 +17,7 @@
 The *causal_graph* module contains the *CausalGraph* class, which inherits from the *DiffImbalance* class.
 
 The code can be runned on gpu using the command
-    jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
+    jax.config.update('jax_platforms', 'gpu') # set 'cpu' or 'gpu'
 """
 
 import itertools
@@ -451,9 +451,9 @@ class CausalGraph(DiffImbalance):
                     data_A=coords_present,
                     data_B=coords_future,
                     periods_A=self.periods,
-                    periods_B=None
-                    if self.periods is None
-                    else self.periods[target_var],
+                    periods_B=(
+                        None if self.periods is None else self.periods[target_var]
+                    ),
                     seed=self.seed,
                     num_epochs=num_epochs,
                     batches_per_epoch=batches_per_epoch,
@@ -567,7 +567,7 @@ class CausalGraph(DiffImbalance):
         """
         G = nx.DiGraph(adj_matrix)
         auto_sets = []
-        for var in np.arange(adj_matrix.shape[0]):
+        for var in range(adj_matrix.shape[0]):
             auto_sets.append(sorted(nx.ancestors(G, var) | {var}))
         return auto_sets
 
@@ -1090,12 +1090,12 @@ class CausalGraph(DiffImbalance):
 
                     # initialize output variables
                     nvars = 1 + embedding_dim_present + embedding_dim_present
-                    imbs_training[
-                        community_name_cause, community_name_effect
-                    ] = np.zeros((len(time_lags), num_epochs + 1))
-                    weights_final[
-                        community_name_cause, community_name_effect
-                    ] = np.zeros((len(time_lags), nvars))
+                    imbs_training[community_name_cause, community_name_effect] = (
+                        np.zeros((len(time_lags), num_epochs + 1))
+                    )
+                    weights_final[community_name_cause, community_name_effect] = (
+                        np.zeros((len(time_lags), nvars))
+                    )
                     communities_ordered = np.concatenate(
                         (
                             [community_name_cause],  # don't repeat (single slice)
@@ -1124,9 +1124,9 @@ class CausalGraph(DiffImbalance):
                         community_name_cause, community_name_effect
                     ] = [communities_ordered, lags_ordered]
                     if compute_imb_final:
-                        imbs_final[
-                            community_name_cause, community_name_effect
-                        ] = np.zeros(len(time_lags))
+                        imbs_final[community_name_cause, community_name_effect] = (
+                            np.zeros(len(time_lags))
+                        )
                         if compute_error:
                             errors_final[
                                 community_name_cause, community_name_effect
@@ -1297,12 +1297,16 @@ class CausalGraph(DiffImbalance):
                         dii = DiffImbalance(
                             data_A=coords_A,
                             data_B=coords_future,
-                            periods_A=None
-                            if self.periods is None
-                            else self.periods[variables_A],
-                            periods_B=None
-                            if self.periods is None
-                            else self.periods[community_effect],
+                            periods_A=(
+                                None
+                                if self.periods is None
+                                else self.periods[variables_A]
+                            ),
+                            periods_B=(
+                                None
+                                if self.periods is None
+                                else self.periods[community_effect]
+                            ),
                             seed=self.seed,
                             num_epochs=num_epochs,
                             batches_per_epoch=batches_per_epoch,

@@ -15,7 +15,6 @@
 
 """Module for testing utils functions."""
 
-
 import numpy as np
 import pytest
 

@@ -19,7 +19,7 @@ The *diff_imbalance* module contains the *DiffImbalance* class, implemented with
 The only method supposed to be called by the user is 'train', which carries out the automatic optimization ot the
 Differential Information as a function of the weights of the features in the first distance space.
 The code can be runned on gpu using the command
-    jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
+    jax.config.update('jax_platforms', 'gpu') # set 'cpu' or 'gpu'
 """
 
 import warnings
@@ -77,6 +77,22 @@ def _compute_dist2_matrix_scaling(
     diffs *= params_repeated[jnp.newaxis, jnp.newaxis, :]
     dist2_matrix = jnp.sum(diffs * diffs, axis=-1)
     return dist2_matrix
+
+
+class _LeafArrayTrainState(train_state.TrainState):
+    # Variant of flax.training.train_state.TrainState that accepts a leaf
+    # jax.Array as params. flax>=0.9 added an OVERWRITE_WITH_GRADIENT membership
+    # check in apply_gradients that assumes a Mapping/PyTree and breaks on a
+    # leaf array.
+    def apply_gradients(self, *, grads, **kwargs):
+        updates, new_opt_state = self.tx.update(grads, self.opt_state, self.params)
+        new_params = optax.apply_updates(self.params, updates)
+        return self.replace(
+            step=self.step + 1,
+            params=new_params,
+            opt_state=new_opt_state,
+            **kwargs,
+        )
 
 
 # CLASS TO OPTIMIZE THE DIFFERENTIAL INFORMATION IMBALANCE
@@ -858,7 +874,7 @@ class DiffImbalance:
         optimizer = opt_class(self.lr_schedule)
 
         # Initialize training state
-        self.state = train_state.TrainState.create(
+        self.state = _LeafArrayTrainState.create(
             apply_fn=self._distance_A,
             params=self.params_init if self.state is None else self.state.params,
             tx=optimizer,
@@ -1218,7 +1234,7 @@ class DiffImbalance:
         selected_indices = valid_indices[best_valid_indices]
 
         # Convert indices to lists for consistent processing
-        selected_features = [[idx] for idx in selected_indices]
+        selected_features = [[int(idx)] for idx in selected_indices]
 
         # Add the best single feature to results
         best_feature = selected_features[0]
