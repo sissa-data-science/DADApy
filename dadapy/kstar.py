@@ -201,8 +201,10 @@ class KStar(IdEstimation):
             )
             _ = self.compute_id_2NN()
 
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
         if self.distances is None or self.dist_indices is None:
-            self.compute_distances()
+            self.compute_distances(n_jobs=threads)
 
         backend_resolved = resolve_backend(
             backend=backend, has_jax=_HAS_JAX, default_backend="cython"
@@ -222,7 +224,6 @@ class KStar(IdEstimation):
         else:
             dist_indices = self.dist_indices.astype(np.int64, copy=False)
             distances = self.distances.astype(np.float64, copy=False)
-            threads = self.n_jobs if n_jobs is None else n_jobs
             if (
                 threads is not None
                 and threads > 1

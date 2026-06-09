@@ -85,10 +85,10 @@ class DataSets:
             X1_i = np.delete(d1.X, [i], axis=0)
             X2_i = np.delete(d2.X, [i], axis=0)
             _, d1_dist_indices = compute_nn_distances(
-                X1_i, d1.maxk - 1, d1.metric, d1.period
+                X1_i, d1.maxk - 1, d1.metric, d1.period, n_jobs=d1.n_jobs
             )  # remove 1 maxk for jackknife
             _, d2_dist_indices = compute_nn_distances(
-                X2_i, d1.maxk - 1, d1.metric, d1.period
+                X2_i, d1.maxk - 1, d1.metric, d1.period, n_jobs=d2.n_jobs
             )
 
             imb_X1toX2 = _return_imbalance(d1_dist_indices, d2_dist_indices, rng, k=k)

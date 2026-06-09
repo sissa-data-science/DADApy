@@ -298,6 +298,8 @@ class Clustering(DensityEstimation):
             cluster_probability_halo (np.ndarray(float)): probability of each point in X_new to belong to each cluster
                 (currently implemented only 0/1), with halo points. Shape (len(X_new), self.N_clusters).
         """
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
         if distances is not None:
             cross_distances, cross_dist_indices = from_all_distances_to_nndistances(
                 distances, maxk
@@ -308,7 +310,7 @@ class Clustering(DensityEstimation):
             sec = time.time()
             sec2 = sec
             cross_distances, cross_dist_indices = compute_cross_nn_distances(
-                X_new, self.X, maxk, self.metric, self.period, n_jobs
+                X_new, self.X, maxk, self.metric, self.period, threads
             )
             if self.verb:
                 print(

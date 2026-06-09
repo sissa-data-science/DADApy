@@ -141,15 +141,16 @@ class NeighGraph(KStar):
             n_jobs (int, optional): number of threads for Cython parallel backend.
         """
 
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
         if self.kstar is None:
-            self.compute_kstar()
+            self.compute_kstar(n_jobs=threads)
 
         if self.verb:
             print("Computation of the neighbour indices started")
 
         sec = time.time()
 
-        threads = self.n_jobs if n_jobs is None else n_jobs
         if (
             threads is not None
             and threads > 1
@@ -181,18 +182,19 @@ class NeighGraph(KStar):
 
         """
 
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
         if self.distances is None:
-            self.compute_distances()
+            self.compute_distances(n_jobs=threads)
 
         if self.kstar is None:
-            self.compute_kstar()
+            self.compute_kstar(n_jobs=threads)
 
         if self.verb:
             print("Computation of the neighbour distances started")
 
         sec = time.time()
 
-        threads = self.n_jobs if n_jobs is None else n_jobs
         if (
             threads is not None
             and threads > 1
@@ -280,9 +282,11 @@ class NeighGraph(KStar):
             n_jobs (int, optional): number of threads for Cython parallel backend.
 
         """
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
         # compute neighbour indices
         if self.nind_list is None:
-            self.compute_neigh_indices()
+            self.compute_neigh_indices(n_jobs=threads)
 
         backend_resolved = resolve_backend(
             backend=backend, has_jax=_HAS_JAX, default_backend="cython"
@@ -300,7 +304,6 @@ class NeighGraph(KStar):
                 batch_size=batch_size
             )
         else:
-            threads = self.n_jobs if n_jobs is None else n_jobs
             if self.period is None:
                 if (
                     threads is not None
@@ -349,15 +352,16 @@ class NeighGraph(KStar):
 
         """
 
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
         # compute neighbour indices
         if self.nind_list is None:
-            self.compute_neigh_indices()
+            self.compute_neigh_indices(n_jobs=threads)
 
         if self.verb:
             print("Computation of the numbers of common neighbours started")
 
         sec = time.time()
-        threads = self.n_jobs if n_jobs is None else n_jobs
         if (
             threads is not None
             and threads > 1

@@ -318,7 +318,12 @@ class DensityEstimation(KStar):
             _ = self.compute_id_2NN()
 
         cross_distances, _ = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.period
+            X_new,
+            self.X,
+            self.maxk,
+            self.metric,
+            self.period,
+            n_jobs=self.n_jobs,
         )
 
         kstar = np.ones(X_new.shape[0], dtype=int) * k
@@ -351,7 +356,12 @@ class DensityEstimation(KStar):
             _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.period
+            X_new,
+            self.X,
+            self.maxk,
+            self.metric,
+            self.period,
+            n_jobs=self.n_jobs,
         )
 
         kstar = cd._compute_kstar_interp(
@@ -392,7 +402,12 @@ class DensityEstimation(KStar):
             _ = self.compute_id_2NN()
 
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
-            X_new, self.X, self.maxk, self.metric, self.period
+            X_new,
+            self.X,
+            self.maxk,
+            self.metric,
+            self.period,
+            n_jobs=self.n_jobs,
         )
 
         kstar = cd._compute_kstar_interp(

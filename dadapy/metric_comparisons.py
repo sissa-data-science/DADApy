@@ -174,12 +174,12 @@ class MetricComparisons(Base):
         """
         X_ = self.X[:, coords1]
         _, dist_indices_i = compute_nn_distances(
-            X_, self.maxk, self.metric, self.period
+            X_, self.maxk, self.metric, self.period, n_jobs=self.n_jobs
         )
 
         X_ = self.X[:, coords2]
         _, dist_indices_j = compute_nn_distances(
-            X_, self.maxk, self.metric, self.period
+            X_, self.maxk, self.metric, self.period, n_jobs=self.n_jobs
         )
 
         imb_ij = _return_imbalance(dist_indices_i, dist_indices_j, self.rng, k=k)
@@ -568,7 +568,7 @@ class MetricComparisons(Base):
     ):
         if force_computation:
             _, dist_indices = compute_nn_distances(
-                coordinates, k, self.metric, self.period
+                coordinates, k, self.metric, self.period, n_jobs=self.n_jobs
             )
             return dist_indices, k
 
@@ -578,7 +578,7 @@ class MetricComparisons(Base):
             ), "when coords is not None the coordinate matrix \
                 coordinates must be defined."
             X_ = coordinates[:, coords]
-            _, dist_indices = compute_nn_distances(X_, k)
+            _, dist_indices = compute_nn_distances(X_, k, n_jobs=self.n_jobs)
             return dist_indices, k
 
         if k > self.maxk:
@@ -591,7 +591,7 @@ class MetricComparisons(Base):
                 # if coordinates are available and k > maxk distances should be recomputed
                 # and nearest neighbors idenitified up to k.
                 _, dist_indices = compute_nn_distances(
-                    coordinates, k, self.metric, self.period
+                    coordinates, k, self.metric, self.period, n_jobs=self.n_jobs
                 )
                 return dist_indices, k
             else:
@@ -614,7 +614,7 @@ class MetricComparisons(Base):
         else:
             # otherwise compute distances and nearest neighbors up to k.
             _, dist_indices = compute_nn_distances(
-                coordinates, k, self.metric, self.period
+                coordinates, k, self.metric, self.period, n_jobs=self.n_jobs
             )
             return dist_indices, k
 
@@ -878,7 +878,11 @@ class MetricComparisons(Base):
         )
 
         _, ranks_effect_future = compute_nn_distances(
-            effect_future, self.maxk, self.metric, period_effect
+            effect_future,
+            self.maxk,
+            self.metric,
+            period_effect,
+            n_jobs=self.n_jobs,
         )
 
         imbalances = Parallel(n_jobs=self.n_jobs)(
@@ -951,6 +955,7 @@ class MetricComparisons(Base):
             self.maxk,
             self.metric,
             period_present,
+            n_jobs=self.n_jobs,
         )
 
         imb = _return_imbalance(ranks_present, ranks_effect_future, self.rng, k=k)
@@ -1094,7 +1099,11 @@ class MetricComparisons(Base):
             )
 
         _, ranks_effect_future = compute_nn_distances(
-            effect_future, self.maxk, self.metric, period_effect
+            effect_future,
+            self.maxk,
+            self.metric,
+            period_effect,
+            n_jobs=self.n_jobs,
         )
 
         imbalances = Parallel(n_jobs=self.n_jobs)(

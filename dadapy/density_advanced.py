@@ -243,23 +243,25 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             n_jobs (int, optional): number of threads for Cython parallel backend.
 
         """
+        threads = self.n_jobs if n_jobs is None else n_jobs
+
         # compute optimal k
         if self.kstar is None:
-            self.compute_kstar()
+            self.compute_kstar(n_jobs=threads)
 
         # check or compute vector_diffs
         if self.neigh_vector_diffs is None:
-            self.compute_neigh_vector_diffs()
+            self.compute_neigh_vector_diffs(n_jobs=threads)
+
+        backend_resolved = resolve_backend(
+            backend=backend, has_jax=_HAS_JAX, default_backend="cython"
+        )
 
         if self.verb:
             print(
                 "Estimation of the density gradient started "
                 f"(backend requested='{backend}', backend selected='{backend_resolved}')"
             )
-
-        backend_resolved = resolve_backend(
-            backend=backend, has_jax=_HAS_JAX, default_backend="cython"
-        )
 
         sec = time.time()
         if backend_resolved == "jax":
@@ -289,7 +291,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 for i in range(self.N):
                     self.grads_var[i, :] = np.diag(self.grads_covmat[i, :, :])
         else:
-            threads = self.n_jobs if n_jobs is None else n_jobs
             if comp_covmat is False:
                 if (
                     threads is not None
@@ -434,15 +435,16 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             comp_Fij_var (bool): if False, Fij_var_array is set to None and grads_covmat is not computed.
             n_jobs (int, optional): number of threads for Cython parallel backend.
         """
+        threads = self.n_jobs if n_jobs is None else n_jobs
 
         if comp_Fij_var is False:
             self.Fij_var_array = None
             if self.grads is None:
-                self.compute_grads(comp_covmat=False)
+                self.compute_grads(comp_covmat=False, n_jobs=threads)
 
         elif comp_Fij_var is True:
             if self.grads_covmat is None:
-                self.compute_grads(comp_covmat=True)
+                self.compute_grads(comp_covmat=True, n_jobs=threads)
             # check or compute common_neighs
             if self.pearson_array is None:
                 self.compute_pearson(similarity_method=similarity_method)
@@ -454,8 +456,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 "Estimation of the gradient semisum (linear) corrections deltaFij to the log-density started"
             )
         sec = time.time()
-
-        threads = self.n_jobs if n_jobs is None else n_jobs
 
         if (
             comp_Fij_var is True
