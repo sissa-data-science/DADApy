@@ -152,11 +152,8 @@ class DiffImbalance:
             not None) starting from the value provided with the attribute learning_rate. The available schedules are: 
             cosine decay ("cos"), or constant learning rate (None). Default is None (constant learning rate).
         learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
-            Default is None, for which the learning rate is dumped to zero. If learning_rate_decay=None, this 
+            Default is None, for which the learning rate is dumped to zero. If learning_rate_decay=None, this
             argument is ignored.
-        num_points_rows (int): number of points sampled from the rows of rank and distance matrices. In case of large
-            datasets, choosing num_points_rows < n_points can significantly speed up the training. The default is
-            None, for which num_points_rows == n_points.
     """
 
     def __init__(
@@ -180,7 +177,6 @@ class DiffImbalance:
         learning_rate=1e-2,
         learning_rate_decay=None,
         learning_rate_final=None,
-        num_points_rows=None,
     ):
         """Initialise the DiffImbalance class."""
         self.nfeatures_A = data_A.shape[1]
@@ -207,41 +203,19 @@ class DiffImbalance:
 
         # initialize jax random generator
         self.key = jax.random.PRNGKey(seed)
-        self.key, subkey = jax.random.split(self.key, num=2)
 
         # initialize spaces A and B
         self.data_A = data_A
         self.data_B = data_B
         self.distances_B = distances_B
 
-        # option to speed up DII calculation by decimating rows (rectangular distance matrices)
-        if num_points_rows is not None:
-            assert num_points_rows < self.data_A.shape[0], (
-                f"num_points_rows ({num_points_rows}) should be smaller than the number "
-                + f"of points in the data set ({self.data_A.shape[0]}) or set to None."
-            )
-            # decimate rows but not columns, and keep same indices in upper left square matrix
-            indices_rows = jax.random.choice(
-                subkey,
-                jnp.arange(data_A.shape[0]),
-                shape=(num_points_rows,),
-                replace=False,
-            )
-            indices_columns = jnp.delete(jnp.arange(data_A.shape[0]), indices_rows)
-            indices_columns = jnp.concatenate((indices_rows, indices_columns))
-        else:
-            indices_rows = jnp.arange(data_A.shape[0])
-            indices_columns = +indices_rows
-
-        self.data_A_rows = data_A[indices_rows]
-        self.data_A_columns = data_A[indices_columns]
+        # rows and columns of the distance/rank matrices span the full data set
+        # (could be modified for rectangular implementation)
+        self.data_A_rows = data_A
+        self.data_A_columns = data_A
         if self.distances_B is None:  # space B provided as features
-            self.data_B_rows = data_B[indices_rows]
-            self.data_B_columns = data_B[indices_columns]
-        else:  # space B provided as distances
-            self.distances_B_subsampled = self.distances_B[indices_rows][
-                :, indices_columns
-            ]
+            self.data_B_rows = data_B
+            self.data_B_columns = data_B
 
         self.nrows = self.data_A_rows.shape[0]
         self.ncolumns = self.data_A_columns.shape[0]
@@ -279,7 +253,6 @@ class DiffImbalance:
         self.learning_rate = learning_rate
         self.learning_rate_decay = learning_rate_decay
         self.learning_rate_final = learning_rate_final
-        self.num_points_rows = num_points_rows
         self.mask = None
 
         self.state = None
@@ -304,6 +277,13 @@ class DiffImbalance:
             self.k > 0
         ), f"'k' must be larger than or equal to 1."
         assert isinstance(k, int), f"'k' must be a positive integer."
+        # 'k' must be smaller than the number of columns of the smallest distance matrix
+        # in which neighbors are looked up. With mini-batches this is nrows // batches_per_epoch
+        assert self.k < self.nrows // self.batches_per_epoch, (
+            f"'k' ({self.k}) must be smaller than the number of points per mini-batch "
+            + f"(nrows // batches_per_epoch = {self.nrows // self.batches_per_epoch}), "
+            + f"so that the k-th neighbor exists when lambda is computed."
+        )
         if self.params_groups is not None:
             n_vars = np.sum(self.params_groups)
             assert n_vars == self.nfeatures_A, (
@@ -325,8 +305,8 @@ class DiffImbalance:
                 batch_columns=self.data_B_columns,
                 periods=self.periods_B,
             )
-        else:  # input B provided as features
-            self.ranks_B = self.distances_B_subsampled.argsort(axis=1).argsort(axis=1)
+        else:  # input B provided as distances
+            self.ranks_B = self.distances_B.argsort(axis=1).argsort(axis=1)
 
         # set method to compute lambda (adaptive or point-adaptive)
         if point_adapt_lambda:
@@ -375,12 +355,12 @@ class DiffImbalance:
                     computed adaptively for each point, as the fraction ('lambda_factor', default: 1/10) of the
                     squared distance of the neighbor of order k.
             """
-            k_max_allowed = self.k_max_allowed
-            if dist2_matrix.shape[1] < self.k_max_allowed:
-                k_max_allowed = dist2_matrix.shape[1]
+            # Request at least k columns from top_k, so that the k-th neighbor is
+            # always available, but never more columns than the matrix has
+            k_max_allowed = min(max(self.k_max_allowed, k), dist2_matrix.shape[1])
             smallest_dist2, _ = jax.lax.top_k(-dist2_matrix, k_max_allowed)
             current_lambdas = (
-                -smallest_dist2[:, self.k - 1] * self.lambda_factor
+                -smallest_dist2[:, k - 1] * self.lambda_factor
             )
 
             # DON'T DELETE: Adaptive scheme of cython code
@@ -774,8 +754,8 @@ class DiffImbalance:
                 self.ranks_B,
             )
         assert not jnp.isnan(self.state.params).any(), (
-            "All weights were set to zero during the optimization. "
-            + "Reduce the value of l1_strength."
+            "Something went wrong in the optimization. This might be due to a too large value "
+            + "of l1_strength or to degeneracies in the dataset, resulting in lambda = 0."
         )
 
         return self.state.params, imb
@@ -920,8 +900,7 @@ class DiffImbalance:
         If the training was carried out with mini-batches of small size, this method allows computing a better
         estimate of the DII than the final DII value produced by 'train'.
         When 'compute_error=False' and 'discard_close_ind=0', the final DII produced by 'train' is the same computed
-        by 'return_final_dii' if the training was performed without mini-batches (batches_per_epoch=1) and without
-        row subsampling ('num_points_rows=None').
+        by 'return_final_dii' if the training was performed without mini-batches (batches_per_epoch=1).
         The value of k for computing the smoothing parameter lambda is set in order to keep the same ratio k/N used
         in the training phase (if batches_per_epoch > 1, N is the size of mini-batches used during the training).
 
@@ -1151,7 +1130,6 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 learning_rate_final = self.learning_rate_final,
-                num_points_rows=self.num_points_rows,
             )
 
             # Set initial parameters and train
@@ -1290,7 +1268,6 @@ class DiffImbalance:
                             learning_rate=self.learning_rate,
                             learning_rate_decay=self.learning_rate_decay,
                             learning_rate_final = self.learning_rate_final,
-                            num_points_rows=self.num_points_rows,
                         )
 
                         # Set initial parameters and train
@@ -1390,7 +1367,6 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 learning_rate_final = self.learning_rate_final,
-                num_points_rows=self.num_points_rows,
             )
 
             # Set initial parameters and train
@@ -1582,7 +1558,6 @@ class DiffImbalance:
                         learning_rate=self.learning_rate,
                         learning_rate_decay=self.learning_rate_decay,
                         learning_rate_final = self.learning_rate_final,
-                        num_points_rows=self.num_points_rows,
                     )
 
                     # Set initial parameters and train
@@ -1679,7 +1654,6 @@ class DiffImbalance:
                 learning_rate=self.learning_rate,
                 learning_rate_decay=self.learning_rate_decay,
                 learning_rate_final = self.learning_rate_final,
-                num_points_rows=self.num_points_rows,
             )
 
             # Set initial parameters and train
