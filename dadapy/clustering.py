@@ -124,7 +124,7 @@ class Clustering(DensityEstimation):
         ), "log error density contains nan values"
 
         if self.verb:
-            print("Clustering started")
+            print("Clustering started with Z = {}".format(Z))
 
         if v2 is True:
             warnings.warn(
@@ -391,7 +391,7 @@ class Clustering(DensityEstimation):
         ), "log error density contains nan values"
 
         if self.verb:
-            print("Clustering started")
+            print("Clustering started with Z = {}".format(Z))
 
         if v2 is True:
             warnings.warn(
