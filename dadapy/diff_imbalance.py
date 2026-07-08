@@ -77,6 +77,28 @@ def _compute_dist2_matrix_scaling(
     return dist2_matrix
 
 
+def _columns_with_ties(data):
+    """Finds the columns (features) of a data matrix that contain repeated values.
+
+    A feature with ties (identical values in two or more points) can make the distance of
+    a point to its k-th neighbor vanish when that feature dominates the metric, which in turn
+    sets the smoothing parameter lambda to zero and breaks the DII optimization.
+
+    Args:
+        data (np.array(float), jnp.array(float)): matrix of shape (n_points, n_features).
+
+    Returns:
+        cols_with_ties (list(int)): sorted indices of the columns that contain at least one
+            repeated value. Empty if every column has only distinct values.
+    """
+    data = np.asarray(data)
+    n_points = data.shape[0]
+    cols_with_ties = [
+        int(j) for j in range(data.shape[1]) if np.unique(data[:, j]).size < n_points
+    ]
+    return cols_with_ties
+
+
 # CLASS TO OPTIMIZE THE DIFFERENTIAL INFORMATION IMBALANCE
 # ----------------------------------------------------------------------------------------------
 
@@ -259,6 +281,13 @@ class DiffImbalance:
         self._distance_A = _compute_dist2_matrix_scaling  # TODO: assign other functions if other distances d_A are chosen
 
         # generic checks and warnings
+        cols_with_ties = _columns_with_ties(data_A)
+        if cols_with_ties:
+            warnings.warn(
+                f"Variables {cols_with_ties} have repeated values in data_A. This can result "
+                + "in setting the smoothing parameter lambda to zero and make the optimization "
+                + "fail. Remove the repeated values before continuing."
+            )
         assert self.nrows >= batches_per_epoch, (
             f"Cannot extract {batches_per_epoch} minibatches "
             + f"from {self.nrows} samples."
@@ -618,7 +647,9 @@ class DiffImbalance:
         self._compute_point_adapt_lambdas = jax.jit(
             _compute_point_adapt_lambdas, static_argnames="k"
         )
-        self._compute_adapt_lambda = jax.jit(_compute_adapt_lambda)
+        self._compute_adapt_lambda = jax.jit(
+            _compute_adapt_lambda, static_argnames="k"
+        )
         self._compute_training_diff_imbalance = jax.jit(
             _compute_training_diff_imbalance, static_argnames="k"
         )
@@ -783,11 +814,17 @@ class DiffImbalance:
             alpha = 0.0
             if self.learning_rate_final is not None:
                 alpha = self.learning_rate_final / self.learning_rate
-            self.lr_schedule = optax.cosine_decay_schedule(
-                init_value=self.learning_rate,
-                decay_steps=self.num_epochs * self.batches_per_epoch,
-                alpha=alpha
-            )
+            decay_steps = self.num_epochs * self.batches_per_epoch
+            # With num_epochs=0 there are no training steps so the schedule is
+            # never queried; fall back to a constant schedule
+            if decay_steps > 0:
+                self.lr_schedule = optax.cosine_decay_schedule(
+                    init_value=self.learning_rate,
+                    decay_steps=decay_steps,
+                    alpha=alpha,
+                )
+            else:
+                self.lr_schedule = optax.constant_schedule(value=self.learning_rate)
         elif self.learning_rate_decay is None:
             self.lr_schedule = optax.constant_schedule(value=self.learning_rate)
         else:
@@ -1177,7 +1214,7 @@ class DiffImbalance:
         valid_features = np.isfinite(single_feature_diis)
         if not np.any(valid_features):
             print("ERROR: All single features failed during training!")
-            return [], [], [], []
+            return [], [], [], [], []
 
         # Select the best n_best single features (only from valid ones)
         valid_indices = np.where(valid_features)[0]
@@ -1186,8 +1223,8 @@ class DiffImbalance:
         best_valid_indices = np.argsort(valid_diis)[:n_best_actual]
         selected_indices = valid_indices[best_valid_indices]
 
-        # Convert indices to lists for consistent processing
-        selected_features = [[idx] for idx in selected_indices]
+        # Convert indices to lists for consistent processing 
+        selected_features = [[int(idx)] for idx in selected_indices]
 
         # Add the best single feature to results
         best_feature = selected_features[0]
@@ -1254,8 +1291,7 @@ class DiffImbalance:
                             distances_B=self.distances_B,
                             periods_A=self.periods_A,
                             periods_B=self.periods_B,
-                            seed=seed
-                            + len(candidate_features),  # Ensure reproducibility
+                            seed=seed,
                             num_epochs=self.num_epochs,
                             batches_per_epoch=self.batches_per_epoch,
                             track_full_loss=self.track_full_loss,
@@ -1534,9 +1570,6 @@ class DiffImbalance:
                     # Initialize weights for training: inherit from parent class
                     params_init = jnp.where(mask, self.params_init, 0.0)
 
-                    # Reset the random seed for consistent mini-batch sequence
-                    training_seed = seed + len(candidate_features)
-
                     # Create a copy of the current object for training
                     dii_copy = DiffImbalance(
                         data_A=self.data_A,
@@ -1544,7 +1577,7 @@ class DiffImbalance:
                         distances_B=self.distances_B,
                         periods_A=self.periods_A,
                         periods_B=self.periods_B,
-                        seed=training_seed,
+                        seed=seed,
                         num_epochs=num_epochs_now,
                         batches_per_epoch=self.batches_per_epoch,
                         track_full_loss=self.track_full_loss,
