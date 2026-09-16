@@ -421,7 +421,7 @@ class DensityEstimation(KStar):
         )
 
         log_den, log_den_err, _ = return_not_normalised_density_PAk(
-            cross_distances, self.intrinsic_dim, kstar, self.maxk, interpolation=True
+            cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
 
         # Normalise density

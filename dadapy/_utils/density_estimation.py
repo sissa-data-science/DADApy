@@ -77,7 +77,7 @@ def return_not_normalised_density_PAk(
         logkstars = np.log(kstar, dtype=float)
         log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
     else:
-        logkstars = 1.0 / np.log(kstar - 1, dtype=float)
+        logkstars = np.log(kstar - 1, dtype=float)
         log_den_err = np.sqrt(
             (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
         )
@@ -156,7 +156,7 @@ def return_not_normalised_density_PAk_optimized(
         logkstars = np.log(kstar, dtype=float)
         log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
     else:
-        logkstars = 1.0 / np.log(kstar - 1, dtype=float)
+        logkstars = np.log(kstar - 1, dtype=float)
         log_den_err = np.sqrt(
             (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
         )
