@@ -301,22 +301,25 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_interpolated_density_kNN(self, X_new, k):
+    def return_interpolated_density_kNN(self, X_new, k, return_kstar=False):
         """Return the kNN density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
             k (int): the number of neighbours considered for the kNN estimator
+            return_kstar (bool): if True, also return the number of neighbours used for each point
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
+            kstar (np.ndarray(int), optional): number of neighbours used for each point
         """
         assert self.X is not None
 
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
 
+        sec = time.time()
         cross_distances, _ = compute_cross_nn_distances(
             X_new,
             self.X,
@@ -325,36 +328,57 @@ class DensityEstimation(KStar):
             self.period,
             n_jobs=self.n_jobs,
         )
+        if self.verb:
+            print(
+                "{0:0.2f} seconds computing the cross distances".format(
+                    time.time() - sec
+                )
+            )
 
         kstar = np.ones(X_new.shape[0], dtype=int) * k
 
+        sec = time.time()
         log_den, log_den_err, _ = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
+        if self.verb:
+            print(
+                "{0:0.2f} seconds computing the interpolated density".format(
+                    time.time() - sec
+                )
+            )
 
         # Normalise density
         log_den -= np.log(self.N)
+
+        if return_kstar:
+            return log_den, log_den_err, kstar
 
         return log_den, log_den_err
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_interpolated_density_kstarNN(self, X_new, Dthr=23.92812698):
+    def return_interpolated_density_kstarNN(
+        self, X_new, Dthr=23.92812698, return_kstar=False
+    ):
         """Return the kstarNN density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
             Dthr: Likelihood ratio parameter used to compute optimal k
+            return_kstar (bool): if True, also return the optimal number of neighbours for each point
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
+            kstar (np.ndarray(int), optional): optimal number of neighbours for each point
         """
         assert self.X is not None
 
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
 
+        sec = time.time()
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new,
             self.X,
@@ -363,7 +387,14 @@ class DensityEstimation(KStar):
             self.period,
             n_jobs=self.n_jobs,
         )
+        if self.verb:
+            print(
+                "{0:0.2f} seconds computing the cross distances".format(
+                    time.time() - sec
+                )
+            )
 
+        sec = time.time()
         kstar = cd._compute_kstar_interp(
             self.intrinsic_dim,
             X_new.shape[0],
@@ -373,34 +404,50 @@ class DensityEstimation(KStar):
             cross_distances,
             self.distances,
         )
+        if self.verb:
+            print("{0:0.2f} seconds computing kstar".format(time.time() - sec))
 
         log_den, log_den_err, _ = return_not_normalised_density_kstarNN(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
+        if self.verb:
+            print(
+                "{0:0.2f} seconds computing the interpolated density".format(
+                    time.time() - sec
+                )
+            )
 
         # Normalise density
         log_den -= np.log(self.N)
+
+        if return_kstar:
+            return log_den, log_den_err, kstar
 
         return log_den, log_den_err
 
     # ----------------------------------------------------------------------------------------------
 
-    def return_interpolated_density_PAk(self, X_new, Dthr=23.92812698):
+    def return_interpolated_density_PAk(
+        self, X_new, Dthr=23.92812698, return_kstar=False
+    ):
         """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
             Dthr: Likelihood ratio parameter used to compute optimal k
+            return_kstar (bool): if True, also return the optimal number of neighbours for each point
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
             log_den_err (np.ndarray(float)): error on log density estimates
+            kstar (np.ndarray(int), optional): optimal number of neighbours for each point
         """
         assert self.X is not None
 
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
 
+        sec = time.time()
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new,
             self.X,
@@ -409,7 +456,14 @@ class DensityEstimation(KStar):
             self.period,
             n_jobs=self.n_jobs,
         )
+        if self.verb:
+            print(
+                "{0:0.2f} seconds computing the cross distances".format(
+                    time.time() - sec
+                )
+            )
 
+        sec = time.time()
         kstar = cd._compute_kstar_interp(
             self.intrinsic_dim,
             X_new.shape[0],
@@ -419,12 +473,24 @@ class DensityEstimation(KStar):
             cross_distances,
             self.distances,
         )
+        if self.verb:
+            print("{0:0.2f} seconds computing kstar".format(time.time() - sec))
 
+        sec = time.time()
         log_den, log_den_err, _ = return_not_normalised_density_PAk(
             cross_distances, self.intrinsic_dim, kstar, interpolation=True
         )
+        if self.verb:
+            print(
+                "{0:0.2f} seconds computing the interpolated density".format(
+                    time.time() - sec
+                )
+            )
 
         # Normalise density
         log_den -= np.log(self.N)
+
+        if return_kstar:
+            return log_den, log_den_err, kstar
 
         return log_den, log_den_err
