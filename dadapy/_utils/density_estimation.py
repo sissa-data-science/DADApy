@@ -34,7 +34,6 @@ def return_not_normalised_density_kstarNN(
     prefactor = np.exp(
         intrinsic_dim / 2.0 * np.log(np.pi) - gammaln((intrinsic_dim + 2) / 2)
     )
-    log_den_min = 9.9e300
 
     log_den = np.log(kstar, dtype=float)
     log_den_err = 1.0 / np.sqrt(kstar, dtype=float)
@@ -51,9 +50,6 @@ def return_not_normalised_density_kstarNN(
             np.log(prefactor) + intrinsic_dim * np.log(distances[i, kstar[i]])
         )
 
-        if log_den[i] < log_den_min:
-            log_den_min = log_den[i]
-
     return log_den, log_den_err, dc
 
 
@@ -66,7 +62,6 @@ def return_not_normalised_density_PAk(
     prefactor = np.exp(
         intrinsic_dim / 2.0 * np.log(np.pi) - gammaln((intrinsic_dim + 2.0) / 2.0)
     )
-    log_den_min = 9.9e300
 
     logkstars = np.log(kstar, dtype=float)
     log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
@@ -131,8 +126,6 @@ def return_not_normalised_density_PAk(
             log_den[i] = cml._nrmaxl(rr, kstar[i], vi)
         else:
             log_den[i] = rr
-        if log_den[i] < log_den_min:
-            log_den_min = log_den[i]
 
     return log_den, log_den_err, dc
 

@@ -190,7 +190,6 @@ class DensityEstimation(KStar):
         dc = np.zeros(self.N, dtype=float)
         log_den = np.zeros(self.N, dtype=float)
         log_den_err = np.zeros(self.N, dtype=float)
-        log_den_min = 9.9e300
 
         for i in range(self.N):
             k = self.kstar[i]
@@ -201,11 +200,6 @@ class DensityEstimation(KStar):
                 jj = self.dist_indices[i, j]
                 log_den_err[i] = log_den_err[i] + (self.kstar[jj] - k) ** 2
             log_den_err[i] = np.sqrt(log_den_err[i] / k)
-
-            if log_den[i] < log_den_min:
-                log_den_min = log_den[i]
-
-            # Normalise density
 
         self.log_den = log_den
         self.log_den_err = log_den_err
