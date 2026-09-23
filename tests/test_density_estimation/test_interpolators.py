@@ -35,14 +35,34 @@ from dadapy import DensityEstimation
         pytest.param(
             "compute_density_kstarNN",
             "return_interpolated_density_kstarNN",
-            {},
+            {"alpha": 0.05},
             id="kstarNN",
         ),
         pytest.param(
             "compute_density_PAk",
             "return_interpolated_density_PAk",
-            {},
+            {"alpha": 0.05},
             id="PAk",
+        ),
+        pytest.param(
+            "compute_density_kstarNN",
+            "return_interpolated_density_kstarNN",
+            {
+                "alpha": 0.05,
+                "bonferroni_deloc": True,
+                "bonferroni_loc": True,
+            },
+            id="kstarNN-bonferroni",
+        ),
+        pytest.param(
+            "compute_density_PAk",
+            "return_interpolated_density_PAk",
+            {
+                "alpha": 0.05,
+                "bonferroni_deloc": True,
+                "bonferroni_loc": True,
+            },
+            id="PAk-bonferroni",
         ),
     ],
 )

@@ -103,7 +103,8 @@ def test_compute_neigh_indices():
 def test_compute_neigh_indices_parallel():
     """Test the compute_neigh_indices method with Cython parallel backend."""
     neigh_graph = NeighGraph(coordinates=data, n_jobs=2)
-    neigh_graph.compute_kstar(Dthr=0.0)
+    neigh_graph.compute_kstar(alpha=1.0)
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
     neigh_graph.compute_neigh_indices(n_jobs=2)
     assert np.array_equal(neigh_graph.nind_list, expected_nint_list)
     assert np.array_equal(neigh_graph.nind_iptr, expected_nind_iprt)
@@ -126,7 +127,8 @@ def test_compute_neigh_dists():
 def test_compute_neigh_dists_parallel():
     """Test the compute_neigh_dists method with Cython parallel backend."""
     neigh_graph = NeighGraph(coordinates=data, n_jobs=2)
-    neigh_graph.compute_kstar(Dthr=0.0)
+    neigh_graph.compute_kstar(alpha=1.0)
+    neigh_graph.set_kstar([2, 2, 2, 2, 2, 2])
     neigh_graph.compute_neigh_dists(n_jobs=2)
     assert np.allclose(neigh_graph.neigh_dists, expected_neigh_dists)
 
@@ -159,7 +161,7 @@ def test_compute_neigh_vector_diffs():
 def test_compute_neigh_vector_diffs_auto_backend():
     """Test that auto backend is consistent with cython backend."""
     neigh_graph = NeighGraph(coordinates=data)
-    neigh_graph.compute_kstar(Dthr=0.0)
+    neigh_graph.compute_kstar(alpha=1.0)
     neigh_graph.compute_neigh_vector_diffs(backend="cython")
     expected = neigh_graph.neigh_vector_diffs.copy()
     neigh_graph.compute_neigh_vector_diffs(backend="auto")
@@ -169,7 +171,7 @@ def test_compute_neigh_vector_diffs_auto_backend():
 def test_compute_neigh_vector_diffs_jax_backend():
     """Test the jax backend or the expected error if jax is unavailable."""
     neigh_graph = NeighGraph(coordinates=data)
-    neigh_graph.compute_kstar(Dthr=0.0)
+    neigh_graph.compute_kstar(alpha=1.0)
 
     if HAS_JAX:
         neigh_graph.compute_neigh_vector_diffs(backend="cython")
