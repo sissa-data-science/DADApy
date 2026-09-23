@@ -24,6 +24,7 @@ import warnings
 
 import numpy as np
 from scipy.special import gammaln
+from scipy.stats import chi2
 
 from dadapy._cython import cython_density as cd
 from dadapy._utils import utils as ut
@@ -39,7 +40,6 @@ except ModuleNotFoundError:
     jnp = None
     _HAS_JAX = False
 
-cores = multiprocessing.cpu_count()
 
 class KStar(IdEstimation):
     """Computes for each point an optimal choice - kstar - of the neighbourhood size.
@@ -110,12 +110,14 @@ class KStar(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def compute_kstar(
-        self, Dthr=23.92812698,
+        self,
+        alpha=1e-6,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
         backend="cython",
         batch_size=None,
-        n_jobs=None
+        n_jobs=None,
     ):
-    def compute_kstar(self, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False):
         """Compute an optimal choice of the neighbourhood size k for each point.
 
         Args:
@@ -131,15 +133,23 @@ class KStar(IdEstimation):
 
         """
         return self._compute_kstar(
-            Dthr=Dthr,
+            alpha=alpha,
+            bonferroni_deloc=bonferroni_deloc,
+            bonferroni_loc=bonferroni_loc,
             backend=backend,
             batch_size=batch_size,
-            n_jobs=n_jobs
+            n_jobs=n_jobs,
         )
 
     # ----------------------------------------------------------------------------------------------
 
-    def _compute_kstar_jax(self, Dthr=23.92812698, batch_size=None):
+    def _compute_kstar_jax(
+        self,
+        alpha=1e-6,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
+        batch_size=None,
+    ):
         if not _HAS_JAX:
             raise ModuleNotFoundError(
                 "JAX is required for backend='jax'. Install `jax` and `jaxlib`."
@@ -156,14 +166,19 @@ class KStar(IdEstimation):
         batch_size = int(max(1, min(batch_size, self.N)))
 
         id_sel = float(self.intrinsic_dim)
-        prefactor = np.exp(
-            id_sel / 2.0 * np.log(np.pi) - gammaln((id_sel + 2.0) / 2.0)
-        )
+        prefactor = np.exp(id_sel / 2.0 * np.log(np.pi) - gammaln((id_sel + 2.0) / 2.0))
 
         dist_indices = jnp.asarray(self.dist_indices.astype(np.int64, copy=False))
         distances = jnp.asarray(self.distances.astype(np.float64, copy=False))
         j_values = jnp.arange(4, self.maxk, dtype=dist_indices.dtype)
         ksels = j_values - 1
+
+        alpha_eff = alpha / self.N if bonferroni_deloc else alpha
+        if bonferroni_loc:
+            test_numbers = np.arange(1, self.maxk - 3, dtype=float)
+            thresholds = jnp.asarray(chi2.isf(alpha_eff / test_numbers, df=1))
+        else:
+            thresholds = chi2.isf(alpha_eff, df=1)
 
         kstar = np.empty(self.N, dtype=np.int64)
         for start in range(0, self.N, batch_size):
@@ -175,16 +190,15 @@ class KStar(IdEstimation):
             neigh_rows = dist_indices[row_grid, j_values[None, :]]
             vvj = prefactor * jnp.power(distances[neigh_rows, ksels[None, :]], id_sel)
 
-            dL = -2.0 * ksels[None, :] * (
-                jnp.log(vvi)
-                + jnp.log(vvj)
-                - 2.0 * jnp.log(vvi + vvj)
-                + np.log(4.0)
+            dL = (
+                -2.0
+                * ksels[None, :]
+                * (jnp.log(vvi) + jnp.log(vvj) - 2.0 * jnp.log(vvi + vvj) + np.log(4.0))
             )
-            reached = dL >= Dthr
+            reached = dL > thresholds
             first_reached = jnp.argmax(reached, axis=1)
             has_reached = jnp.any(reached, axis=1)
-            batch_kstar = jnp.where(has_reached, first_reached + 2, self.maxk - 1)
+            batch_kstar = jnp.where(has_reached, first_reached + 3, self.maxk - 1)
             kstar[start:stop] = np.asarray(batch_kstar, dtype=np.int64)
 
         return kstar
@@ -192,12 +206,20 @@ class KStar(IdEstimation):
     # ----------------------------------------------------------------------------------------------
 
     def _compute_kstar(
-        self, Dthr=23.92812698, backend="cython", batch_size=None, n_jobs=None
+        self,
+        alpha=1e-6,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
+        backend="cython",
+        batch_size=None,
+        n_jobs=None,
     ):
         """Compute an optimal choice of the neighbourhood size k for each point.
 
         Args:
-            Dthr (float): likelihood-ratio threshold.
+            alpha (float): significance level of the likelihood-ratio test.
+            bonferroni_deloc (bool): whether to correct for tests across data points.
+            bonferroni_loc (bool): whether to correct for successive neighbourhood tests.
             backend (str): 'cython', 'jax', or 'auto'.
             batch_size (int or None): used only by backend='jax'.
             n_jobs (int or None): used by backend='cython' if an OpenMP-enabled Cython kernel is available.
@@ -222,15 +244,21 @@ class KStar(IdEstimation):
         if self.verb:
             print(
                 "kstar estimation started, "
-                f"Dthr = {Dthr}, backend requested = '{backend}', "
+                f"alpha = {alpha}, bonferroni_deloc = {bonferroni_deloc}, "
+                f"bonferroni_loc = {bonferroni_loc}, "
+                f"backend requested = '{backend}', "
                 f"backend selected = '{backend_resolved}'"
             )
-            print(f"kstar estimation started, alpha = {alpha}")
 
         sec = time.time()
 
         if backend_resolved == "jax":
-            kstar = self._compute_kstar_jax(Dthr=Dthr, batch_size=batch_size)
+            kstar = self._compute_kstar_jax(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+                batch_size=batch_size,
+            )
         else:
             dist_indices = self.dist_indices.astype(np.int64, copy=False)
             distances = self.distances.astype(np.float64, copy=False)
@@ -243,9 +271,11 @@ class KStar(IdEstimation):
                     self.intrinsic_dim,
                     self.N,
                     self.maxk,
-                    Dthr,
+                    alpha,
                     dist_indices,
                     distances,
+                    bonferroni_deloc,
+                    bonferroni_loc,
                     int(threads),
                 )
             else:
@@ -253,20 +283,12 @@ class KStar(IdEstimation):
                     self.intrinsic_dim,
                     self.N,
                     self.maxk,
-                    Dthr,
+                    alpha,
                     dist_indices,
                     distances,
+                    bonferroni_deloc,
+                    bonferroni_loc,
                 )
-        kstar = cd._compute_kstar(
-            self.intrinsic_dim,
-            self.N,
-            self.maxk,
-            alpha,
-            self.dist_indices.astype("int64"),
-            self.distances.astype("float64"),
-            bonferroni_deloc,
-            bonferroni_loc,
-        )
 
         self.set_kstar(kstar)
 
@@ -292,7 +314,7 @@ class KStar(IdEstimation):
         Args:
             initial_id (float): initial estimate of the id default uses 2NN
             n_iter (int): number of iteration
-            alpha (float): threshold value for the kstar test
+            alpha (float): significance level of the kstar test
             d0 (float): minimum id value
             d1 (float): maximum id value
             eps (float): threshold for the convergence of the Gride algorithm
@@ -311,7 +333,11 @@ class KStar(IdEstimation):
             if self.distances is None:
                 self.compute_distances()
         # compute kstar
-        self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
+        self.compute_kstar(
+            alpha=alpha,
+            bonferroni_deloc=bonferroni_deloc,
+            bonferroni_loc=bonferroni_loc,
+        )
 
         ids = [self.intrinsic_dim]
         ids_err = [self.intrinsic_dim_err]
@@ -342,7 +368,11 @@ class KStar(IdEstimation):
             )
             self.set_id(gride_id)
             log_lik = -ut._neg_loglik(self.dtype, gride_id, mus, n1s, n2s)
-            self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
 
             ids.append(gride_id)
             ids_err.append(id_err)
@@ -384,7 +414,7 @@ class KStar(IdEstimation):
         Args:
             initial_id (float): initial estimate of the id default uses 2NN
             n_iter (int): number of iteration
-            alpha (float): threshold value for the kstar test
+            alpha (float): significance level of the kstar test
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
              at each iteration
@@ -407,7 +437,11 @@ class KStar(IdEstimation):
             self.set_id(initial_id)
             if self.distances is None:
                 self.compute_distances()
-        self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
+        self.compute_kstar(
+            alpha=alpha,
+            bonferroni_deloc=bonferroni_deloc,
+            bonferroni_loc=bonferroni_loc,
+        )
 
         ids = [self.intrinsic_dim]
         ids_err = [self.intrinsic_dim_err]
@@ -431,7 +465,11 @@ class KStar(IdEstimation):
             """
 
             # update the k*
-            self.compute_kstar(alpha, bonferroni_deloc, bonferroni_loc)
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
             # store the obtained values
             ids.append(ide)
             ids_err.append(id_err)
