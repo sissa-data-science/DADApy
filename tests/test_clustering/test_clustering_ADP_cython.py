@@ -208,16 +208,15 @@ def test_cython_compute_clustering_no_garbage_assignments_minimal_case():
         dist_indices[i] = [i, higher] + others
 
     out = cf._compute_clustering(
-        2.0,
-        False,
+        2.0,        # Z
         kstar,
         dist_indices,
-        maxk,
-        False,
+        maxk,  
+        False,      # verb
         log_den_err,
-        rho_c,
-        g,
-        N,
+        rho_c,  
+        g, 
+        N, 
     )
     cluster_indices, n_clusters, labels = out[0], out[1], out[2]
 
