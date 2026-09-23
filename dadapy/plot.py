@@ -18,9 +18,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
-from matplotlib import cm
 from matplotlib.collections import LineCollection
-from scipy import cluster
+from scipy import cluster  # noqa: F401  # registers scipy.cluster submodule
 from sklearn import manifold
 
 
@@ -29,7 +28,7 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
     mus = Data.distances[:, 2] / Data.distances[:, 1]
 
     idx = np.arange(mus.shape[0])
-    idx = np.random.choice(
+    idx = Data.rng.choice(
         idx, size=(int(np.around(Data.N * decimation))), replace=False
     )
     mus = mus[idx]
@@ -43,9 +42,7 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
 
     x_, y_ = np.atleast_2d(x[:Nele_eff]).T, y[:Nele_eff]
 
-    slope, residuals, rank, s = np.linalg.lstsq(
-        x_, y_, rcond=None
-    )  # x[:Nele_eff, None]?
+    slope, residuals, _, _ = np.linalg.lstsq(x_, y_, rcond=None)  # x[:Nele_eff, None]?
 
     plt.plot(x, y, "o")
     plt.plot(x[:Nele_eff], y[:Nele_eff], "o")
@@ -60,7 +57,6 @@ def plot_ID_line_fit_estimation(Data, decimation=0.9, fraction_used=0.9):
     plt.xlabel("log(mu)")
     plt.ylabel("-log(1-F(mu))")
     plt.show()
-    # plt.savefig('ID_line_fit_plot.png')
 
 
 def plot_SLAn(Data, linkage="single"):
@@ -89,9 +85,8 @@ def plot_SLAn(Data, linkage="single"):
     else:
         print("ERROR: select a valid linkage criterion")
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)  # create figure & 1 axis
-    dn = sp.cluster.hierarchy.dendrogram(DD)
-    # fig.savefig('dendrogramm.png')  # save the figure to file
+    plt.subplots(nrows=1, ncols=1)  # create figure & 1 axis
+    sp.cluster.hierarchy.dendrogram(DD)
     plt.show()
 
 
@@ -107,7 +102,7 @@ def plot_MDS(Data, cmap="viridis", savefig=""):
     for i in range(Data.N_clusters):
         d_dis[i][i] = 0.0
     out = model.fit_transform(d_dis)
-    fig, ax = plt.subplots(nrows=1, ncols=1)
+    _, ax = plt.subplots(nrows=1, ncols=1)
     s = []
     col = []
     for i in range(Data.N_clusters):
@@ -140,13 +135,10 @@ def plot_MDS(Data, cmap="viridis", savefig=""):
             c=cc,
             weight="bold",
         )
-    #    for i in range(Data.N_clusters):
-    #        ax.annotate(i, (out[i, 0], out[i, 1]))
     # Add edges
     rr = np.amax(Rho_bord_m)
     if rr > 0.0:
         Rho_bord_m = Rho_bord_m / rr * 100.0
-    start_idx, end_idx = np.where(out)
     segments = [
         [out[i, :], out[j, :]] for i in range(len(out)) for j in range(len(out))
     ]
@@ -169,7 +161,7 @@ def plot_matrix(Data, savefig=""):
     for j in range(Data.N_clusters):
         topography[j, j] = Data.log_den[Data.cluster_centers[j]]
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)
+    plt.subplots(nrows=1, ncols=1)
     plt.imshow(topography, cmap="gray_r", interpolation=None)
     plt.xticks(np.arange(0, Data.N_clusters, step=1))
     plt.yticks(np.arange(0, Data.N_clusters, step=1))
@@ -188,7 +180,7 @@ def plot_DecGraph(Data, savefig=""):
     plt.show()
 
 
-def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
+def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):  # noqa: C901
     """Generate a visualisation of the topography computed with ADP.
 
     This visualisation fundamentally corresponds to a hierarchy of the clusters built
@@ -210,8 +202,6 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
             to the logarithm of the population of the clusters instead of
             proportional to the population itself. In very unbalanced clusterings,
             it makes the dendrogram more human readable. The default is True.
-
-    Returns:
 
     """
     # Prepare some auxiliary lists
@@ -242,7 +232,7 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
     # Obtain the dendrogram in form of links
     nlinks = 0
     clnew = Data.N_clusters
-    for j in range(Data.N_clusters - 1):
+    for _ in range(Data.N_clusters - 1):
         aa = np.argmin(d12)
         nlinks = nlinks + 1
         L.append(clnew + nlinks)
@@ -268,16 +258,16 @@ def get_dendrogram(Data, cmap="viridis", savefig="", logscale=True):
         e1new = []
         e2new = []
         d12new = []
-        for j in unt:
+        for u in unt:
             t = 0
             dmin = 9.9e99
             for _ in d12:
-                if (e1[t] == j) | (e2[t] == j):
+                if (e1[t] == u) | (e2[t] == u):
                     if (e1[t] == fe) | (e2[t] == fe) | (e1[t] == fs) | (e2[t] == fs):
                         if d12[t] < dmin:
                             dmin = d12[t]
                 t = t + 1
-            e1new.append(j)
+            e1new.append(u)
             e2new.append(newname)
             d12new.append(dmin)
 
@@ -391,8 +381,6 @@ def plot_inf_imb_plane(imbalances, coord_list=None, labels=None):
         imbalance computations
         labels (list of strings, optional): Labels for the list of coordinates
 
-    Returns:
-
     """
     plt.figure(figsize=(5, 5))
     for i, (imb0, imb1) in enumerate(imbalances.T):
@@ -429,10 +417,7 @@ def plot_pdf(n_emp, n_mod, title=None, fileout=None):
         title (string, optional): title
         fileout (string, optional): path to save the plot
 
-    Returns:
-
     """
-
     sup = max(n_emp.max(), n_mod.max())
     inf = min(n_emp.min(), n_mod.min())
     a = np.histogram(
@@ -470,8 +455,6 @@ def plot_cdf(n_emp, n_mod, title=None, fileout=None):
         n_mod (np.ndarray): sample of model-simulated points
         title (string, optional): title
         fileout (string, optional): path to save the plot
-
-    Returns:
 
     """
     sup = max(n_emp.max(), n_mod.max())
@@ -518,10 +501,8 @@ def plot_id_pv(x, idd, pv, title, xlabel, fileout):
         xlabel (string, optional): label of x axis
         fileout (string, optional): path to save the plot
 
-    Returns:
-
     """
-    fig, ax1 = plt.subplots()
+    _, ax1 = plt.subplots()
 
     c_left = "firebrick"
     c_right = "navy"
@@ -542,7 +523,6 @@ def plot_id_pv(x, idd, pv, title, xlabel, fileout):
     ax2.set_yscale("log")
 
     ax2.scatter(x, pv, marker="^", color=c_right, s=75)
-    # ax2.plot(data[:,0],np.ones_like(data[:,-1])*0.05,'k--',alpha=0.5,label=r'$\alpha=0.05$')
 
     plt.legend()
     plt.tight_layout()
@@ -559,9 +539,8 @@ if __name__ == "__main__":
     # basic tests for plotting functions
     from dadapy import Data
 
-    X = np.vstack(
-        (np.random.normal(0, 1, size=(1000, 5)), np.random.normal(5, 1, size=(1000, 5)))
-    )
+    rng = np.random.default_rng(0)
+    X = np.vstack((rng.normal(0, 1, size=(1000, 5)), rng.normal(5, 1, size=(1000, 5))))
 
     data = Data(X)
 

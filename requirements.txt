@@ -9,7 +9,7 @@ scikit-learn
 joblib
 matplotlib
 jax
-jaxlib
 flax
+optax
 tqdm
 networkx

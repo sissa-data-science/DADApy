@@ -30,10 +30,10 @@ data = Data(X)
 data.compute_distances(maxk=100)
 
 # compute the intrinsic dimension using 2nn estimator
-id, id_error, id_distance = data.compute_id_2NN()
+id_twonn, id_error, id_distance = data.compute_id_2NN()
 
 # compute the intrinsic dimension up to the 64th nearest neighbors using Gride
-id_list, id_error_list, id_distance_list = data.return_id_scaling_gride(range_max=64)
+id_gride_list, id_error_list, id_distance_list = data.return_id_scaling_gride(range_max=64)
 
 # compute the density using PAk, a point adaptive kNN estimator
 log_den, log_den_error = data.compute_density_PAk()
@@ -45,11 +45,54 @@ cluster_assignment = data.compute_clustering_ADP()
 X2 = np.random.normal(0, 1, (1000, 5))
 overlap_x2 = data.return_data_overlap(X2)
 
+# compute the information imbalance with another dataset
+ii_x2 = data.return_information_imbalance(X2)
+
 # compute the neighborhood overlap with a set of labels
 labels = np.repeat(np.arange(10), 100)
-overlap_labels = data.return_label_overlap(labels)
+overlap_labels = data.return_label_overlap(labels, k=10)
+```
+
+The Data class is just container of classes. If you need to work with a specific module  
+you can equivalently import it directly. 
+
+```python
+import numpy as np
+from dadapy import IdEstimation
+
+# Generate a simple 3D gaussian dataset
+X = np.random.normal(0, 1, (1000, 3))
+
+# initialize the "Data" class with the set of coordinates
+ie = IdEstimation(X)
+
+# compute the intrinsic dimension up to the 64th nearest neighbors using Gride
+id_list, id_error_list, id_distance_list = ie.return_id_scaling_gride(range_max=64)
 
 ```
+
+This allows to work more naturally with data comparison methods.
+
+```python
+import numpy as np
+from dadapy import NeighborhoodOverlap
+
+# Generate a simple 3D gaussian dataset
+X = np.random.normal(0, 1, (1000, 3))
+X2 = np.random.normal(0, 1, (1000, 5))
+labels = np.repeat(np.arange(10), 100)
+
+# compute the neighborhood overlap with another dataset
+no = NeighborhoodOverlap(X, X2)
+overlap_x2 = no.return_data_overlap()
+
+# compute the neighborhood overlap with a set of labels
+no = NeighborhoodOverlap(X, labels = labels)
+overlap_x2 = no.return_label_overlap(k=10)
+
+```
+
+
 
 # Currently implemented algorithms
 
@@ -104,12 +147,11 @@ overlap_labels = data.return_label_overlap(labels)
   > Allione et al., arXiv (2025)
 
 # Installation
-The package is compatible with the Python versions 3.8, 3.9, 3.10, 3.11, and 3.12.
-The methods of the classes ```DiffImbalance``` and ```CausalGraph``` are only compatible with Python>=3.9.
+The package is compatible with the Python versions 3.10, 3.11, 3.12, 3.13, and 3.14.
 We currently only support Unix-based systems, including Linux and macOS.
 For Windows machines, we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
 
-The package requires `numpy`, `scipy`, `scikit-learn`, `jax`, `jaxlib` and `matplotlib` for the visualizations.
+The package requires `numpy`, `scipy`, `scikit-learn`, `jax`, `jaxlib`, and `matplotlib` for the visualizations.
 
 The package contains Cython-generated C extensions that are automatically compiled during installation. 
 
@@ -126,7 +168,7 @@ and install it with pip as follows:
 pip install git+https://github.com/sissa-data-science/DADApy
 ```
 
-Alternatively, if you'd like to modify the implementation of some function locally you can download the repository and install the package with:
+Alternatively, if you'd like to modify the implementation of some function locally, you can download the repository and install the package with:
 
 ```sh
 git clone https://github.com/sissa-data-science/DADApy.git
@@ -135,13 +177,13 @@ python setup.py build_ext --inplace
 pip install .
 ```
 
-The methods of the classes ```DiffImbalance``` and ```CausalGraph``` can be run on GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
+The methods of the classes ```DiffImbalance``` and ```CausalGraph``` can be run on a GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
 
 ```sh
 pip install --upgrade "jax[cuda12_pip]==0.4.30" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
 
-For more information on the installation of the JAX library on GPUs see the official [repository](https://github.com/google/jax?tab=readme-ov-file#installation).
+For more information on the installation of the JAX library on GPUs, see the official [repository](https://github.com/google/jax?tab=readme-ov-file#installation).
 
 
 # Citing DADApy

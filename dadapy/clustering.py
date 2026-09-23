@@ -19,7 +19,6 @@ The *clustering* module contains the *Clustering* class.
 Density-based clustering algorithms are implemented as methods of this class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -37,9 +36,8 @@ from dadapy._utils.utils import (
     compute_cross_nn_distances,
     from_all_distances_to_nndistances,
 )
+from dadapy._utils.utils import cores
 from dadapy.density_estimation import DensityEstimation
-
-cores = multiprocessing.cpu_count()
 
 
 class Clustering(DensityEstimation):
@@ -58,7 +56,7 @@ class Clustering(DensityEstimation):
             the estimated log density of the saddle point between each couple of peaks.
         log_den_bord_err (np.ndarray(float)): A matrix of dimensions N_clusters x N_clusters containing
             the estimated error on the log density of the saddle point between each couple of peaks.
-        bord_indices (np.ndarray(float)): A matrix of dimensions N_clusters x N_clusters containing the indices of
+        bord_indices (np.ndarray(int)): A matrix of dimensions N_clusters x N_clusters containing the indices of
             the saddle point between each couple of peaks.
 
     """
@@ -71,6 +69,7 @@ class Clustering(DensityEstimation):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the Clustering class."""
         super().__init__(
@@ -80,6 +79,7 @@ class Clustering(DensityEstimation):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.cluster_indices = None
@@ -208,9 +208,7 @@ class Clustering(DensityEstimation):
                 else:
                     ncalls = ncalls + 1
                     dd = self.X[((self.log_den > self.log_den[i]) & (tt != i))]
-                    ds = np.transpose(
-                        sp.spatial.distance.cdist([np.transpose(self.X[i, :])], dd)
-                    )
+                    ds = sp.spatial.distance.cdist([self.X[i]], dd).ravel()
                     j = np.argmin(ds)
                     self.ref[i] = ll[j]
                     self.delta[i] = ds[j]
@@ -1076,9 +1074,9 @@ class Clustering(DensityEstimation):
                             current_saddle = saddle_density[i, 0]
 
             if check == 1:
-                saddle_indices[
-                    to_remove, -1
-                ] = 0  # the couple center1, center2 is removed
+                saddle_indices[to_remove, -1] = (
+                    0  # the couple center1, center2 is removed
+                )
                 margin1 = max_a1 / max_sum_err1
                 margin2 = max_a2 / max_sum_err2
 

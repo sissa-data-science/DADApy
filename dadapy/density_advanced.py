@@ -22,7 +22,6 @@ the methods in the DensityAdvanced class are based on the sparse neighbourhood g
 in the NeighGraph class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -33,6 +32,7 @@ from scipy import sparse
 from dadapy._cython import cython_grads as cgr
 from dadapy._utils.density_estimation import return_not_normalised_density_kstarNN
 from dadapy._utils.utils import resolve_backend
+from dadapy._utils.utils import cores
 from dadapy.density_estimation import DensityEstimation
 from dadapy.neigh_graph import NeighGraph
 
@@ -47,9 +47,6 @@ except ModuleNotFoundError:
     jnp = None
     jsp = None
     _HAS_JAX = False
-
-cores = multiprocessing.cpu_count()
-
 
 class DensityAdvanced(DensityEstimation, NeighGraph):
     """Computes the log-density gradient and its covariance at each point and other log-density-related properties.
@@ -91,6 +88,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -100,6 +98,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.grads = None
@@ -369,8 +368,9 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     # ----------------------------------------------------------------------------------------------
 
     def compute_pearson(self, similarity_method="jaccard"):
-        """
-        Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
+        """Compute Pearson correlation coefficient for the directed deltaFij of neighbour pairs.
+
+        For any couple (i,j) of points connected on the directed neighbourhood graph, estimate the
         Pearson correlation coefficient between the directed deltaFij computed with the gradients in i and in j, namely
         between dot(g_i,(x_j-x_i)) and dot(g_j,(x_j-x_i)). These are needed in order to compute the errors on the
         deltaFs. They are estimated as the neighbourhood similarity index (see documentation for
@@ -381,7 +381,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             similarity_method (str): similarity_method to compute the neighbourhood similarity index (see documentation
                 for compute_neigh_similarity_index).
         """
-
         # check or compute neigh_similarity_index
         if self.neigh_similarity_index is None:
             self.compute_neigh_similarity_index(method=similarity_method)
@@ -428,6 +427,12 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             Then use these p in the estimate of the variances on the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where
             E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2025]).
             The log-density differences are stored Fij_array, their variances in Fij_array_var.
+
+        If not defined, compute the Pearson coefficients p (see docs for pearson_array) by running
+        compute_pearson.
+        Then use these p in the estimate of the variances on the deltaFij as 1/4*(E_i^2+E_j^2+2*E_i*E_j*chi), where
+        E_i is the error on the estimate of grad_i*DeltaX_ij (see [Carli2024]).
+        The log-density differences are stored Fij_array, their variances in Fij_array_var.
 
         Args:
             similarity_method (str): see docs for neigh_graph.compute_neigh_similarity_index function
@@ -537,13 +542,13 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
     def compute_diag_inv_deltaFs_cross_covariance_LSDI(
         self, similarity_method="jaccard"
     ):
-        """Compute the diagonal of the appoximate inverse of the deltaFs cross-covariance cov[deltaFij,deltaFlm] using
-        the LSDI approximation (see compute_density_BMTI docs)
+        """Compute the diagonal of the appoximate inverse of the deltaFs cross-covariance.
+
+        Targets cov[deltaFij,deltaFlm] using the LSDI approximation (see compute_density_BMTI docs).
 
         Args:
             similarity_method: see docs for neigh_graph.compute_neigh_similarity_index function
         """
-
         # check for deltaFs
         if self.neigh_similarity_index_mat is None:
             self.compute_neigh_similarity_index_mat(method=similarity_method)
@@ -723,7 +728,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
                 self.intrinsic_dim,
                 self.kstar,
                 interpolation=False,
-                bias=False,
             )
             # Normalise density
             log_den -= np.log(self.N)
@@ -734,7 +738,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         if self.N > 10000 and solver == "dense":
             warnings.warn(
                 "The number of points is large and you are not using a memory efficient option. \
-                If you run into memory issues, consider using other options."
+                If you run into memory issues, consider using other options.",
+                stacklevel=2,
             )
 
         if self.verb:
@@ -789,8 +794,6 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             if self.verb:
                 print("{0:0.2f} seconds inverting A matrix".format(time.time() - sec2))
 
-            sec2 = time.time()
-
         sec2 = time.time()
         if self.verb:
             print("{0:0.2f} seconds for BMTI density estimation".format(sec2 - sec))
@@ -806,15 +809,14 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             redundancy = np.sqrt(k1 * k2)
 
             tmpvec = (
-                np.ones(self.nspar, dtype=np.float_) / self.Fij_var_array / redundancy
+                np.ones(self.nspar, dtype=np.float64) / self.Fij_var_array / redundancy
             )
         elif delta_F_inv_cov == "LSDI":
-            # self.compute_deltaFs_inv_cross_covariance()
             self.compute_diag_inv_deltaFs_cross_covariance_LSDI()
             tmpvec = self.inv_deltaFs_cov
 
         elif delta_F_inv_cov == "identity":
-            tmpvec = np.ones(self.nspar, dtype=np.float_)
+            tmpvec = np.ones(self.nspar, dtype=np.float64)
 
         else:
             raise ValueError(
@@ -832,7 +834,7 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
         A = sparse.csr_matrix(
             (-tmpvec, (self.nind_list[:, 0], self.nind_list[:, 1])),
             shape=(self.N, self.N),
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
         # make A symmetric
@@ -1209,7 +1211,8 @@ class DensityAdvanced(DensityEstimation, NeighGraph):
             # default solver: sp_direct
             if solver != "sp_direct":
                 warnings.warn(
-                    f"The solver '{solver}' selected is not among the options. Using 'sp_direct' instead."
+                    f"The solver '{solver}' selected is not among the options. Using 'sp_direct' instead.",
+                    stacklevel=2,
                 )
             if self.verb:
                 print(

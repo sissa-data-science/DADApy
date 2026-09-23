@@ -19,7 +19,6 @@ The *density_estimation* module contains the *DensityEstimation* class.
 The different algorithms of density estimation are implemented as methods of this class.
 """
 
-import multiprocessing
 import time
 import warnings
 
@@ -31,10 +30,8 @@ from dadapy._utils.density_estimation import (
     return_not_normalised_density_PAk,
     return_not_normalised_density_PAk_optimized,
 )
-from dadapy._utils.utils import compute_cross_nn_distances
+from dadapy._utils.utils import compute_cross_nn_distances, cores
 from dadapy.kstar import KStar
-
-cores = multiprocessing.cpu_count()
 
 
 class DensityEstimation(KStar):
@@ -57,6 +54,7 @@ class DensityEstimation(KStar):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -66,6 +64,7 @@ class DensityEstimation(KStar):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.log_den = None
@@ -90,7 +89,7 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kNN(self, k=10, bias=False):
+    def compute_density_kNN(self, k=10):
         """Compute the density of each point using a simple kNN estimator.
 
         Args:
@@ -113,7 +112,6 @@ class DensityEstimation(KStar):
             self.intrinsic_dim,
             self.kstar,
             interpolation=False,
-            bias=bias,
         )
 
         # Normalise density
@@ -130,19 +128,27 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kstarNN(self, Dthr=23.92812698, bias=False):
+    def compute_density_kstarNN(
+        self, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Compute the density of each point using a simple kNN estimator with an optimal choice of k.
 
         Args:
-            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-                to a p-value of 1e-6.
+            alpha (float): Likelihood ratio parameter used to compute optimal k.
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): estimated log density
             log_den_err (np.ndarray(float)): estimated error on log density
         """
         if self.kstar is None:
-            self.compute_kstar(Dthr=Dthr)
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
 
         if self.verb:
             print("kstar-NN density estimation started")
@@ -152,7 +158,6 @@ class DensityEstimation(KStar):
             self.intrinsic_dim,
             self.kstar,
             interpolation=False,
-            bias=bias,
         )
 
         # Normalise density
@@ -169,20 +174,29 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_kpeaks(self, Dthr=23.92812698):
+    def compute_density_kpeaks(
+        self, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Compute the density of each point as proportional to the optimal k value found for that point.
 
         This method is mostly useful for the kpeaks clustering algorithm.
 
         Args:
-            Dthr: Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-                to a p-value of 1e-6.
+            alpha: Likelihood ratio parameter used to compute optimal k.
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): estimated log density
             log_den_err (np.ndarray(float)): estimated error on log density
         """
-        self.compute_kstar(Dthr)
+        if self.kstar is None:
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
 
         if self.verb:
             print("Density estimation for k-peaks clustering started")
@@ -212,12 +226,16 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def compute_density_PAk(self, Dthr=23.92812698, optimized=True):
+    def compute_density_PAk(
+        self, alpha=1e-6, optimized=True, bonferroni_deloc=False, bonferroni_loc=False
+    ):
         """Compute the density of each point using the PAk estimator.
 
         Args:
-            Dthr (float): Likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92 corresponds
-                to a p-value of 1e-6.
+            alpha (float): Likelihood ratio parameter used to compute optimal k.
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
 
         Returns:
             log_den (np.ndarray(float)): estimated log density
@@ -225,7 +243,12 @@ class DensityEstimation(KStar):
         """
         # compute optimal k
         if self.kstar is None:
-            self.compute_kstar(Dthr=Dthr)
+            self.compute_kstar(
+                alpha=alpha,
+                bonferroni_deloc=bonferroni_deloc,
+                bonferroni_loc=bonferroni_loc,
+            )
+
         elif len(np.unique(self.kstar)) == 1:
             warnings.warn(
                 "Found pointwise optimal k already computed and CONSTANT over the datapoints. \
@@ -354,12 +377,16 @@ class DensityEstimation(KStar):
 
     def return_interpolated_density_kstarNN(
         self, X_new, Dthr=23.92812698, return_kstar=False
+        self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
     ):
         """Return the kstarNN density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
-            Dthr: Likelihood ratio parameter used to compute optimal k
+            alpha: Likelihood ratio parameter used to compute optimal k
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
             return_kstar (bool): if True, also return the optimal number of neighbours for each point
 
         Returns:
@@ -393,10 +420,12 @@ class DensityEstimation(KStar):
             self.intrinsic_dim,
             X_new.shape[0],
             self.maxk,
-            Dthr,
+            alpha,
             cross_dist_indices,
             cross_distances,
             self.distances,
+            bonferroni_deloc,
+            bonferroni_loc,
         )
         if self.verb:
             print("{0:0.2f} seconds computing kstar".format(time.time() - sec))
@@ -423,12 +452,16 @@ class DensityEstimation(KStar):
 
     def return_interpolated_density_PAk(
         self, X_new, Dthr=23.92812698, return_kstar=False
+        self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
     ):
         """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
-            Dthr: Likelihood ratio parameter used to compute optimal k
+            alpha: Likelihood ratio parameter used to compute optimal k
+            bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
+            bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
+                at each iteration
             return_kstar (bool): if True, also return the optimal number of neighbours for each point
 
         Returns:
@@ -462,10 +495,12 @@ class DensityEstimation(KStar):
             self.intrinsic_dim,
             X_new.shape[0],
             self.maxk,
-            Dthr,
+            alpha,
             cross_dist_indices,
             cross_distances,
             self.distances,
+            bonferroni_deloc,
+            bonferroni_loc,
         )
         if self.verb:
             print("{0:0.2f} seconds computing kstar".format(time.time() - sec))

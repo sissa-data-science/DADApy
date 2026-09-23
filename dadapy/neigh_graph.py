@@ -19,7 +19,6 @@ The *neighbourhood_graph* module contains the *NeighGraph* class.
 It contains different methods and attributes which allow to exploit the structure of the directed neighbourhood graph.
 """
 
-import multiprocessing
 import time
 
 import numpy as np
@@ -27,6 +26,7 @@ from scipy import sparse
 
 from dadapy._cython import cython_grads as cgr
 from dadapy._utils.utils import resolve_backend
+from dadapy._utils.utils import cores
 from dadapy.kstar import KStar
 
 try:
@@ -39,11 +39,11 @@ except ModuleNotFoundError:
 
 cores = multiprocessing.cpu_count()
 
-
 class NeighGraph(KStar):
-    """
-    Computes the directed neighbourhood graph (DNG) based on the kstar optimal neighbourhood selection and
-    other DNG-based quantities. Inherits from class KStar. The DNG is stored in nind_list and can be
+    """Compute the directed neighbourhood graph (DNG) and related DNG-based quantities.
+
+    The DNG is based on the kstar optimal neighbourhood selection. Inherits from class KStar.
+    The DNG is stored in nind_list and can be
     retrieved using the kstar (inherited from Kstar class) and nind_iptr attributes. Can compute and store
     distances and vector differences between nodes connected on the DNG. Can compute and store the number
     of points in common in the neighbourhoods of couples of nodes connected on the DNG. Can use the common
@@ -84,6 +84,7 @@ class NeighGraph(KStar):
         period=None,
         verbose=False,
         n_jobs=cores,
+        rng_seed=42,
     ):
         """Initialise the DensityEstimation class."""
         super().__init__(
@@ -93,6 +94,7 @@ class NeighGraph(KStar):
             period=period,
             verbose=verbose,
             n_jobs=n_jobs,
+            rng_seed=rng_seed,
         )
 
         self.nspar = None
@@ -220,14 +222,13 @@ class NeighGraph(KStar):
         If the attribute neigh_dists is not assigned, invokes method compute_neigh_dists.
 
         """
-
         if self.neigh_dists is None:
             self.compute_neigh_dists()
 
         if self.nind_list is None or self.nind_iptr is None:
             self.compute_neigh_indices()
 
-        dgraph = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+        dgraph = sparse.lil_matrix((self.N, self.N), dtype=np.float64)
 
         for ind_spar, indices in enumerate(self.nind_list):
             dgraph[indices[0], indices[1]] = self.neigh_dists[ind_spar]
@@ -343,6 +344,7 @@ class NeighGraph(KStar):
         """Compute the common number of neighbours between the couple of points (i,j) such that j is
         in the neighbourhod of i.
 
+        Here j is required to be in the neighbourhood of i.
         The numbers are stored in common_neighs_array.
         If the flag comp_common_neighs_mat has value True, also the symmetric matrix common_neighs_mat is computed.
 
@@ -395,10 +397,10 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_neigh_similarity_index(self, method="jaccard"):
-        """
-        Compute an estimate of the overlaps between the neighbourhoods of the points connected by edges on the DNG,
-        with values from 0 to 1, and stores them in the neigh_similarity_index attribute. See also the documentation
-        for the neigh_similarity_index attribute for completeness.
+        """Estimate overlaps between neighbourhoods of points connected by edges on the DNG.
+
+        Values range from 0 to 1 and are stored in the neigh_similarity_index attribute.
+        See also the documentation for the neigh_similarity_index attribute for completeness.
 
         Args:
             method (str): currently implemented "jaccard", "geometric", "squared_geometric".
@@ -411,7 +413,6 @@ class NeighGraph(KStar):
             "geometric": p_1,2 = k_1,2 / sqrt(k_1 * k_2), i.e. the number of common points divided by the geometric mean
             "squared geometric": p_1,2 = (k_1,2)^2 / (k_1 * k_2), i.e. the square of the "geometric" version
         """
-
         # check or compute common_neighs
         if self.common_neighs_array is None:
             self.compute_common_neighs()
@@ -443,10 +444,9 @@ class NeighGraph(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def compute_neigh_similarity_index_mat(self, method=None, sparse_mat=False):
-        """
-        Compute, for any couple (i,j) of points connected on the directed neighbourhood graph, an estimate of the
-        overlaps between the neighbourhoods of the points connected by edges on the DNG, with values from 0 to 1 and
-        stores them in the neigh_similarity_index_mat matrix attribute.
+        """Estimate overlaps between neighbourhoods for all couples (i,j) connected on the DNG.
+
+        Values range from 0 to 1 and are stored in the neigh_similarity_index_mat matrix attribute.
 
         Args:
             method (str): currently implemented "jaccard", "geometric", "squared_geometric".
@@ -462,7 +462,6 @@ class NeighGraph(KStar):
             sparse_mat (bool): if True, the matrix is returned in sparse format (scipy.sparse.lil_matrix). If False, it
             is returned in dense format (numpy.ndarray).
         """
-
         sec = time.time()
         # check if the neigh_similarity_index array exists
         if method is not None:
@@ -473,7 +472,7 @@ class NeighGraph(KStar):
                 self.compute_neigh_similarity_index()
 
         # fill a sparse matrix from the neigh_similarity_index array
-        nsi_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float_)
+        nsi_mat = sparse.lil_matrix((self.N, self.N), dtype=np.float64)
         for nspar, indices in enumerate(self.nind_list):
             i = indices[0]
             j = indices[1]

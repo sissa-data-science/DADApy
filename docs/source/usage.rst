@@ -6,7 +6,7 @@ distances between points.
 After the initialisation a series of computations are performed by calling the class method relative to specific
 algorithm wanted.
 The results of the computations are typically available as attributes of the object.
-Instead of the general Data object, specific class objects can be created, such as the MetricComparisons, FeatureWeighting or DensityEstimation objects. 
+Instead of the general Data object, specific class objects can be created, such as the InformationImbalance, NeighborhoodOverlap, FeatureWeighting or DensityEstimation objects.
 
 .. code-block:: python
 

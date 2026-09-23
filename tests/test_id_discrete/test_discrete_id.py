@@ -19,7 +19,7 @@ import matplotlib
 import numpy as np
 import pytest
 
-from dadapy.id_discrete import IdDiscrete
+from dadapy import IdDiscrete
 
 
 def test_distances():
@@ -64,7 +64,7 @@ def test_distances_condensed():
 
     X = rng.integers(0, box, size=(N, d))
 
-    I3Dc = IdDiscrete(X, condensed=True)
+    I3Dc = IdDiscrete(X, condensed=True, n_jobs=1)
     I3Dc.compute_distances(metric="manhattan", period=box, d_max=d * box)
 
     # fix number of neighbours

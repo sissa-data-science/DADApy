@@ -15,7 +15,6 @@
 
 """Module for testing the Binomial ID estimator."""
 
-
 import os
 
 import numpy as np

@@ -15,7 +15,6 @@
 
 """Module for testing the correlaion dimension and box counting ID estimators."""
 
-
 import os
 
 import matplotlib

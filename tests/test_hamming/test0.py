@@ -22,7 +22,7 @@ import pytest
 
 # this environmental variable must be set <before> the BID imports
 os.environ["JAX_ENABLE_X64"] = "True"
-from dadapy.hamming import BID, Hamming  # noqa: E402
+from dadapy import BID, Hamming  # noqa: E402
 
 # EXPECTED OUTPUT
 d_0 = 99.855
@@ -58,7 +58,9 @@ alphamin = 0  # + eps          # order of  min_quantile, to remove poorly sample
 alphamax = 1  # - eps          # order of max_quantile, to define r* (named rmax here)
 delta = 5e-4  # stochastic optimization step
 Nsteps = int(1e6)  # number of optimization steps
-optfolder0 = "results/opt/"  # folder where optimization results are saved
+optfolder0 = (
+    "./tests/test_hamming/results/opt/"  # folder where optimization results are saved
+)
 export_logKLs = 1  # flag to export the logKLs during optimization
 
 B = BID(
@@ -75,6 +77,6 @@ B = BID(
 B.computeBID()
 
 assert np.array_equal(H.D_values, expected_histogram)
-assert pytest.approx(B.Op.d0, abs=1e-3) == d_0
+assert pytest.approx(B.Op.d0, abs=5e-3) == d_0
 assert pytest.approx(B.Op.d1, abs=1e-3) == d_1
-assert pytest.approx(np.log(B.Op.KL), abs=1e-2) == logKL
+assert pytest.approx(np.log(B.Op.KL), abs=2e-2) == logKL

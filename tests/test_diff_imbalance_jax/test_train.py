@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 from jax import config
 
-config.update("jax_platform_name", "cpu")
+config.update("jax_platforms", "cpu")
 filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy")
 
 
@@ -36,9 +36,9 @@ def test_DiffImbalance_train1():
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    expected_weights = [0.13817, 0.04679, 0.09338]
-    expected_imb = 0.03670
-    expected_imb_final = 0.03670
+    expected_weights = [0.138213, 0.046663, 0.093379]
+    expected_imb = 0.036707
+    expected_imb_final = 0.036706
 
     # train the DII to recover ground-truth metric
     dii = DiffImbalance(
@@ -85,9 +85,9 @@ def test_DiffImbalance_train2():
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    expected_weights = [12.03902, 5.10201, 11.3592]
-    expected_imb = 0.11381
-    expected_imb_final = 0.05178
+    expected_weights = [11.93965, 4.733478, 11.620625]
+    expected_imb = 0.142907
+    expected_imb_final = 0.050689
 
     # train the DII
     dii = DiffImbalance(
@@ -131,10 +131,10 @@ def test_DiffImbalance_train3():
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    expected_weights = [0.16791, 0.04188, 0.00716]
-    expected_imb = 0.438795
-    expected_imb_final = 0.59615
-    expected_error_final = 0.07216
+    expected_weights = [0.168243, 0.040554, 0.007055]
+    expected_imb = 0.436222
+    expected_imb_final = 0.591419
+    expected_error_final = 0.075345
 
     # train the DII
     dii = DiffImbalance(
@@ -181,10 +181,10 @@ def test_DiffImbalance_train4():
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    expected_weights = [0.1312, 0.05073, 0.10106]
-    expected_imb = 0.0403795
-    expected_imb_final = 0.08504
-    expected_error_final = 0.01226
+    expected_weights = [0.127811, 0.059216, 0.100786]
+    expected_imb = 0.031075
+    expected_imb_final = 0.098426
+    expected_error_final = 0.015008
 
     # train the DII to recover ground-truth metric
     dii = DiffImbalance(
@@ -233,10 +233,10 @@ def test_DiffImbalance_train5():
     params_init = [1, 0.1]
     params_groups = [2, 1]
 
-    expected_weights = [1, 0.10002]
-    expected_imb = 0.05411
-    expected_imb_final = 0.10039
-    expected_error_final = 0.01771
+    expected_weights = [0.999998, 0.100018]
+    expected_imb = 0.0398
+    expected_imb_final = 0.146825
+    expected_error_final = 0.020287
 
     # train the DII to recover ground-truth metric
     dii = DiffImbalance(
@@ -286,10 +286,10 @@ def test_DiffImbalance_train6():
         axis=-1
     )
 
-    expected_weights = [0.1312, 0.05073, 0.10106]
-    expected_imb = 0.0403795
-    expected_imb_final = 0.08504
-    expected_error_final = 0.01226
+    expected_weights = [0.127811, 0.059216, 0.100786]
+    expected_imb = 0.031075
+    expected_imb_final = 0.098426
+    expected_error_final = 0.015008
 
     # train the DII to recover ground-truth metric
     dii = DiffImbalance(
