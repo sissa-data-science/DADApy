@@ -134,7 +134,7 @@ class DensityEstimation(KStar):
         """Compute the density of each point using a simple kNN estimator with an optimal choice of k.
 
         Args:
-            alpha (float): Likelihood ratio parameter used to compute optimal k.
+            alpha (float): significance level used to compute the optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
                 at each iteration
@@ -182,7 +182,7 @@ class DensityEstimation(KStar):
         This method is mostly useful for the kpeaks clustering algorithm.
 
         Args:
-            alpha: Likelihood ratio parameter used to compute optimal k.
+            alpha (float): significance level used to compute the optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
                 at each iteration
@@ -232,7 +232,7 @@ class DensityEstimation(KStar):
         """Compute the density of each point using the PAk estimator.
 
         Args:
-            alpha (float): Likelihood ratio parameter used to compute optimal k.
+            alpha (float): significance level used to compute the optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
                 at each iteration
@@ -376,14 +376,18 @@ class DensityEstimation(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def return_interpolated_density_kstarNN(
-        self, X_new, Dthr=23.92812698, return_kstar=False
-        self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
+        self,
+        X_new,
+        alpha=1e-6,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
+        return_kstar=False,
     ):
         """Return the kstarNN density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
-            alpha: Likelihood ratio parameter used to compute optimal k
+            alpha (float): significance level used to compute the optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
                 at each iteration
@@ -451,14 +455,18 @@ class DensityEstimation(KStar):
     # ----------------------------------------------------------------------------------------------
 
     def return_interpolated_density_PAk(
-        self, X_new, Dthr=23.92812698, return_kstar=False
-        self, X_new, alpha=1e-6, bonferroni_deloc=False, bonferroni_loc=False
+        self,
+        X_new,
+        alpha=1e-6,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
+        return_kstar=False,
     ):
         """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
 
         Args:
             X_new (np.ndarray(float)): The points onto which the density should be computed
-            alpha: Likelihood ratio parameter used to compute optimal k
+            alpha (float): significance level used to compute the optimal k.
             bonferroni_deloc (bool): apply bonferroni correction for multiple testing across the dataset
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
                 at each iteration

@@ -37,7 +37,6 @@ except ModuleNotFoundError:
     jnp = None
     _HAS_JAX = False
 
-cores = multiprocessing.cpu_count()
 
 class NeighGraph(KStar):
     """Compute the directed neighbourhood graph (DNG) and related DNG-based quantities.

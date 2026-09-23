@@ -268,12 +268,14 @@ class Clustering(DensityEstimation):
 
         return self.cluster_assignment
 
-    def predict_cluster_ADP(
+    def predict_cluster_ADP(  # noqa: C901
         self,
         X_new,
         maxk,
         distances=None,
-        Dthr=23.92812698,
+        alpha=1e-6,
+        bonferroni_deloc=False,
+        bonferroni_loc=False,
         density_est="PAk",
         n_jobs=None,
     ):
@@ -282,11 +284,12 @@ class Clustering(DensityEstimation):
 
         Args:
             X_new (np.ndarray(float)): points for which to predict cluster assignment. Shape (len(X_new), self.dims)
-            Dthr (float, optional): likelihood ratio parameter used to compute optimal k, the value of Dthr=23.92
-                corresponds to a p-value of 1e-6 (see compute_kstar).
+            alpha (float): significance level used to compute the interpolated kstar (see KStar.compute_kstar).
+            bonferroni_deloc (bool): whether to correct for tests across query points (see KStar.compute_kstar).
+            bonferroni_loc (bool): whether to correct for successive neighbourhood tests (see KStar.compute_kstar).
             distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float))): Distance matrix (N x N),
                 or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
-            density_est (str, optional): chosen density interpolator. Currently implemented: "PAk" and "kstarNN".
+            density_est (str, optional): density interpolator. Currently implemented: "PAk" (default) and "kstarNN".
             n_jobs (int): number of cores to be used.
         Returns:
             cluster_prediction (np.ndarray(int)): predicted cluster labels for points X_new, no points assigned to halo
@@ -322,10 +325,12 @@ class Clustering(DensityEstimation):
             self.intrinsic_dim,
             X_new.shape[0],
             maxk,
-            Dthr,
+            alpha,
             cross_dist_indices,
             cross_distances,
             self.distances,
+            bonferroni_deloc,
+            bonferroni_loc,
         )
         if self.verb:
             print("{0:0.2f} seconds to compute kstar.".format(time.time() - sec))
