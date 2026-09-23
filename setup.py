@@ -52,13 +52,15 @@ openmp_supported = os.system("gcc -fopenmp -E - < /dev/null > /dev/null 2>&1") =
 
 if openmp_supported:
     # If '-fopenmp' is supported, add the extra compile and link arguments
-    # Installing cython_distances using OpenMP
-    for ext_parallel in exts_parallel:
-        ext_parallel.extra_compile_args.append("-fopenmp")
-        ext_parallel.extra_link_args.append("-fopenmp")
-
-if os.system(command) == 0:
-    # If '-fopenmp' is supported, add the extra compile and link arguments.
+    # to every extension that uses Cython OpenMP/prange code.
+    # cython_density and cython_grads are built with the serial modules but
+    # also expose parallel routines, so they need OpenMP flags too.
+    parallel_ext_names = {
+        "dadapy._cython.cython_density",
+        "dadapy._cython.cython_grads",
+        "dadapy._cython.cython_distances",
+        "dadapy._cython.cython_differentiable_imbalance",
+    }
     for ext in ext_modules + exts_parallel:
         if ext.name in parallel_ext_names:
             ext.extra_compile_args = list(ext.extra_compile_args or [])
