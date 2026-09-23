@@ -23,61 +23,46 @@ import pytest
 from dadapy import DensityEstimation
 
 
-def test_density_estimation_kNN():
-    """Test the kNN interpolator is coherent with the kNN estimator."""
-    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
-
-    X = np.load(filename)[:25]
-
-    k = 5
-
-    de = DensityEstimation(coordinates=X)
-
-    computed, _ = de.compute_density_kNN(k)
-
-    interpolated, _ = de.return_interpolated_density_kNN(X, k)
-
-    diff = computed - interpolated
-
-    expected_diff = np.array([np.log(k) - np.log(k - 1)] * len(diff))
-
-    assert diff == pytest.approx(expected_diff, abs=1e-6)
-
-
-def test_interpolated_density_kNN_optionally_returns_kstar():
-    """Test that the kNN interpolator optionally returns its fixed kstar."""
-    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
-    X = np.load(filename)[:25]
-    k = 5
-
-    de = DensityEstimation(coordinates=X)
-
-    result = de.return_interpolated_density_kNN(X, k)
-    result_with_kstar = de.return_interpolated_density_kNN(X, k, return_kstar=True)
-
-    assert len(result) == 2
-    for actual, expected in zip(result_with_kstar[:2], result):
-        assert actual == pytest.approx(expected)
-    assert np.array_equal(result_with_kstar[2], np.full(X.shape[0], k))
-
-
 @pytest.mark.parametrize(
-    "interpolator_name",
-    ["return_interpolated_density_kstarNN", "return_interpolated_density_PAk"],
+    "density_method, interpolator_method, kwargs",
+    [
+        pytest.param(
+            "compute_density_kNN",
+            "return_interpolated_density_kNN",
+            {"k": 5},
+            id="kNN",
+        ),
+        pytest.param(
+            "compute_density_kstarNN",
+            "return_interpolated_density_kstarNN",
+            {},
+            id="kstarNN",
+        ),
+        pytest.param(
+            "compute_density_PAk",
+            "return_interpolated_density_PAk",
+            {},
+            id="PAk",
+        ),
+    ],
 )
-def test_adaptive_interpolated_density_optionally_returns_kstar(interpolator_name):
-    """Test that adaptive interpolators optionally return their optimal kstar."""
+def test_density_interpolators(density_method, interpolator_method, kwargs):
+    """Test interpolated estimates evaluated on the reference data."""
     filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
     X = np.load(filename)[:25]
 
     de = DensityEstimation(coordinates=X)
-    interpolator = getattr(de, interpolator_name)
+    expected_log_den, expected_log_den_err = getattr(de, density_method)(**kwargs)
+    expected_kstar = de.kstar.copy()
 
-    result = interpolator(X)
-    result_with_kstar = interpolator(X, return_kstar=True)
+    interpolator = getattr(de, interpolator_method)
+    result = interpolator(X, **kwargs)
+    result_with_kstar = interpolator(X, return_kstar=True, **kwargs)
 
     assert len(result) == 2
-    for actual, expected in zip(result_with_kstar[:2], result):
-        assert actual == pytest.approx(expected)
-    assert result_with_kstar[2].shape == (X.shape[0],)
-    assert np.issubdtype(result_with_kstar[2].dtype, np.integer)
+    assert len(result_with_kstar) == 3
+    assert result[0] == pytest.approx(expected_log_den)
+    assert result[1] == pytest.approx(expected_log_den_err)
+    assert result_with_kstar[0] == pytest.approx(result[0])
+    assert result_with_kstar[1] == pytest.approx(result[1])
+    assert np.array_equal(result_with_kstar[2], expected_kstar)
