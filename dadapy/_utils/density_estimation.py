@@ -36,13 +36,8 @@ def return_not_normalised_density_kstarNN(
     )
     log_den_min = 9.9e300
 
-    if not interpolation:
-        log_den = np.log(kstar, dtype=float)
-        log_den_err = 1.0 / np.sqrt(kstar, dtype=float)
-
-    else:
-        log_den = np.log(kstar - 1, dtype=float)
-        log_den_err = 1.0 / np.sqrt(kstar - 1, dtype=float)
+    log_den = np.log(kstar, dtype=float)
+    log_den_err = 1.0 / np.sqrt(kstar, dtype=float)
     if bias:
         warnings.warn(
             "bias contribution to the density error is an experimental feature \
@@ -73,14 +68,8 @@ def return_not_normalised_density_PAk(
     )
     log_den_min = 9.9e300
 
-    if not interpolation:
-        logkstars = np.log(kstar, dtype=float)
-        log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
-    else:
-        logkstars = np.log(kstar - 1, dtype=float)
-        log_den_err = np.sqrt(
-            (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
-        )
+    logkstars = np.log(kstar, dtype=float)
+    log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
 
     if bias:
         warnings.warn(
@@ -152,14 +141,8 @@ def return_not_normalised_density_PAk_optimized(
     distances, intrinsic_dim, kstar, interpolation=False, bias=False
 ):
     N = distances.shape[0]
-    if not interpolation:
-        logkstars = np.log(kstar, dtype=float)
-        log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
-    else:
-        logkstars = np.log(kstar - 1, dtype=float)
-        log_den_err = np.sqrt(
-            (4 * (kstar - 1) + 2) / ((kstar - 1) * ((kstar - 1) - 1)), dtype=float
-        )
+    logkstars = np.log(kstar, dtype=float)
+    log_den_err = np.sqrt((4 * kstar + 2) / (kstar * (kstar - 1)), dtype=float)
     if bias:
         log_den_err = (log_den_err**2 + (kstar / N) ** (2 / intrinsic_dim)) ** 0.5
 
