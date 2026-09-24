@@ -301,8 +301,25 @@ class Clustering(DensityEstimation):
             cluster_probability (np.ndarray(float)): probability of each point in X_new to belong to each cluster
                 (currently implemented only 0/1), no points assigned to halo. Shape (len(X_new), self.N_clusters).
             cluster_probability_halo (np.ndarray(float)): probability of each point in X_new to belong to each cluster
-                (currently implemented only 0/1), with halo points. Shape (len(X_new), self.N_clusters).
+                (currently implemented only 0/1), with halo points represented by the last column. Shape
+                (len(X_new), self.N_clusters + 1).
+
+        Raises:
+            RuntimeError: If ADP clustering has not been computed on the training data.
+            ValueError: If density_est is not "PAk" or "kstarNN", or if distances are not supplied when the training
+                coordinates are unavailable.
         """
+        if self.cluster_assignment is None or self.cluster_assignment_halo is None:
+            raise RuntimeError(
+                "ADP clustering must be computed before predicting cluster labels"
+            )
+        if density_est not in ("PAk", "kstarNN"):
+            raise ValueError("density_est must be either 'PAk' or 'kstarNN'")
+        if distances is None and self.X is None:
+            raise ValueError(
+                "distances must be supplied when training coordinates are unavailable"
+            )
+
         threads = self.n_jobs if n_jobs is None else n_jobs
         sec2 = time.time()
 
