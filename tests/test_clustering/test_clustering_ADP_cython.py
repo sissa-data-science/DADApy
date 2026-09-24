@@ -18,6 +18,8 @@
 import os
 
 import numpy as np
+import pytest
+from scipy.spatial.distance import cdist
 
 from dadapy import Clustering
 from dadapy._cython import cython_clustering as cf
@@ -169,6 +171,44 @@ def test_cython_clustering_assignment_within_valid_range():
     )
 
 
+@pytest.mark.parametrize("density_est", ["PAk", "kstarNN"])
+def test_predict_cluster_adp_distance_inputs_are_equivalent(density_est):
+    """Predictions are independent of the supported distance input format."""
+    cl = Clustering(coordinates=X)
+    cl.compute_clustering_ADP(Z=1.65)
+
+    query_indices = np.array([0, 10, 50, 60])
+    X_new = X[query_indices] + 1e-8
+    maxk = 20
+
+    cross_distances = cdist(X_new, X)
+    cross_dist_indices = np.argsort(cross_distances, axis=1)[:, :maxk]
+    nn_distances = np.take_along_axis(cross_distances, cross_dist_indices, axis=1)
+
+    predictions_computed = cl.predict_cluster_ADP(
+        X_new, maxk=maxk, density_est=density_est
+    )
+    predictions_matrix = cl.predict_cluster_ADP(
+        X_new,
+        maxk=maxk,
+        distances=cross_distances,
+        density_est=density_est,
+    )
+    predictions_tuple = cl.predict_cluster_ADP(
+        X_new,
+        maxk=maxk,
+        distances=(nn_distances, cross_dist_indices),
+        density_est=density_est,
+    )
+
+    assert np.array_equal(predictions_computed[0], cl.cluster_assignment[query_indices])
+    for expected, matrix_result, tuple_result in zip(
+        predictions_computed, predictions_matrix, predictions_tuple
+    ):
+        assert np.array_equal(matrix_result, expected)
+        assert np.array_equal(tuple_result, expected)
+
+
 def test_cython_compute_clustering_no_garbage_assignments_minimal_case():
     """Regression test for the off-by-one in the cython removed-centers loop.
 
@@ -208,15 +248,15 @@ def test_cython_compute_clustering_no_garbage_assignments_minimal_case():
         dist_indices[i] = [i, higher] + others
 
     out = cf._compute_clustering(
-        2.0,        # Z
+        2.0,  # Z
         kstar,
         dist_indices,
-        maxk,  
-        False,      # verb
+        maxk,
+        False,  # verb
         log_den_err,
-        rho_c,  
-        g, 
-        N, 
+        rho_c,
+        g,
+        N,
     )
     cluster_indices, n_clusters, labels = out[0], out[1], out[2]
 

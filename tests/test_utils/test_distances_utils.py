@@ -45,6 +45,40 @@ def test_cross_nn_distances():
     assert pytest.approx(distances) == expected_distances
 
 
+def test_from_cross_distances_to_nndistances():
+    """Test preparation of full and nearest-neighbour cross distances."""
+    cross_distances = np.array(
+        [[0.3, 0.1, 0.4, 0.2], [0.8, 0.6, 0.9, 0.7]], dtype=np.float32
+    )
+    maxk = 3
+
+    expected_indices = np.array([[1, 3, 0], [1, 3, 0]])
+    expected_distances = np.array([[0.1, 0.2, 0.3], [0.6, 0.7, 0.8]])
+
+    matrix_distances, matrix_indices = utils.from_cross_distances_to_nndistances(
+        cross_distances,
+        maxk,
+        n_queries=2,
+        n_reference=4,
+    )
+
+    all_indices = np.argsort(cross_distances, axis=1)
+    all_distances = np.take_along_axis(cross_distances, all_indices, axis=1)
+    tuple_distances, tuple_indices = utils.from_cross_distances_to_nndistances(
+        (all_distances, all_indices),
+        maxk,
+        n_queries=2,
+        n_reference=4,
+    )
+
+    assert np.array_equal(matrix_indices, expected_indices)
+    assert np.allclose(matrix_distances, expected_distances)
+    assert np.array_equal(tuple_indices, expected_indices)
+    assert np.allclose(tuple_distances, expected_distances)
+    assert matrix_distances.dtype == np.float64
+    assert matrix_indices.dtype == np.int64
+
+
 def test_cross_nn_distances_periodic():
     """Test for computation of cross nearest neighbour distances for periodic boundaries."""
     X = np.array([0, 0.1, 0.3, 0.55]).reshape(-1, 1)

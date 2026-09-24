@@ -84,13 +84,107 @@ def from_all_distances_to_nndistances(pdist_matrix, maxk):
     return distances, dist_indices
 
 
+# Validate the structure and dtypes of precomputed nearest-neighbour arrays.
+def _validate_cross_nn_distances(cross_distances, cross_dist_indices):
+    if not isinstance(cross_distances, np.ndarray) or not isinstance(
+        cross_dist_indices, np.ndarray
+    ):
+        raise TypeError("nearest-neighbour distances and indices must be numpy arrays")
+    if cross_distances.ndim != 2 or cross_dist_indices.ndim != 2:
+        raise ValueError("nearest-neighbour distances and indices must be 2D arrays")
+    if cross_distances.shape != cross_dist_indices.shape:
+        raise ValueError(
+            "nearest-neighbour distances and indices must have the same shape"
+        )
+    if not np.issubdtype(cross_dist_indices.dtype, np.integer):
+        raise TypeError("nearest-neighbour indices must be integers")
+
+
+# Check the output dimensions and indices, then prepare Cython-compatible arrays.
+def _finalize_cross_nn_distances(
+    cross_distances, cross_dist_indices, maxk, n_queries, n_reference
+):
+    if cross_distances.shape[0] != n_queries:
+        raise ValueError("distances must have one row for each query point")
+    if cross_distances.shape[1] < maxk:
+        raise ValueError("distances must contain at least maxk neighbours per point")
+
+    cross_distances = np.ascontiguousarray(cross_distances[:, :maxk], dtype=np.float64)
+    cross_dist_indices = np.ascontiguousarray(
+        cross_dist_indices[:, :maxk], dtype=np.int64
+    )
+    invalid_indices = (cross_dist_indices < 0) | (cross_dist_indices >= n_reference)
+    if np.any(invalid_indices):
+        raise ValueError("nearest-neighbour indices must refer to reference points")
+
+    return cross_distances, cross_dist_indices
+
+
+def from_cross_distances_to_nndistances(distances, maxk, n_queries, n_reference):
+    """Prepare nearest-neighbour distances between query and reference points.
+
+    Args:
+        distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(int))):
+            Either of the following supplied-distance formats:
+
+            - A full, unsorted cross-distance matrix with shape
+              (n_queries, n_reference). The nearest maxk reference points are
+              selected here.
+            - A tuple (cross_distances, cross_dist_indices) containing already
+              sorted nearest-neighbour distances and their reference-point
+              indices. Both arrays must have shape (n_queries, at least maxk).
+              They are validated and truncated here without being sorted again.
+
+        maxk (int): number of nearest neighbours to retain.
+        n_queries (int): number of query points.
+        n_reference (int): number of reference points.
+
+    Returns:
+        cross_distances (np.ndarray(float)): n_queries x maxk distances.
+        cross_dist_indices (np.ndarray(int)): n_queries x maxk reference indices.
+
+    """
+    if isinstance(distances, tuple):
+        # This format already contains nearest neighbours and their indices.
+        if len(distances) != 2:
+            raise ValueError(
+                "distances must contain the neighbour distances and indices"
+            )
+        cross_distances, cross_dist_indices = distances
+        _validate_cross_nn_distances(cross_distances, cross_dist_indices)
+    elif isinstance(distances, np.ndarray):
+        # This format contains all query-reference distances and must be sorted.
+        if distances.ndim != 2:
+            raise ValueError("the cross-distance matrix must be a 2D array")
+        if distances.shape[1] != n_reference:
+            raise ValueError(
+                "the cross-distance matrix must have one column per reference point"
+            )
+        cross_dist_indices = np.argsort(distances, axis=1)[:, :maxk]
+        cross_distances = np.take_along_axis(distances, cross_dist_indices, axis=1)
+    else:
+        raise TypeError(
+            "distances must be a cross-distance matrix or a tuple of "
+            "nearest-neighbour distances and indices"
+        )
+
+    return _finalize_cross_nn_distances(
+        cross_distances,
+        cross_dist_indices,
+        maxk,
+        n_queries,
+        n_reference,
+    )
+
+
 def compute_cross_nn_distances(
     X_new, X, maxk, metric="euclidean", period=None, n_jobs=None
 ):
     """Compute distances, up to neighbour maxk, between points of X_new and points of X.
 
-    The element distances[i,j] represents the distance between point i in dataset X_new and its j-th neighbour in dataset
-    X, whose index is dist_indices[i,j]
+    The element distances[i,j] represents the distance between point i in
+    dataset X_new and its j-th neighbour in dataset X, whose index is
+    dist_indices[i,j]
 
     Args:
         X_new (np.array(float)): dataset (N points) from which distances are computed

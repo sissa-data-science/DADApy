@@ -34,9 +34,9 @@ from dadapy._utils.density_estimation import (
 )
 from dadapy._utils.utils import (
     compute_cross_nn_distances,
-    from_all_distances_to_nndistances,
+    cores,
+    from_cross_distances_to_nndistances,
 )
-from dadapy._utils.utils import cores
 from dadapy.density_estimation import DensityEstimation
 
 
@@ -284,11 +284,15 @@ class Clustering(DensityEstimation):
 
         Args:
             X_new (np.ndarray(float)): points for which to predict cluster assignment. Shape (len(X_new), self.dims)
+            maxk (int): number of training-set neighbours used for each query point.
             alpha (float): significance level used to compute the interpolated kstar (see KStar.compute_kstar).
             bonferroni_deloc (bool): whether to correct for tests across query points (see KStar.compute_kstar).
             bonferroni_loc (bool): whether to correct for successive neighbourhood tests (see KStar.compute_kstar).
-            distances (np.ndarray(float), tuple(np.ndarray(float), np.ndarray(float))): Distance matrix (N x N),
-                or tuple of nearest neighbor distances (N x maxk) and their indices (N x maxk).
+            distances (None, np.ndarray(float), tuple(np.ndarray(float), np.ndarray(int))): Distance input. If None,
+                nearest neighbours are computed from X_new and the training coordinates. A full cross-distance matrix
+                must have shape (len(X_new), self.N) and is sorted internally. Alternatively, pass a tuple containing
+                already-sorted nearest-neighbour distances and the corresponding training indices, each with shape
+                (len(X_new), at least maxk).
             density_est (str, optional): density interpolator. Currently implemented: "PAk" (default) and "kstarNN".
             n_jobs (int): number of cores to be used.
         Returns:
@@ -300,16 +304,19 @@ class Clustering(DensityEstimation):
                 (currently implemented only 0/1), with halo points. Shape (len(X_new), self.N_clusters).
         """
         threads = self.n_jobs if n_jobs is None else n_jobs
+        sec2 = time.time()
 
         if distances is not None:
-            cross_distances, cross_dist_indices = from_all_distances_to_nndistances(
-                distances, maxk
+            cross_distances, cross_dist_indices = from_cross_distances_to_nndistances(
+                distances,
+                maxk,
+                n_queries=X_new.shape[0],
+                n_reference=self.N,
             )
         else:
             if self.verb:
                 print("Estimation of the distances started")
             sec = time.time()
-            sec2 = sec
             cross_distances, cross_dist_indices = compute_cross_nn_distances(
                 X_new, self.X, maxk, self.metric, self.period, threads
             )
