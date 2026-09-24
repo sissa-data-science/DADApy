@@ -23,6 +23,7 @@ from scipy.spatial.distance import cdist
 
 from dadapy import Clustering
 from dadapy._cython import cython_clustering as cf
+from dadapy._cython import cython_density as cd
 
 filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
 
@@ -134,6 +135,14 @@ expected_cluster_assignment = np.array(
 )
 
 
+@pytest.fixture(scope="module")
+def adp_clustering():
+    """Return a fitted ADP clustering object for prediction tests."""
+    cl = Clustering(coordinates=X)
+    cl.compute_clustering_ADP(Z=1.65)
+    return cl
+
+
 def test_clustering_ADP_cython():
     """Test the clustering operations work correctly."""
     cl = Clustering(coordinates=X)
@@ -143,6 +152,33 @@ def test_clustering_ADP_cython():
     assert cl.N_clusters == 2
 
     assert (cl.cluster_assignment == expected_cluster_assignment).all()
+
+    assigned_points = [point for cluster in cl.cluster_indices for point in cluster]
+    assert sorted(assigned_points) == list(range(cl.N))
+    assert len(assigned_points) == len(set(assigned_points))
+    assert len(cl.cluster_indices) == cl.N_clusters
+    assert len(cl.cluster_centers) == cl.N_clusters
+    for cluster, indices in enumerate(cl.cluster_indices):
+        assert np.all(cl.cluster_assignment[indices] == cluster)
+
+    valid_halo_labels = (cl.cluster_assignment_halo == -1) | (
+        (cl.cluster_assignment_halo >= 0) & (cl.cluster_assignment_halo < cl.N_clusters)
+    )
+    assert valid_halo_labels.all()
+
+    expected_matrix_shape = (cl.N_clusters, cl.N_clusters)
+    assert cl.log_den_bord.shape == expected_matrix_shape
+    assert cl.log_den_bord_err.shape == expected_matrix_shape
+    assert cl.bord_indices.shape == expected_matrix_shape
+
+
+def test_clustering_adp_merges_clusters_at_higher_z():
+    """A larger merging factor merges the two modes in the reference data."""
+    cl = Clustering(coordinates=X)
+    cl.compute_clustering_ADP(Z=3.0)
+
+    assert cl.N_clusters == 1
+    assert np.all(cl.cluster_assignment == 0)
 
 
 def test_clustering_adp_cython_matches_pure_python():
@@ -172,10 +208,11 @@ def test_cython_clustering_assignment_within_valid_range():
 
 
 @pytest.mark.parametrize("density_est", ["PAk", "kstarNN"])
-def test_predict_cluster_adp_distance_inputs_are_equivalent(density_est):
+def test_predict_cluster_adp_distance_inputs_are_equivalent(
+    adp_clustering, density_est
+):
     """Predictions are independent of the supported distance input format."""
-    cl = Clustering(coordinates=X)
-    cl.compute_clustering_ADP(Z=1.65)
+    cl = adp_clustering
 
     query_indices = np.array([0, 10, 50, 60])
     X_new = X[query_indices] + 1e-8
@@ -202,11 +239,93 @@ def test_predict_cluster_adp_distance_inputs_are_equivalent(density_est):
     )
 
     assert np.array_equal(predictions_computed[0], cl.cluster_assignment[query_indices])
+
+    cluster_prediction, cluster_prediction_halo, probability, probability_halo = (
+        predictions_computed
+    )
+    n_queries = len(X_new)
+    assert cluster_prediction.shape == (n_queries,)
+    assert cluster_prediction_halo.shape == (n_queries,)
+    assert probability.shape == (n_queries, cl.N_clusters)
+    assert probability_halo.shape == (n_queries, cl.N_clusters + 1)
+    assert np.all((cluster_prediction >= 0) & (cluster_prediction < cl.N_clusters))
+    assert np.all(
+        (cluster_prediction_halo == -1)
+        | ((cluster_prediction_halo >= 0) & (cluster_prediction_halo < cl.N_clusters))
+    )
+    assert np.all(np.isin(probability, [0, 1]))
+    assert np.all(np.isin(probability_halo, [0, 1]))
+    assert np.all(probability.sum(axis=1) == 1)
+    assert np.all(probability_halo.sum(axis=1) == 1)
+
     for expected, matrix_result, tuple_result in zip(
         predictions_computed, predictions_matrix, predictions_tuple
     ):
         assert np.array_equal(matrix_result, expected)
         assert np.array_equal(tuple_result, expected)
+
+
+def test_predict_cluster_adp_forwards_kstar_options(adp_clustering, monkeypatch):
+    """Prediction forwards alpha and Bonferroni options to interpolated kstar."""
+    recorded_options = {}
+    compute_kstar_interp = cd._compute_kstar_interp
+
+    def record_kstar_options(*args):
+        recorded_options["alpha"] = args[3]
+        recorded_options["bonferroni_deloc"] = args[7]
+        recorded_options["bonferroni_loc"] = args[8]
+        return compute_kstar_interp(*args)
+
+    monkeypatch.setattr(cd, "_compute_kstar_interp", record_kstar_options)
+
+    adp_clustering.predict_cluster_ADP(
+        X[[0, 50]] + 1e-8,
+        maxk=20,
+        alpha=0.05,
+        bonferroni_deloc=True,
+        bonferroni_loc=True,
+    )
+
+    assert recorded_options == {
+        "alpha": 0.05,
+        "bonferroni_deloc": True,
+        "bonferroni_loc": True,
+    }
+
+
+def test_predict_cluster_adp_rejects_invalid_density_estimator(adp_clustering):
+    """Prediction reports unsupported density estimators explicitly."""
+    with pytest.raises(ValueError, match="density_est"):
+        adp_clustering.predict_cluster_ADP(
+            X[[0]] + 1e-8,
+            maxk=20,
+            density_est="invalid",
+        )
+
+
+def test_predict_cluster_adp_requires_clustering():
+    """Prediction requires ADP clustering attributes to be available."""
+    cl = Clustering(coordinates=X)
+
+    with pytest.raises(RuntimeError, match="ADP clustering"):
+        cl.predict_cluster_ADP(X[[0]] + 1e-8, maxk=20)
+
+
+def test_predict_cluster_adp_requires_distances_without_training_coordinates():
+    """A distance-only model requires cross distances for prediction."""
+    cl = Clustering(distances=cdist(X, X))
+    cl.compute_clustering_ADP(Z=1.65)
+    X_new = X[[0]] + 1e-8
+
+    with pytest.raises(ValueError, match="distances must be supplied"):
+        cl.predict_cluster_ADP(X_new, maxk=20)
+
+    prediction = cl.predict_cluster_ADP(
+        X_new,
+        maxk=20,
+        distances=cdist(X_new, X),
+    )[0]
+    assert prediction.shape == (1,)
 
 
 def test_cython_compute_clustering_no_garbage_assignments_minimal_case():

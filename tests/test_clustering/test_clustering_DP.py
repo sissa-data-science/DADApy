@@ -149,3 +149,20 @@ def test_compute_cluster_DP():
     cl.compute_DecGraph()
     _ = cl.compute_clustering_DP(dens_cut=-3.0, delta_cut=3.0)
     assert (cl.cluster_assignment == expected_cluster_assignment).all()
+
+
+def test_compute_cluster_DP_with_halo():
+    """Test that DP halo labels preserve the underlying cluster assignment."""
+    cl = Clustering(coordinates=X)
+    cl.compute_density_PAk()
+    cl.compute_DecGraph()
+
+    assignment_halo = cl.compute_clustering_DP(dens_cut=-3.0, delta_cut=3.0, halo=True)
+
+    valid_labels = (assignment_halo == -1) | np.isin(assignment_halo, [0, 1])
+    non_halo = assignment_halo != -1
+    assert valid_labels.all()
+    assert np.any(~non_halo)
+    assert np.array_equal(
+        assignment_halo[non_halo], expected_cluster_assignment[non_halo]
+    )
