@@ -231,6 +231,8 @@ dadapy/_cython/.*
 examples/datasets/mnist.npy
 examples/datasets/isolet_float32.npy
 examples/datasets/isomap_faces.npy
+examples/datasets/cln025traj_dihedrals_decimated_equilibrated.npy
+examples/datasets/cln025traj_distances_decimated_equilibrated.npy
 
 clustering_bug_example
 
