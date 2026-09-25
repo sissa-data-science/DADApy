@@ -102,7 +102,13 @@ class Clustering(DensityEstimation):
         The calculation is optimized though cython
 
         Args:
-            Z(float): merging parameter
+            Z (float): Merging parameter.
+            v2 (bool): If True, use the memory-efficient ADP implementation.
+                It stores only observed inter-cluster saddle points during
+                merging, reducing peak memory when many putative clusters are
+                found. It should produce the same clustering results as the
+                default implementation, but may be up to twice as slow.
+                Default: False.
 
         Returns:
             cluster_assignment (np.ndarray(int)): assignment of points to specific clusters.
@@ -408,7 +414,25 @@ class Clustering(DensityEstimation):
     def compute_clustering_ADP_pure_python(  # noqa: C901
         self, Z=1.65, halo=False, v2=False
     ):
-        """Compute ADP clustering, but without the cython optimization."""
+        """Compute ADP clustering without the Cython optimization.
+
+        Args:
+            Z (float): Merging parameter. Higher values merge density peaks
+                more aggressively and therefore produce fewer clusters.
+                Default: 1.65.
+            halo (bool): If True, assign label -1 to halo points. Default:
+                False.
+            v2 (bool): If True, use the memory-efficient ADP implementation.
+                It stores only observed inter-cluster saddle points during
+                merging, reducing peak memory when many putative clusters are
+                found. It should produce the same clustering results as the
+                default implementation, but may be up to twice as slow.
+                Default: False.
+
+        Returns:
+            cluster_assignment (np.ndarray(int)): Assignment of points to
+                clusters. Also saved in self.cluster_assignment.
+        """
         if self.log_den is None:
             self.compute_density_PAk()
 
