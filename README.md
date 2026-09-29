@@ -105,7 +105,7 @@ overlap_x2 = no.return_label_overlap(k=10)
 - I3D estimator (for both continuous and discrete spaces)
   > Macocco et al., *Physical Review Letters* (2023)
 - BID estimator
-  > Acevedo et al., *Nature Communications Physics* (2025)
+  > Acevedo et al., *Communications Physics* (2025)
   
 - Density estimators
     - 
@@ -144,7 +144,7 @@ overlap_x2 = no.return_label_overlap(k=10)
 - Imbalance Gain
   > Del Tatto et al., *PNAS* (2024)
 - Community causal graph
-  > Allione et al., arXiv (2025)
+  > Allione et al., *Physical Review Letters* (2025)
 
 # Installation
 The package is compatible with the Python versions 3.10, 3.11, 3.12, 3.13, and 3.14.
