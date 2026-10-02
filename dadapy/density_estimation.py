@@ -30,7 +30,7 @@ from dadapy._utils.density_estimation import (
     return_not_normalised_density_PAk,
     return_not_normalised_density_PAk_optimized,
 )
-from dadapy._utils.utils import compute_cross_nn_distances, cores
+from dadapy._utils.utils import _validate_maxk, compute_cross_nn_distances, cores
 from dadapy.kstar import KStar
 
 
@@ -318,20 +318,6 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
-    def _get_interpolation_maxk(self, maxk):
-        # Use the stored neighbour cap unless a smaller one is requested.
-        if maxk is None:
-            return self.maxk
-        if isinstance(maxk, bool) or not isinstance(maxk, (int, np.integer)):
-            raise TypeError("maxk must be an integer")
-        if maxk < 2:
-            raise ValueError("maxk must be at least 2")
-        if maxk > self.maxk:
-            raise ValueError("maxk cannot be greater than self.maxk")
-        return int(maxk)
-
-    # ----------------------------------------------------------------------------------------------
-
     def return_interpolated_density_kNN(self, X_new, k, return_kstar=False):
         """Return the kNN density of the primary dataset, evaluated on a new set of points "X_new".
 
@@ -408,7 +394,7 @@ class DensityEstimation(KStar):
                 at each iteration
             return_kstar (bool): if True, also return the optimal number of neighbours for each point
             maxk (int, optional): maximum number of neighbours considered when selecting kstar.
-                It cannot exceed self.maxk. Default is self.maxk.
+                It must be at least 4 and cannot exceed self.maxk. Default is self.maxk.
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
@@ -416,7 +402,7 @@ class DensityEstimation(KStar):
             kstar (np.ndarray(int), optional): optimal number of neighbours for each point
         """
         assert self.X is not None
-        maxk = self._get_interpolation_maxk(maxk)
+        maxk = _validate_maxk(self.maxk if maxk is None else maxk, self.maxk)
 
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
@@ -491,7 +477,7 @@ class DensityEstimation(KStar):
                 at each iteration
             return_kstar (bool): if True, also return the optimal number of neighbours for each point
             maxk (int, optional): maximum number of neighbours considered when selecting kstar.
-                It cannot exceed self.maxk. Default is self.maxk.
+                It must be at least 4 and cannot exceed self.maxk. Default is self.maxk.
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
@@ -499,7 +485,7 @@ class DensityEstimation(KStar):
             kstar (np.ndarray(int), optional): optimal number of neighbours for each point
         """
         assert self.X is not None
-        maxk = self._get_interpolation_maxk(maxk)
+        maxk = _validate_maxk(self.maxk if maxk is None else maxk, self.maxk)
 
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()

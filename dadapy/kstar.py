@@ -28,8 +28,7 @@ from scipy.stats import chi2
 
 from dadapy._cython import cython_density as cd
 from dadapy._utils import utils as ut
-from dadapy._utils.utils import cores
-from dadapy._utils.utils import resolve_backend
+from dadapy._utils.utils import cores, resolve_backend
 from dadapy.id_estimation import IdEstimation
 
 try:
@@ -131,6 +130,14 @@ class KStar(IdEstimation):
             batch_size (int, optional): batch size used by the JAX backend to reduce peak memory usage.
             n_jobs (int, optional): number of threads for the Cython parallel backend.
 
+        Notes:
+            Automatic selection requires self.maxk >= 4 and never returns kstar below 3.
+            With self.maxk = 4, kstar is fixed to 3; likelihood-ratio testing starts
+            when self.maxk >= 5.
+
+        Raises:
+            ValueError: If self.maxk is smaller than 4.
+
         """
         return self._compute_kstar(
             alpha=alpha,
@@ -155,11 +162,10 @@ class KStar(IdEstimation):
                 "JAX is required for backend='jax'. Install `jax` and `jaxlib`."
             )
 
-        if self.maxk <= 1:
-            return np.ones(self.N, dtype=int)
+        ut._validate_maxk(self.maxk)
 
-        if self.maxk <= 4:
-            return np.full(self.N, self.maxk - 1, dtype=int)
+        if self.maxk == 4:
+            return np.full(self.N, 3, dtype=int)
 
         if batch_size is None:
             batch_size = self.N
@@ -224,6 +230,8 @@ class KStar(IdEstimation):
             batch_size (int or None): used only by backend='jax'.
             n_jobs (int or None): used by backend='cython' if an OpenMP-enabled Cython kernel is available.
         """
+        ut._validate_maxk(self.maxk)
+
         if self.intrinsic_dim is None:
             warnings.warn(
                 "Careful! The intrinsic dimension is not defined. "

@@ -28,6 +28,17 @@ from sklearn.neighbors import NearestNeighbors
 cores = min(multiprocessing.cpu_count(), 128)
 
 
+# Validate the neighbour cap used by automatic kstar selection.
+def _validate_maxk(maxk, maxk_available=None):
+    if isinstance(maxk, bool) or not isinstance(maxk, (int, np.integer)):
+        raise TypeError("maxk must be an integer")
+    if maxk < 4:
+        raise ValueError("maxk must be at least 4 so that kstar is at least 3")
+    if maxk_available is not None and maxk > maxk_available:
+        raise ValueError("maxk cannot be greater than the available maxk")
+    return int(maxk)
+
+
 def compute_all_distances(X, n_jobs=cores, metric="euclidean"):
     """Compute the distances among all available points of the dataset X
 

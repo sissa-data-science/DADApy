@@ -49,11 +49,10 @@ def _compute_kstar(floatTYPE_t id_sel,
         chi2.isf(alpha_eff / np.arange(1, maxk + 1), 1), dtype=float
     )
 
-    if maxk <= 1:
-        kstar[:] = 1
-        return kstar
-    if maxk <= 4:
-        kstar[:] = maxk - 1
+    if maxk < 4:
+        raise ValueError("maxk must be at least 4 so that kstar is at least 3")
+    if maxk == 4:
+        kstar[:] = 3
         return kstar
 
     for i in range(Nele):
@@ -104,11 +103,10 @@ def _compute_kstar_parallel(floatTYPE_t id_sel,
     cdef DTYPE_t[::1] kstar_v = kstar
     cdef floatTYPE_t[::1] local_thresholds_v = local_thresholds
 
-    if maxk <= 1:
-        kstar[:] = 1
-        return kstar
-    if maxk <= 4:
-        kstar[:] = maxk - 1
+    if maxk < 4:
+        raise ValueError("maxk must be at least 4 so that kstar is at least 3")
+    if maxk == 4:
+        kstar[:] = 3
         return kstar
 
     with nogil:
@@ -155,11 +153,10 @@ def _compute_kstar_interp(floatTYPE_t id_sel,
         chi2.isf(alpha_eff / np.arange(1, maxk + 1), 1), dtype=float
     )
 
-    if maxk <= 1:
-        kstar[:] = 1
-        return kstar
-    if maxk <= 4:
-        kstar[:] = maxk - 1
+    if maxk < 4:
+        raise ValueError("maxk must be at least 4 so that kstar is at least 3")
+    if maxk == 4:
+        kstar[:] = 3
         return kstar
 
     for i in range(Nele):

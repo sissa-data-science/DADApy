@@ -103,13 +103,13 @@ def test_density_interpolators(density_method, interpolator_method, kwargs):
         ),
     ],
 )
+@pytest.mark.parametrize("maxk", [4, 10])
 def test_adaptive_density_interpolators_with_explicit_maxk(
-    density_method, interpolator_method
+    density_method, interpolator_method, maxk
 ):
     """Test adaptive interpolators with an explicit neighbour cap."""
     filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
     X = np.load(filename)[:25]
-    maxk = 10
     kwargs = {"alpha": 0.05}
 
     reference = DensityEstimation(coordinates=X, maxk=maxk)
@@ -125,6 +125,7 @@ def test_adaptive_density_interpolators_with_explicit_maxk(
     assert log_den == pytest.approx(expected_log_den)
     assert log_den_err == pytest.approx(expected_log_den_err)
     assert np.array_equal(kstar, reference.kstar)
+    assert np.all(kstar >= 3)
 
 
 @pytest.mark.parametrize(
@@ -139,5 +140,22 @@ def test_adaptive_density_interpolators_reject_unavailable_maxk(
     X = np.load(filename)[:25]
     de = DensityEstimation(coordinates=X, maxk=10)
 
-    with pytest.raises(ValueError, match="greater than self.maxk"):
+    with pytest.raises(ValueError, match="greater than the available maxk"):
         getattr(de, interpolator_method)(X, maxk=11)
+
+
+@pytest.mark.parametrize(
+    "interpolator_method",
+    ["return_interpolated_density_kstarNN", "return_interpolated_density_PAk"],
+)
+@pytest.mark.parametrize("maxk", [1, 2, 3])
+def test_adaptive_density_interpolators_reject_maxk_below_minimum(
+    interpolator_method, maxk
+):
+    """Test the minimum neighbour cap used for automatic kstar selection."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+    de = DensityEstimation(coordinates=X)
+
+    with pytest.raises(ValueError, match="maxk must be at least 4"):
+        getattr(de, interpolator_method)(X, maxk=maxk)

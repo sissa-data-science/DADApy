@@ -303,6 +303,13 @@ def test_predict_cluster_adp_rejects_invalid_density_estimator(adp_clustering):
         )
 
 
+@pytest.mark.parametrize("maxk", [1, 2, 3])
+def test_predict_cluster_adp_rejects_maxk_below_minimum(adp_clustering, maxk):
+    """Prediction requires enough neighbours to keep kstar at least three."""
+    with pytest.raises(ValueError, match="maxk must be at least 4"):
+        adp_clustering.predict_cluster_ADP(X[[0]] + 1e-8, maxk=maxk)
+
+
 def test_predict_cluster_adp_requires_clustering():
     """Prediction requires ADP clustering attributes to be available."""
     cl = Clustering(coordinates=X)

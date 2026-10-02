@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 
 from dadapy import KStar
+from dadapy._cython import cython_density as cd
 
 try:
     import jax  # noqa: F401
@@ -79,9 +80,19 @@ def test_compute_kstar_auto_backend():
     assert np.array_equal(kstar.kstar, expected)
 
 
-@pytest.mark.parametrize("maxk", [1, 2, 3, 4])
-def test_compute_kstar_backends_small_maxk(maxk):
-    """Test backend agreement when no likelihood-ratio test can be performed."""
+@pytest.mark.parametrize("maxk", [1, 2, 3])
+def test_compute_kstar_rejects_maxk_below_minimum(maxk):
+    """Test that automatic kstar selection cannot return values below three."""
+    cython = KStar(coordinates=backend_data, maxk=maxk, n_jobs=1)
+    cython.set_id(2.0)
+
+    with pytest.raises(ValueError, match="maxk must be at least 4"):
+        cython.compute_kstar(alpha=0.05, backend="cython")
+
+
+def test_compute_kstar_backends_at_minimum_maxk():
+    """Test backend agreement at the minimum supported neighbour cap."""
+    maxk = 4
     cython = KStar(coordinates=backend_data, maxk=maxk, n_jobs=1)
     cython.set_id(2.0)
     cython.compute_kstar(alpha=0.05, backend="cython")
@@ -91,12 +102,47 @@ def test_compute_kstar_backends_small_maxk(maxk):
     parallel.compute_kstar(alpha=0.05, backend="cython")
 
     assert np.array_equal(parallel.kstar, cython.kstar)
+    assert np.all(cython.kstar == 3)
 
     if HAS_JAX:
         jax_kstar = KStar(coordinates=backend_data, maxk=maxk, n_jobs=1)
         jax_kstar.set_id(2.0)
         jax_kstar.compute_kstar(alpha=0.05, backend="jax")
         assert np.array_equal(jax_kstar.kstar, cython.kstar)
+
+
+def test_cython_kstar_kernels_reject_maxk_below_minimum():
+    """Test minimum-kstar validation inside the Cython kernels."""
+    kstar = KStar(coordinates=backend_data, maxk=3, n_jobs=1)
+    kstar.set_id(2.0)
+    kstar.compute_distances()
+
+    common_args = (
+        kstar.intrinsic_dim,
+        kstar.N,
+        kstar.maxk,
+        0.05,
+        kstar.dist_indices,
+        kstar.distances,
+        False,
+        False,
+    )
+    with pytest.raises(ValueError, match="maxk must be at least 4"):
+        cd._compute_kstar(*common_args)
+    with pytest.raises(ValueError, match="maxk must be at least 4"):
+        cd._compute_kstar_parallel(*common_args, 1)
+    with pytest.raises(ValueError, match="maxk must be at least 4"):
+        cd._compute_kstar_interp(
+            kstar.intrinsic_dim,
+            kstar.N,
+            kstar.maxk,
+            0.05,
+            kstar.dist_indices[:, : kstar.maxk],
+            kstar.distances[:, : kstar.maxk],
+            kstar.distances,
+            False,
+            False,
+        )
 
 
 @pytest.mark.parametrize(

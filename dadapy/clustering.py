@@ -33,6 +33,7 @@ from dadapy._utils.density_estimation import (
     return_not_normalised_density_PAk,
 )
 from dadapy._utils.utils import (
+    _validate_maxk,
     compute_cross_nn_distances,
     cores,
     from_cross_distances_to_nndistances,
@@ -290,7 +291,8 @@ class Clustering(DensityEstimation):
 
         Args:
             X_new (np.ndarray(float)): points for which to predict cluster assignment. Shape (len(X_new), self.dims)
-            maxk (int): number of training-set neighbours used for each query point.
+            maxk (int): number of training-set neighbours used for each query point. It must be at least 4 and cannot
+                exceed self.maxk.
             alpha (float): significance level used to compute the interpolated kstar (see KStar.compute_kstar).
             bonferroni_deloc (bool): whether to correct for tests across query points (see KStar.compute_kstar).
             bonferroni_loc (bool): whether to correct for successive neighbourhood tests (see KStar.compute_kstar).
@@ -312,8 +314,8 @@ class Clustering(DensityEstimation):
 
         Raises:
             RuntimeError: If ADP clustering has not been computed on the training data.
-            ValueError: If density_est is not "PAk" or "kstarNN", or if distances are not supplied when the training
-                coordinates are unavailable.
+            ValueError: If maxk is outside the supported range, density_est is not "PAk" or "kstarNN", or distances
+                are not supplied when the training coordinates are unavailable.
         """
         if self.cluster_assignment is None or self.cluster_assignment_halo is None:
             raise RuntimeError(
@@ -325,6 +327,7 @@ class Clustering(DensityEstimation):
             raise ValueError(
                 "distances must be supplied when training coordinates are unavailable"
             )
+        maxk = _validate_maxk(maxk, self.maxk)
 
         threads = self.n_jobs if n_jobs is None else n_jobs
         sec2 = time.time()
