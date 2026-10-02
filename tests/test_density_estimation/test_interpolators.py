@@ -86,3 +86,58 @@ def test_density_interpolators(density_method, interpolator_method, kwargs):
     assert result_with_kstar[0] == pytest.approx(result[0])
     assert result_with_kstar[1] == pytest.approx(result[1])
     assert np.array_equal(result_with_kstar[2], expected_kstar)
+
+
+@pytest.mark.parametrize(
+    "density_method, interpolator_method",
+    [
+        pytest.param(
+            "compute_density_kstarNN",
+            "return_interpolated_density_kstarNN",
+            id="kstarNN",
+        ),
+        pytest.param(
+            "compute_density_PAk",
+            "return_interpolated_density_PAk",
+            id="PAk",
+        ),
+    ],
+)
+def test_adaptive_density_interpolators_with_explicit_maxk(
+    density_method, interpolator_method
+):
+    """Test adaptive interpolators with an explicit neighbour cap."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+    maxk = 10
+    kwargs = {"alpha": 0.05}
+
+    reference = DensityEstimation(coordinates=X, maxk=maxk)
+    expected_log_den, expected_log_den_err = getattr(reference, density_method)(
+        **kwargs
+    )
+
+    de = DensityEstimation(coordinates=X)
+    log_den, log_den_err, kstar = getattr(de, interpolator_method)(
+        X, maxk=maxk, return_kstar=True, **kwargs
+    )
+
+    assert log_den == pytest.approx(expected_log_den)
+    assert log_den_err == pytest.approx(expected_log_den_err)
+    assert np.array_equal(kstar, reference.kstar)
+
+
+@pytest.mark.parametrize(
+    "interpolator_method",
+    ["return_interpolated_density_kstarNN", "return_interpolated_density_PAk"],
+)
+def test_adaptive_density_interpolators_reject_unavailable_maxk(
+    interpolator_method,
+):
+    """Test that the requested neighbour cap is available in the reference data."""
+    filename = os.path.join(os.path.split(__file__)[0], "../2gaussians_in_2d.npy")
+    X = np.load(filename)[:25]
+    de = DensityEstimation(coordinates=X, maxk=10)
+
+    with pytest.raises(ValueError, match="greater than self.maxk"):
+        getattr(de, interpolator_method)(X, maxk=11)

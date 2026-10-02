@@ -318,6 +318,20 @@ class DensityEstimation(KStar):
 
     # ----------------------------------------------------------------------------------------------
 
+    def _get_interpolation_maxk(self, maxk):
+        # Use the stored neighbour cap unless a smaller one is requested.
+        if maxk is None:
+            return self.maxk
+        if isinstance(maxk, bool) or not isinstance(maxk, (int, np.integer)):
+            raise TypeError("maxk must be an integer")
+        if maxk < 2:
+            raise ValueError("maxk must be at least 2")
+        if maxk > self.maxk:
+            raise ValueError("maxk cannot be greater than self.maxk")
+        return int(maxk)
+
+    # ----------------------------------------------------------------------------------------------
+
     def return_interpolated_density_kNN(self, X_new, k, return_kstar=False):
         """Return the kNN density of the primary dataset, evaluated on a new set of points "X_new".
 
@@ -382,6 +396,7 @@ class DensityEstimation(KStar):
         bonferroni_deloc=False,
         bonferroni_loc=False,
         return_kstar=False,
+        maxk=None,
     ):
         """Return the kstarNN density of the primary dataset, evaluated on a new set of points "X_new".
 
@@ -392,6 +407,8 @@ class DensityEstimation(KStar):
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
                 at each iteration
             return_kstar (bool): if True, also return the optimal number of neighbours for each point
+            maxk (int, optional): maximum number of neighbours considered when selecting kstar.
+                It cannot exceed self.maxk. Default is self.maxk.
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
@@ -399,6 +416,7 @@ class DensityEstimation(KStar):
             kstar (np.ndarray(int), optional): optimal number of neighbours for each point
         """
         assert self.X is not None
+        maxk = self._get_interpolation_maxk(maxk)
 
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
@@ -407,7 +425,7 @@ class DensityEstimation(KStar):
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new,
             self.X,
-            self.maxk,
+            maxk,
             self.metric,
             self.period,
             n_jobs=self.n_jobs,
@@ -423,7 +441,7 @@ class DensityEstimation(KStar):
         kstar = cd._compute_kstar_interp(
             self.intrinsic_dim,
             X_new.shape[0],
-            self.maxk,
+            maxk,
             alpha,
             cross_dist_indices,
             cross_distances,
@@ -461,6 +479,7 @@ class DensityEstimation(KStar):
         bonferroni_deloc=False,
         bonferroni_loc=False,
         return_kstar=False,
+        maxk=None,
     ):
         """Return the PAk density of the primary dataset, evaluated on a new set of points "X_new".
 
@@ -471,6 +490,8 @@ class DensityEstimation(KStar):
             bonferroni_loc (bool): apply bonferroni correction for multiple testing correcting the threshold
                 at each iteration
             return_kstar (bool): if True, also return the optimal number of neighbours for each point
+            maxk (int, optional): maximum number of neighbours considered when selecting kstar.
+                It cannot exceed self.maxk. Default is self.maxk.
 
         Returns:
             log_den (np.ndarray(float)): log density of dataset evaluated on X_new
@@ -478,6 +499,7 @@ class DensityEstimation(KStar):
             kstar (np.ndarray(int), optional): optimal number of neighbours for each point
         """
         assert self.X is not None
+        maxk = self._get_interpolation_maxk(maxk)
 
         if self.intrinsic_dim is None:
             _ = self.compute_id_2NN()
@@ -486,7 +508,7 @@ class DensityEstimation(KStar):
         cross_distances, cross_dist_indices = compute_cross_nn_distances(
             X_new,
             self.X,
-            self.maxk,
+            maxk,
             self.metric,
             self.period,
             n_jobs=self.n_jobs,
@@ -502,7 +524,7 @@ class DensityEstimation(KStar):
         kstar = cd._compute_kstar_interp(
             self.intrinsic_dim,
             X_new.shape[0],
-            self.maxk,
+            maxk,
             alpha,
             cross_dist_indices,
             cross_distances,
