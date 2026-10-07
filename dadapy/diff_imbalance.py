@@ -475,17 +475,12 @@ class DiffImbalance:
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1] - 1
 
-            # set distance of a point with itself to a large number, so that it is never selected as
-            # a neighbor by the softmax and is excluded when lambda is computed
-            large_value = jnp.max(dist2_matrix_A) + 1e6
-            dist2_matrix_A = dist2_matrix_A.at[jnp.arange(N), jnp.arange(N)].set(
-                large_value
-            )
-
-            # discard distances between points that are "close" along axis=0 (e.g. correlated in time):
-            # setting them to 'large_value' excludes these pairs from the softmax neighbor selection
+            # pairs excluded from the neighbor selection in space A and from the computation of lambda:
+            # each point with itself and, if 'batch_close_mask' is given, the pairs of points that are
+            # "close" along axis=0 (e.g. correlated in time)
+            discarded_pairs = jnp.eye(N, dist2_matrix_A.shape[1], dtype=bool)
             if batch_close_mask is not None:
-                dist2_matrix_A = jnp.where(batch_close_mask, large_value, dist2_matrix_A)
+                discarded_pairs = discarded_pairs | batch_close_mask
 
                 # re-rank space B consistently with the exclusion: push the discarded pairs (including
                 # each point's self-pair) to the largest ranks, then renumber the surviving pairs so that
@@ -499,18 +494,25 @@ class DiffImbalance:
                 # so the DII is normalized point by point (see below)
                 max_rank = n_columns - batch_close_mask.sum(axis=1)
 
+            # compute lambda values: the discarded pairs are set to an infinite distance, so that they are
+            # never among the k nearest neighbors
             lambdas = self.lambda_method(
-                dist2_matrix=dist2_matrix_A,
+                dist2_matrix=jnp.where(discarded_pairs, jnp.inf, dist2_matrix_A),
                 k=k,
-            )  # compute lambda values
-            c_matrix = (
-                jax.nn.softmax(  # N.B. diagonal elements already numerically zero
+            )
+            # the logits of the discarded pairs are set to -inf, so that their softmax coefficients are
+            # exactly zero, whatever the scale of the distances. N.B. the division by lambda is carried out
+            # on the finite distances before masking, as dividing infinite distances gives NaN gradients
+            c_matrix = jax.nn.softmax(
+                jnp.where(
+                    discarded_pairs,
+                    -jnp.inf,
                     -dist2_matrix_A
                     / lambdas[
                         :, jnp.newaxis
                     ],  # jax.lax.stop_gradient(lambdas[:, jnp.newaxis])
-                    axis=1,
-                )
+                ),
+                axis=1,
             )
 
             # DON'T DELETE: Alternative definition of c_ij coefficients (sigmoid instead of softmax)
@@ -620,21 +622,27 @@ class DiffImbalance:
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1] - 1
 
-            # set distance of a point with itself to large number
-            dist2_matrix_A = dist2_matrix_A.at[jnp.arange(N), jnp.arange(N)].set(
-                jnp.max(dist2_matrix_A) + 1e6
-            )
-            # apply mask to column indices around the row index
+            # discard the distance of each point with itself
+            discarded_pairs = jnp.eye(N, dist2_matrix_A.shape[1], dtype=bool)
+            # apply mask to column indices around the row index (this also removes the self-distances)
             if self.mask is not None:
                 dist2_matrix_A = dist2_matrix_A[self.mask].reshape(
                     (dist2_matrix_A.shape[0], -1)
                 )
+                discarded_pairs = discarded_pairs[self.mask].reshape(
+                    (discarded_pairs.shape[0], -1)
+                )
                 max_rank = dist2_matrix_A.shape[1]
+
+            # compute lambda values and softmax coefficients, excluding the discarded pairs (see
+            # '_compute_training_diff_imbalance')
             lambdas = self.lambda_method(
-                dist2_matrix=dist2_matrix_A, k=k
-            )  # compute lambda values
-            c_matrix = jax.nn.softmax(  # N.B. diagonal elements already numerically zero if mask is None
-                -dist2_matrix_A / lambdas[:, jnp.newaxis],
+                dist2_matrix=jnp.where(discarded_pairs, jnp.inf, dist2_matrix_A), k=k
+            )
+            c_matrix = jax.nn.softmax(
+                jnp.where(
+                    discarded_pairs, -jnp.inf, -dist2_matrix_A / lambdas[:, jnp.newaxis]
+                ),
                 axis=1,
             )
 
