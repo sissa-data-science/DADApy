@@ -155,69 +155,6 @@ class CausalGraph(DiffImbalance):
                 )
         return num_variables, periods
 
-    def return_nn_indices(
-        self,
-        variables,
-        num_samples,
-        time_lags,
-        embedding_dim=1,
-        embedding_time=1,
-        discard_close_ind=None,
-    ):
-        """Return the indices of the nearest neighbor of each point.
-
-        Args:
-            variables (list, jnp.array(int)): array of the coordinates used to build the distance space
-                (with weights 1).
-            num_samples (int): number of samples harvested from the full time series.
-            time_lags (list(int), np.array(int)): tested time lags between 'present' and 'future'.
-            embedding_dim (int): dimension of the time-delay embedding vector built on each variable. Default is 1,
-                which means the time-delay embeddings are not employed.
-            embedding_time (int): lag between consecutive samples in the time-delay embedding vectors of each
-                variable. Default is 1.
-            discard_close_ind (int): defines the "close points" for which distances and ranks are not computed: for each
-                point i, distances between i and points within [i-discard_close_ind, i+discard_close_ind] are discarded.
-
-        Returns:
-            nn_indices (np.array(float)): array of the nearest neighbors indices: nn_indices[i] is the
-                index of the column with value 1 in the rank matrix.
-        """
-        assert (
-            self.time_series is not None
-        ), "Error: to call this method, provide the time series while initializing the CausalGraph class."
-
-        assert num_samples <= self.time_series.shape[0] - max(time_lags), (
-            f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial samples, "
-            + f"if the maximum time lag is {max(time_lags)}.\nChoose a value of num_samples such that "
-            + f"num_samples < {self.time_series.shape[0]} - {max(time_lags)}"
-        )
-        indices_present = np.linspace(
-            (embedding_dim - 1)
-            * embedding_time,  # select times defining the ensemble of trajectories
-            self.time_series.shape[0] - max(time_lags) - 1,
-            num_samples,
-            dtype=int,
-        )
-        indices_present = [
-            indices_present - embedding_time * i for i in range(embedding_dim)
-        ]
-        coords_present = self.time_series[
-            indices_present
-        ]  # has shape (embedding_dim, num_samples, n_variables)
-        coords_present = np.transpose(
-            coords_present, axes=[1, 2, 0]
-        )  # convert to shape (num_samples, n_variables, embedding_dim)
-        dii = DiffImbalance(
-            data_A=coords_present[:, variables].reshape(
-                (num_samples, len(variables) * embedding_dim)
-            ),
-            data_B=coords_present[:, variables].reshape(
-                (num_samples, len(variables) * embedding_dim)
-            ),  # dummy argument
-        )
-        nn_indices = dii._return_nn_indices(discard_close_ind=discard_close_ind)
-        return np.array(nn_indices)
-
     def optimize_present_to_future(  # noqa: C901
         self,
         num_samples,

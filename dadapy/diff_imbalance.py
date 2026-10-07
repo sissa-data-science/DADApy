@@ -767,43 +767,6 @@ class DiffImbalance:
         mask = mask.at[-discard_close_ind:].set(last_rows)
         return mask
 
-    def _return_nn_indices(self, discard_close_ind=0):
-        """
-        Returns indices of the nearest neighbor of each point.
-
-        Args:
-            discard_close_ind (int): given any point i, defines the "close" points (following the labelling order
-                along axis=0 of data_A and data_B) that are known to be significantly correlated with i. For example,
-                this may occur when the data set is a time series, and axis=0 is the time dimension. For each point i,
-                distances between i and points within the time window [i-discard_close_ind, i+discard_close_ind] are
-                discarded. Default is 0, for which no distances between "time-correlated" points are discarded.
-
-        Returns:
-            nn_indices (np.array(float)): array of the nearest neighbors indices: nn_indices[i] is the index of the
-                column with value 1 in the rank matrix.
-        """
-        rank_matrix = self._compute_rank_matrix(
-            batch_rows=self.data_A_rows,
-            batch_columns=self.data_A_columns,
-            periods=self.periods_A,
-        )
-        npoints = rank_matrix.shape[0]
-        # discard diagonal elements
-        rank_matrix = rank_matrix.at[jnp.arange(npoints), jnp.arange(npoints)].set(
-            npoints + 1
-        )
-
-        # construct and apply mask to discard distances between "close" points
-        if discard_close_ind > 0:
-            mask = self._return_mask(
-                npoints=rank_matrix.shape[0], discard_close_ind=discard_close_ind
-            )
-            rank_matrix = rank_matrix[mask].reshape((rank_matrix.shape[0], -1))
-            rank_matrix = rank_matrix.argsort(axis=1).argsort(axis=1) + 1
-
-        nn_indices = jnp.argmin(rank_matrix, axis=1)
-        return nn_indices
-
     def _get_batch_close_mask(self, batch_indices):
         """Returns the boolean mask flagging pairs of "close" points for a batch, or None if not needed.
 
