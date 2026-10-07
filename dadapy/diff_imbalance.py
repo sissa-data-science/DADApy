@@ -265,6 +265,12 @@ class DiffImbalance:
                 if periods_B is not None
                 else periods_B
             )
+        else:  # space B provided as distances: periods are not needed
+            if periods_B is not None:
+                warnings.warn(
+                    f"Argument distances_B is not None; periods_B will be ignored."
+                )
+            self.periods_B = None
         self.num_epochs = num_epochs
         self.batches_per_epoch = batches_per_epoch
         self.track_full_loss = track_full_loss
