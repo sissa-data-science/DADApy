@@ -77,6 +77,10 @@ def _compute_dist2_matrix_scaling(
     return dist2_matrix
 
 
+# HELPER FUNCTIONS
+# ----------------------------------------------------------------------------------------------
+
+
 def _columns_with_ties(data):
     """Finds the columns (features) of a data matrix that contain repeated values.
 
@@ -145,9 +149,17 @@ class DiffImbalance:
             carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
             which means that the gradient is computed over all the available points (batch GD).
         track_full_loss (bool): whether to compute the training DII on the full dataset at each training epoch,
-            if minibatches are used (batches_per_epoch > 1). This can be computationally demaning for large 
-            datasets but helps monitoring the convergence of the DII, as its calculation on small minibatches 
+            if minibatches are used (batches_per_epoch > 1). This can be computationally demaning for large
+            datasets but helps monitoring the convergence of the DII, as its calculation on small minibatches
             may be affected by large fluctuations. Default is False.
+        discard_close_ind (int): given any point i, defines the "close" points (following the labelling order
+            along axis=0 of data_A and data_B) that are known to be significantly correlated with i. For example,
+            this may occur when the data set is a time series, and axis=0 is the time dimension. During training,
+            for each point i the pairs (i, j) with |i - j| <= discard_close_ind are discarded entirely: they are
+            never selected as neighbors in space A, do not enter the computation of the smoothing parameter
+            lambda, and are not counted in the ranks of space B (the remaining neighbors of i are re-ranked
+            among themselves, and the DII of point i is normalized by their number). Default is 0, for which no
+            distances between "time-correlated" points are discarded.
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
         l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
@@ -188,6 +200,7 @@ class DiffImbalance:
         num_epochs=200,
         batches_per_epoch=1,
         track_full_loss=False,
+        discard_close_ind=0,
         seed=0,
         l1_strength=0.0,
         point_adapt_lambda=True,
@@ -255,6 +268,7 @@ class DiffImbalance:
         self.num_epochs = num_epochs
         self.batches_per_epoch = batches_per_epoch
         self.track_full_loss = track_full_loss
+        self.discard_close_ind = discard_close_ind
         self.l1_strength = l1_strength
         self.point_adapt_lambda = point_adapt_lambda
         self.k = k
@@ -312,6 +326,19 @@ class DiffImbalance:
             f"'k' ({self.k}) must be smaller than the number of points per mini-batch "
             + f"(nrows // batches_per_epoch = {self.nrows // self.batches_per_epoch}), "
             + f"so that the k-th neighbor exists when lambda is computed."
+        )
+        assert (
+            isinstance(discard_close_ind, (int, np.integer)) and discard_close_ind >= 0
+        ), f"'discard_close_ind' must be a non-negative integer, while it is {discard_close_ind}."
+        # each point discards at most (2*discard_close_ind + 1) columns (itself and the 2*discard_close_ind
+        # points closest along axis=0); at least k non-discarded neighbors must survive to compute lambda
+        assert (
+            self.k + 2 * self.discard_close_ind < self.nrows // self.batches_per_epoch
+        ), (
+            f"With 'discard_close_ind' ({self.discard_close_ind}), 'k' ({self.k}) must satisfy "
+            + f"k + 2*discard_close_ind < number of points per mini-batch "
+            + f"(nrows // batches_per_epoch = {self.nrows // self.batches_per_epoch}), so that at least "
+            + f"k non-discarded neighbors survive for each point when lambda is computed."
         )
         if self.params_groups is not None:
             n_vars = np.sum(self.params_groups)
@@ -417,7 +444,7 @@ class DiffImbalance:
             return current_lambda
 
         def _compute_training_diff_imbalance(
-            params, batch_A_rows, batch_A_columns, batch_B_ranks, k
+            params, batch_A_rows, batch_A_columns, batch_B_ranks, k, batch_close_mask=None
         ):
             """Computes the Differentiable Information Imbalance (DII) at the current step of the training.
 
@@ -429,7 +456,11 @@ class DiffImbalance:
                     points labelling the distance matrix columns.
                 batch_B_ranks (jnp.array(float)): matrix of shape (n_points_rows, n_points_columns), containing
                     the pre-computed target ranks in space B.
-                step (int): number of current gradient descent step.
+                k (int): neighbor order to set lambda adaptively.
+                batch_close_mask (jnp.array(bool)): matrix of shape (n_points_rows, n_points_columns), True where
+                    the pair of points is "close" along axis=0 (see 'discard_close_ind'). Such pairs are excluded 
+                    from the computation of the DII and of the smoothing parameter lambda. Default is None, for 
+                    which no pairs are discarded.
 
             Returns:
                 diff_imbalance (float): current value of the DII.
@@ -444,10 +475,29 @@ class DiffImbalance:
             N = dist2_matrix_A.shape[0]
             max_rank = dist2_matrix_A.shape[1] - 1
 
-            # set distance of a point with itself to large number
+            # set distance of a point with itself to a large number, so that it is never selected as
+            # a neighbor by the softmax and is excluded when lambda is computed
+            large_value = jnp.max(dist2_matrix_A) + 1e6
             dist2_matrix_A = dist2_matrix_A.at[jnp.arange(N), jnp.arange(N)].set(
-                jnp.max(dist2_matrix_A) + 1e6
+                large_value
             )
+
+            # discard distances between points that are "close" along axis=0 (e.g. correlated in time):
+            # setting them to 'large_value' excludes these pairs from the softmax neighbor selection
+            if batch_close_mask is not None:
+                dist2_matrix_A = jnp.where(batch_close_mask, large_value, dist2_matrix_A)
+
+                # re-rank space B consistently with the exclusion: push the discarded pairs (including
+                # each point's self-pair) to the largest ranks, then renumber the surviving pairs so that
+                # the closest one in space B has rank 1, the second closest 2, and so on
+                n_columns = batch_B_ranks.shape[1]
+                batch_B_ranks = jnp.where(batch_close_mask, n_columns, batch_B_ranks)
+                batch_B_ranks = batch_B_ranks.argsort(axis=1).argsort(axis=1) + 1
+
+                # number of surviving (non-discarded) neighbors of each point; it differs from row to
+                # row because each point has a different number of "close" points inside the mini-batch,
+                # so the DII is normalized point by point (see below)
+                max_rank = n_columns - batch_close_mask.sum(axis=1)
 
             lambdas = self.lambda_method(
                 dist2_matrix=dist2_matrix_A,
@@ -468,9 +518,13 @@ class DiffImbalance:
             #    (lambdas[:, jnp.newaxis] - dist2_matrix_A)/(self.lambda_factor * lambdas[:, jnp.newaxis])
             # )
 
-            # compute DII
+            # compute DII. When close pairs are discarded, 'max_rank' is an array (the number of surviving
+            # neighbors of each point) and the normalization is applied point by point
             conditional_ranks = jnp.sum(batch_B_ranks * c_matrix, axis=1)
-            diff_imbalance = 2.0 / (max_rank + 1) * jnp.sum(conditional_ranks) / N
+            if batch_close_mask is not None:
+                diff_imbalance = jnp.mean(2.0 / (max_rank + 1) * conditional_ranks)
+            else:
+                diff_imbalance = 2.0 / (max_rank + 1) * jnp.sum(conditional_ranks) / N
 
             # DON'T DELETE: analytical gradient of the DII (without differentiating lambda)
             # diffs_squared = ((batch_A_rows[:,jnp.newaxis,:] - batch_A_columns[jnp.newaxis,:,:])
@@ -589,7 +643,9 @@ class DiffImbalance:
             diff_imbalance = 2.0 / (max_rank + 1) * jnp.sum(conditional_ranks) / N
             return diff_imbalance
 
-        def _train_step(state, batch_A_rows, batch_A_columns, batch_B_ranks):
+        def _train_step(
+            state, batch_A_rows, batch_A_columns, batch_B_ranks, batch_close_mask=None
+        ):
             """Performs a single gradient descent step in the optimization of the DII.
 
             Args:
@@ -600,6 +656,10 @@ class DiffImbalance:
                     the points labelling the distance matrix columns.
                 batch_B_ranks (jnp.array(float)): matrix of shape (n_points_rows, n_points_columns), containing
                     the pre-computed target ranks in space B.
+                batch_close_mask (jnp.array(bool)): matrix of shape (n_points_rows, n_points_columns), True where
+                    the pair of points is "close" along axis=0 (see 'discard_close_ind'). Passed on to
+                    '_compute_training_diff_imbalance' to discard the corresponding distances in space A. Default
+                    is None, for which only the self-distances (diagonal) are discarded.
 
             Returns:
                 state_new (flax.training.train_state.TrainState object): new training state after optimizer step
@@ -611,6 +671,7 @@ class DiffImbalance:
                 batch_A_columns=batch_A_columns,
                 batch_B_ranks=batch_B_ranks,
                 k=self.k,
+                batch_close_mask=batch_close_mask,
             )
             # Get loss and gradient
             imb, grads = jax.value_and_grad(loss_fn)(state.params)
@@ -733,6 +794,29 @@ class DiffImbalance:
         nn_indices = jnp.argmin(rank_matrix, axis=1)
         return nn_indices
 
+    def _get_batch_close_mask(self, batch_indices):
+        """Returns the boolean mask flagging pairs of "close" points for a batch, or None if not needed.
+
+        Entry (i, j) of the mask is True if |batch_indices[i] - batch_indices[j]| <= discard_close_ind,
+        i.e. the two points are known to be correlated (for instance because they are close in time). Since
+        the mask is built from the original point indices, it correctly identifies "close" pairs even when
+        the points appear shuffled inside a mini-batch.
+
+        Args:
+            batch_indices (jnp.array(int)): array of shape (n_points_batch,) with the indices (labelling axis=0
+                of data_A and data_B) of the points in the current batch. n_points_batch is equal to
+                n_points / batches_per_epoch, or to n_points when the DII is computed on the full data set.
+
+        Returns:
+            batch_close_mask (jnp.array(bool) or None): matrix of shape (n_points_batch, n_points_batch), True
+                where the two points are "close" (the diagonal is always True). Returns None when
+                discard_close_ind == 0, so that no pair (except the self-distances) is discarded.
+        """
+        if self.discard_close_ind == 0:
+            return None
+        diffs = jnp.abs(batch_indices[:, jnp.newaxis] - batch_indices[jnp.newaxis, :])
+        return diffs <= self.discard_close_ind
+
     def _train_epoch(self, key):
         """Performs the training for a single epoch.
 
@@ -760,6 +844,7 @@ class DiffImbalance:
                     self.ranks_B[batch_indices][:, batch_indices]
                     .argsort(axis=1)
                     .argsort(axis=1),
+                    self._get_batch_close_mask(batch_indices),
                 )
             # DON'T DELETE: Alternative method for mini-batch GD (only subsample rows)
             # for i_batch, batch_indices in enumerate(all_batch_indices):
@@ -783,6 +868,7 @@ class DiffImbalance:
                 self.data_A_rows,
                 self.data_A_columns,
                 self.ranks_B,
+                self._get_batch_close_mask(jnp.arange(self.nrows)),
             )
         assert not jnp.isnan(self.state.params).any(), (
             "Something went wrong in the optimization. This might be due to a too large value "
@@ -867,6 +953,14 @@ class DiffImbalance:
         batch_indices = jnp.arange(self.nrows // self.batches_per_epoch)
         params_training = params_training.at[0].set(self.params_init)
 
+        # mask discarding the "close" pairs on the full data set (points in their natural order along
+        # axis=0). It is only needed when the DII is tracked over the full data set (track_full_loss).
+        full_close_mask = (
+            self._get_batch_close_mask(jnp.arange(self.nrows))
+            if self.track_full_loss
+            else None
+        )
+
         # compute starting DII before training
         if not self.track_full_loss: # dii over a minibatch
             imb_start = self._compute_training_diff_imbalance(
@@ -877,6 +971,7 @@ class DiffImbalance:
                 .argsort(axis=1)
                 .argsort(axis=1),
                 k=self.k,
+                batch_close_mask=self._get_batch_close_mask(batch_indices),
             )
             # DON'T DELETE: Alternative method for mini-batching (only sample rows)
             # imb_start = self._compute_training_diff_imbalance(
@@ -894,6 +989,7 @@ class DiffImbalance:
                 batch_A_columns=self.data_A_columns,
                 batch_B_ranks=self.ranks_B,
                 k=self.k * self.batches_per_epoch,
+                batch_close_mask=full_close_mask,
             )
         imbs_training = imbs_training.at[0].set(imb_start)
 
@@ -917,6 +1013,7 @@ class DiffImbalance:
                     batch_A_columns=self.data_A_columns,
                     batch_B_ranks=self.ranks_B,
                     k=self.k * self.batches_per_epoch,
+                    batch_close_mask=full_close_mask,
                 )
             imbs_training = imbs_training.at[epoch_idx].set(imb_now)
         
@@ -1108,7 +1205,10 @@ class DiffImbalance:
             ratio_rows_columns (float): ratio between the number of points along rows and columns when
                 computing the DII. Only used when compute_error is True. Default is 1.
             seed (int): seed for random number generation. Default is 0.
-            discard_close_ind (int): index to discard close points when computing the DII. Default is 0.
+            discard_close_ind (int): given any point i, defines the "close" points along axis=0 (e.g. correlated
+                in time) whose distances to i are discarded. It is applied both when training the weights of each
+                candidate feature set and when evaluating the corresponding DII on the full data set (see the
+                'discard_close_ind' attribute of the class and the argument of 'return_final_dii'). Default is 0.
 
         Returns:
             best_feature_sets (list): list of lists, where each sublist contains the indices of the selected
@@ -1158,6 +1258,7 @@ class DiffImbalance:
                 num_epochs=0, # no weights to be optimized here!
                 batches_per_epoch=self.batches_per_epoch,
                 track_full_loss=self.track_full_loss,
+                discard_close_ind=discard_close_ind,
                 l1_strength=0.0,
                 point_adapt_lambda=self.point_adapt_lambda,
                 k=self.k,
@@ -1295,6 +1396,7 @@ class DiffImbalance:
                             num_epochs=self.num_epochs,
                             batches_per_epoch=self.batches_per_epoch,
                             track_full_loss=self.track_full_loss,
+                            discard_close_ind=discard_close_ind,
                             l1_strength=0.0,
                             point_adapt_lambda=self.point_adapt_lambda,
                             k=self.k,
@@ -1394,6 +1496,7 @@ class DiffImbalance:
                 num_epochs=self.num_epochs,
                 batches_per_epoch=self.batches_per_epoch,
                 track_full_loss=self.track_full_loss,
+                discard_close_ind=discard_close_ind,
                 l1_strength=0.0,
                 point_adapt_lambda=self.point_adapt_lambda,
                 k=self.k,
@@ -1470,7 +1573,10 @@ class DiffImbalance:
             ratio_rows_columns (float): ratio between the number of points along rows and columns when
                 computing the DII. Only used when compute_error is True. Default is 1.
             seed (int): seed for random number generation. Default is 0.
-            discard_close_ind (int): index to discard close points when computing the DII. Default is 0.
+            discard_close_ind (int): given any point i, defines the "close" points along axis=0 (e.g. correlated
+                in time) whose distances to i are discarded. It is applied both when training the weights of each
+                candidate feature set and when evaluating the corresponding DII on the full data set (see the
+                'discard_close_ind' attribute of the class and the argument of 'return_final_dii'). Default is 0.
 
         Returns:
             best_feature_sets (list): list of lists, where each sublist contains the indices of the selected
@@ -1581,6 +1687,7 @@ class DiffImbalance:
                         num_epochs=num_epochs_now,
                         batches_per_epoch=self.batches_per_epoch,
                         track_full_loss=self.track_full_loss,
+                        discard_close_ind=discard_close_ind,
                         l1_strength=0.0,
                         point_adapt_lambda=self.point_adapt_lambda,
                         k=self.k,
@@ -1677,6 +1784,7 @@ class DiffImbalance:
                 num_epochs=num_epochs_now,
                 batches_per_epoch=self.batches_per_epoch,
                 track_full_loss=self.track_full_loss,
+                discard_close_ind=discard_close_ind,
                 l1_strength=0.0,
                 point_adapt_lambda=self.point_adapt_lambda,
                 k=self.k,

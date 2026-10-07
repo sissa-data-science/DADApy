@@ -231,14 +231,12 @@ class CausalGraph(DiffImbalance):
         batches_per_epoch=1,
         l1_strength=0.0,
         point_adapt_lambda=False,
-        k_init=1,
-        k_final=1,
+        k=1,
         lambda_factor=0.1,
         params_init=None,
         optimizer_name="sgd",
         learning_rate=1e-2,
         learning_rate_decay=None,
-        num_points_rows=None,
         compute_imb_final=False,
         compute_error=False,
         ratio_rows_columns=1,
@@ -272,15 +270,11 @@ class CausalGraph(DiffImbalance):
             batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
                 carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
                 which means that the gradient is computed over all the available points (batch GD).
-            seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
-                partitions.
             l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
-                in the DII (if False), or a different parameter for each point (if True). Default is True.
-            k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
+                in the DII (if False), or a different parameter for each point (if True). Default is False.
+            k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
-            k_final (int): final rank of neighbors used to set lambda. If batches_per_epoch > 1, neighbors are
-                recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
             params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
                 values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
@@ -289,18 +283,14 @@ class CausalGraph(DiffImbalance):
                 additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
-                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), exponential
-                decay ("exp"; the initial learning rate is halved every 10 steps), or constant learning rate (None).
-                Default is None (constant learning rate).
-            num_points_rows (int): number of points sampled from the rows of rank and distance matrices.
-                In case of large datasets, choosing num_points_rows < n_points can significantly speed
-                up the training. The default is None, for which num_points_rows == n_points.
+                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
+                learning rate (None). Default is None (constant learning rate).
             compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
                 specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
                 which those arguments are ignored.
             compute_error (bool): whether to compute the final DII and its error by sampling different points along
                 rows and columns of the distance matrix. If False, the final DII is computed using the same points
-                along rows and columns, which does not allow for an error estimation. Default is True.
+                along rows and columns, which does not allow for an error estimation. Default is False.
             ratio_rows_columns (float): only read when compute_error is True; defines the ratio between the number
                 of points along rows (nrows) and along columns (ncolumns) of distance and rank matrices, in two groups
                 randomly sampled.  In general, nrows and ncolumns are determined by solving the equations
@@ -459,18 +449,18 @@ class CausalGraph(DiffImbalance):
                     batches_per_epoch=batches_per_epoch,
                     l1_strength=l1_strength,
                     point_adapt_lambda=point_adapt_lambda,
-                    k_init=k_init,
-                    k_final=k_final,
+                    k=k,
                     lambda_factor=lambda_factor,
                     params_init=params_init,
                     optimizer_name=optimizer_name,
                     learning_rate=learning_rate,
                     learning_rate_decay=learning_rate_decay,
-                    num_points_rows=num_points_rows,
                 )
                 weights_temp, imbs_training[i_var, j_tau] = dii.train(
                     bar_label=f"target_var={target_var}, tau={tau}"
                 )
+                # weights enter the distances squared, so only their absolute value is meaningful
+                weights_temp = np.abs(weights_temp)
 
                 # compute final DII and its error
                 if compute_imb_final:
@@ -664,8 +654,8 @@ class CausalGraph(DiffImbalance):
                 "community" (default) and "all-variable". If "community", a community causal graph where
                 each node represents a community is shown. If "all-variable", communities are represented
                 with different colors in a graph with all the original D variables in the time series.
-            savefig_name (str): path at which the picture of the final graph is saved in pdf format. If
-                None (default), the figure is not saved.
+            savefig_name (str): path at which the picture of the final graph is saved, in the format given by
+                the file extension. If None (default), the figure is not saved.
             variable_names (np.array(str)): array of shape (D,) containing the names of the D variables.
                 Used only if type="community", to show the variable names in the printout of each community.
             **kwargs: customizable arguments used by the networkx library. If type="all-variable", these
@@ -799,10 +789,10 @@ class CausalGraph(DiffImbalance):
             }
 
             # convert communities into names and add them to graph as nodes
+            print("Conversion labels - communities:")
             for community, key in zip(community_names, keys):
                 community_name = community_names[tuple(community)]
                 G.add_node(str(community_name))
-                print("Conversion labels - communities:")
                 if variable_names is None:
                     print(
                         f"Community {community_name} ({len(community)} variables, level {key[1]}): {community}"
@@ -880,13 +870,11 @@ class CausalGraph(DiffImbalance):
         batches_per_epoch=1,
         l1_strength=0.0,
         point_adapt_lambda=False,
-        k_init=1,
-        k_final=1,
+        k=1,
         lambda_factor=0.1,
         optimizer_name="sgd",
         learning_rate=1e-2,
         learning_rate_decay=None,
-        num_points_rows=None,
         compute_imb_final=False,
         compute_error=False,
         ratio_rows_columns=1,
@@ -921,46 +909,29 @@ class CausalGraph(DiffImbalance):
                 the target variable (t=tau, t=tau-1, ...). Default is 1.
             embedding_time (int): lag between consecutive samples in the time-delay embedding vectors of each
                 variable.  Default is 1.
-            target_variables (str or list(int), np.array(int)): list or np.array of the target variables
-                defining the distance space in the future. Default is "all", for which the optimization is
-                iterated over all variables as target.
-            save_weights (bool): whether to save or not the weights during training, rather than only the final
-                weights. If True, weights are saved in the attribute 'weights_training' of the CausalGraph object,
-                which is an array of shape (n_target_variables, n_time_lags, num_epochs+1, num_variables).
-                Default is False.
             num_epochs (int): number of training epochs. Default is 200.
             batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
                 carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
                 which means that the gradient is computed over all the available points (batch GD).
-            seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
-                partitions.
             l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
-                in the DII (if False), or a different parameter for each point (if True). Default is True.
-            k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
+                in the DII (if False), or a different parameter for each point (if True). Default is False.
+            k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
-            k_final (int): final rank of neighbors used to set lambda. If batches_per_epoch > 1, neighbors are
-                recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
-            params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
-                values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
             optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
                 (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
                 additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
-                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), exponential
-                decay ("exp"; the initial learning rate is halved every 10 steps), or constant learning rate (None).
-                Default is None (constant learning rate).
-            num_points_rows (int): number of points sampled from the rows of rank and distance matrices.
-                In case of large datasets, choosing num_points_rows < n_points can significantly speed
-                up the training. The default is None, for which num_points_rows == n_points.
+                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
+                learning rate (None). Default is None (constant learning rate).
             compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
                 specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
                 which those arguments are ignored.
             compute_error (bool): whether to compute the final DII and its error by sampling different points along
                 rows and columns of the distance matrix. If False, the final DII is computed using the same points
-                along rows and columns, which does not allow for an error estimation. Default is True.
+                along rows and columns, which does not allow for an error estimation. Default is False.
             ratio_rows_columns (float): only read when compute_error is True; defines the ratio between the number
                 of points along rows (nrows) and along columns (ncolumns) of distance and rank matrices, in two groups
                 randomly sampled.  In general, nrows and ncolumns are determined by solving the equations
@@ -1004,7 +975,7 @@ class CausalGraph(DiffImbalance):
             # Get intermediates (excluding A and B) for each path
             intermediates_per_path = [set(path[1:-1]) for path in all_paths]
 
-            # Find intersection across all path intermediates
+            # Find union across all path intermediates
             mediators = list(set.union(*intermediates_per_path))
             return mediators
 
@@ -1200,7 +1171,7 @@ class CausalGraph(DiffImbalance):
                             + tau
                             - 1
                         )
-                        indices_cond2 = (  # for conditioning on mediators(t=tau-1), effect(t=tau-2), ...
+                        indices_cond2 = (  # for conditioning on mediators(t=tau-1), mediators(t=tau-2), ...
                             np.array(
                                 [
                                     t0s - embedding_time * i
@@ -1240,10 +1211,10 @@ class CausalGraph(DiffImbalance):
 
                             coords_cond_mediators = self.time_series[:, mediator_vars][
                                 indices_cond2
-                            ]  # has shape (embedding_dim_present+1, num_samples, n_variables_mediators)
+                            ]  # has shape (embedding_dim_present, num_samples, n_variables_mediators)
                             coords_cond_mediators = np.transpose(
                                 coords_cond_mediators, axes=[1, 2, 0]
-                            )  # convert to shape (num_samples, n_variables_mediators, embedding_dim_present+1)
+                            )  # convert to shape (num_samples, n_variables_mediators, embedding_dim_present)
                             coords_cond_mediators = coords_cond_mediators.reshape(
                                 (
                                     num_samples,
@@ -1312,15 +1283,13 @@ class CausalGraph(DiffImbalance):
                             batches_per_epoch=batches_per_epoch,
                             l1_strength=l1_strength,
                             point_adapt_lambda=point_adapt_lambda,
-                            k_init=k_init,
-                            k_final=k_final,
+                            k=k,
                             lambda_factor=lambda_factor,
                             params_init=None,
                             params_groups=params_groups,
                             optimizer_name=optimizer_name,
                             learning_rate=learning_rate,
                             learning_rate_decay=learning_rate_decay,
-                            num_points_rows=num_points_rows,
                         )
                         (
                             weights_temp,
@@ -1330,6 +1299,8 @@ class CausalGraph(DiffImbalance):
                         ) = dii.train(
                             bar_label=f"Communities {community_name_cause}->{community_name_effect}, tau={tau}"
                         )
+                        # weights enter the distances squared, so only their absolute value is meaningful
+                        weights_temp = np.abs(weights_temp)
 
                         # compute final DII and its error
                         if compute_imb_final:
@@ -1389,11 +1360,10 @@ class CausalGraph(DiffImbalance):
             communities_and_lags (dict): output communities and lags of method 'find_direct_links_communities'.
             variable_names (np.array(str)): array of shape (D,) containing the names of the D variables.
             threshold (float): weight threshold above which a direct link between two communities is drawn.
-            savefig_name (str): path at which the picture of the final graph is saved in pdf format. If
-                None (default), the figure is not saved.
-            **kwargs: customizable arguments used by the networkx library. If type="all-variable", these
-                include: 'scale','k1' and 'k2', 'cmap', 'width' and 'arrowsize'. If type="community", the
-                possible arguments are: 'node_color', 'node_size', 'width', 'arrowstyle', 'arrowsize'.
+            savefig_name (str): path at which the picture of the final graph is saved, in the format given by
+                the file extension. If None (default), the figure is not saved.
+            **kwargs: customizable arguments used by the networkx library. The possible arguments are:
+                'node_color', 'node_size', 'width', 'arrowstyle', 'arrowsize'.
 
         Returns:
             G (nx.diGraph object): refined community causal graph.
