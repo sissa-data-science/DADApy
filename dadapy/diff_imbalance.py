@@ -309,13 +309,6 @@ class DiffImbalance:
         assert self.k is not None, (
             f"Provide a value of 'k' to compute lambda adaptively."
         )
-        self.k_max_allowed = 100
-        if self.k > self.k_max_allowed:
-            warnings.warn(
-                f"For efficiency reasons the maximum value for 'k' is {self.k_max_allowed}, while you set it to {self.k}.\n"
-                + f"The run will continue with k = {self.k_max_allowed}"
-            )
-            self.k = self.k_max_allowed            
         assert (
             self.k > 0
         ), f"'k' must be larger than or equal to 1."
@@ -411,16 +404,19 @@ class DiffImbalance:
                     computed adaptively for each point, as the fraction ('lambda_factor', default: 1/10) of the
                     squared distance of the neighbor of order k.
             """
-            # Request at least k columns from top_k, so that the k-th neighbor is
-            # always available, but never more columns than the matrix has
-            k_max_allowed = min(max(self.k_max_allowed, k), dist2_matrix.shape[1])
-            smallest_dist2, _ = jax.lax.top_k(-dist2_matrix, k_max_allowed)
-            current_lambdas = (
-                -smallest_dist2[:, k - 1] * self.lambda_factor
+            # find the k nearest neighbors of each point. The search is carried out in single precision, for
+            # which XLA has a fast top-k kernel on CPU (in double precision, enabled when importing dadapy,
+            # top_k sorts each row). k is capped at the number of columns, which can only be exceeded by the
+            # rescaled k used in 'return_final_dii'
+            _, nn_indices = jax.lax.top_k(
+                -dist2_matrix.astype(jnp.float32), min(k, dist2_matrix.shape[1])
             )
+            # the k-th smallest distance, read in the original precision, is the largest of the k smallest
+            smallest_dist2 = jnp.take_along_axis(dist2_matrix, nn_indices, axis=1)
+            current_lambdas = smallest_dist2.max(axis=1) * self.lambda_factor
 
-            # DON'T DELETE: Adaptive scheme of cython code
-            # diffs_dists_2nd_1st = -smallest_dist2[:, 1] + smallest_dist2[:, 0]
+            # DON'T DELETE: Adaptive scheme of cython code (requires k >= 2)
+            # diffs_dists_2nd_1st = smallest_dist2[:, 1] - smallest_dist2[:, 0]
             # current_lambdas = 0.5*(diffs_dists_2nd_1st.min() + diffs_dists_2nd_1st.mean())
 
             return current_lambdas
