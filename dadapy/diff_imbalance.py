@@ -828,19 +828,30 @@ class DiffImbalance:
         return diffs <= self.discard_close_ind
 
     def _train_epoch(self, key):
-        """Performs the training for a single epoch.
+        """Performs the training for a single epoch, updating the training state.
 
         Args:
             key (jax.random.PRNGKey): key for the JAX pseudo-random number generator (PRNG).
 
         Returns:
-            params (jnp.array(float)): array of shape (n_features_A,) containing the
-                weights at the last step of the current training epoch. The single mini-batch
-                updates are not returned.
-            imb (float): value of the DII at the last step of the current training epoch.
+            imb_start (float): DII of the weights at the start of the epoch, computed over the first
+                mini-batch of the epoch (over the full data set, if batches_per_epoch == 1 or track_full_loss
+                is True). Each training step returns the DII computed before its weight update.
         """
         # ----------------------------MINI-BATCH GD----------------------------
         if self.batches_per_epoch > 1:
+            # if required, compute the DII of the starting weights over the full data set
+            imb_start = None
+            if self.track_full_loss:
+                imb_start = self._compute_training_diff_imbalance(
+                    params=self.state.params,
+                    batch_A_rows=self.data_A_rows,
+                    batch_A_columns=self.data_A_columns,
+                    batch_B_ranks=self.ranks_B,
+                    k=self.k * self.batches_per_epoch,
+                    batch_close_mask=self._get_batch_close_mask(jnp.arange(self.nrows)),
+                )
+
             all_batch_indices = jnp.split(
                 jax.random.permutation(key, self.nrows), self.batches_per_epoch
             )
@@ -856,6 +867,8 @@ class DiffImbalance:
                     .argsort(axis=1),
                     self._get_batch_close_mask(batch_indices),
                 )
+                if imb_start is None:  # DII of the starting weights over the first mini-batch
+                    imb_start = imb
             # DON'T DELETE: Alternative method for mini-batch GD (only subsample rows)
             # for i_batch, batch_indices in enumerate(all_batch_indices):
             #    ordered_column_indices = np.ravel(
@@ -870,10 +883,12 @@ class DiffImbalance:
             #        self.data_A_columns[ordered_column_indices],
             #        self.ranks_B[batch_indices][:, ordered_column_indices],
             #    )
+            #    if imb_start is None:
+            #        imb_start = imb
 
         # -----------------------------BATCH GD----------------------------
         else:
-            self.state, imb = self._train_step(
+            self.state, imb_start = self._train_step(
                 self.state,
                 self.data_A_rows,
                 self.data_A_columns,
@@ -885,7 +900,7 @@ class DiffImbalance:
             + "of l1_strength or to degeneracies in the dataset, resulting in lambda = 0."
         )
 
-        return self.state.params, imb
+        return imb_start
 
     def _init_optimizer(self):
         """Initializes the optimizer and the training state using the Optax library.
@@ -951,82 +966,32 @@ class DiffImbalance:
                 feature weights during the training, starting from their initialization. Also accessible as
                 attribute of the CausalGraph object.
             imbs_training (np.array(float)): array of shape (num_epochs+1,) containing the DII during the
-                training. Element imbs_training[i] is the DII computed over the last mini-batch used
-                in training epoch i. The same output is accessible as attribute of the CausalGraph object.
+                training. Element imbs_training[i] is the DII of the weights params_training[i], computed over
+                the first mini-batch of the following training epoch (over the full data set, if
+                batches_per_epoch == 1 or track_full_loss is True). The same output is accessible as attribute
+                of the CausalGraph object.
         """
         # Initialize optimizer
         self._init_optimizer()
 
-        # Construct output arrays and initialize them using inital weights
+        # Construct output arrays. Element i refers to the weights at the start of training epoch i+1. The
+        # training starts from the initial weights or, if 'train' was already called, from the weights of
+        # the previous training
         params_training = jnp.empty(shape=(self.num_epochs + 1, self.nparams))
         imbs_training = jnp.empty(shape=(self.num_epochs + 1,))
-        batch_indices = jnp.arange(self.nrows // self.batches_per_epoch)
-        params_training = params_training.at[0].set(self.params_init)
 
-        # mask discarding the "close" pairs on the full data set (points in their natural order along
-        # axis=0). It is only needed when the DII is tracked over the full data set (track_full_loss).
-        full_close_mask = (
-            self._get_batch_close_mask(jnp.arange(self.nrows))
-            if self.track_full_loss
-            else None
-        )
-
-        # compute starting DII before training
-        if not self.track_full_loss: # dii over a minibatch
-            imb_start = self._compute_training_diff_imbalance(
-                params=self.params_init,
-                batch_A_rows=self.data_A_rows[batch_indices],
-                batch_A_columns=self.data_A_columns[batch_indices],
-                batch_B_ranks=self.ranks_B[batch_indices][:, batch_indices]
-                .argsort(axis=1)
-                .argsort(axis=1),
-                k=self.k,
-                batch_close_mask=self._get_batch_close_mask(batch_indices),
-            )
-            # DON'T DELETE: Alternative method for mini-batching (only sample rows)
-            # imb_start = self._compute_training_diff_imbalance(
-            #    params=self.params_init,
-            #    batch_A_rows=self.data_A_rows[batch_indices],
-            #    batch_A_columns=self.data_A_columns,
-            #    batch_B_ranks=self.ranks_B[batch_indices],
-            #    k=self.k,
-            # )
-
-        else: # dii over full dataset
-            imb_start = self._compute_training_diff_imbalance(
-                params=self.params_init,
-                batch_A_rows=self.data_A_rows,
-                batch_A_columns=self.data_A_columns,
-                batch_B_ranks=self.ranks_B,
-                k=self.k * self.batches_per_epoch,
-                batch_close_mask=full_close_mask,
-            )
-        imbs_training = imbs_training.at[0].set(imb_start)
-
-        # Train over different epochs
+        # Train over different epochs, storing the weights at the start of each epoch and their DII. The
+        # additional last epoch only provides the DII of the final weights, and its weight updates are discarded
         desc = "Training"
         if bar_label is not None:
             desc += f" ({bar_label})"
-        for epoch_idx in tqdm(range(1, self.num_epochs + 1), desc=desc):
+        for epoch_idx in tqdm(range(self.num_epochs + 1), desc=desc):
             self.key, subkey = jax.random.split(self.key, num=2)
-            params_now, imb_now = self._train_epoch(subkey)
-            params_training = params_training.at[epoch_idx].set(
-                params_now
-            )
+            state_start = self.state
+            params_training = params_training.at[epoch_idx].set(self.state.params)
+            imbs_training = imbs_training.at[epoch_idx].set(self._train_epoch(subkey))
+        self.state = state_start
 
-            # overwrite 'imb_now' with DII over full data set if required
-            # (not necessary if training already occurs on a single batch)
-            if self.track_full_loss and self.batches_per_epoch > 1:
-                imb_now = self._compute_training_diff_imbalance(
-                    params=params_now,
-                    batch_A_rows=self.data_A_rows,
-                    batch_A_columns=self.data_A_columns,
-                    batch_B_ranks=self.ranks_B,
-                    k=self.k * self.batches_per_epoch,
-                    batch_close_mask=full_close_mask,
-                )
-            imbs_training = imbs_training.at[epoch_idx].set(imb_now)
-        
         # AFTER TRAINING, scale weights such that their norm appears constant during the training
         norm_init = jnp.sqrt((self.params_init**2).sum())
         params_training *= norm_init / jnp.sqrt((params_training**2).sum(axis=1, keepdims=True))
