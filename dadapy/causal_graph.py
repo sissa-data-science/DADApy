@@ -729,11 +729,11 @@ class CausalGraph(DiffImbalance):
                 )
 
             # draw edges
-            for _community_effect_idx, order_idx in keys:
+            for order_idx, communities in communities_orders.items():
                 if order_idx == 0:
                     continue
                 # for each putative effect community at order >=1...
-                for community_effect in communities_orders[order_idx]:
+                for community_effect in communities:
                     community_name_effect = community_names[tuple(community_effect)]
                     # ...loop over all putative causal communities at previous orders
                     for previous_order in range(0, order_idx):
@@ -925,11 +925,11 @@ class CausalGraph(DiffImbalance):
         communities_and_lags = {}
 
         # identify all pairs of indirectly linked communities, and mediator communities #############
-        for _community_effect_idx, order_idx in keys:
+        for order_idx, communities in communities_orders.items():
             if order_idx < 2:
                 continue
             # for each putative effect community at order >=2...
-            for community_effect in communities_orders[order_idx]:
+            for community_effect in communities:
                 community_name_effect = community_names[tuple(community_effect)]
 
                 # ...find all its ancestor communities...
