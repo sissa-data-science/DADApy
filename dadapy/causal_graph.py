@@ -218,7 +218,7 @@ class CausalGraph(DiffImbalance):
         batches_per_epoch=1,
         track_full_loss=False,
         l1_strength=0.0,
-        point_adapt_lambda=False,
+        point_adapt_lambda=True,
         k=1,
         lambda_factor=0.1,
         params_init=None,
@@ -264,7 +264,7 @@ class CausalGraph(DiffImbalance):
                 optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
                 Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
-                in the DII (if False), or a different parameter for each point (if True). Default is False.
+                in the DII (if False), or a different parameter for each point (if True). Default is True.
             k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
@@ -799,7 +799,7 @@ class CausalGraph(DiffImbalance):
         batches_per_epoch=1,
         track_full_loss=False,
         l1_strength=0.0,
-        point_adapt_lambda=False,
+        point_adapt_lambda=True,
         k=1,
         lambda_factor=0.1,
         optimizer_name="adam",
@@ -849,7 +849,7 @@ class CausalGraph(DiffImbalance):
                 optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
                 Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
-                in the DII (if False), or a different parameter for each point (if True). Default is False.
+                in the DII (if False), or a different parameter for each point (if True). Default is True.
             k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
