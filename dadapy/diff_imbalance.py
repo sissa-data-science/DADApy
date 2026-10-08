@@ -191,9 +191,10 @@ class DiffImbalance:
             Default is None, which means that features B are treated as nonperiodic. If not all features are
             periodic, the entries of the nonperiodic ones should be set to 0.
         num_epochs (int): number of training epochs. Default is 200.
-        batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
-            carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
-            which means that the gradient is computed over all the available points (batch GD).
+        batches_per_epoch (int): number of minibatches. Each weight update is carried out by computing the DII
+            gradient over n_points // batches_per_epoch points. If n_points is not a multiple of batches_per_epoch,
+            the last (n_points % batches_per_epoch) points of the data set are discarded, with a warning. Default
+            is 1, which means that the gradient is computed over all the available points (batch GD).
         track_full_loss (bool): whether to compute the training DII on the full dataset at each training epoch,
             if minibatches are used (batches_per_epoch > 1). This can be computationally demaning for large
             datasets but helps monitoring the convergence of the DII, as its calculation on small minibatches
@@ -288,7 +289,27 @@ class DiffImbalance:
                 f"Number of points in data_A ({data_A.shape[0]}) and distances_B ({distances_B.shape[0]})"
                 + f" do not match."
             )
-        self.nparams = self.nfeatures_A if params_groups is None else len(params_groups)
+
+        # if the number of points is not a multiple of batches_per_epoch, discard the last points of the
+        # data set, so that all mini-batches contain the same number of points
+        assert data_A.shape[0] >= batches_per_epoch, (
+            f"Cannot extract {batches_per_epoch} minibatches "
+            + f"from {data_A.shape[0]} samples."
+        )
+        n_discarded = data_A.shape[0] % batches_per_epoch
+        if n_discarded > 0:
+            n_kept = data_A.shape[0] - n_discarded
+            warnings.warn(
+                f"The number of points ({data_A.shape[0]}) is not a multiple of batches_per_epoch "
+                + f"({batches_per_epoch}): the last {n_discarded} points of the data set are discarded, "
+                + f"so that all mini-batches contain {n_kept // batches_per_epoch} points."
+            )
+            data_A = data_A[:n_kept]
+            if distances_B is None:
+                data_B = data_B[:n_kept]
+            else:
+                distances_B = distances_B[:n_kept, :n_kept]
+        self.nparams =self.nfeatures_A if params_groups is None else len(params_groups)
 
         # initialize jax random generator
         self.key = jax.random.PRNGKey(seed)
@@ -360,10 +381,6 @@ class DiffImbalance:
                 + "in setting the smoothing parameter lambda to zero and make the optimization "
                 + "fail. Remove the repeated values before continuing."
             )
-        assert self.nrows >= batches_per_epoch, (
-            f"Cannot extract {batches_per_epoch} minibatches "
-            + f"from {self.nrows} samples."
-        )
         assert self.k is not None, (
             f"Provide a value of 'k' to compute lambda adaptively."
         )
