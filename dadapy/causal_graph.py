@@ -362,7 +362,11 @@ class CausalGraph(DiffImbalance):
                 dii = DiffImbalance(
                     data_A=coords_present,
                     data_B=coords_future,
-                    periods_A=self.periods,
+                    periods_A=(  # columns ordered by variable, then time shift
+                        None
+                        if self.periods is None
+                        else np.repeat(self.periods, embedding_dim_present)
+                    ),
                     periods_B=(
                         None if self.periods is None else self.periods[target_var]
                     ),
@@ -1037,14 +1041,15 @@ class CausalGraph(DiffImbalance):
                             ),
                             axis=1,
                         )
+                        # variables of the columns of coords_A, ordered by variable, then time shift
                         variables_A = np.concatenate(
                             (
                                 community_cause,  # don't repeat (single slice)
-                                np.tile(
-                                    community_effect, reps=embedding_dim_present
+                                np.repeat(
+                                    community_effect, embedding_dim_present
                                 ),  # Repeat E (=max_lag) times
-                                np.tile(
-                                    mediator_vars, reps=embedding_dim_present
+                                np.repeat(
+                                    mediator_vars, embedding_dim_present
                                 ),  # Repeat E (=max_lag) times
                             )
                         )
@@ -1073,7 +1078,10 @@ class CausalGraph(DiffImbalance):
                             periods_B=(
                                 None
                                 if self.periods is None
-                                else self.periods[community_effect]
+                                else np.repeat(
+                                    self.periods[community_effect],
+                                    embedding_dim_future,
+                                )
                             ),
                             seed=self.seed,
                             num_epochs=num_epochs,
