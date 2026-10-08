@@ -416,7 +416,7 @@ class CausalGraph(DiffImbalance):
         self.imbs_final = imbs_final
         return weights_final, imbs_training, imbs_final
 
-    def compute_adj_matrix(self, weights, threshold=1e-1):
+    def compute_adj_matrix(self, weights, threshold):
         """Compute the adjacency matrix from the optimal weights returned by optimize_present_to_future.
 
         As a preliminary step before applying the threshold, the maximum weight over the tested time lags is
@@ -1096,7 +1096,7 @@ class CausalGraph(DiffImbalance):
         weights_refine,
         communities_and_lags,
         variable_names,
-        threshold=1e-1,
+        threshold,
         savefig_name=None,
         **kwargs,
     ):
