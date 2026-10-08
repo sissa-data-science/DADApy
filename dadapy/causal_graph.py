@@ -14,7 +14,7 @@
 # ==============================================================================
 
 """
-The *causal_graph* module contains the *CausalGraph* class, which inherits from the *DiffImbalance* class.
+The *causal_graph* module contains the *CausalGraph* class, which uses the *DiffImbalance* class to optimize the DII.
 
 The code can be runned on gpu using the command
     jax.config.update('jax_platforms', 'gpu') # set 'cpu' or 'gpu'
@@ -39,7 +39,7 @@ def symbol_generator():
             yield f"{c}{i}"
 
 
-class CausalGraph(DiffImbalance):
+class CausalGraph:
     """Constructs a community causal graph where variables are grouped into single nodes.
 
     Attributes:
