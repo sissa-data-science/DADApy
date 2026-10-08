@@ -306,7 +306,7 @@ class CausalGraph(DiffImbalance):
             np.arange(self.num_variables),
         )
 
-        if target_variables == "all":
+        if isinstance(target_variables, str) and target_variables == "all":
             target_variables = np.arange(self.num_variables)
 
         # initialize output variables
