@@ -103,6 +103,25 @@ def _columns_with_ties(data):
     return cols_with_ties
 
 
+def _scale_by_tangent_projection():
+    """Optax transformation removing from the weight updates their component along the current weights.
+
+    The DII is invariant under a global rescaling of the weights, so it only depends on their direction.
+    Removing the radial component of the updates, as in the AdamP optimizer (Heo et al., ICLR 2021),
+    prevents the momentum and the per-weight step normalization of Adam from changing the norm of the
+    weights. With SGD the updates are already orthogonal to the weights, and the transformation has no effect.
+
+    Returns:
+        tangent_projection (optax.GradientTransformation): transformation to be chained after the optimizer.
+    """
+
+    def update_fn(updates, state, params):
+        unit_params = params / jnp.linalg.norm(params)
+        return updates - (updates @ unit_params) * unit_params, state
+
+    return optax.GradientTransformation(lambda params: optax.EmptyState(), update_fn)
+
+
 # CLASS TO OPTIMIZE THE DIFFERENTIAL INFORMATION IMBALANCE
 # ----------------------------------------------------------------------------------------------
 
@@ -162,7 +181,10 @@ class DiffImbalance:
             distances between "time-correlated" points are discarded.
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
-        l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
+        l1_strength (float): strength of the L1 regularization (LASSO) term. Since the norm of the weights is
+            kept fixed during the training (see params_init), with optimizer 'sgd' the effective strength of the
+            regularization is proportional to the norm of params_init, while with 'adam' it does not depend on
+            it. Default is 0.
         point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
             in the DII (if False), or a different parameter for each point (if True). Default is True.
         k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
@@ -171,16 +193,19 @@ class DiffImbalance:
         params_init (np.array(float), jnp.array(float)): array of shape (n_params,) containing the initial
             values of the scaling weights to be optimized. If params_groups is set to None, each feature is
             scaled by an independent optimization parameter, so n_params == n_features_A. If params_init is None,
-            the initial scaling parameters are set to [0.1, 0.1, ..., 0.1].
+            the initial scaling parameters are set to [0.1, 0.1, ..., 0.1]. Since the DII only depends on the
+            direction of the weights, their norm is kept equal to the norm of params_init during the training:
+            the updates are made orthogonal to the current weights (as in the AdamP optimizer), and after each
+            update the weights are projected back onto the sphere with this radius.
         params_groups (np.array(int), jnp.array(int)): array of shape (n_params,) containing at position i the
             number of features that share the same weight in params_init[i], using the same order of the columns
             in data_A. If params_groups = [3, 2, 4], for example, the first 3 features in space A will share a
             common weight, the following 2 features will share a second common weight, and the last 4 features
             will also be scaled by a common optimization parameter. params_groups should satisfy the constraint
             sum(params_groups) == n_features_A. If params_groups is None, no weight sharing is enforced.
-        optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
-            (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
-            additional details.
+        optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
+            (default) and 'sgd'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for additional
+            details.
         learning_rate (float): value of the learning rate. Default is 1e-2.
         learning_rate_decay (str): schedule to damp the learning rate to zero (or to learning_rate_final, if
             not None) starting from the value provided with the attribute learning_rate. The available schedules are: 
@@ -208,7 +233,7 @@ class DiffImbalance:
         lambda_factor=0.1,
         params_init=None,
         params_groups=None,
-        optimizer_name="sgd",
+        optimizer_name="adam",
         learning_rate=1e-2,
         learning_rate_decay=None,
         learning_rate_final=None,
@@ -686,6 +711,9 @@ class DiffImbalance:
             # Get loss and gradient
             imb, grads = jax.value_and_grad(loss_fn)(state.params)
 
+            # norm of the weights, kept fixed during the training as the DII only depends on their direction
+            params_norm = jnp.linalg.norm(state.params)
+
             # Update parameters
             state = state.apply_gradients(grads=grads)
 
@@ -710,6 +738,13 @@ class DiffImbalance:
                 #    params=state.params
                 #    * (1.0 - jnp.where(state.params * candidate_params < 0, 1.0, 0.0))
                 # )
+
+            # Project the weights back onto the sphere of radius 'params_norm'
+            state = state.replace(
+                params=optax.projections.projection_l2_sphere(
+                    state.params, scale=params_norm
+                )
+            )
 
             return state, imb
 
@@ -868,19 +903,18 @@ class DiffImbalance:
     def _init_optimizer(self):
         """Initializes the optimizer and the training state using the Optax library.
 
-        The function uses the attribute optimizer_name of the DiffImbalance object,
-        which can be set to one of the following options: "sgd", "adam", "adamw". For more
-        information on these optimizers, see https://optax.readthedocs.io/en/latest/api/optimizers.html.
+        The function uses the attribute optimizer_name of the DiffImbalance object, which can be set to
+        "adam" or "sgd". For more information on these optimizers, see
+        https://optax.readthedocs.io/en/latest/api/optimizers.html. The updates of the optimizer are made
+        orthogonal to the current weights (see '_scale_by_tangent_projection').
         """
         if self.optimizer_name.lower() == "adam":
             opt_class = optax.adam
-        elif self.optimizer_name.lower() == "adamw":
-            opt_class = optax.adamw
         elif self.optimizer_name.lower() == "sgd":
             opt_class = optax.sgd
         else:
             raise ValueError(
-                f'Unknown optimizer "{self.optimizer_name.lower()}". Choose among "sgd", "adam" and "adamw".'
+                f'Unknown optimizer "{self.optimizer_name.lower()}". Choose among "adam" and "sgd".'
             )
 
         # set the learning rate schedule (cosine decay or constant)
@@ -905,7 +939,9 @@ class DiffImbalance:
             raise ValueError(
                 f'Unknown learning rate decay schedule "{self.learning_rate_decay}". Choose among None or "cos".'
             )
-        optimizer = opt_class(self.lr_schedule)
+        optimizer = optax.chain(
+            opt_class(self.lr_schedule), _scale_by_tangent_projection()
+        )
 
         # Initialize training state
         self.state = train_state.TrainState.create(
@@ -955,9 +991,6 @@ class DiffImbalance:
             imbs_training = imbs_training.at[epoch_idx].set(self._train_epoch(subkey))
         self.state = state_start
 
-        # AFTER TRAINING, scale weights such that their norm appears constant during the training
-        norm_init = jnp.sqrt((self.params_init**2).sum())
-        params_training *= norm_init / jnp.sqrt((params_training**2).sum(axis=1, keepdims=True))
         self.params_final = params_training[-1]
         self.params_training = params_training
         self.imbs_training = imbs_training

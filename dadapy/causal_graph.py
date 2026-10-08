@@ -171,7 +171,7 @@ class CausalGraph(DiffImbalance):
         k=1,
         lambda_factor=0.1,
         params_init=None,
-        optimizer_name="sgd",
+        optimizer_name="adam",
         learning_rate=1e-2,
         learning_rate_decay=None,
         compute_imb_final=False,
@@ -215,9 +215,9 @@ class CausalGraph(DiffImbalance):
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
             params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
                 values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
-            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
-                (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
-                additional details.
+            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
+                (default) and 'sgd'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for additional
+                details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
@@ -809,7 +809,7 @@ class CausalGraph(DiffImbalance):
         point_adapt_lambda=False,
         k=1,
         lambda_factor=0.1,
-        optimizer_name="sgd",
+        optimizer_name="adam",
         learning_rate=1e-2,
         learning_rate_decay=None,
         compute_imb_final=False,
@@ -856,9 +856,9 @@ class CausalGraph(DiffImbalance):
             k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
-            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
-                (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
-                additional details.
+            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
+                (default) and 'sgd'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for additional
+                details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
