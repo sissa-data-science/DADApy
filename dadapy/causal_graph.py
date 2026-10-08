@@ -857,11 +857,13 @@ class CausalGraph(DiffImbalance):
                 of communities linked through indirect paths in the community causal graph. The keys
                 are tuples (community_name_cause, community_name_effect), while the values are
                 np.arrays of shape (n_time_lags, n_weights), where n_weights is equal to 1 + E + E*M
-                (1 weight for the cause community, E weights for the effect community, and E weights
-                for each of the M mediator communities), and E=embedding_dim_present.
+                (1 weight for the cause community at t=0, E weights for the effect community at
+                t=tau-1, tau-1-embedding_time, ..., and E weights for each of the M mediator communities,
+                ordered by time and then by community name), and E=embedding_dim_present. Each weight is
+                shared by all the variables of a community at a given time.
             communities_and_lags (dict): dictionary containing as keys the tuples
-                (community_name_cause, community_name_effect), and as values a list of communities
-                and corresponding lags.
+                (community_name_cause, community_name_effect), and as values a list of two arrays of
+                shape (n_weights,), containing the community name and the time of each weight.
             imbs_training (dict): dictionary containing as keys the tuples
                 (community_name_cause, community_name_effect), and as values the DIIs during the
                 trainings.
@@ -874,13 +876,13 @@ class CausalGraph(DiffImbalance):
                 nx.all_simple_paths(graph, source=node_start, target=node_end)
             )
             if not all_paths:
-                return set()
+                return []
 
             # Get intermediates (excluding A and B) for each path
             intermediates_per_path = [set(path[1:-1]) for path in all_paths]
 
-            # Find union across all path intermediates
-            mediators = list(set.union(*intermediates_per_path))
+            # Find union across all path intermediates (sorted, for a reproducible order of the weights)
+            mediators = sorted(set.union(*intermediates_per_path))
             return mediators
 
         keys = list(community_dictionary.keys())
@@ -964,108 +966,64 @@ class CausalGraph(DiffImbalance):
                     mediator_names = find_mediators(
                         community_graph, community_name_cause, community_name_effect
                     )
-                    mediator_sets = [
-                        from_names_to_communities[mediator_name]
-                        for mediator_name in mediator_names
+
+                    # groups of variables sharing the same weight in space A, in the order of the output weights:
+                    # the cause community at t=0, the effect community at t=tau-1, tau-1-embedding_time, ...,
+                    # and all the mediator communities at t=tau-1, then at t=tau-1-embedding_time, ...
+                    # Each group is a pair (community name, lag), with t=tau-lag (lag=None for t=0).
+                    lags_cond = 1 + embedding_time * np.arange(embedding_dim_present)
+                    groups_A = (
+                        [(community_name_cause, None)]
+                        + [(community_name_effect, lag) for lag in lags_cond]
+                        + [(name, lag) for lag in lags_cond for name in mediator_names]
+                    )
+                    variables_A = [
+                        list(from_names_to_communities[name]) for name, _ in groups_A
                     ]
-                    mediator_vars = list(set().union(*mediator_sets))
+                    params_groups = [len(variables) for variables in variables_A]
 
                     # initialize output variables
-                    # 1 weight for the cause, E for the effect and E for each mediator community
-                    nvars = 1 + embedding_dim_present * (1 + len(mediator_names))
                     imbs_training[community_name_cause, community_name_effect] = (
                         np.zeros((len(time_lags), num_epochs + 1))
                     )
                     weights_final[community_name_cause, community_name_effect] = (
-                        np.zeros((len(time_lags), nvars))
-                    )
-                    communities_ordered = np.concatenate(
-                        (
-                            [community_name_cause],  # don't repeat (single slice)
-                            np.tile(
-                                [community_name_effect], reps=embedding_dim_present
-                            ),  # Repeat E (=max_lag) times
-                            np.tile(
-                                mediator_names, reps=embedding_dim_present
-                            ),  # Repeat E (=max_lag) times
-                        )
-                    )
-                    lags_ordered = np.concatenate(
-                        (
-                            ["t=0"],
-                            [
-                                f"t=tau-{lag}"
-                                for lag in np.arange(1, embedding_dim_present + 1)
-                            ],
-                            [
-                                f"t=tau-{lag}"
-                                for lag in np.arange(1, embedding_dim_present + 1)
-                            ],
-                        )
+                        np.zeros((len(time_lags), len(groups_A)))
                     )
                     communities_and_lags[
                         community_name_cause, community_name_effect
-                    ] = [communities_ordered, lags_ordered]
+                    ] = [
+                        np.array([name for name, _ in groups_A]),
+                        np.array(
+                            [
+                                "t=0" if lag is None else f"t=tau-{lag}"
+                                for _, lag in groups_A
+                            ]
+                        ),
+                    ]
                     if compute_imb_final:
                         imbs_final[community_name_cause, community_name_effect] = (
                             np.zeros(len(time_lags))
                         )
 
-                    # compute DII((cause(t=0), effect(t=tau-1), ... , mediator(t=tau-1), ...) -> effect(t=tau))
-                    coords_present = self._extract_samples(
-                        t0s, np.array([0]), community_cause
-                    )  # no embedding for causal community!
-
                     # LOOP OVER TAU #############
                     for j_tau, tau in enumerate(time_lags):
-                        # effect at t=tau, tau-1, ... (space B), conditioning variables at t=tau-1, tau-2, ...
-                        shifts_cond = (
-                            tau - 1 - embedding_time * np.arange(embedding_dim_present)
+                        # space A: cause(t=0), effect(t=tau-1), ..., mediators(t=tau-1), ... (one block per group)
+                        coords_A = np.concatenate(
+                            [
+                                self._extract_samples(
+                                    t0s,
+                                    np.array([0 if lag is None else tau - lag]),
+                                    variables,
+                                )
+                                for (_, lag), variables in zip(groups_A, variables_A)
+                            ],
+                            axis=1,
                         )
+                        # space B: effect at t=tau, tau-embedding_time, ... (time-delay embeddings)
                         coords_future = self._extract_samples(
                             t0s,
                             tau - embedding_time * np.arange(embedding_dim_future),
                             community_effect,
-                        )
-                        coords_cond_effect = self._extract_samples(
-                            t0s, shifts_cond, community_effect
-                        )
-                        coords_cond_mediators = self._extract_samples(
-                            t0s, shifts_cond, mediator_vars
-                        )
-
-                        coords_A = np.concatenate(
-                            (
-                                coords_present,
-                                coords_cond_effect,
-                                coords_cond_mediators,
-                            ),
-                            axis=1,
-                        )
-                        # variables of the columns of coords_A, ordered by variable, then time shift
-                        variables_A = np.concatenate(
-                            (
-                                community_cause,  # don't repeat (single slice)
-                                np.repeat(
-                                    community_effect, embedding_dim_present
-                                ),  # Repeat E (=max_lag) times
-                                np.repeat(
-                                    mediator_vars, embedding_dim_present
-                                ),  # Repeat E (=max_lag) times
-                            )
-                        )
-                        params_groups = np.concatenate(
-                            (
-                                [len(community_cause)],  # don't repeat (single slice)
-                                np.tile(
-                                    [len(community_effect)],
-                                    reps=embedding_dim_present,
-                                ),  # Repeat E (=max_lag) times
-                                np.tile(
-                                    [len(set) for set in mediator_sets],
-                                    reps=embedding_dim_present,
-                                ),  # Repeat E (=max_lag) times
-                            )
                         )
 
                         dii = DiffImbalance(
@@ -1074,7 +1032,7 @@ class CausalGraph(DiffImbalance):
                             periods_A=(
                                 None
                                 if self.periods is None
-                                else self.periods[variables_A]
+                                else self.periods[np.concatenate(variables_A)]
                             ),
                             periods_B=(
                                 None
@@ -1121,7 +1079,7 @@ class CausalGraph(DiffImbalance):
                         ] = weights_temp[-1]
 
         self.weights_final_refine = weights_final
-        self.communities_and_lags = communities_and_lags
+        self.communities_and_lags_refine = communities_and_lags
         self.imbs_training_refine = imbs_training
         self.imbs_final_refine = imbs_final
         return (
