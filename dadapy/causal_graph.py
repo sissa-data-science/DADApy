@@ -201,7 +201,9 @@ class CausalGraph(DiffImbalance):
             batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
                 carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
                 which means that the gradient is computed over all the available points (batch GD).
-            l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
+            l1_strength (float): strength of the L1 regularization (LASSO) term, currently supported only with
+                optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
+                Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
                 in the DII (if False), or a different parameter for each point (if True). Default is False.
             k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
@@ -211,8 +213,8 @@ class CausalGraph(DiffImbalance):
                 values of the scaling weights to be optimized. If None, the initial weights are all equal, with unit
                 norm: [1, 1, ..., 1] / sqrt(n_features_A). The norm of the weights is kept fixed during the training.
             optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
-                (default) and 'sgd'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for additional
-                details.
+                (default) and 'sgd'. If l1_strength is not 0, only 'sgd' is supported. See
+                https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
@@ -814,15 +816,17 @@ class CausalGraph(DiffImbalance):
             batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
                 carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
                 which means that the gradient is computed over all the available points (batch GD).
-            l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
+            l1_strength (float): strength of the L1 regularization (LASSO) term, currently supported only with
+                optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
+                Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
                 in the DII (if False), or a different parameter for each point (if True). Default is False.
             k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
             optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
-                (default) and 'sgd'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for additional
-                details.
+                (default) and 'sgd'. If l1_strength is not 0, only 'sgd' is supported. See
+                https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant

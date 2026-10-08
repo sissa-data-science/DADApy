@@ -211,10 +211,10 @@ class DiffImbalance:
             "time-correlated" points are discarded.
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
-        l1_strength (float): strength of the L1 regularization (LASSO) term. Since the norm of the weights is
-            kept fixed during the training (see params_init), with optimizer 'sgd' the effective strength of the
-            regularization is proportional to the norm of params_init, while with 'adam' it does not depend on
-            it. Default is 0.
+        l1_strength (float): strength of the L1 regularization (LASSO) term, currently supported only with
+            optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning). Since the
+            norm of the weights is kept fixed during the training (see params_init), the effective strength of
+            the regularization is proportional to the norm of params_init. Default is 0.
         point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
             in the DII (if False), or a different parameter for each point (if True). Default is True.
         k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
@@ -234,8 +234,8 @@ class DiffImbalance:
             will also be scaled by a common optimization parameter. params_groups should satisfy the constraint
             sum(params_groups) == n_features_A. If params_groups is None, no weight sharing is enforced.
         optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
-            (default) and 'sgd'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for additional
-            details.
+            (default) and 'sgd'. If l1_strength is not 0, only 'sgd' is supported. See
+            https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
         learning_rate (float): value of the learning rate. Default is 1e-2.
         learning_rate_decay (str): schedule to damp the learning rate to zero (or to learning_rate_final, if
             not None) starting from the value provided with the attribute learning_rate. The available schedules are: 
@@ -368,6 +368,12 @@ class DiffImbalance:
         self.imb_final = None
         self.imbs_training = None
         self.optimizer_name = optimizer_name
+        if self.l1_strength != 0 and self.optimizer_name.lower() == "adam":
+            warnings.warn(
+                "The L1 regularization is currently supported only with optimizer_name='sgd': the optimizer "
+                + "is changed from 'adam' to 'sgd'."
+            )
+            self.optimizer_name = "sgd"
         self.learning_rate = learning_rate
         self.learning_rate_decay = learning_rate_decay
         self.learning_rate_final = learning_rate_final
