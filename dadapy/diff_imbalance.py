@@ -927,6 +927,43 @@ class DiffImbalance:
         params_init = jnp.where(mask, self.params_init, 0.0)
         return params_init * jnp.linalg.norm(self.params_init) / jnp.linalg.norm(params_init)
 
+    def _return_greedy_copy(self, params_init, num_epochs, seed):
+        """Returns a copy of the DiffImbalance object, used to train a subset of features in the greedy searches.
+
+        The copy has the same data and settings of the current object, except for the initial weights, the
+        number of training epochs and the seed. The L1 regularization is switched off (l1_strength=0).
+
+        Args:
+            params_init (jnp.array(float)): array of shape (n_features_A,) containing the initial weights, set
+                to zero for the features which are not in the subset.
+            num_epochs (int): number of training epochs.
+            seed (int): seed of the JAX random generator.
+
+        Returns:
+            dii_copy (DiffImbalance): copy of the DiffImbalance object.
+        """
+        return DiffImbalance(
+            data_A=self.data_A,
+            data_B=self.data_B if self.distances_B is None else None,
+            distances_B=self.distances_B,
+            periods_A=self.periods_A,
+            periods_B=self.periods_B,
+            seed=seed,
+            num_epochs=num_epochs,
+            batches_per_epoch=self.batches_per_epoch,
+            track_full_loss=self.track_full_loss,
+            discard_close_ind=self.discard_close_ind,
+            l1_strength=0.0,
+            point_adapt_lambda=self.point_adapt_lambda,
+            k=self.k,
+            lambda_factor=self.lambda_factor,
+            params_init=params_init,
+            optimizer_name=self.optimizer_name,
+            learning_rate=self.learning_rate,
+            learning_rate_decay=self.learning_rate_decay,
+            learning_rate_final=self.learning_rate_final,
+        )
+
     def forward_greedy_feature_selection(
         self,
         n_features_max=None,
@@ -987,26 +1024,8 @@ class DiffImbalance:
             params_init = self._return_subset_params_init(mask)
 
             # Create a copy of the current object for training
-            dii_copy = DiffImbalance(
-                data_A=self.data_A,
-                data_B=self.data_B,
-                distances_B=self.distances_B,
-                periods_A=self.periods_A,
-                periods_B=self.periods_B,
-                seed=seed,
-                num_epochs=0, # no weights to be optimized here!
-                batches_per_epoch=self.batches_per_epoch,
-                track_full_loss=self.track_full_loss,
-                discard_close_ind=self.discard_close_ind,
-                l1_strength=0.0,
-                point_adapt_lambda=self.point_adapt_lambda,
-                k=self.k,
-                lambda_factor=self.lambda_factor,
-                params_init=params_init,
-                optimizer_name=self.optimizer_name,
-                learning_rate=self.learning_rate,
-                learning_rate_decay=self.learning_rate_decay,
-                learning_rate_final = self.learning_rate_final,
+            dii_copy = self._return_greedy_copy(  # no weights to be optimized here!
+                params_init=params_init, num_epochs=0, seed=seed
             )
 
             # Set initial parameters and train
@@ -1102,26 +1121,8 @@ class DiffImbalance:
                         params_init = self._return_subset_params_init(mask)
 
                         # Create a copy of the current object for training
-                        dii_copy = DiffImbalance(
-                            data_A=self.data_A,
-                            data_B=self.data_B,
-                            distances_B=self.distances_B,
-                            periods_A=self.periods_A,
-                            periods_B=self.periods_B,
-                            seed=seed,
-                            num_epochs=self.num_epochs,
-                            batches_per_epoch=self.batches_per_epoch,
-                            track_full_loss=self.track_full_loss,
-                            discard_close_ind=self.discard_close_ind,
-                            l1_strength=0.0,
-                            point_adapt_lambda=self.point_adapt_lambda,
-                            k=self.k,
-                            lambda_factor=self.lambda_factor,
-                            params_init=params_init,
-                            optimizer_name=self.optimizer_name,
-                            learning_rate=self.learning_rate,
-                            learning_rate_decay=self.learning_rate_decay,
-                            learning_rate_final = self.learning_rate_final,
+                        dii_copy = self._return_greedy_copy(
+                            params_init=params_init, num_epochs=self.num_epochs, seed=seed
                         )
 
                         # Set initial parameters and train
@@ -1180,26 +1181,8 @@ class DiffImbalance:
             mask = mask.at[jnp.array(candidate_features[best_idx])].set(True)
             params_init = self._return_subset_params_init(mask)
 
-            dii_copy = DiffImbalance(
-                data_A=self.data_A,
-                data_B=self.data_B,
-                distances_B=self.distances_B,
-                periods_A=self.periods_A,
-                periods_B=self.periods_B,
-                seed=seed,
-                num_epochs=self.num_epochs,
-                batches_per_epoch=self.batches_per_epoch,
-                track_full_loss=self.track_full_loss,
-                discard_close_ind=self.discard_close_ind,
-                l1_strength=0.0,
-                point_adapt_lambda=self.point_adapt_lambda,
-                k=self.k,
-                lambda_factor=self.lambda_factor,
-                params_init=params_init,
-                optimizer_name=self.optimizer_name,
-                learning_rate=self.learning_rate,
-                learning_rate_decay=self.learning_rate_decay,
-                learning_rate_final = self.learning_rate_final,
+            dii_copy = self._return_greedy_copy(
+                params_init=params_init, num_epochs=self.num_epochs, seed=seed
             )
 
             # Set initial parameters and train
@@ -1251,7 +1234,8 @@ class DiffImbalance:
         one at a time, until either no features are left or n_features_min is reached.
         For each iteration, the algorithm selects the n_best feature sets with the lowest DII values
         for consideration in the next round.
-        The method should be called after calling the train() method, which performs the first optimization.
+        The weights of the full feature set are also optimized within the method, with the same settings used for
+        the subsets of features (in particular, without L1 regularization).
 
         For each candidate feature set, the weights are optimized specifically for that subset.
         When mini-batches are used, the same random seed ensures consistent mini-batch sequences. The pairs of
@@ -1276,8 +1260,6 @@ class DiffImbalance:
         assert (
             self.params_groups is None
         ), f"This method is not yet compatible with option 'params_groups'."
-        assert self.params_final is not None, "First call the train() method!"
-
         n_features = self.nfeatures_A
 
         # Initialize lists to store results
@@ -1286,23 +1268,27 @@ class DiffImbalance:
         best_diis_training = []
         best_weights_list = []
 
-        # Start with all features and use the original trained weights
+        # Start with all features
         current_features = [list(range(n_features))]
 
-        ############################ First evaluate all features together ############################
-        self.return_final_dii()
-        best_diis.append(float(self.imb_final))
+        ############################ First train and evaluate all features together ############################
+        dii_copy = self._return_greedy_copy(
+            params_init=self.params_init, num_epochs=self.num_epochs, seed=seed
+        )
+        dii_copy.train()
+        dii_copy.return_final_dii()
+        best_diis.append(float(dii_copy.imb_final))
 
         # Print all-feature information
         print("------------------------------------------------")
         print(f"All features: {current_features}")
-        print(f"\tDII: {self.imb_final}")
-        print(f"\tOptimal weights: {self.params_final}")
+        print(f"\tDII: {dii_copy.imb_final}")
+        print(f"\tOptimal weights: {dii_copy.params_final}")
         print("------------------------------------------------")
 
         best_feature_sets.append(current_features[0].copy())
-        best_weights_list.append(self.params_final)
-        best_diis_training.append(self.imbs_training)
+        best_weights_list.append(dii_copy.params_final)
+        best_diis_training.append(dii_copy.imbs_training)
 
         ############################ Greedy loop over n-tuples (n<D) ############################
         while len(best_feature_sets[-1]) > n_features_min:
@@ -1345,27 +1331,8 @@ class DiffImbalance:
                     params_init = self._return_subset_params_init(mask)
 
                     # Create a copy of the current object for training
-                    dii_copy = DiffImbalance(
-                        data_A=self.data_A,
-                        data_B=self.data_B,
-                        distances_B=self.distances_B,
-                        periods_A=self.periods_A,
-                        periods_B=self.periods_B,
-                        seed=seed,
-                        num_epochs=num_epochs_now,
-                        batches_per_epoch=self.batches_per_epoch,
-                        track_full_loss=self.track_full_loss,
-                        discard_close_ind=self.discard_close_ind,
-                        l1_strength=0.0,
-                        point_adapt_lambda=self.point_adapt_lambda,
-                        k=self.k,
-                        lambda_factor=self.lambda_factor,
-                        params_init=params_init,
-                        params_groups=None,
-                        optimizer_name=self.optimizer_name,
-                        learning_rate=self.learning_rate,
-                        learning_rate_decay=self.learning_rate_decay,
-                        learning_rate_final = self.learning_rate_final,
+                    dii_copy = self._return_greedy_copy(
+                        params_init=params_init, num_epochs=num_epochs_now, seed=seed
                     )
 
                     # Set initial parameters and train
@@ -1425,27 +1392,8 @@ class DiffImbalance:
             mask = jnp.zeros(n_features, dtype=bool)
             mask = mask.at[jnp.array(best_feature_set)].set(True)
             params_init = self._return_subset_params_init(mask)
-            dii_copy = DiffImbalance(
-                data_A=self.data_A,
-                data_B=self.data_B,
-                distances_B=self.distances_B,
-                periods_A=self.periods_A,
-                periods_B=self.periods_B,
-                seed=seed,
-                num_epochs=num_epochs_now,
-                batches_per_epoch=self.batches_per_epoch,
-                track_full_loss=self.track_full_loss,
-                discard_close_ind=self.discard_close_ind,
-                l1_strength=0.0,
-                point_adapt_lambda=self.point_adapt_lambda,
-                k=self.k,
-                lambda_factor=self.lambda_factor,
-                params_init=params_init,
-                params_groups=None,
-                optimizer_name=self.optimizer_name,
-                learning_rate=self.learning_rate,
-                learning_rate_decay=self.learning_rate_decay,
-                learning_rate_final = self.learning_rate_final,
+            dii_copy = self._return_greedy_copy(
+                params_init=params_init, num_epochs=num_epochs_now, seed=seed
             )
 
             # Set initial parameters and train
