@@ -642,13 +642,14 @@ class DiffImbalance:
             # norm of the weights, kept fixed during the training as the DII only depends on their direction
             params_norm = jnp.linalg.norm(state.params)
 
+            # learning rate of the current step, read before 'apply_gradients' increments state.step
+            current_lr = self.lr_schedule(state.step)
+
             # Update parameters
             state = state.apply_gradients(grads=grads)
 
             # Apply L1 penalty
             if self.l1_strength != 0:
-                current_lr = self.lr_schedule(state.step)
-
                 # (GD clipping, B. Carpenter et al, 2008)
                 state = state.replace(
                     params=jnp.where(state.params > 0, 1.0, 0.0)
