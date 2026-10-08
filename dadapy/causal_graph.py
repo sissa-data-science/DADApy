@@ -46,32 +46,32 @@ class CausalGraph(DiffImbalance):
         time_series (np.array(float)): array of shape (N_times,D), where N_times is the length of
             trajectory and D is the number of dynamical variables. The sampling time is supposed to
             be constant along the trajectory and for all the variables.
-        coords_present (np.array(float)): array of shape (N_samples,D) containing the samples of the
-            D-dimensional trajectory at time t=0; read only when time_series is None.
-        coords_future (np.array(float)): array of shape (N_samples,D,n_lags) containing the samples of
-            the D-dimensional trajectory at different future time lags; read only when time_series is None.
-            If you want to test a single time lag, reshape the dataset with coords_future[:,:,np.newaxis].
+        time_series_ensemble (np.array(float)): array of shape (N_trajs,N_times,D) containing N_trajs
+            independent trajectories of the same dynamical process, sampled at the same N_times times; read
+            only when time_series is None. Each trajectory provides one sample, taken at the same time t=0 for
+            all the trajectories: t=0 is the first time along axis=1 or, if time-delay embeddings are employed,
+            the time (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time, so that the
+            embedding times before t=0 are available.
         periods (np.ndarray(float)): array of shape (D,) containing the periods of the dynamical variables.
             The default is None, which means that the variables are treated as nonperiodic. If not all
             variables are periodic, the entries of the nonperiodic ones should be set to 0.
         standardize (bool): whether to standardize each of the D variables, dividing by its standard
-            deviation along the trajectory or the provided samples. Default is True.
+            deviation along the trajectory (or over all trajectories and times, for time_series_ensemble).
+            Default is True.
         seed (int): seed of JAX random generator.
     """
 
     def __init__(
         self,
         time_series=None,
-        coords_present=None,
-        coords_future=None,
+        time_series_ensemble=None,
         periods=None,
         standardize=True,
         seed=0,
     ):
         """Initialise the CausalGraph object."""
         self.time_series = time_series
-        self.coords_present = coords_present
-        self.coords_future = coords_future
+        self.time_series_ensemble = time_series_ensemble
         self.standardize = standardize
         self.num_variables, self.periods = self._check_and_initialize_args(periods)
         self.seed = seed
@@ -92,66 +92,118 @@ class CausalGraph(DiffImbalance):
 
     def _check_and_initialize_args(self, periods):
         """Check input arguments to constructor of CausalGraph object."""
-        num_variables = None
-        periods = periods
-        if (
-            self.time_series is None
-            and self.coords_present is not None
-            and self.coords_future is not None
-        ):
-            assert len(self.coords_future.shape) == 3, (
-                f"Coords_future has shape {self.coords_future.shape}, while the expected shape "
-                + "is (N_samples, D_features, n_lags).\nIf you want to test a single time lag, "
-                + "provide as input coords_future[:,:,np.newaxis]."
+        if self.time_series is not None:
+            if self.time_series_ensemble is not None:
+                warnings.warn(
+                    "You passed both 'time_series' and 'time_series_ensemble'; the latter will be ignored.",
+                    stacklevel=2,
+                )
+                self.time_series_ensemble = None
+            assert (
+                self.time_series.ndim == 2
+            ), f"'time_series' has shape {self.time_series.shape}, while the expected shape is (N_times, D)."
+            data = self.time_series
+        else:
+            assert (
+                self.time_series_ensemble is not None
+            ), "Provide either 'time_series' or 'time_series_ensemble' to initialize the CausalGraph class."
+            assert self.time_series_ensemble.ndim == 3, (
+                f"'time_series_ensemble' has shape {self.time_series_ensemble.shape}, while the expected "
+                + "shape is (N_trajs, N_times, D)."
             )
-            assert self.coords_present.shape == self.coords_future.shape[:2], (
-                "Arguments coords_present and coords_future should have shapes (N_samples, D_features) "
-                + "and (N_samples, D_features, n_lags),\n but the number of samples and/or the "
-                + "number of features do not match."
+            data = self.time_series_ensemble
+        num_variables = data.shape[-1]
+        if periods is not None:
+            periods = np.ones(num_variables) * np.array(periods)
+
+        # standard deviation of each variable along the time series (or over all trajectories and times)
+        std = np.std(data.reshape(-1, num_variables), ddof=1, axis=0)
+        if self.standardize is True:
+            # not in place, so that the input array is not modified
+            if self.time_series is not None:
+                self.time_series = self.time_series / std
+            else:
+                self.time_series_ensemble = self.time_series_ensemble / std
+        elif (std != 1).any():
+            warnings.warn(
+                f"The {num_variables} variables of the input time series are not standardized.",
+                stacklevel=2,
             )
-            num_variables = self.coords_present.shape[1]
-            if periods is not None:
-                periods = np.ones(self.coords_present.shape[1]) * np.array(periods)
-            if (
-                self.standardize is False
-                and (
-                    np.std(self.coords_present, ddof=1, axis=0)
-                    != np.ones(num_variables)
-                ).any()
-            ):
-                warnings.warn(
-                    f"The {num_variables} variables in 'coords_present' are not standardized.",
-                    stacklevel=2,
-                )
-            if self.standardize is True:
-                self.coords_present /= np.std(
-                    self.coords_present, ddof=1, axis=0, keepdims=True
-                )
-        elif self.time_series is not None:
-            if self.coords_present is not None or self.coords_future is not None:
-                warnings.warn(
-                    "You passed the whole time series as input; the arguments coords_present and "
-                    + "coords_future will be ignored",
-                    stacklevel=2,
-                )
-            num_variables = self.time_series.shape[1]
-            if periods is not None:
-                periods = np.ones(self.time_series.shape[1]) * np.array(periods)
-            if (
-                self.standardize is False
-                and (
-                    np.std(self.time_series, ddof=1, axis=0) != np.ones(num_variables)
-                ).any()
-            ):
-                warnings.warn(
-                    f"Warning: the {num_variables} variables of the input time series are not standardized.",
-                    stacklevel=2,
-                )
-            if self.standardize is True:
-                self.time_series /= np.std(
-                    self.time_series, ddof=1, axis=0, keepdims=True
-                )
         return num_variables, periods
+
+    def _select_times(
+        self,
+        num_samples,
+        time_lags,
+        embedding_dim_present,
+        embedding_dim_future,
+        embedding_time,
+    ):
+        """Select the times t=0 at which the samples in the present space are taken.
+
+        The first selectable time is (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time,
+        so that the times before t=0 needed by the time-delay embeddings are available.
+
+        Args:
+            num_samples (int): number of times selected along the time series. Ignored if the data are provided
+                through 'time_series_ensemble', where the samples are the N_trajs trajectories.
+            time_lags, embedding_dim_present, embedding_dim_future, embedding_time: see the method
+                'optimize_present_to_future'.
+
+        Returns:
+            t0s (np.ndarray(int) or int): array of shape (num_samples,) containing the times selected along
+                'time_series' or, for 'time_series_ensemble', the single time (along axis=1) at which all the
+                trajectories are sampled.
+        """
+        t_first = (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time
+        if self.time_series is not None:
+            n_times = self.time_series.shape[0]
+            assert num_samples <= n_times - max(time_lags) - t_first, (
+                f"Cannot extract {num_samples} samples from a time series of length {n_times}, with maximum "
+                + f"time lag {max(time_lags)} and {t_first} initial times reserved for the time-delay "
+                + "embeddings. Choose a smaller value of num_samples."
+            )
+            return np.linspace(
+                t_first, n_times - max(time_lags) - 1, num_samples, dtype=int
+            )
+        if num_samples is not None:
+            warnings.warn(
+                "Argument 'num_samples' will be ignored, as the samples are the trajectories in "
+                + "'time_series_ensemble'. To suppress this warning, set 'num_samples' to None.",
+                stacklevel=3,
+            )
+        n_times = self.time_series_ensemble.shape[1]
+        assert t_first + max(time_lags) < n_times, (
+            f"The trajectories in 'time_series_ensemble' have {n_times} times, while the maximum time lag "
+            + f"({max(time_lags)}) and the time-delay embeddings require at least {t_first + max(time_lags) + 1}."
+        )
+        return t_first
+
+    def _extract_samples(self, t0s, time_shifts, variables):
+        """Extract the samples of some variables at the times t0s + time_shifts.
+
+        Args:
+            t0s (np.ndarray(int) or int): times t=0 returned by the method '_select_times'.
+            time_shifts (np.ndarray(int)): array of shape (n_shifts,) containing the time shifts with respect
+                to t=0 (e.g. tau, tau-1, ... for time-delay embeddings in the future).
+            variables (list(int), np.ndarray(int)): indices of the extracted variables.
+
+        Returns:
+            samples (np.ndarray(float)): array of shape (num_samples, n_variables * n_shifts), with columns
+                ordered as (variable_1, shift_1), (variable_1, shift_2), ..., (variable_2, shift_1), ...
+        """
+        if self.time_series is not None:
+            samples = self.time_series[
+                np.add.outer(t0s, time_shifts)
+            ]  # has shape (num_samples, n_shifts, D)
+        else:
+            samples = self.time_series_ensemble[
+                :, t0s + time_shifts
+            ]  # has shape (N_trajs, n_shifts, D)
+        samples = np.transpose(
+            samples[:, :, variables], axes=[0, 2, 1]
+        )  # convert to shape (num_samples, n_variables, n_shifts)
+        return samples.reshape((samples.shape[0], -1))
 
     def optimize_present_to_future(  # noqa: C901
         self,
@@ -177,12 +229,13 @@ class CausalGraph(DiffImbalance):
     ):
         """Optimize the DII iteratively from the full space in the present to a target space in the future.
 
-        Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
-        are read only when data are provided to the CausalGraph object through the argument 'time_series'.
+        Argument 'num_samples' is read only when data are provided to the CausalGraph object through the argument
+        'time_series'; with 'time_series_ensemble', the samples are the N_trajs trajectories.
 
         Args:
             num_samples (int): number of samples harvested from the full time series, interpreted as
-                independent initial conditions of the same dynamical process.
+                independent initial conditions of the same dynamical process. Ignored (set it to None) if the
+                data are provided through 'time_series_ensemble'.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
                 space (t=0, t=-1, ...). Default is 1, which means the time-delay embeddings are not employed.
@@ -221,8 +274,9 @@ class CausalGraph(DiffImbalance):
                 learning rate (None). Default is None (constant learning rate).
             compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
                 'return_final_dii' of the DiffImbalance class). Default is False.
-            discard_close_ind (int): given any point i, defines the "close" points (following the time ordering
-                along axis=0 of 'time_series' or 'coords_present') that are known to be significantly correlated with i.
+            discard_close_ind (int): given any point i, defines the "close" points (following the order of the
+                samples: the times selected along 'time_series', or the trajectories along axis=0 of
+                'time_series_ensemble') that are known to be significantly correlated with i.
                 The pairs (i, j) with |i - j| <= discard_close_ind are discarded both during the training and when
                 computing the final DII (see the argument 'discard_close_ind' of the DiffImbalance class). Default is
                 0, for which no distances between points close in the time are discarded.
@@ -238,56 +292,19 @@ class CausalGraph(DiffImbalance):
                 the end of each training computed over the full data set. If 'compute_imb_final' is False, imbs_final
                 is set to None. Also accessible as attribute of the CausalGraph object.
         """
-        coords_present = None
-        if self.time_series is not None:
-            assert num_samples <= self.time_series.shape[0] - max(time_lags), (
-                f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial "
-                + f"samples, if the maximum time lag is {np.max(time_lags)}.\nChoose a smaller value of "
-                + "num_samples."
-            )
-
-            t0s = np.linspace(
-                (max(embedding_dim_present, embedding_dim_future) - 1)
-                * embedding_time,  # select times defining the ensemble of trajectories
-                self.time_series.shape[0] - max(time_lags) - 1,
-                num_samples,
-                dtype=int,
-            )
-            indices_present = np.array(
-                [t0s - embedding_time * i for i in range(embedding_dim_present)]
-            )
-            coords_present = self.time_series[
-                indices_present
-            ]  # has shape (embedding_dim_present, num_samples, n_variables)
-            coords_present = np.transpose(
-                coords_present, axes=[1, 2, 0]
-            )  # convert to shape (num_samples, n_variables, embedding_dim_present)
-            coords_present = coords_present.reshape(
-                (num_samples, self.num_variables * embedding_dim_present)
-            )
-        elif self.coords_present is not None:
-            if num_samples is not None:
-                warnings.warn(
-                    "Argument 'num_samples' will be ignored, as you already provided the independent "
-                    + "initial conditions through arguments 'coords_present' and 'coords_future'.\n "
-                    + "To suppress this warning, set 'num_samples' to None.",
-                    stacklevel=2,
-                )
-            if time_lags is not None:
-                warnings.warn(
-                    "Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
-                    + "are already read from the last dimension of 'coords_future'.\n "
-                    + "To suppress this warning, set 'time_lags' to None.",
-                    stacklevel=2,
-                )
-            num_samples = self.coords_present.shape[0]
-            time_lags = np.arange(1, self.coords_future.shape[2] + 1)
-            coords_present = self.coords_present
-        else:
-            print(
-                "To call this method, provide either a time series or directly the present and future samples "
-                + "while initializing the CausalGraph class."
-            )
+        t0s = self._select_times(
+            num_samples,
+            time_lags,
+            embedding_dim_present,
+            embedding_dim_future,
+            embedding_time,
+        )
+        # present space: all variables at times t=0, -1, ... (time-delay embeddings)
+        coords_present = self._extract_samples(
+            t0s,
+            -embedding_time * np.arange(embedding_dim_present),
+            np.arange(self.num_variables),
+        )
 
         if target_variables == "all":
             target_variables = np.arange(self.num_variables)
@@ -335,22 +352,12 @@ class CausalGraph(DiffImbalance):
         # loop over target variables and time lags
         for i_var, target_var in enumerate(target_variables):
             for j_tau, tau in enumerate(time_lags):
-                indices_future = (
-                    np.array(
-                        [t0s - embedding_time * i for i in range(embedding_dim_future)]
-                    )
-                    + tau
+                # future space: target variable at times t=tau, tau-1, ... (time-delay embeddings)
+                coords_future = self._extract_samples(
+                    t0s,
+                    tau - embedding_time * np.arange(embedding_dim_future),
+                    [target_var],
                 )
-
-                if self.time_series is not None:
-                    coords_future = self.time_series[
-                        indices_future, target_var
-                    ]  # has shape (embedding_dim_future, num_samples)
-                    coords_future = np.transpose(
-                        coords_future, axes=[1, 0]
-                    )  # convert to shape (num_samples, embedding_dim_future)
-                else:
-                    coords_future = self.coords_future[:, :, j_tau]
 
                 dii = DiffImbalance(
                     data_A=coords_present,
@@ -793,8 +800,8 @@ class CausalGraph(DiffImbalance):
         by the same weight. The number of previous time steps E included in the optimization is given
         by the argument 'embedding_dim_present'.
 
-        Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
-        are read only when data are provided to the CausalGraph object through the argument 'time_series'.
+        Argument 'num_samples' is read only when data are provided to the CausalGraph object through the argument
+        'time_series'; with 'time_series_ensemble', the samples are the N_trajs trajectories.
 
         Args:
             adj_matrix (np.ndarray(float)): binary matrix of shape (D,D) defining the links of a directed
@@ -804,7 +811,8 @@ class CausalGraph(DiffImbalance):
             community_dictionary (dict): dictionary with pairs (comm_id, level) as keys, and lists containing
                 the indices of the variables in each community as values.
             num_samples (int): number of samples harvested from the full time series, interpreted as
-                independent initial conditions of the same dynamical process.
+                independent initial conditions of the same dynamical process. Ignored (set it to None) if the
+                data are provided through 'time_series_ensemble'.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
                 space (t=0, t=-1, ...). Default is 1, which means the time-delay embeddings are not employed.
@@ -833,8 +841,9 @@ class CausalGraph(DiffImbalance):
                 learning rate (None). Default is None (constant learning rate).
             compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
                 'return_final_dii' of the DiffImbalance class). Default is False.
-            discard_close_ind (int): given any point i, defines the "close" points (following the time ordering
-                along axis=0 of 'time_series' or 'coords_present') that are known to be significantly correlated with i.
+            discard_close_ind (int): given any point i, defines the "close" points (following the order of the
+                samples: the times selected along 'time_series', or the trajectories along axis=0 of
+                'time_series_ensemble') that are known to be significantly correlated with i.
                 The pairs (i, j) with |i - j| <= discard_close_ind are discarded both during the training and when
                 computing the final DII (see the argument 'discard_close_ind' of the DiffImbalance class). Default is
                 0, for which no distances between points close in the time are discarded.
@@ -896,6 +905,14 @@ class CausalGraph(DiffImbalance):
             print(
                 f"- Community {community_name} ({len(community)} variables, level {key[1]}): {community}"
             )
+
+        t0s = self._select_times(
+            num_samples,
+            time_lags,
+            embedding_dim_present,
+            embedding_dim_future,
+            embedding_time,
+        )
 
         # initialize output variables
         imbs_training = {}
@@ -990,133 +1007,27 @@ class CausalGraph(DiffImbalance):
                         )
 
                     # compute DII((cause(t=0), effect(t=tau-1), ... , mediator(t=tau-1), ...) -> effect(t=tau))
-                    coords_present = None
-                    variables_t0 = community_cause
-                    if self.time_series is not None:
-                        assert num_samples <= self.time_series.shape[0] - max(
-                            time_lags
-                        ), (
-                            f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial "
-                            + f"samples, if the maximum time lag is {np.max(time_lags)}.\nChoose a smaller value of "
-                            + "num_samples."
-                        )
-
-                        t0s = np.linspace(
-                            (max(embedding_dim_present, embedding_dim_future) - 1)
-                            * embedding_time,  # select times defining the ensemble of trajectories
-                            self.time_series.shape[0] - max(time_lags) - 1,
-                            num_samples,
-                            dtype=int,
-                        )
-                        indices_present = +t0s  # no embedding for causal community!
-                        coords_present = self.time_series[:, variables_t0][
-                            indices_present
-                        ]  # has shape (num_samples, n_variables_t0)
-                    elif self.coords_present is not None:
-                        if num_samples is not None:
-                            warnings.warn(
-                                "Argument 'num_samples' will be ignored, as you already provided the independent "
-                                + "initial conditions through arguments 'coords_present' and 'coords_future'.\n "
-                                + "To suppress this warning, set 'num_samples' to None.",
-                                stacklevel=2,
-                            )
-                        if time_lags is not None:
-                            warnings.warn(
-                                "Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
-                                + "are already read from the last dimension of 'coords_future'.\n "
-                                + "To suppress this warning, set 'time_lags' to None.",
-                                stacklevel=2,
-                            )
-                        num_samples = self.coords_present.shape[0]
-                        time_lags = np.arange(1, self.coords_future.shape[2] + 1)
-                        coords_present = self.coords_present[:, variables_t0]
-                    else:
-                        print(
-                            "To call this method, provide either a time series or directly the "
-                            "present and future samples while initializing the CausalGraph class."
-                        )
+                    coords_present = self._extract_samples(
+                        t0s, np.array([0]), community_cause
+                    )  # no embedding for causal community!
 
                     # LOOP OVER TAU #############
                     for j_tau, tau in enumerate(time_lags):
-                        indices_future = (  # for space B: effect(t=tau)
-                            np.array(
-                                [
-                                    t0s - embedding_time * i
-                                    for i in range(embedding_dim_future)
-                                ]
-                            )
-                            + tau
+                        # effect at t=tau, tau-1, ... (space B), conditioning variables at t=tau-1, tau-2, ...
+                        shifts_cond = (
+                            tau - 1 - embedding_time * np.arange(embedding_dim_present)
                         )
-                        indices_cond1 = (  # for conditioning on effect(t=tau-1), effect(t=tau-2), ...
-                            np.array(
-                                [
-                                    t0s - embedding_time * i
-                                    for i in range(embedding_dim_present)
-                                ]
-                            )
-                            + tau
-                            - 1
+                        coords_future = self._extract_samples(
+                            t0s,
+                            tau - embedding_time * np.arange(embedding_dim_future),
+                            community_effect,
                         )
-                        indices_cond2 = (  # for conditioning on mediators(t=tau-1), mediators(t=tau-2), ...
-                            np.array(
-                                [
-                                    t0s - embedding_time * i
-                                    for i in range(embedding_dim_present)
-                                ]
-                            )
-                            + tau
-                            - 1
+                        coords_cond_effect = self._extract_samples(
+                            t0s, shifts_cond, community_effect
                         )
-
-                        if self.time_series is not None:
-                            coords_future = self.time_series[:, community_effect][
-                                indices_future
-                            ]  # has shape (embedding_dim_future, num_samples, n_variables_effect_community)
-                            coords_future = np.transpose(
-                                coords_future, axes=[1, 2, 0]
-                            )  # convert to shape (num_samples, n_variables_effect_community, embedding_dim_future)
-                            coords_future = coords_future.reshape(
-                                (
-                                    num_samples,
-                                    len(community_effect) * embedding_dim_future,
-                                )
-                            )
-
-                            coords_cond_effect = self.time_series[:, community_effect][
-                                indices_cond1
-                            ]  # has shape (embedding_dim_present, num_samples, n_variables_effect_community)
-                            coords_cond_effect = np.transpose(
-                                coords_cond_effect, axes=[1, 2, 0]
-                            )  # convert to shape (num_samples, n_variables_effect_community, embedding_dim_present)
-                            coords_cond_effect = coords_cond_effect.reshape(
-                                (
-                                    num_samples,
-                                    len(community_effect) * embedding_dim_present,
-                                )
-                            )
-
-                            coords_cond_mediators = self.time_series[:, mediator_vars][
-                                indices_cond2
-                            ]  # has shape (embedding_dim_present, num_samples, n_variables_mediators)
-                            coords_cond_mediators = np.transpose(
-                                coords_cond_mediators, axes=[1, 2, 0]
-                            )  # convert to shape (num_samples, n_variables_mediators, embedding_dim_present)
-                            coords_cond_mediators = coords_cond_mediators.reshape(
-                                (
-                                    num_samples,
-                                    len(mediator_vars) * (embedding_dim_present),
-                                )
-                            )
-                        else:
-                            coords_future = self.coords_future[
-                                :, community_effect, j_tau
-                            ]
-                            # TODO: this branch was unreachable due to a typo (jtau) and the
-                            # resulting array is currently unused downstream; revisit when the
-                            # else-branch path is exercised.
-                            coords_cond = self.coords_future[  # noqa: F841
-                                :, mediator_vars, j_tau - 1 : j_tau + 1
-                            ]
+                        coords_cond_mediators = self._extract_samples(
+                            t0s, shifts_cond, mediator_vars
+                        )
 
                         coords_A = np.concatenate(
                             (
