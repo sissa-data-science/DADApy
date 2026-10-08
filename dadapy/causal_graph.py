@@ -214,7 +214,8 @@ class CausalGraph(DiffImbalance):
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
             params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
-                values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
+                values of the scaling weights to be optimized. If None, the initial weights are all equal, with unit
+                norm: [1, 1, ..., 1] / sqrt(n_features_A). The norm of the weights is kept fixed during the training.
             optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
                 (default) and 'sgd'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for additional
                 details.

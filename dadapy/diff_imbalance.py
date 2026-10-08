@@ -193,10 +193,10 @@ class DiffImbalance:
         params_init (np.array(float), jnp.array(float)): array of shape (n_params,) containing the initial
             values of the scaling weights to be optimized. If params_groups is set to None, each feature is
             scaled by an independent optimization parameter, so n_params == n_features_A. If params_init is None,
-            the initial scaling parameters are set to [0.1, 0.1, ..., 0.1]. Since the DII only depends on the
-            direction of the weights, their norm is kept equal to the norm of params_init during the training:
-            the updates are made orthogonal to the current weights (as in the AdamP optimizer), and after each
-            update the weights are projected back onto the sphere with this radius.
+            the initial scaling parameters are all equal, with unit norm: [1, 1, ..., 1] / sqrt(n_params). Since
+            the DII only depends on the direction of the weights, their norm is kept equal to the norm of
+            params_init during the training. In the greedy feature selections, the initial weights of each subset 
+            of features are taken from params_init and rescaled to the norm of params_init.
         params_groups (np.array(int), jnp.array(int)): array of shape (n_params,) containing at position i the
             number of features that share the same weight in params_init[i], using the same order of the columns
             in data_A. If params_groups = [3, 2, 4], for example, the first 3 features in space A will share a
@@ -307,7 +307,7 @@ class DiffImbalance:
         if params_init is not None:
             self.params_init = jnp.array(params_init, dtype=float)
         else:
-            self.params_init = 0.1 * jnp.ones(self.nparams)
+            self.params_init = jnp.ones(self.nparams) / jnp.sqrt(self.nparams)
         self.params_groups = params_groups
         if params_groups is not None:
             self.params_groups = tuple(params_groups)
@@ -1149,6 +1149,23 @@ class DiffImbalance:
 
         return imb_final, error_final
 
+    def _return_subset_params_init(self, mask):
+        """Returns the initial weights for training a subset of features in the greedy feature selections.
+
+        The weights are rescaled in order to preserve the norm of the weight vector (the norm of params_init)
+        across all optimizations, so that the learning rate and the L1 strength have the same meaning for every
+        subset of features.
+
+        Args:
+            mask (jnp.array(bool)): array of shape (n_features_A,), True for the features in the subset.
+
+        Returns:
+            params_init (jnp.array(float)): array of shape (n_features_A,) with the entries of params_init for
+                the features in the subset and zeros elsewhere, rescaled to the norm of params_init.
+        """
+        params_init = jnp.where(mask, self.params_init, 0.0)
+        return params_init * jnp.linalg.norm(self.params_init) / jnp.linalg.norm(params_init)
+
     def forward_greedy_feature_selection(
         self,
         n_features_max=None,
@@ -1215,8 +1232,8 @@ class DiffImbalance:
             mask = mask.at[feature].set(True)
 
             # Initialize weights for training (only this feature is active)
-            # Use the corresponding value from self.params_init for this feature
-            params_init = jnp.where(mask, self.params_init, 0.0)
+            # Use the corresponding value from self.params_init for this feature, rescaled
+            params_init = self._return_subset_params_init(mask)
 
             # Create a copy of the current object for training
             dii_copy = DiffImbalance(
@@ -1306,9 +1323,9 @@ class DiffImbalance:
 
         # Store the optimal weights for the best single feature
         best_weights = np.zeros(n_features)
-        best_weights[best_feature[0]] = self.params_init[
-            best_feature[0]
-        ]  # Inherit from parent class
+        best_weights[best_feature[0]] = jnp.sign(
+            self.params_init[best_feature[0]]
+        ) * jnp.linalg.norm(self.params_init)  # Inherit from parent class (rescaled)
 
         # Add to weights list
         best_weights_list.append(best_weights)
@@ -1353,8 +1370,8 @@ class DiffImbalance:
                         mask = jnp.zeros(n_features, dtype=bool)
                         mask = mask.at[jnp.array(candidate_set)].set(True)
 
-                        # Initialize weights for training: inherit from parent class
-                        params_init = jnp.where(mask, self.params_init, 0.0)
+                        # Initialize weights for training: inherit from parent class (rescaled)
+                        params_init = self._return_subset_params_init(mask)
 
                         # Create a copy of the current object for training
                         dii_copy = DiffImbalance(
@@ -1455,7 +1472,7 @@ class DiffImbalance:
             # (not saved before to avoid memory problems for large data sets)
             mask = jnp.zeros(n_features, dtype=bool)
             mask = mask.at[jnp.array(candidate_features[best_idx])].set(True)
-            params_init = jnp.where(mask, self.params_init, 0.0)
+            params_init = self._return_subset_params_init(mask)
 
             dii_copy = DiffImbalance(
                 data_A=self.data_A,
@@ -1644,8 +1661,8 @@ class DiffImbalance:
                     mask = jnp.zeros(n_features, dtype=bool)
                     mask = mask.at[jnp.array(candidate_set)].set(True)
 
-                    # Initialize weights for training: inherit from parent class
-                    params_init = jnp.where(mask, self.params_init, 0.0)
+                    # Initialize weights for training: inherit from parent class (rescaled)
+                    params_init = self._return_subset_params_init(mask)
 
                     # Create a copy of the current object for training
                     dii_copy = DiffImbalance(
@@ -1744,7 +1761,7 @@ class DiffImbalance:
             # (not saved before to avoid memory problems for large data sets)
             mask = jnp.zeros(n_features, dtype=bool)
             mask = mask.at[jnp.array(best_feature_set)].set(True)
-            params_init = jnp.where(mask, self.params_init, 0.0)
+            params_init = self._return_subset_params_init(mask)
             dii_copy = DiffImbalance(
                 data_A=self.data_A,
                 data_B=self.data_B,
