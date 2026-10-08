@@ -847,7 +847,10 @@ class DiffImbalance:
 
         Notice that when mini-batches are employed, for efficiency reasons the DII is *not* recomputed
         over the full data set at each training epoch. To access the value of the DII over the full data
-        set, use after training the method 'return_final_dii'.
+        set, use after training the method 'return_final_dii', or initialize the DiffImbalance object
+        with 'track_full_loss = True'.
+        If the method is called more than once, the optimization continues from the final weights of the
+        previous call, and params_init is ignored (a warning is raised).
 
         Args:
             bar_label (str): label on the tqdm training bar, useful when several trains are performed.
@@ -862,6 +865,14 @@ class DiffImbalance:
                 batches_per_epoch == 1 or track_full_loss is True). The same output is accessible as attribute
                 of the DiffImbalance object.
         """
+        # the training state exists only if 'train' was already called
+        if self.state is not None:
+            warnings.warn(
+                "The method 'train' was already called: the optimization continues from the final weights of "
+                + "the previous call, and params_init is ignored. To restart from params_init, create a new "
+                + "DiffImbalance object."
+            )
+
         # Initialize optimizer
         self._init_optimizer()
 
