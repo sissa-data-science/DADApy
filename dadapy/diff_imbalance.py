@@ -103,6 +103,30 @@ def _columns_with_ties(data):
     return cols_with_ties
 
 
+def _check_continuous_variables(data, name):
+    """Checks that a data matrix contains continuous variables, i.e. that it is an array of floats.
+
+    Args:
+        data (np.array(float), jnp.array(float), list): matrix of shape (n_points, n_features).
+        name (str): name of the data matrix, used in the error message.
+
+    Returns:
+        data (np.array(float), jnp.array(float)): the input data, converted to a NumPy array if it was not
+            already a NumPy or JAX array (e.g. a list or a pandas DataFrame).
+
+    Raises:
+        ValueError: if the data are not floats (e.g. integers, booleans or categorical variables).
+    """
+    if not isinstance(data, (np.ndarray, jax.Array)):
+        data = np.asarray(data)
+    if not jnp.issubdtype(data.dtype, jnp.floating):
+        raise ValueError(
+            f"'{name}' contains variables of type {data.dtype}. The current DII implementation does not "
+            + "support discrete variables: provide continuous variables as an array of floats."
+        )
+    return data
+
+
 def _scale_by_tangent_projection():
     """Optax transformation removing from the weight updates their component along the current weights.
 
@@ -154,7 +178,10 @@ class DiffImbalance:
 
     Attributes:
         data_A (np.array(float), jnp.array(float)): feature space A, matrix of shape (n_points, n_features_A).
+            The current DII implementation only supports continuous variables (arrays of floats): integer,
+            boolean or categorical variables raise a ValueError.
         data_B (np.array(float), jnp.array(float)): feature space B, matrix of shape (n_points, n_features_B).
+            As data_A, it must contain continuous variables (arrays of floats).
         distances_B (np.array(float), jnp.array(float)): distance matrix in space B, of shape (n_points, n_points).
             Default is None, for which distances are computed from the features in data_B.
         periods_A (np.array(float), jnp.array(float)): array of shape (n_features_A,), periods of features A.
@@ -239,8 +266,10 @@ class DiffImbalance:
         learning_rate_final=None,
     ):
         """Initialise the DiffImbalance class."""
+        data_A = _check_continuous_variables(data_A, name="data_A")
         self.nfeatures_A = data_A.shape[1]
         if distances_B is None:  # space B provided as features
+            data_B = _check_continuous_variables(data_B, name="data_B")
             self.nfeatures_B = data_B.shape[1]
             assert data_A.shape[0] == data_B.shape[0], (
                 f"Space A has {data_A.shape[0]} samples "
@@ -434,8 +463,7 @@ class DiffImbalance:
                     squared distance of the neighbor of order k.
             """
             # find the k nearest neighbors of each point. The search is carried out in single precision, for
-            # which XLA has a fast top-k kernel on CPU (in double precision, enabled when importing dadapy,
-            # top_k sorts each row)
+            # which XLA has a fast top-k kernel on CPU
             _, nn_indices = jax.lax.top_k(-dist2_matrix.astype(jnp.float32), k)
             # the k-th smallest distance, read in the original precision, is the largest of the k smallest
             smallest_dist2 = jnp.take_along_axis(dist2_matrix, nn_indices, axis=1)
