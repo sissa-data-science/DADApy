@@ -216,6 +216,7 @@ class CausalGraph(DiffImbalance):
         save_weights=False,
         num_epochs=200,
         batches_per_epoch=1,
+        track_full_loss=False,
         l1_strength=0.0,
         point_adapt_lambda=False,
         k=1,
@@ -224,6 +225,7 @@ class CausalGraph(DiffImbalance):
         optimizer_name="adam",
         learning_rate=1e-2,
         learning_rate_decay=None,
+        learning_rate_final=None,
         compute_imb_final=False,
         discard_close_ind=0,
     ):
@@ -254,6 +256,10 @@ class CausalGraph(DiffImbalance):
             batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
                 carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
                 which means that the gradient is computed over all the available points (batch GD).
+            track_full_loss (bool): whether to compute the training DII on the full data set at each training epoch,
+                if minibatches are used (batches_per_epoch > 1). This can be computationally demanding for large
+                data sets, but helps monitoring the convergence of the DII, as its calculation on small minibatches
+                may be affected by large fluctuations. Default is False.
             l1_strength (float): strength of the L1 regularization (LASSO) term, currently supported only with
                 optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
                 Default is 0.
@@ -269,9 +275,12 @@ class CausalGraph(DiffImbalance):
                 (default) and 'sgd'. If l1_strength is not 0, only 'sgd' is supported. See
                 https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
-            learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
-                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
-                learning rate (None). Default is None (constant learning rate).
+            learning_rate_decay (str): schedule to damp the learning rate to zero (or to learning_rate_final, if not
+                None) starting from the value provided with the attribute learning_rate. The available schedules are:
+                cosine decay ("cos"), or constant learning rate (None). Default is None (constant learning rate).
+            learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
+                Default is None, for which the learning rate is damped to zero. If learning_rate_decay=None, this
+                argument is ignored.
             compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
                 'return_final_dii' of the DiffImbalance class). Default is False.
             discard_close_ind (int): given any point i, defines the "close" points (following the order of the
@@ -373,6 +382,7 @@ class CausalGraph(DiffImbalance):
                     seed=self.seed,
                     num_epochs=num_epochs,
                     batches_per_epoch=batches_per_epoch,
+                    track_full_loss=track_full_loss,
                     l1_strength=l1_strength,
                     point_adapt_lambda=point_adapt_lambda,
                     k=k,
@@ -381,6 +391,7 @@ class CausalGraph(DiffImbalance):
                     optimizer_name=optimizer_name,
                     learning_rate=learning_rate,
                     learning_rate_decay=learning_rate_decay,
+                    learning_rate_final=learning_rate_final,
                     discard_close_ind=discard_close_ind,
                 )
                 weights_temp, imbs_training[i_var, j_tau] = dii.train(
@@ -786,6 +797,7 @@ class CausalGraph(DiffImbalance):
         embedding_time=1,
         num_epochs=200,
         batches_per_epoch=1,
+        track_full_loss=False,
         l1_strength=0.0,
         point_adapt_lambda=False,
         k=1,
@@ -793,6 +805,7 @@ class CausalGraph(DiffImbalance):
         optimizer_name="adam",
         learning_rate=1e-2,
         learning_rate_decay=None,
+        learning_rate_final=None,
         compute_imb_final=False,
         discard_close_ind=0,
     ):
@@ -828,6 +841,10 @@ class CausalGraph(DiffImbalance):
             batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
                 carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
                 which means that the gradient is computed over all the available points (batch GD).
+            track_full_loss (bool): whether to compute the training DII on the full data set at each training epoch,
+                if minibatches are used (batches_per_epoch > 1). This can be computationally demanding for large
+                data sets, but helps monitoring the convergence of the DII, as its calculation on small minibatches
+                may be affected by large fluctuations. Default is False.
             l1_strength (float): strength of the L1 regularization (LASSO) term, currently supported only with
                 optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
                 Default is 0.
@@ -840,9 +857,12 @@ class CausalGraph(DiffImbalance):
                 (default) and 'sgd'. If l1_strength is not 0, only 'sgd' is supported. See
                 https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
-            learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
-                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
-                learning rate (None). Default is None (constant learning rate).
+            learning_rate_decay (str): schedule to damp the learning rate to zero (or to learning_rate_final, if not
+                None) starting from the value provided with the attribute learning_rate. The available schedules are:
+                cosine decay ("cos"), or constant learning rate (None). Default is None (constant learning rate).
+            learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
+                Default is None, for which the learning rate is damped to zero. If learning_rate_decay=None, this
+                argument is ignored.
             compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
                 'return_final_dii' of the DiffImbalance class). Default is False.
             discard_close_ind (int): given any point i, defines the "close" points (following the order of the
@@ -1045,6 +1065,7 @@ class CausalGraph(DiffImbalance):
                             seed=self.seed,
                             num_epochs=num_epochs,
                             batches_per_epoch=batches_per_epoch,
+                            track_full_loss=track_full_loss,
                             l1_strength=l1_strength,
                             point_adapt_lambda=point_adapt_lambda,
                             k=k,
@@ -1054,6 +1075,7 @@ class CausalGraph(DiffImbalance):
                             optimizer_name=optimizer_name,
                             learning_rate=learning_rate,
                             learning_rate_decay=learning_rate_decay,
+                            learning_rate_final=learning_rate_final,
                             discard_close_ind=discard_close_ind,
                         )
                         (
