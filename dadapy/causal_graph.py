@@ -856,9 +856,9 @@ class CausalGraph(DiffImbalance):
             weights_final (dict): dictionary containing the final optimization weights for each pair
                 of communities linked through indirect paths in the community causal graph. The keys
                 are tuples (community_name_cause, community_name_effect), while the values are
-                np.arrays of shape (n_time_lags, n_weights), where n_weights is equal to 1 + E + E
+                np.arrays of shape (n_time_lags, n_weights), where n_weights is equal to 1 + E + E*M
                 (1 weight for the cause community, E weights for the effect community, and E weights
-                for the mediator communities), and E=embedding_dim_present.
+                for each of the M mediator communities), and E=embedding_dim_present.
             communities_and_lags (dict): dictionary containing as keys the tuples
                 (community_name_cause, community_name_effect), and as values a list of communities
                 and corresponding lags.
@@ -971,7 +971,8 @@ class CausalGraph(DiffImbalance):
                     mediator_vars = list(set().union(*mediator_sets))
 
                     # initialize output variables
-                    nvars = 1 + embedding_dim_present + embedding_dim_present
+                    # 1 weight for the cause, E for the effect and E for each mediator community
+                    nvars = 1 + embedding_dim_present * (1 + len(mediator_names))
                     imbs_training[community_name_cause, community_name_effect] = (
                         np.zeros((len(time_lags), num_epochs + 1))
                     )
