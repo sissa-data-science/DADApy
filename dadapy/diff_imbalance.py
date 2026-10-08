@@ -173,12 +173,12 @@ class DiffImbalance:
             may be affected by large fluctuations. Default is False.
         discard_close_ind (int): given any point i, defines the "close" points (following the labelling order
             along axis=0 of data_A and data_B) that are known to be significantly correlated with i. For example,
-            this may occur when the data set is a time series, and axis=0 is the time dimension. During training,
-            for each point i the pairs (i, j) with |i - j| <= discard_close_ind are discarded entirely: they are
-            never selected as neighbors in space A, do not enter the computation of the smoothing parameter
-            lambda, and are not counted in the ranks of space B (the remaining neighbors of i are re-ranked
-            among themselves, and the DII of point i is normalized by their number). Default is 0, for which no
-            distances between "time-correlated" points are discarded.
+            this may occur when the data set is a time series, and axis=0 is the time dimension. For each point i 
+            the pairs (i, j) with |i - j| <= discard_close_ind are discarded entirely: they are never selected as 
+            neighbors in space A, do not enter the computation of the smoothing parameter lambda, and are not 
+            counted in the ranks of space B (the remaining neighbors of i are re-ranked among themselves, and the 
+            DII of point i is normalized by their number). Default is 0, for which no distances between 
+            "time-correlated" points are discarded.
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
         l1_strength (float): strength of the L1 regularization (LASSO) term. Since the norm of the weights is
@@ -315,12 +315,10 @@ class DiffImbalance:
         self.params_training = None
         self.imb_final = None
         self.imbs_training = None
-        self.error_final = None
         self.optimizer_name = optimizer_name
         self.learning_rate = learning_rate
         self.learning_rate_decay = learning_rate_decay
         self.learning_rate_final = learning_rate_final
-        self.mask = None
 
         self.state = None
         self._distance_A = _compute_dist2_matrix_scaling  # TODO: assign other functions if other distances d_A are chosen
@@ -437,11 +435,8 @@ class DiffImbalance:
             """
             # find the k nearest neighbors of each point. The search is carried out in single precision, for
             # which XLA has a fast top-k kernel on CPU (in double precision, enabled when importing dadapy,
-            # top_k sorts each row). k is capped at the number of columns, which can only be exceeded by the
-            # rescaled k used in 'return_final_dii'
-            _, nn_indices = jax.lax.top_k(
-                -dist2_matrix.astype(jnp.float32), min(k, dist2_matrix.shape[1])
-            )
+            # top_k sorts each row)
+            _, nn_indices = jax.lax.top_k(-dist2_matrix.astype(jnp.float32), k)
             # the k-th smallest distance, read in the original precision, is the largest of the k smallest
             smallest_dist2 = jnp.take_along_axis(dist2_matrix, nn_indices, axis=1)
             current_lambdas = smallest_dist2.max(axis=1) * self.lambda_factor
@@ -566,118 +561,6 @@ class DiffImbalance:
             # )
             return diff_imbalance
 
-        def _compute_final_diff_imbalance_and_error(
-            params, batch_A_rows, batch_A_columns, batch_B_ranks, k
-        ):
-            """Computes the Differentiable Information Imbalance (DII) and its error.
-
-            Args:
-                params (jnp.array(float)): array of shape (n_features_A,) of the current feature weights.
-                batch_A_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features_A), containing
-                    points labelling the distance matrix rows.
-                batch_A_columns (jnp.array(float)): matrix of shape (n_points_columns, n_features_A), containing
-                    points labelling the distance matrix columns.
-                batch_B_ranks (jnp.array(float)): matrix of shape (n_points_rows, n_points_columns), containing
-                    the pre-computed target ranks in space B.
-                k (int): neighbor order to set lambda adaptively.
-
-            Returns:
-                diff_imbalance (float): value of the DII.
-                error_imbalance (float): error associated to the DII.
-            """
-            dist2_matrix_A = self._distance_A(  # compute distance matrix A
-                params=params,
-                batch_rows=batch_A_rows,
-                batch_columns=batch_A_columns,
-                periods=self.periods_A,
-                params_groups=self.params_groups,
-            )
-            N = dist2_matrix_A.shape[0]
-            max_rank = dist2_matrix_A.shape[1]
-            lambdas = self.lambda_method(
-                dist2_matrix=dist2_matrix_A, k=k
-            )  # compute lambda values
-            c_matrix = jax.nn.softmax(
-                -dist2_matrix_A
-                / lambdas[
-                    :, jnp.newaxis
-                ],  # jax.lax.stop_gradient(lambdas[:,jnp.newaxis])
-                axis=1,
-            )
-
-            # DON'T DELETE: compute standard Information Imbalance
-            # batch_A_ranks = dist2_matrix_A.argsort(axis=1).argsort(axis=1) + 1
-            # mask_A = (batch_A_ranks <= k)
-            # conditional_ranks = jnp.where(mask_A, 1.0, 0.0) * batch_B_ranks
-            # conditional_ranks = conditional_ranks.sum(axis=-1) / k
-            # values_average = 2.0 / (max_rank + 1) * conditional_ranks
-
-            # compute DII and error
-            values_average = (
-                2.0 / (max_rank + 1) * jnp.sum(batch_B_ranks * c_matrix, axis=1)
-            )
-            diff_imbalance = jnp.mean(values_average)
-            error_imbalance = jnp.std(values_average, ddof=1) / jnp.sqrt(N)
-
-            return diff_imbalance, error_imbalance
-
-        def _compute_final_diff_imbalance(
-            params, batch_A_rows, batch_A_columns, batch_B_ranks, k
-        ):
-            """Computes the Differentiable Information Imbalance (DII) without providing the error.
-
-            Args:
-                params (jnp.array(float)): array of shape (n_features_A,) of the current feature weights.
-                batch_A_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features_A), containing
-                    the points labelling the distance matrix rows.
-                batch_A_columns (jnp.array(float)): matrix of shape (n_points_columns, n_features_A), containing
-                    the points labelling the distance matrix columns.
-                batch_B_ranks (jnp.array(float)): matrix of shape (n_points_rows, n_points_columns), containing
-                    the pre-computed target ranks in space B.
-                k (int): neighbor order to set lambda adaptively.
-
-            Returns:
-                diff_imbalance (float): value of the DII.
-            """
-            dist2_matrix_A = self._distance_A(  # compute distance matrix A
-                params=params,
-                batch_rows=batch_A_rows,
-                batch_columns=batch_A_columns,
-                periods=self.periods_A,
-                params_groups=self.params_groups,
-            )
-            N = dist2_matrix_A.shape[0]
-            max_rank = dist2_matrix_A.shape[1] - 1
-
-            # discard the distance of each point with itself
-            discarded_pairs = jnp.eye(N, dist2_matrix_A.shape[1], dtype=bool)
-            # apply mask to column indices around the row index (this also removes the self-distances)
-            if self.mask is not None:
-                dist2_matrix_A = dist2_matrix_A[self.mask].reshape(
-                    (dist2_matrix_A.shape[0], -1)
-                )
-                discarded_pairs = discarded_pairs[self.mask].reshape(
-                    (discarded_pairs.shape[0], -1)
-                )
-                max_rank = dist2_matrix_A.shape[1]
-
-            # compute lambda values and softmax coefficients, excluding the discarded pairs (see
-            # '_compute_training_diff_imbalance')
-            lambdas = self.lambda_method(
-                dist2_matrix=jnp.where(discarded_pairs, jnp.inf, dist2_matrix_A), k=k
-            )
-            c_matrix = jax.nn.softmax(
-                jnp.where(
-                    discarded_pairs, -jnp.inf, -dist2_matrix_A / lambdas[:, jnp.newaxis]
-                ),
-                axis=1,
-            )
-
-            # compute DII
-            conditional_ranks = jnp.sum(batch_B_ranks * c_matrix, axis=1)
-            diff_imbalance = 2.0 / (max_rank + 1) * jnp.sum(conditional_ranks) / N
-            return diff_imbalance
-
         def _train_step(
             state, batch_A_rows, batch_A_columns, batch_B_ranks, batch_close_mask=None
         ):
@@ -759,48 +642,7 @@ class DiffImbalance:
         self._compute_training_diff_imbalance = jax.jit(
             _compute_training_diff_imbalance, static_argnames="k"
         )
-        self._compute_final_diff_imbalance_and_error = jax.jit(
-            _compute_final_diff_imbalance_and_error, static_argnames="k"
-        )
-        self._compute_final_diff_imbalance = jax.jit(
-            _compute_final_diff_imbalance, static_argnames="k"
-        )
         self._train_step = jax.jit(_train_step)
-
-    def _return_mask(self, npoints, discard_close_ind):
-        """Returns a square boolean mask with False on the diagonals, and True elsewhere.
-
-        Args:
-            npoints (int): number of rows and columns of the mask matrix.
-            discard_close_ind (int): defines the diagonals filled with False, with offset between
-                -discard_close_ind (below the main diagonal) and +discard_close_ind (above the main
-                diagonal).
-
-        Returns:
-            mask (jnp.array(float)): square boolean matrix of shape (npoints, npoints).
-        """
-        mask = jnp.abs(
-            jnp.arange(npoints)[:, jnp.newaxis] - jnp.arange(npoints)[jnp.newaxis, :]
-        )
-        mask = (mask > discard_close_ind).astype(jnp.bool)
-        # more columns than necessary discarded for starting and final rows, for shape compatibility
-        first_rows = jnp.concatenate(
-            (
-                jnp.zeros(2 * discard_close_ind + 1),
-                jnp.ones(npoints - 2 * discard_close_ind - 1),
-            ),
-            dtype=bool,
-        )
-        last_rows = jnp.concatenate(
-            (
-                jnp.ones(npoints - 2 * discard_close_ind - 1),
-                jnp.zeros(2 * discard_close_ind + 1),
-            ),
-            dtype=bool,
-        )
-        mask = mask.at[:discard_close_ind].set(first_rows)
-        mask = mask.at[-discard_close_ind:].set(last_rows)
-        return mask
 
     def _get_batch_close_mask(self, batch_indices):
         """Returns the boolean mask flagging pairs of "close" points for a batch, or None if not needed.
@@ -997,157 +839,30 @@ class DiffImbalance:
 
         return np.array(params_training), np.array(imbs_training)
 
-    def return_final_dii(
-        self, compute_error=True, ratio_rows_columns=1, seed=0, discard_close_ind=0
-    ):
+    def return_final_dii(self):
         """Returns final DII computed over the full data set using the optimal weights.
 
         If the training was carried out with mini-batches of small size, this method allows computing a better
-        estimate of the DII than the final DII value produced by 'train'.
-        When 'compute_error=False' and 'discard_close_ind=0', the final DII produced by 'train' is the same computed
-        by 'return_final_dii' if the training was performed without mini-batches (batches_per_epoch=1).
-        The value of k for computing the smoothing parameter lambda is set in order to keep the same ratio k/N used
-        in the training phase (if batches_per_epoch > 1, N is the size of mini-batches used during the training).
-
-        Args:
-            compute_error (bool): whether to compute the final DII and its error by sampling different points along
-                rows and columns of the distance matrix. If False, the final DII is computed using the same points
-                along rows and columns, which does not allow for an error estimation. Default is True.
-            ratio_rows_columns (float): only read when compute_error is True; defines the ratio between the number
-                of points along rows (nrows) and along columns (ncolumns) of distance and rank matrices, in two groups
-                randomly sampled.  In general, nrows and ncolumns are determined by solving the equations
-                    nrows / ncolumns = ratio_rows_columns,
-                    nrows + ncolumns = n_total_points.
-                Default is 1, which means that both groups have n_points / 2 elements.
-            discard_close_ind (int): given any point i, defines the "close" points (following the labelling order
-                along axis=0 of data_A and data_B) that are known to be significantly correlated with i. For example,
-                this may occur when the data set is a time series, and axis=0 is the time dimension. If compute_error
-                is True, "time-correlated" points are excluded by subsampling the data along axis=0 with stride
-                discard_close_ind + 1. If compute_error is False, distances between each point i and points within the
-                time window [i-discard_close_ind, i+discard_close_ind] are discarded. Default is 0, for which no
-                distances between points close in time are discarded.
-            seed (int): seed of JAX random generator, default is 0.
+        estimate of the DII than the final DII value produced by 'train'. The DII is computed as during the
+        training, but over the full data set: the value of k is rescaled to keep the same ratio k/N used in the
+        training phase (N being the size of the mini-batches), and the pairs of "close" points defined by the
+        attribute 'discard_close_ind' are discarded. The result coincides with the last element of
+        'imbs_training' if the training was performed without mini-batches (batches_per_epoch=1), or with
+        track_full_loss=True.
 
         Returns:
-            imb_final (float): final DII, also accessible as attribute of the CausalGraph object.
-            error_final (float): error associated to final DII, also accessible as attribute of the CausalGraph object.
-                If compute_error is False, error_final is set to None.
+            imb_final (float): final DII, also accessible as attribute of the DiffImbalance object.
         """
         assert self.params_final is not None, "First call the train() method!"
-        if compute_error is True and ratio_rows_columns is None:
-            raise ValueError(
-                "Option 'compute_error==True' requires a value for the argument 'ratio_rows_columns'."
-            )
-        elif compute_error is False and ratio_rows_columns is not None:
-            warnings.warn(
-                f"You set 'compute_error' to False; argument 'ratio_rows_columns' will be ignored.\n"
-                + f"To suppress this warning set it to None."
-            )
-
-        # case 1: compute final DII and its error, using different points for rows and columns
-        if compute_error == True:
-            # subsample data to remove neighbor correlations, with stride discard_close_ind+1
-            data_A = self.data_A
-            data_B = self.data_B
-            distances_B = self.distances_B
-            if discard_close_ind != 0:
-                subsamples = jnp.arange(
-                    0, self.data_A.shape[0], discard_close_ind + 1, dtype=int
-                )
-                data_A = data_A[subsamples]
-                if self.distances_B is None:
-                    data_B = data_B[subsamples]
-                else:
-                    distances_B = distances_B[subsamples][:, subsamples]
-
-            # Split points in two groups, labelling rows and columns. The number of rows 'nrows'
-            # comes from equations nrows / ncols = ratio_rows_columns and nrows + ncols = npoints.
-            nrows = int(ratio_rows_columns / (ratio_rows_columns + 1) * data_A.shape[0])
-            self.key = jax.random.PRNGKey(seed)  # initialize jax random generator
-            self.key, subkey = jax.random.split(self.key, num=2)
-            indices_rows = jax.random.choice(
-                subkey, jnp.arange(data_A.shape[0]), shape=(nrows,), replace=False
-            )
-            indices_columns = jnp.delete(jnp.arange(data_A.shape[0]), indices_rows)
-
-            # compute final DII and its error
-            if self.distances_B is None:  # space B provided as features
-                ranks_B = (
-                    self._compute_rank_matrix(
-                        batch_rows=data_B[indices_rows],
-                        batch_columns=data_B[indices_columns],
-                        periods=self.periods_B,
-                    )
-                    + 1
-                )
-            else:  # space B provided as distances
-                ranks_B = (
-                    (distances_B[indices_rows][:, indices_columns])
-                    .argsort(axis=1)
-                    .argsort(axis=1)
-                ) + 1
-
-            # set k to keep same ration k/N used during DII training
-            k = int(
-                jnp.ceil(
-                    self.k * self.batches_per_epoch / (discard_close_ind + 1)
-                )
-            )
-            imb_final, error_final = self._compute_final_diff_imbalance_and_error(
-                params=self.params_final,
-                batch_A_rows=data_A[indices_rows],
-                batch_A_columns=data_A[indices_columns],
-                batch_B_ranks=ranks_B,
-                k=k,
-            )
-
-        # case 2: compute final DII only (square distance matrices)
-        elif compute_error == False:
-            # construct mask to discard distances d[i, i-discard_close_ind:i+discard_close_ind+1], for each i
-            mask = None
-            self.mask = None
-            npoints = self.data_A.shape[0]
-            if discard_close_ind != 0:
-                mask = self._return_mask(
-                    npoints=npoints, discard_close_ind=discard_close_ind
-                )
-            self.mask = mask
-
-            # compute final DII
-            if self.distances_B is None:  # space B provided as features
-                ranks_B = self._compute_rank_matrix(
-                    batch_rows=self.data_B,
-                    batch_columns=self.data_B,
-                    periods=self.periods_B,
-                )
-            else:  # space B provided as distances
-                ranks_B = self.distances_B.argsort(axis=1).argsort(axis=1)
-
-            if mask is not None:
-                ranks_B = ranks_B[mask].reshape((ranks_B.shape[0], -1))
-                ranks_B = ranks_B.argsort(axis=1).argsort(axis=1) + 1
-
-            # set k to keep same ratio k/N used during DII training
-            k = int(
-                jnp.ceil(
-                    self.k
-                    * self.batches_per_epoch
-                    * (1 - 2 * discard_close_ind / self.ncolumns)
-                )
-            )
-            imb_final = self._compute_final_diff_imbalance(
-                params=self.params_final,
-                batch_A_rows=self.data_A,
-                batch_A_columns=self.data_A,
-                batch_B_ranks=ranks_B,
-                k=k,
-            )
-            error_final = None
-
-        self.imb_final = imb_final
-        self.error_final = error_final
-
-        return imb_final, error_final
+        self.imb_final = self._compute_training_diff_imbalance(
+            params=self.params_final,
+            batch_A_rows=self.data_A_rows,
+            batch_A_columns=self.data_A_columns,
+            batch_B_ranks=self.ranks_B,
+            k=self.k * self.batches_per_epoch,
+            batch_close_mask=self._get_batch_close_mask(jnp.arange(self.nrows)),
+        )
+        return self.imb_final
 
     def _return_subset_params_init(self, mask):
         """Returns the initial weights for training a subset of features in the greedy feature selections.
@@ -1170,10 +885,7 @@ class DiffImbalance:
         self,
         n_features_max=None,
         n_best=10,
-        compute_error=False,
-        ratio_rows_columns=1,
         seed=0,
-        discard_close_ind=0,
     ):
         """Performs forward greedy feature selection using the Differentiable Information Imbalance.
 
@@ -1183,26 +895,21 @@ class DiffImbalance:
         until n_features_max features are selected or all features are included.
 
         For each candidate feature set, the weights are optimized specifically for that subset.
-        When mini-batches are used, the same random seed ensures consistent mini-batch sequences, and the
-        same split of points along rows and columns of distance matrices if compute_error is True.
+        When mini-batches are used, the same random seed ensures consistent mini-batch sequences. The pairs of
+        "close" points defined by the attribute 'discard_close_ind' are discarded both when training the weights
+        of each candidate feature set and when computing its final DII.
 
         Args:
             n_features_max (int): maximum number of features to select. If None, will select up to all features.
             n_best (int): number of best feature tuples to consider at each iteration. Default is 10.
-            compute_error (bool): whether to compute error estimates for the DII. Default is False.
-            ratio_rows_columns (float): ratio between the number of points along rows and columns when
-                computing the DII. Only used when compute_error is True. Default is 1.
             seed (int): seed for random number generation. Default is 0.
-            discard_close_ind (int): given any point i, defines the "close" points along axis=0 (e.g. correlated
-                in time) whose distances to i are discarded. It is applied both when training the weights of each
-                candidate feature set and when evaluating the corresponding DII on the full data set (see the
-                'discard_close_ind' attribute of the class and the argument of 'return_final_dii'). Default is 0.
 
         Returns:
             best_feature_sets (list): list of lists, where each sublist contains the indices of the selected
                 features at each iteration.
             best_diis (list): list of DII values corresponding to each set of selected features.
-            best_errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
+            best_diis_training (list): list of arrays containing the DII during the training of each set of
+                selected features (see 'imbs_training' in 'train').
             best_weights_list (list): list of arrays containing the optimal weights for each set of selected features.
         """
         if self.l1_strength != 0.0:
@@ -1218,13 +925,11 @@ class DiffImbalance:
         best_feature_sets = []
         best_diis = []
         best_diis_training = []
-        best_errors = []
         best_weights_list = []
 
         ############################ First evaluate all single features ############################
         single_feature_diis = []
         single_feature_diis_training = []
-        single_feature_errors = []
 
         for feature in range(n_features):
             # Create mask for this single feature
@@ -1246,7 +951,7 @@ class DiffImbalance:
                 num_epochs=0, # no weights to be optimized here!
                 batches_per_epoch=self.batches_per_epoch,
                 track_full_loss=self.track_full_loss,
-                discard_close_ind=discard_close_ind,
+                discard_close_ind=self.discard_close_ind,
                 l1_strength=0.0,
                 point_adapt_lambda=self.point_adapt_lambda,
                 k=self.k,
@@ -1268,31 +973,14 @@ class DiffImbalance:
                     float("inf")
                 )  # Use infinity as a large penalty
                 single_feature_diis_training.append(None)
-                single_feature_errors.append(None)
                 continue
 
             # Save DII over training epochs
             single_feature_diis_training.append(dii_copy.imbs_training)
 
             # Compute DII on the full dataset
-            if compute_error:
-                dii_copy.return_final_dii(
-                    compute_error=True,
-                    ratio_rows_columns=ratio_rows_columns,
-                    seed=seed,
-                    discard_close_ind=discard_close_ind,
-                )
-                single_feature_diis.append(float(dii_copy.imb_final))
-                single_feature_errors.append(float(dii_copy.error_final))
-            else:
-                dii_copy.return_final_dii(
-                    compute_error=False,
-                    ratio_rows_columns=None,
-                    seed=seed,
-                    discard_close_ind=discard_close_ind,
-                )
-                single_feature_diis.append(float(dii_copy.imb_final))
-                single_feature_errors.append(None)
+            dii_copy.return_final_dii()
+            single_feature_diis.append(float(dii_copy.imb_final))
 
             print(f"Feature set = [{feature}], DII = {dii_copy.imb_final}\n")
 
@@ -1303,7 +991,7 @@ class DiffImbalance:
         valid_features = np.isfinite(single_feature_diis)
         if not np.any(valid_features):
             print("ERROR: All single features failed during training!")
-            return [], [], [], [], []
+            return [], [], [], []
 
         # Select the best n_best single features (only from valid ones)
         valid_indices = np.where(valid_features)[0]
@@ -1330,11 +1018,6 @@ class DiffImbalance:
         # Add to weights list
         best_weights_list.append(best_weights)
 
-        if compute_error:
-            best_errors.append(single_feature_errors[selected_indices[0]])
-        else:
-            best_errors.append(None)
-
         # Print the best single feature information
         print("------------------------------------------------")
         print(f"Best single feature: [{best_feature[0]}]")
@@ -1350,7 +1033,6 @@ class DiffImbalance:
         while len(best_feature_sets[-1]) < min(n_features_max, n_features):
             candidate_features = []
             candidate_diis = []
-            candidate_errors = []
 
             # Generate candidate feature sets by combining selected features with remaining features
             for selected_set in selected_features:
@@ -1384,7 +1066,7 @@ class DiffImbalance:
                             num_epochs=self.num_epochs,
                             batches_per_epoch=self.batches_per_epoch,
                             track_full_loss=self.track_full_loss,
-                            discard_close_ind=discard_close_ind,
+                            discard_close_ind=self.discard_close_ind,
                             l1_strength=0.0,
                             point_adapt_lambda=self.point_adapt_lambda,
                             k=self.k,
@@ -1409,28 +1091,11 @@ class DiffImbalance:
                             candidate_diis.append(
                                 float("inf")
                             )  # Use infinity as a large penalty
-                            candidate_errors.append(None)
                             continue
 
                         # Compute DII on the full dataset
-                        if compute_error:
-                            dii_copy.return_final_dii(
-                                compute_error=True,
-                                ratio_rows_columns=ratio_rows_columns,
-                                seed=seed,
-                                discard_close_ind=discard_close_ind,
-                            )
-                            candidate_diis.append(float(dii_copy.imb_final))
-                            candidate_errors.append(float(dii_copy.error_final))
-                        else:
-                            dii_copy.return_final_dii(
-                                compute_error=False,
-                                ratio_rows_columns=None,
-                                seed=seed,
-                                discard_close_ind=discard_close_ind,
-                            )
-                            candidate_diis.append(float(dii_copy.imb_final))
-                            candidate_errors.append(None)
+                        dii_copy.return_final_dii()
+                        candidate_diis.append(float(dii_copy.imb_final))
 
                         print(
                             f"Feature set = {candidate_set}, DII = {dii_copy.imb_final}\n"
@@ -1462,11 +1127,6 @@ class DiffImbalance:
             # Add the best new set to results
             best_feature_sets.append(candidate_features[best_idx])
             best_diis.append(candidate_diis[best_idx])
-            if compute_error:
-                candidate_errors = np.array(candidate_errors)
-                best_errors.append(candidate_errors[best_idx])
-            else:
-                best_errors.append(None)
 
             # Create a copy of DiffImbalance to get the optimal weights for the best feature set
             # (not saved before to avoid memory problems for large data sets)
@@ -1484,7 +1144,7 @@ class DiffImbalance:
                 num_epochs=self.num_epochs,
                 batches_per_epoch=self.batches_per_epoch,
                 track_full_loss=self.track_full_loss,
-                discard_close_ind=discard_close_ind,
+                discard_close_ind=self.discard_close_ind,
                 l1_strength=0.0,
                 point_adapt_lambda=self.point_adapt_lambda,
                 k=self.k,
@@ -1531,16 +1191,13 @@ class DiffImbalance:
             if len(best_feature_sets[-1]) == n_features:
                 break
 
-        return best_feature_sets, best_diis, best_diis_training, best_errors, best_weights_list
+        return best_feature_sets, best_diis, best_diis_training, best_weights_list
 
     def backward_greedy_feature_selection(
         self,
         n_features_min=1,
         n_best=10,
-        compute_error=False,
-        ratio_rows_columns=1,
         seed=0,
-        discard_close_ind=0,
     ):
         """Performs backward greedy feature selection using the Differentiable Information Imbalance.
 
@@ -1551,26 +1208,21 @@ class DiffImbalance:
         The method should be called after calling the train() method, which performs the first optimization.
 
         For each candidate feature set, the weights are optimized specifically for that subset.
-        When mini-batches are used, the same random seed ensures consistent mini-batch sequences, and the
-        same split of points along rows and columns of distance matrices if compute_error is True.
+        When mini-batches are used, the same random seed ensures consistent mini-batch sequences. The pairs of
+        "close" points defined by the attribute 'discard_close_ind' are discarded both when training the weights
+        of each candidate feature set and when computing its final DII.
 
         Args:
             n_features_min (int): minimum number of features to select. Default is 1.
             n_best (int): number of best feature tuples to consider at each iteration. Default is 10.
-            compute_error (bool): whether to compute error estimates for the DII. Default is False.
-            ratio_rows_columns (float): ratio between the number of points along rows and columns when
-                computing the DII. Only used when compute_error is True. Default is 1.
             seed (int): seed for random number generation. Default is 0.
-            discard_close_ind (int): given any point i, defines the "close" points along axis=0 (e.g. correlated
-                in time) whose distances to i are discarded. It is applied both when training the weights of each
-                candidate feature set and when evaluating the corresponding DII on the full data set (see the
-                'discard_close_ind' attribute of the class and the argument of 'return_final_dii'). Default is 0.
 
         Returns:
             best_feature_sets (list): list of lists, where each sublist contains the indices of the selected
                 features at each iteration.
             best_diis (list): list of DII values corresponding to each set of selected features.
-            best_errors (list): list of error estimates for each DII value. Only meaningful if compute_error is True.
+            best_diis_training (list): list of arrays containing the DII during the training of each set of
+                selected features (see 'imbs_training' in 'train').
             best_weights_list (list): list of arrays containing the optimal weights for each set of selected features.
         """
         if self.l1_strength != 0.0:
@@ -1586,31 +1238,14 @@ class DiffImbalance:
         best_feature_sets = []
         best_diis = []
         best_diis_training = []
-        best_errors = []
         best_weights_list = []
 
         # Start with all features and use the original trained weights
         current_features = [list(range(n_features))]
 
         ############################ First evaluate all features together ############################
-        if compute_error:
-            self.return_final_dii(
-                compute_error=True,
-                ratio_rows_columns=ratio_rows_columns,
-                seed=seed,
-                discard_close_ind=discard_close_ind,
-            )
-            best_diis.append(float(self.imb_final))
-            best_errors.append(float(self.error_final))
-        else:
-            self.return_final_dii(
-                compute_error=False,
-                ratio_rows_columns=None,  # Set to None when compute_error is False
-                seed=seed,
-                discard_close_ind=discard_close_ind,
-            )
-            best_diis.append(float(self.imb_final))
-            best_errors.append(None)
+        self.return_final_dii()
+        best_diis.append(float(self.imb_final))
 
         # Print all-feature information
         print("------------------------------------------------")
@@ -1626,7 +1261,6 @@ class DiffImbalance:
         ############################ Greedy loop over n-tuples (n<D) ############################
         while len(best_feature_sets[-1]) > n_features_min:
             candidate_diis = []
-            candidate_errors = []
             candidate_features = []
 
             n_features_now = len(best_feature_sets[-1]) - 1
@@ -1675,7 +1309,7 @@ class DiffImbalance:
                         num_epochs=num_epochs_now,
                         batches_per_epoch=self.batches_per_epoch,
                         track_full_loss=self.track_full_loss,
-                        discard_close_ind=discard_close_ind,
+                        discard_close_ind=self.discard_close_ind,
                         l1_strength=0.0,
                         point_adapt_lambda=self.point_adapt_lambda,
                         k=self.k,
@@ -1701,29 +1335,12 @@ class DiffImbalance:
                         candidate_diis.append(
                             float("inf")
                         )  # Use infinity as a large penalty
-                        candidate_errors.append(None)
                         continue
 
                     # Use return_final_dii to compute DII on the full dataset
                     dii_copy.params_final = trained_weights
-                    if compute_error:
-                        dii_copy.return_final_dii(
-                            compute_error=True,
-                            ratio_rows_columns=ratio_rows_columns,
-                            seed=seed,
-                            discard_close_ind=discard_close_ind,
-                        )
-                        candidate_diis.append(dii_copy.imb_final)
-                        candidate_errors.append(dii_copy.error_final)
-                    else:
-                        dii_copy.return_final_dii(
-                            compute_error=False,
-                            ratio_rows_columns=None,  # Set to None when compute_error is False
-                            seed=seed,
-                            discard_close_ind=discard_close_ind,
-                        )
-                        candidate_diis.append(dii_copy.imb_final)
-                        candidate_errors.append(None)
+                    dii_copy.return_final_dii()
+                    candidate_diis.append(dii_copy.imb_final)
 
                     print(
                         f"Feature set = {candidate_set}, DII = {dii_copy.imb_final}\n"
@@ -1772,7 +1389,7 @@ class DiffImbalance:
                 num_epochs=num_epochs_now,
                 batches_per_epoch=self.batches_per_epoch,
                 track_full_loss=self.track_full_loss,
-                discard_close_ind=discard_close_ind,
+                discard_close_ind=self.discard_close_ind,
                 l1_strength=0.0,
                 point_adapt_lambda=self.point_adapt_lambda,
                 k=self.k,
@@ -1806,12 +1423,6 @@ class DiffImbalance:
             best_feature_sets.append(best_feature_set.copy())
             best_diis.append(candidate_diis[best_idx])
 
-            if compute_error:
-                candidate_errors = np.array(candidate_errors)
-                best_errors.append(candidate_errors[best_idx])
-            else:
-                best_errors.append(None)
-
             # Print the best n-tuple information
             print("------------------------------------------------")
             print(f"Best {len(best_feature_set)}-tuple: {candidate_features[best_idx]}")
@@ -1820,4 +1431,4 @@ class DiffImbalance:
             print(f"Selected {n_best_actual} best candidates for next iteration")
             print("------------------------------------------------")
 
-        return best_feature_sets, best_diis, best_diis_training, best_errors, best_weights_list
+        return best_feature_sets, best_diis, best_diis_training, best_weights_list

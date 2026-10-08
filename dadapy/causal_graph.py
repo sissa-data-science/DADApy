@@ -81,7 +81,6 @@ class CausalGraph(DiffImbalance):
         self.weights_training = None
         self.weights_final = None
         self.imbs_final = None
-        self.errors_final = None
         self.adj_matrix = None
         self.community_dictionary = None
 
@@ -90,7 +89,6 @@ class CausalGraph(DiffImbalance):
         self.communities_and_lags_refine = None
         self.imbs_training_refine = None
         self.imbs_final_refine = None
-        self.errors_final_refine = None
 
     def _check_and_initialize_args(self, periods):
         """Check input arguments to constructor of CausalGraph object."""
@@ -175,16 +173,12 @@ class CausalGraph(DiffImbalance):
         learning_rate=1e-2,
         learning_rate_decay=None,
         compute_imb_final=False,
-        compute_error=False,
-        ratio_rows_columns=1,
-        discard_close_ind=None,
+        discard_close_ind=0,
     ):
         """Optimize the DII iteratively from the full space in the present to a target space in the future.
 
         Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
         are read only when data are provided to the CausalGraph object through the argument 'time_series'.
-        Arguments 'compute_error', 'ratio_rows_columns' and 'discard_close_ind' are only read when 'compute_imb_final'
-        is set to True.
 
         Args:
             num_samples (int): number of samples harvested from the full time series, interpreted as
@@ -223,24 +217,13 @@ class CausalGraph(DiffImbalance):
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
                 learning rate (None). Default is None (constant learning rate).
-            compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
-                specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
-                which those arguments are ignored.
-            compute_error (bool): whether to compute the final DII and its error by sampling different points along
-                rows and columns of the distance matrix. If False, the final DII is computed using the same points
-                along rows and columns, which does not allow for an error estimation. Default is False.
-            ratio_rows_columns (float): only read when compute_error is True; defines the ratio between the number
-                of points along rows (nrows) and along columns (ncolumns) of distance and rank matrices, in two groups
-                randomly sampled.  In general, nrows and ncolumns are determined by solving the equations
-                    nrows / ncolumns = ratio_rows_columns,
-                    nrows + ncolumns = n_total_points.
-                Default is 1, which means that both groups have n_points / 2 elements.
+            compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
+                'return_final_dii' of the DiffImbalance class). Default is False.
             discard_close_ind (int): given any point i, defines the "close" points (following the time ordering
                 along axis=0 of 'time_series' or 'coords_present') that are known to be significantly correlated with i.
-                If compute_error is True, "time-correlated" points are excluded by subsampling the data along axis=0
-                with stride discard_close_ind + 1. If compute_error is False, distances between each point i and points
-                within the time window [i-discard_close_ind, i+discard_close_ind] are discarded. Default is 0, for which
-                no distances between points close in the time are discarded.
+                The pairs (i, j) with |i - j| <= discard_close_ind are discarded both during the training and when
+                computing the final DII (see the argument 'discard_close_ind' of the DiffImbalance class). Default is
+                0, for which no distances between points close in the time are discarded.
 
         Returns:
             weights_final (np.array(float)): array of shape (n_target_variables, n_time_lags, D) containing the
@@ -252,11 +235,6 @@ class CausalGraph(DiffImbalance):
             imbs_final (np.array(float)): array of shape (n_target_variables, n_time_lags) containing the DII at
                 the end of each training computed over the full data set. If 'compute_imb_final' is False, imbs_final
                 is set to None. Also accessible as attribute of the CausalGraph object.
-            errors_final (np.array(float)): array of shape (n_target_variables, n_time_lags) containing
-                the errors of the DII at the end of each training, computed over the full data set.
-                If 'compute_imb_final' is False, or if 'compute_imb_final' is True and 'compute_error'
-                is False, errors_final is set to None. Also accessible as attribute of the
-                CausalGraph object.
         """
         coords_present = None
         if self.time_series is not None:
@@ -349,11 +327,8 @@ class CausalGraph(DiffImbalance):
                     )
                 )
         imbs_final = None
-        errors_final = None
         if compute_imb_final:
             imbs_final = np.zeros((len(target_variables), len(time_lags)))
-            if compute_error:
-                errors_final = np.zeros((len(target_variables), len(time_lags)))
 
         # loop over target variables and time lags
         for i_var, target_var in enumerate(target_variables):
@@ -393,6 +368,7 @@ class CausalGraph(DiffImbalance):
                     optimizer_name=optimizer_name,
                     learning_rate=learning_rate,
                     learning_rate_decay=learning_rate_decay,
+                    discard_close_ind=discard_close_ind,
                 )
                 weights_temp, imbs_training[i_var, j_tau] = dii.train(
                     bar_label=f"target_var={target_var}, tau={tau}"
@@ -400,17 +376,9 @@ class CausalGraph(DiffImbalance):
                 # weights enter the distances squared, so only their absolute value is meaningful
                 weights_temp = np.abs(weights_temp)
 
-                # compute final DII and its error
+                # compute final DII
                 if compute_imb_final:
-                    imb, err = dii.return_final_dii(
-                        compute_error=compute_error,
-                        ratio_rows_columns=ratio_rows_columns,
-                        seed=self.seed,
-                        discard_close_ind=discard_close_ind,
-                    )
-                    imbs_final[i_var, j_tau] = imb
-                    if compute_error:
-                        errors_final[i_var, j_tau] = dii.error_final
+                    imbs_final[i_var, j_tau] = dii.return_final_dii()
 
                 # save weights
                 if embedding_dim_present == 1:
@@ -433,8 +401,7 @@ class CausalGraph(DiffImbalance):
         if save_weights:
             self.weights_training = weights_training
         self.imbs_final = imbs_final
-        self.errors_final = errors_final
-        return weights_final, imbs_training, imbs_final, errors_final
+        return weights_final, imbs_training, imbs_final
 
     def compute_adj_matrix(self, weights, threshold=1e-1):
         """Compute the adjacency matrix from the optimal weights returned by optimize_present_to_future.
@@ -814,9 +781,7 @@ class CausalGraph(DiffImbalance):
         learning_rate=1e-2,
         learning_rate_decay=None,
         compute_imb_final=False,
-        compute_error=False,
-        ratio_rows_columns=1,
-        discard_close_ind=None,
+        discard_close_ind=0,
     ):
         """Implement the refinement step to distinguish direct and indirect links between nonconsecutive communities.
 
@@ -828,8 +793,6 @@ class CausalGraph(DiffImbalance):
 
         Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
         are read only when data are provided to the CausalGraph object through the argument 'time_series'.
-        Arguments 'compute_error', 'ratio_rows_columns' and 'discard_close_ind' are only read when 'compute_imb_final'
-        is set to True.
 
         Args:
             adj_matrix (np.ndarray(float)): binary matrix of shape (D,D) defining the links of a directed
@@ -864,24 +827,13 @@ class CausalGraph(DiffImbalance):
             learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
                 with the attribute learning_rate. The available schedules are: cosine decay ("cos"), or constant
                 learning rate (None). Default is None (constant learning rate).
-            compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
-                specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
-                which those arguments are ignored.
-            compute_error (bool): whether to compute the final DII and its error by sampling different points along
-                rows and columns of the distance matrix. If False, the final DII is computed using the same points
-                along rows and columns, which does not allow for an error estimation. Default is False.
-            ratio_rows_columns (float): only read when compute_error is True; defines the ratio between the number
-                of points along rows (nrows) and along columns (ncolumns) of distance and rank matrices, in two groups
-                randomly sampled.  In general, nrows and ncolumns are determined by solving the equations
-                    nrows / ncolumns = ratio_rows_columns,
-                    nrows + ncolumns = n_total_points.
-                Default is 1, which means that both groups have n_points / 2 elements.
+            compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
+                'return_final_dii' of the DiffImbalance class). Default is False.
             discard_close_ind (int): given any point i, defines the "close" points (following the time ordering
                 along axis=0 of 'time_series' or 'coords_present') that are known to be significantly correlated with i.
-                If compute_error is True, "time-correlated" points are excluded by subsampling the data along axis=0
-                with stride discard_close_ind + 1. If compute_error is False, distances between each point i and points
-                within the time window [i-discard_close_ind, i+discard_close_ind] are discarded. Default is 0, for which
-                no distances between points close in the time are discarded.
+                The pairs (i, j) with |i - j| <= discard_close_ind are discarded both during the training and when
+                computing the final DII (see the argument 'discard_close_ind' of the DiffImbalance class). Default is
+                0, for which no distances between points close in the time are discarded.
 
         Returns:
             weights_final (dict): dictionary containing the final optimization weights for each pair
@@ -898,9 +850,6 @@ class CausalGraph(DiffImbalance):
                 trainings.
             imbs_final (dict): dictionary containing as keys the tuples
                 (community_name_cause, community_name_effect), and as values the final DIIs.
-            errors_final (dict): dictionary containing as keys the tuples
-                (community_name_cause, community_name_effect), and as values the errors of the
-                final DIIs.
         """
 
         def find_mediators(graph, node_start, node_end):
@@ -948,7 +897,6 @@ class CausalGraph(DiffImbalance):
         imbs_training = {}
         weights_final = {}
         imbs_final = {}
-        errors_final = {}
         communities_and_lags = {}
 
         # identify all pairs of indirectly linked communities, and mediator communities #############
@@ -1036,10 +984,6 @@ class CausalGraph(DiffImbalance):
                         imbs_final[community_name_cause, community_name_effect] = (
                             np.zeros(len(time_lags))
                         )
-                        if compute_error:
-                            errors_final[
-                                community_name_cause, community_name_effect
-                            ] = np.zeros(len(time_lags))
 
                     # compute DII((cause(t=0), effect(t=tau-1), ... , mediator(t=tau-1), ...) -> effect(t=tau))
                     coords_present = None
@@ -1228,6 +1172,7 @@ class CausalGraph(DiffImbalance):
                             optimizer_name=optimizer_name,
                             learning_rate=learning_rate,
                             learning_rate_decay=learning_rate_decay,
+                            discard_close_ind=discard_close_ind,
                         )
                         (
                             weights_temp,
@@ -1240,21 +1185,11 @@ class CausalGraph(DiffImbalance):
                         # weights enter the distances squared, so only their absolute value is meaningful
                         weights_temp = np.abs(weights_temp)
 
-                        # compute final DII and its error
+                        # compute final DII
                         if compute_imb_final:
-                            imb, err = dii.return_final_dii(
-                                compute_error=compute_error,
-                                ratio_rows_columns=ratio_rows_columns,
-                                seed=self.seed,
-                                discard_close_ind=discard_close_ind,
-                            )
                             imbs_final[community_name_cause, community_name_effect][
                                 j_tau
-                            ] = imb
-                            if compute_error:
-                                errors_final[
-                                    community_name_cause, community_name_effect
-                                ][j_tau] = dii.error_final
+                            ] = dii.return_final_dii()
 
                         # save weights
                         weights_final[community_name_cause, community_name_effect][
@@ -1265,13 +1200,11 @@ class CausalGraph(DiffImbalance):
         self.communities_and_lags = communities_and_lags
         self.imbs_training_refine = imbs_training
         self.imbs_final_refine = imbs_final
-        self.errors_final_refine = errors_final
         return (
             weights_final,
             communities_and_lags,
             imbs_training,
             imbs_final,
-            errors_final,
         )
 
     def community_graph_refinement(
