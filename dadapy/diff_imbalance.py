@@ -16,8 +16,10 @@
 """
 The *diff_imbalance* module contains the *DiffImbalance* class, implemented with JAX.
 
-The code can be runned on gpu using the command
-    jax.config.update('jax_platform_name', 'gpu') # set 'cpu' or 'gpu'
+By default, JAX runs the code on GPU when one is available. A specific platform can be selected, before any
+JAX computation, with the command
+    jax.config.update('jax_platforms', 'cpu')  # set 'cpu' or 'cuda'
+or with the environment variable JAX_PLATFORMS=cpu.
 """
 
 import warnings
@@ -57,8 +59,8 @@ def _compute_dist2_matrix_scaling(
             that share the same weight params[i], using the same order of the columns in batch_rows and batch_columns.
             If params_groups is None, no weight sharing is enforced.
     Returns:
-        dist2_matrix (jnp.array(float)): array of shape (n_points_rows, n_features) containing the square Euclidean
-            distances between all points in 'batch_rows' and all points in 'batch_columns'.
+        dist2_matrix (jnp.array(float)): array of shape (n_points_rows, n_points_columns) containing the square
+            Euclidean distances between all points in 'batch_rows' and all points in 'batch_columns'.
     """
     diffs = batch_rows[:, jnp.newaxis, :] - batch_columns[jnp.newaxis, :, :]
     if periods is not None:
@@ -385,9 +387,11 @@ class DiffImbalance:
             f"Provide a value of 'k' to compute lambda adaptively."
         )
         assert (
-            self.k > 0
-        ), f"'k' must be larger than or equal to 1."
-        assert isinstance(k, int), f"'k' must be a positive integer."
+            isinstance(self.k, (int, np.integer))
+            and not isinstance(self.k, bool)
+            and self.k > 0
+        ), f"'k' must be a positive integer, while it is {self.k}."
+        self.k = int(self.k)  # Python int, as k is a static argument of the jitted functions
         # 'k' must be smaller than the number of columns of the smallest distance matrix
         # in which neighbors are looked up. With mini-batches this is nrows // batches_per_epoch
         assert self.k < self.nrows // self.batches_per_epoch, (
@@ -851,12 +855,12 @@ class DiffImbalance:
         Returns:
             params_training (np.array(float)): matrix of shape (num_epochs+1, n_features_A) containing the
                 feature weights during the training, starting from their initialization. Also accessible as
-                attribute of the CausalGraph object.
+                attribute of the DiffImbalance object.
             imbs_training (np.array(float)): array of shape (num_epochs+1,) containing the DII during the
                 training. Element imbs_training[i] is the DII of the weights params_training[i], computed over
                 the first mini-batch of the following training epoch (over the full data set, if
                 batches_per_epoch == 1 or track_full_loss is True). The same output is accessible as attribute
-                of the CausalGraph object.
+                of the DiffImbalance object.
         """
         # Initialize optimizer
         self._init_optimizer()
