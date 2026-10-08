@@ -407,6 +407,31 @@ class CausalGraph(DiffImbalance):
         if save_weights:
             self.weights_training = weights_training
         self.imbs_final = imbs_final
+
+        # recall the meaning of the axes of the output arrays
+        axes_weights = ["variable in the present"] + (
+            ["time-delay component (t=0, -embedding_time, ...)"]
+            if len(weights_shape) == 2
+            else []
+        )
+        outputs = {
+            "weights_final": (weights_final, ["target variable", "time lag"] + axes_weights),
+            "imbs_training": (imbs_training, ["target variable", "time lag", "epoch"]),
+        }
+        if save_weights:
+            outputs["weights_training"] = (
+                weights_training,
+                ["target variable", "time lag", "epoch"] + axes_weights,
+            )
+        if compute_imb_final:
+            outputs["imbs_final"] = (imbs_final, ["target variable", "time lag"])
+        print("Output arrays (also accessible as attributes of the CausalGraph object):")
+        for name, (array, axes) in outputs.items():
+            print(f"- {name}: shape {array.shape} = ({', '.join(axes)})")
+        print(
+            "The axes 'target variable' and 'time lag' follow the order of 'target_variables' and 'time_lags'; "
+            + "epoch 0 corresponds to the initial weights."
+        )
         return weights_final, imbs_training, imbs_final
 
     def compute_adj_matrix(self, weights, threshold):
@@ -1086,6 +1111,17 @@ class CausalGraph(DiffImbalance):
         self.communities_and_lags_refine = communities_and_lags
         self.imbs_training_refine = imbs_training
         self.imbs_final_refine = imbs_final
+
+        # recall the meaning of the axes of the output arrays
+        print(
+            "Output dictionaries, with keys (cause, effect) (also accessible as attributes of the CausalGraph "
+            + "object, with suffix '_refine'):\n"
+            + "- weights_final[(cause, effect)]: shape (n_time_lags, n_weights); the community and time of each "
+            + "weight are in communities_and_lags[(cause, effect)]\n"
+            + "- imbs_training[(cause, effect)]: shape (n_time_lags, num_epochs+1); epoch 0 corresponds to the "
+            + "initial weights"
+            + ("\n- imbs_final[(cause, effect)]: shape (n_time_lags,)" if compute_imb_final else "")
+        )
         return (
             weights_final,
             communities_and_lags,
