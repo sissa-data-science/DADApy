@@ -14,10 +14,12 @@
 # ==============================================================================
 
 """
-The *causal_graph* module contains the *CausalGraph* class, which inherits from the *DiffImbalance* class.
+The *causal_graph* module contains the *CausalGraph* class, which uses the *DiffImbalance* class to optimize the DII.
 
-The code can be runned on gpu using the command
-    jax.config.update('jax_platforms', 'gpu') # set 'cpu' or 'gpu'
+By default, JAX runs the code on GPU when one is available. A specific platform can be selected, before any
+JAX computation, with the command
+    jax.config.update('jax_platforms', 'cpu')  # set 'cpu' or 'cuda'
+or with the environment variable JAX_PLATFORMS=cpu.
 """
 
 import itertools
@@ -39,39 +41,39 @@ def symbol_generator():
             yield f"{c}{i}"
 
 
-class CausalGraph(DiffImbalance):
+class CausalGraph:
     """Constructs a community causal graph where variables are grouped into single nodes.
 
     Attributes:
         time_series (np.array(float)): array of shape (N_times,D), where N_times is the length of
             trajectory and D is the number of dynamical variables. The sampling time is supposed to
             be constant along the trajectory and for all the variables.
-        coords_present (np.array(float)): array of shape (N_samples,D) containing the samples of the
-            D-dimensional trajectory at time t=0; read only when time_series is None.
-        coords_future (np.array(float)): array of shape (N_samples,D,n_lags) containing the samples of
-            the D-dimensional trajectory at different future time lags; read only when time_series is None.
-            If you want to test a single time lag, reshape the dataset with coords_future[:,:,np.newaxis].
+        time_series_ensemble (np.array(float)): array of shape (N_trajs,N_times,D) containing N_trajs
+            independent trajectories of the same dynamical process, sampled at the same N_times times; read
+            only when time_series is None. Each trajectory provides one sample, taken at the same time t=0 for
+            all the trajectories: t=0 is the first time along axis=1 or, if time-delay embeddings are employed,
+            the time (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time, so that the
+            embedding times before t=0 are available.
         periods (np.ndarray(float)): array of shape (D,) containing the periods of the dynamical variables.
             The default is None, which means that the variables are treated as nonperiodic. If not all
             variables are periodic, the entries of the nonperiodic ones should be set to 0.
         standardize (bool): whether to standardize each of the D variables, dividing by its standard
-            deviation along the trajectory or the provided samples. Default is True.
+            deviation along the trajectory (or over all trajectories and times, for time_series_ensemble).
+            Default is True.
         seed (int): seed of JAX random generator.
     """
 
     def __init__(
         self,
         time_series=None,
-        coords_present=None,
-        coords_future=None,
+        time_series_ensemble=None,
         periods=None,
         standardize=True,
         seed=0,
     ):
         """Initialise the CausalGraph object."""
         self.time_series = time_series
-        self.coords_present = coords_present
-        self.coords_future = coords_future
+        self.time_series_ensemble = time_series_ensemble
         self.standardize = standardize
         self.num_variables, self.periods = self._check_and_initialize_args(periods)
         self.seed = seed
@@ -81,7 +83,6 @@ class CausalGraph(DiffImbalance):
         self.weights_training = None
         self.weights_final = None
         self.imbs_final = None
-        self.errors_final = None
         self.adj_matrix = None
         self.community_dictionary = None
 
@@ -90,425 +91,398 @@ class CausalGraph(DiffImbalance):
         self.communities_and_lags_refine = None
         self.imbs_training_refine = None
         self.imbs_final_refine = None
-        self.errors_final_refine = None
 
     def _check_and_initialize_args(self, periods):
         """Check input arguments to constructor of CausalGraph object."""
-        num_variables = None
-        periods = periods
-        if (
-            self.time_series is None
-            and self.coords_present is not None
-            and self.coords_future is not None
-        ):
-            assert len(self.coords_future.shape) == 3, (
-                f"Coords_future has shape {self.coords_future.shape}, while the expected shape "
-                + "is (N_samples, D_features, n_lags).\nIf you want to test a single time lag, "
-                + "provide as input coords_future[:,:,np.newaxis]."
+        if self.time_series is not None:
+            if self.time_series_ensemble is not None:
+                warnings.warn(
+                    "You passed both 'time_series' and 'time_series_ensemble'; the latter will be ignored.",
+                    stacklevel=2,
+                )
+                self.time_series_ensemble = None
+            assert (
+                self.time_series.ndim == 2
+            ), f"'time_series' has shape {self.time_series.shape}, while the expected shape is (N_times, D)."
+            data = self.time_series
+        else:
+            assert (
+                self.time_series_ensemble is not None
+            ), "Provide either 'time_series' or 'time_series_ensemble' to initialize the CausalGraph class."
+            assert self.time_series_ensemble.ndim == 3, (
+                f"'time_series_ensemble' has shape {self.time_series_ensemble.shape}, while the expected "
+                + "shape is (N_trajs, N_times, D)."
             )
-            assert self.coords_present.shape == self.coords_future.shape[:2], (
-                "Arguments coords_present and coords_future should have shapes (N_samples, D_features) "
-                + "and (N_samples, D_features, n_lags),\n but the number of samples and/or the "
-                + "number of features do not match."
+            data = self.time_series_ensemble
+        num_variables = data.shape[-1]
+        if periods is not None:
+            periods = np.ones(num_variables) * np.array(periods)
+
+        # standard deviation of each variable along the time series (or over all trajectories and times)
+        std = np.std(data.reshape(-1, num_variables), ddof=1, axis=0)
+        if self.standardize is True:
+            # not in place, so that the input array is not modified
+            if self.time_series is not None:
+                self.time_series = self.time_series / std
+            else:
+                self.time_series_ensemble = self.time_series_ensemble / std
+        elif not np.allclose(
+            std, 1, rtol=1e-2
+        ):  # tolerance: e.g. data standardized with ddof=0
+            warnings.warn(
+                f"The {num_variables} variables of the input time series are not standardized.",
+                stacklevel=2,
             )
-            num_variables = self.coords_present.shape[1]
-            if periods is not None:
-                periods = np.ones(self.coords_present.shape[1]) * np.array(periods)
-            if (
-                self.standardize is False
-                and (
-                    np.std(self.coords_present, ddof=1, axis=0)
-                    != np.ones(num_variables)
-                ).any()
-            ):
-                warnings.warn(
-                    f"The {num_variables} variables in 'coords_present' are not standardized.",
-                    stacklevel=2,
-                )
-            if self.standardize is True:
-                self.coords_present /= np.std(
-                    self.coords_present, ddof=1, axis=0, keepdims=True
-                )
-        elif self.time_series is not None:
-            if self.coords_present is not None or self.coords_future is not None:
-                warnings.warn(
-                    "You passed the whole time series as input; the arguments coords_present and "
-                    + "coords_future will be ignored",
-                    stacklevel=2,
-                )
-            num_variables = self.time_series.shape[1]
-            if periods is not None:
-                periods = np.ones(self.time_series.shape[1]) * np.array(periods)
-            if (
-                self.standardize is False
-                and (
-                    np.std(self.time_series, ddof=1, axis=0) != np.ones(num_variables)
-                ).any()
-            ):
-                warnings.warn(
-                    f"Warning: the {num_variables} variables of the input time series are not standardized.",
-                    stacklevel=2,
-                )
-            if self.standardize is True:
-                self.time_series /= np.std(
-                    self.time_series, ddof=1, axis=0, keepdims=True
-                )
         return num_variables, periods
 
-    def return_nn_indices(
+    def _select_times(
         self,
-        variables,
         num_samples,
         time_lags,
-        embedding_dim=1,
-        embedding_time=1,
-        discard_close_ind=None,
+        embedding_dim_present,
+        embedding_dim_future,
+        embedding_time,
+        discard_close_ind,
     ):
-        """Return the indices of the nearest neighbor of each point.
+        """Select the times t=0 at which the samples in the present space are taken.
+
+        The first selectable time is t_first = (max(embedding_dim_present, embedding_dim_future) - 1) *
+        embedding_time, so that the times before t=0 needed by the time-delay embeddings are available. Along
+        'time_series', the num_samples times are uniformly spaced by an integer number of time steps, starting
+        from t_first; the unused times at the end of the allowed range are reported with a print.
 
         Args:
-            variables (list, jnp.array(int)): array of the coordinates used to build the distance space
-                (with weights 1).
-            num_samples (int): number of samples harvested from the full time series.
-            time_lags (list(int), np.array(int)): tested time lags between 'present' and 'future'.
-            embedding_dim (int): dimension of the time-delay embedding vector built on each variable. Default is 1,
-                which means the time-delay embeddings are not employed.
-            embedding_time (int): lag between consecutive samples in the time-delay embedding vectors of each
-                variable. Default is 1.
-            discard_close_ind (int): defines the "close points" for which distances and ranks are not computed: for each
-                point i, distances between i and points within [i-discard_close_ind, i+discard_close_ind] are discarded.
+            num_samples (int): number of times selected along the time series; if None, all the available times
+                are used. Ignored if the data are provided through 'time_series_ensemble', where the samples are the
+                N_trajs trajectories.
+            time_lags, embedding_dim_present, embedding_dim_future, embedding_time, discard_close_ind: see the
+                method 'optimize_present_to_future'.
 
         Returns:
-            nn_indices (np.array(float)): array of the nearest neighbors indices: nn_indices[i] is the
-                index of the column with value 1 in the rank matrix.
+            t0s (np.ndarray(int) or int): array of shape (num_samples,) containing the times selected along
+                'time_series' or, for 'time_series_ensemble', the single time (along axis=1) at which all the
+                trajectories are sampled.
+            discard_close_samples (int): discard_close_ind converted into a distance between sample indices,
+                as required by the DiffImbalance class (unchanged for 'time_series_ensemble').
         """
-        assert (
-            self.time_series is not None
-        ), "Error: to call this method, provide the time series while initializing the CausalGraph class."
+        t_first = (
+            max(embedding_dim_present, embedding_dim_future) - 1
+        ) * embedding_time
+        if self.time_series is not None:
+            n_times = self.time_series.shape[0]
+            t_last = (
+                n_times - max(time_lags) - 1
+            )  # last time t=0 for which t=max(time_lags) is available
+            if num_samples is None:
+                num_samples = t_last - t_first + 1
+                warnings.warn(
+                    f"You didn't set num_samples: num_samples is set automatically to {num_samples}, using all the "
+                    + f"available times (from t={t_first} to t={t_last}).",
+                    stacklevel=3,
+                )
+            assert 2 <= num_samples <= t_last - t_first + 1, (
+                f"Cannot extract {num_samples} samples from a time series of length {n_times}, with maximum "
+                + f"time lag {max(time_lags)} and {t_first} initial times reserved for the time-delay "
+                + f"embeddings. Choose a value of num_samples between 2 and {t_last - t_first + 1}."
+            )
+            step = (t_last - t_first) // (num_samples - 1)
+            t0s = t_first + step * np.arange(num_samples)
+            if t0s[-1] < t_last:
+                print(
+                    f"The {num_samples} samples are taken every {step} time steps, at t={t0s[0]}, {t0s[1]}, ..., "
+                    + f"{t0s[-1]}; the possible times range from t={t_first} to t={t_last} "
+                    + f"(N_times - max(time_lags) - 1), so the last {t_last - t0s[-1]} are not used."
+                )
+            # samples m positions apart are m * step time steps apart
+            return t0s, discard_close_ind // step
+        if num_samples is not None:
+            warnings.warn(
+                "Argument 'num_samples' will be ignored, as the samples are the trajectories in "
+                + "'time_series_ensemble'. To suppress this warning, do not set 'num_samples'.",
+                stacklevel=3,
+            )
+        n_times = self.time_series_ensemble.shape[1]
+        assert t_first + max(time_lags) < n_times, (
+            f"The trajectories in 'time_series_ensemble' have {n_times} times, while the maximum time lag "
+            + f"({max(time_lags)}) and the time-delay embeddings require at least {t_first + max(time_lags) + 1}."
+        )
+        return t_first, discard_close_ind
 
-        assert num_samples <= self.time_series.shape[0] - max(time_lags), (
-            f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial samples, "
-            + f"if the maximum time lag is {max(time_lags)}.\nChoose a value of num_samples such that "
-            + f"num_samples < {self.time_series.shape[0]} - {max(time_lags)}"
-        )
-        indices_present = np.linspace(
-            (embedding_dim - 1)
-            * embedding_time,  # select times defining the ensemble of trajectories
-            self.time_series.shape[0] - max(time_lags) - 1,
-            num_samples,
-            dtype=int,
-        )
-        indices_present = [
-            indices_present - embedding_time * i for i in range(embedding_dim)
-        ]
-        coords_present = self.time_series[
-            indices_present
-        ]  # has shape (embedding_dim, num_samples, n_variables)
-        coords_present = np.transpose(
-            coords_present, axes=[1, 2, 0]
-        )  # convert to shape (num_samples, n_variables, embedding_dim)
-        dii = DiffImbalance(
-            data_A=coords_present[:, variables].reshape(
-                (num_samples, len(variables) * embedding_dim)
-            ),
-            data_B=coords_present[:, variables].reshape(
-                (num_samples, len(variables) * embedding_dim)
-            ),  # dummy argument
-        )
-        nn_indices = dii._return_nn_indices(discard_close_ind=discard_close_ind)
-        return np.array(nn_indices)
+    def _extract_samples(self, t0s, time_shifts, variables):
+        """Extract the samples of some variables at the times t0s + time_shifts.
+
+        Args:
+            t0s (np.ndarray(int) or int): times t=0 returned by the method '_select_times'.
+            time_shifts (np.ndarray(int)): array of shape (n_shifts,) containing the time shifts with respect
+                to t=0 (e.g. tau, tau-1, ... for time-delay embeddings in the future).
+            variables (list(int), np.ndarray(int)): indices of the extracted variables.
+
+        Returns:
+            samples (np.ndarray(float)): array of shape (num_samples, n_variables * n_shifts), with columns
+                ordered as (variable_1, shift_1), (variable_1, shift_2), ..., (variable_2, shift_1), ...
+        """
+        if self.time_series is not None:
+            samples = self.time_series[
+                np.add.outer(t0s, time_shifts)
+            ]  # has shape (num_samples, n_shifts, D)
+        else:
+            samples = self.time_series_ensemble[
+                :, t0s + time_shifts
+            ]  # has shape (N_trajs, n_shifts, D)
+        samples = np.transpose(
+            samples[:, :, variables], axes=[0, 2, 1]
+        )  # convert to shape (num_samples, n_variables, n_shifts)
+        return samples.reshape((samples.shape[0], -1))
 
     def optimize_present_to_future(  # noqa: C901
         self,
-        num_samples,
         time_lags,
+        num_samples=None,
         embedding_dim_present=1,
         embedding_dim_future=1,
         embedding_time=1,
+        share_embedding_weights=False,
         target_variables="all",
         save_weights=False,
         num_epochs=200,
         batches_per_epoch=1,
+        track_full_loss=False,
         l1_strength=0.0,
-        point_adapt_lambda=False,
-        k_init=1,
-        k_final=1,
+        point_adapt_lambda=True,
+        k=1,
         lambda_factor=0.1,
         params_init=None,
-        optimizer_name="sgd",
+        optimizer_name="adam",
         learning_rate=1e-2,
         learning_rate_decay=None,
-        num_points_rows=None,
+        learning_rate_final=None,
         compute_imb_final=False,
-        compute_error=False,
-        ratio_rows_columns=1,
-        discard_close_ind=None,
+        discard_close_ind=0,
+        num_epochs_average=1,
     ):
         """Optimize the DII iteratively from the full space in the present to a target space in the future.
 
-        Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
-        are read only when data are provided to the CausalGraph object through the argument 'time_series'.
-        Arguments 'compute_error', 'ratio_rows_columns' and 'discard_close_ind' are only read when 'compute_imb_final'
-        is set to True.
+        Argument 'num_samples' is read only when data are provided to the CausalGraph object through the argument
+        'time_series'; with 'time_series_ensemble', the samples are the N_trajs trajectories.
 
         Args:
-            num_samples (int): number of samples harvested from the full time series, interpreted as
-                independent initial conditions of the same dynamical process.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
+            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
+                interpreted as independent initial conditions of the same dynamical process. Default is None, for
+                which all the available times are used (with a warning). Ignored if the data are provided through
+                'time_series_ensemble'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
                 space (t=0, t=-1, ...). Default is 1, which means the time-delay embeddings are not employed.
             embedding_dim_future (int): dimension of the time-delay embedding vectors built in the space of
                 the target variable (t=tau, t=tau-1, ...). Default is 1.
             embedding_time (int): lag between consecutive samples in the time-delay embedding vectors of each
                 variable.  Default is 1.
+            share_embedding_weights (bool): whether all the time-delay components of each variable in the present
+                space (t=0, t=-1, ...) share the same weight, so that a single weight per variable is optimized.
+                Read only if embedding_dim_present > 1. Default is False.
             target_variables (str or list(int), np.array(int)): list or np.array of the target variables
                 defining the distance space in the future. Default is "all", for which the optimization is
                 iterated over all variables as target.
             save_weights (bool): whether to save or not the weights during training, rather than only the final
                 weights. If True, weights are saved in the attribute 'weights_training' of the CausalGraph object,
-                which is an array of shape (n_target_variables, n_time_lags, num_epochs+1, num_variables).
-                Default is False.
+                which is an array of shape (n_target_variables, n_time_lags, num_epochs+1, D), or
+                (n_target_variables, n_time_lags, num_epochs+1, D, embedding_dim_present) if embedding_dim_present > 1
+                and share_embedding_weights is False. Default is False.
             num_epochs (int): number of training epochs. Default is 200.
-            batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
-                carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
-                which means that the gradient is computed over all the available points (batch GD).
-            seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
-                partitions.
-            l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
+            batches_per_epoch (int): number of minibatches. Each weight update is carried out by computing the DII
+                gradient over n_points // batches_per_epoch points, where n_points is num_samples (or N_trajs, for
+                'time_series_ensemble'). If n_points is not a multiple of batches_per_epoch, the last
+                (n_points % batches_per_epoch) points are discarded, with a warning. Default is 1, which means that
+                the gradient is computed over all the available points (batch GD).
+            track_full_loss (bool): whether to compute the training DII on the full data set at each training epoch,
+                if minibatches are used (batches_per_epoch > 1). This can be computationally demanding for large
+                data sets, but helps monitoring the convergence of the DII, as its calculation on small minibatches
+                may be affected by large fluctuations. Default is False.
+            l1_strength (float): strength of the L1 regularization (LASSO) term, currently supported only with
+                optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
+                Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
                 in the DII (if False), or a different parameter for each point (if True). Default is True.
-            k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
+            k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
-            k_final (int): final rank of neighbors used to set lambda. If batches_per_epoch > 1, neighbors are
-                recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
-            params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
-                values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
-            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
-                (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
-                additional details.
+            params_init (np.array(float), jnp.array(float)): array of shape (n_params,) containing the initial
+                values of the scaling weights to be optimized, where n_params = D * embedding_dim_present, or
+                n_params = D if share_embedding_weights is True. If None, the initial weights are all equal, with unit
+                norm: [1, 1, ..., 1] / sqrt(n_params). The norm of the weights is kept fixed during the training.
+            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
+                (default) and 'sgd'. If l1_strength is not 0, only 'sgd' is supported. See
+                https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
-            learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
-                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), exponential
-                decay ("exp"; the initial learning rate is halved every 10 steps), or constant learning rate (None).
-                Default is None (constant learning rate).
-            num_points_rows (int): number of points sampled from the rows of rank and distance matrices.
-                In case of large datasets, choosing num_points_rows < n_points can significantly speed
-                up the training. The default is None, for which num_points_rows == n_points.
-            compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
-                specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
-                which those arguments are ignored.
-            compute_error (bool): whether to compute the final DII and its error by sampling different points along
-                rows and columns of the distance matrix. If False, the final DII is computed using the same points
-                along rows and columns, which does not allow for an error estimation. Default is True.
-            ratio_rows_columns (float): only read when compute_error is True; defines the ratio between the number
-                of points along rows (nrows) and along columns (ncolumns) of distance and rank matrices, in two groups
-                randomly sampled.  In general, nrows and ncolumns are determined by solving the equations
-                    nrows / ncolumns = ratio_rows_columns,
-                    nrows + ncolumns = n_total_points.
-                Default is 1, which means that both groups have n_points / 2 elements.
-            discard_close_ind (int): given any point i, defines the "close" points (following the time ordering
-                along axis=0 of 'time_series' or 'coords_present') that are known to be significantly correlated with i.
-                If compute_error is True, "time-correlated" points are excluded by subsampling the data along axis=0
-                with stride discard_close_ind + 1. If compute_error is False, distances between each point i and points
-                within the time window [i-discard_close_ind, i+discard_close_ind] are discarded. Default is 0, for which
-                no distances between points close in the time are discarded.
+            learning_rate_decay (str): schedule to damp the learning rate to zero (or to learning_rate_final, if not
+                None) starting from the value provided with the attribute learning_rate. The available schedules are:
+                cosine decay ("cos"), or constant learning rate (None). Default is None (constant learning rate).
+            learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
+                Default is None, for which the learning rate is damped to zero. If learning_rate_decay=None, this
+                argument is ignored.
+            compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
+                'return_final_dii' of the DiffImbalance class). Default is False.
+            discard_close_ind (int): defines the "close" samples, which are known to be significantly correlated.
+                With 'time_series', it is a number of time steps of the time series (a common choice is its
+                autocorrelation time): the pairs of samples taken at times t_i and t_j with
+                |t_i - t_j| <= discard_close_ind are discarded both during the training and when computing the
+                final DII (see the argument 'discard_close_ind' of the DiffImbalance class). With
+                'time_series_ensemble', the pairs of trajectories (i, j) along axis=0 with |i - j| <= discard_close_ind
+                are discarded, and the value is usually 0 for independent trajectories. Default is 0, for which no
+                pairs are discarded.
+            num_epochs_average (int): number of final training epochs over which the (signed) weights are averaged
+                to define the final weights, so that the weights oscillating around zero at convergence are
+                suppressed (see the argument 'num_epochs_average' of the DiffImbalance class). Meaningful with a
+                constant learning rate (learning_rate_decay=None). Default is 1 (weights at the end of the training).
 
         Returns:
             weights_final (np.array(float)): array of shape (n_target_variables, n_time_lags, D) containing the
                 D final scaling weights for each optimization, where D is the number of variables in the time series.
-                If embedding_dim_present > 1, the shape is (n_target_variables, n_time_lags, D, embedding_dim_present).
+                If embedding_dim_present > 1 and share_embedding_weights is False, the shape is
+                (n_target_variables, n_time_lags, D, embedding_dim_present). Since the DII is invariant under a sign
+                change of each weight, only the absolute values of the weights are meaningful.
                 Also accessible as attribute of the CausalGraph object.
             imbs_training (np.array(float)): array of shape (n_target_variables, n_time_lags, num_epochs+1)
                 containing the DII during the trainings. Also accessible as attribute of the CausalGraph object.
             imbs_final (np.array(float)): array of shape (n_target_variables, n_time_lags) containing the DII at
                 the end of each training computed over the full data set. If 'compute_imb_final' is False, imbs_final
                 is set to None. Also accessible as attribute of the CausalGraph object.
-            errors_final (np.array(float)): array of shape (n_target_variables, n_time_lags) containing
-                the errors of the DII at the end of each training, computed over the full data set.
-                If 'compute_imb_final' is False, or if 'compute_imb_final' is True and 'compute_error'
-                is False, errors_final is set to None. Also accessible as attribute of the
-                CausalGraph object.
         """
-        coords_present = None
-        if self.time_series is not None:
-            assert num_samples <= self.time_series.shape[0] - max(time_lags), (
-                f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial "
-                + f"samples, if the maximum time lag is {np.max(time_lags)}.\nChoose a smaller value of "
-                + "num_samples."
-            )
+        t0s, discard_close_samples = self._select_times(
+            num_samples,
+            time_lags,
+            embedding_dim_present,
+            embedding_dim_future,
+            embedding_time,
+            discard_close_ind,
+        )
+        # present space: all variables at times t=0, -1, ... (time-delay embeddings)
+        coords_present = self._extract_samples(
+            t0s,
+            -embedding_time * np.arange(embedding_dim_present),
+            np.arange(self.num_variables),
+        )
 
-            t0s = np.linspace(
-                (max(embedding_dim_present, embedding_dim_future) - 1)
-                * embedding_time,  # select times defining the ensemble of trajectories
-                self.time_series.shape[0] - max(time_lags) - 1,
-                num_samples,
-                dtype=int,
-            )
-            indices_present = np.array(
-                [t0s - embedding_time * i for i in range(embedding_dim_present)]
-            )
-            coords_present = self.time_series[
-                indices_present
-            ]  # has shape (embedding_dim_present, num_samples, n_variables)
-            coords_present = np.transpose(
-                coords_present, axes=[1, 2, 0]
-            )  # convert to shape (num_samples, n_variables, embedding_dim_present)
-            coords_present = coords_present.reshape(
-                (num_samples, self.num_variables * embedding_dim_present)
-            )
-        elif self.coords_present is not None:
-            if num_samples is not None:
-                warnings.warn(
-                    "Argument 'num_samples' will be ignored, as you already provided the independent "
-                    + "initial conditions through arguments 'coords_present' and 'coords_future'.\n "
-                    + "To suppress this warning, set 'num_samples' to None.",
-                    stacklevel=2,
-                )
-            if time_lags is not None:
-                warnings.warn(
-                    "Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
-                    + "are already read from the last dimension of 'coords_future'.\n "
-                    + "To suppress this warning, set 'time_lags' to None.",
-                    stacklevel=2,
-                )
-            num_samples = self.coords_present.shape[0]
-            time_lags = np.arange(1, self.coords_future.shape[2] + 1)
-            coords_present = self.coords_present
-        else:
-            print(
-                "To call this method, provide either a time series or directly the present and future samples "
-                + "while initializing the CausalGraph class."
-            )
-
-        if target_variables == "all":
+        if isinstance(target_variables, str) and target_variables == "all":
             target_variables = np.arange(self.num_variables)
+
+        # shape of the weights of each optimization: one weight per variable and time-delay component, or one
+        # weight per variable if its time-delay components share the same weight (adjacent columns in space A)
+        params_groups = None
+        weights_shape = (self.num_variables,)
+        if embedding_dim_present > 1:
+            if share_embedding_weights:
+                params_groups = [embedding_dim_present] * self.num_variables
+            else:
+                weights_shape = (self.num_variables, embedding_dim_present)
 
         # initialize output variables
         imbs_training = np.zeros(
             (len(target_variables), len(time_lags), num_epochs + 1)
         )
-        if embedding_dim_present == 1:
-            weights_final = np.zeros(
-                (len(target_variables), len(time_lags), self.num_variables)
+        weights_final = np.zeros(
+            (len(target_variables), len(time_lags)) + weights_shape
+        )
+        if save_weights is True:
+            weights_training = np.zeros(
+                (len(target_variables), len(time_lags), num_epochs + 1) + weights_shape
             )
-            if save_weights is True:
-                weights_training = np.zeros(
-                    (
-                        len(target_variables),
-                        len(time_lags),
-                        num_epochs + 1,
-                        self.num_variables,
-                    )
-                )
-        elif embedding_dim_present > 1:
-            weights_final = np.zeros(
-                (
-                    len(target_variables),
-                    len(time_lags),
-                    self.num_variables,
-                    embedding_dim_present,
-                )
-            )
-            if save_weights is True:
-                weights_training = np.zeros(
-                    (
-                        len(target_variables),
-                        len(time_lags),
-                        num_epochs + 1,
-                        self.num_variables,
-                        embedding_dim_present,
-                    )
-                )
         imbs_final = None
-        errors_final = None
         if compute_imb_final:
             imbs_final = np.zeros((len(target_variables), len(time_lags)))
-            if compute_error:
-                errors_final = np.zeros((len(target_variables), len(time_lags)))
 
         # loop over target variables and time lags
         for i_var, target_var in enumerate(target_variables):
             for j_tau, tau in enumerate(time_lags):
-                indices_future = (
-                    np.array(
-                        [t0s - embedding_time * i for i in range(embedding_dim_future)]
-                    )
-                    + tau
+                # future space: target variable at times t=tau, tau-1, ... (time-delay embeddings)
+                coords_future = self._extract_samples(
+                    t0s,
+                    tau - embedding_time * np.arange(embedding_dim_future),
+                    [target_var],
                 )
-
-                if self.time_series is not None:
-                    coords_future = self.time_series[
-                        indices_future, target_var
-                    ]  # has shape (embedding_dim_future, num_samples)
-                    coords_future = np.transpose(
-                        coords_future, axes=[1, 0]
-                    )  # convert to shape (num_samples, embedding_dim_future)
-                else:
-                    coords_future = self.coords_future[:, :, j_tau]
 
                 dii = DiffImbalance(
                     data_A=coords_present,
                     data_B=coords_future,
-                    periods_A=self.periods,
+                    periods_A=(  # columns ordered by variable, then time shift
+                        None
+                        if self.periods is None
+                        else np.repeat(self.periods, embedding_dim_present)
+                    ),
                     periods_B=(
                         None if self.periods is None else self.periods[target_var]
                     ),
                     seed=self.seed,
                     num_epochs=num_epochs,
                     batches_per_epoch=batches_per_epoch,
+                    track_full_loss=track_full_loss,
                     l1_strength=l1_strength,
                     point_adapt_lambda=point_adapt_lambda,
-                    k_init=k_init,
-                    k_final=k_final,
+                    k=k,
                     lambda_factor=lambda_factor,
                     params_init=params_init,
+                    params_groups=params_groups,
                     optimizer_name=optimizer_name,
                     learning_rate=learning_rate,
                     learning_rate_decay=learning_rate_decay,
-                    num_points_rows=num_points_rows,
+                    learning_rate_final=learning_rate_final,
+                    discard_close_ind=discard_close_samples,
+                    num_epochs_average=num_epochs_average,
                 )
                 weights_temp, imbs_training[i_var, j_tau] = dii.train(
                     bar_label=f"target_var={target_var}, tau={tau}"
                 )
-
-                # compute final DII and its error
+                # compute final DII
                 if compute_imb_final:
-                    imb, err = dii.return_final_dii(
-                        compute_error=compute_error,
-                        ratio_rows_columns=ratio_rows_columns,
-                        seed=self.seed,
-                        discard_close_ind=discard_close_ind,
-                    )
-                    imbs_final[i_var, j_tau] = imb
-                    if compute_error:
-                        errors_final[i_var, j_tau] = dii.error_final
+                    imbs_final[i_var, j_tau] = dii.return_final_dii()
 
                 # save weights
-                if embedding_dim_present == 1:
-                    weights_final[i_var, j_tau] = weights_temp[-1]
-                    if save_weights is True:
-                        weights_training[i_var, j_tau] = weights_temp.reshape(
-                            (num_epochs + 1, self.num_variables)
-                        )
-                elif embedding_dim_present > 1:
-                    weights_final[i_var, j_tau] = weights_temp[-1].reshape(
-                        (self.num_variables, embedding_dim_present)
+                weights_final[i_var, j_tau] = np.asarray(dii.params_final).reshape(
+                    weights_shape
+                )
+                if save_weights is True:
+                    weights_training[i_var, j_tau] = weights_temp.reshape(
+                        (num_epochs + 1,) + weights_shape
                     )
-                    if save_weights is True:
-                        weights_training[i_var, j_tau] = weights_temp.reshape(
-                            (num_epochs + 1, self.num_variables, embedding_dim_present)
-                        )
 
         self.weights_final = weights_final
         self.imbs_training = imbs_training
         if save_weights:
             self.weights_training = weights_training
         self.imbs_final = imbs_final
-        self.errors_final = errors_final
-        return weights_final, imbs_training, imbs_final, errors_final
 
-    def compute_adj_matrix(self, weights, threshold=1e-1):
+        # recall the meaning of the axes of the output arrays
+        axes_weights = ["variable in the present"] + (
+            ["time-delay component (t=0, -embedding_time, ...)"]
+            if len(weights_shape) == 2
+            else []
+        )
+        outputs = {
+            "weights_final": (
+                weights_final,
+                ["target variable", "time lag"] + axes_weights,
+            ),
+            "imbs_training": (imbs_training, ["target variable", "time lag", "epoch"]),
+        }
+        if save_weights:
+            outputs["weights_training"] = (
+                weights_training,
+                ["target variable", "time lag", "epoch"] + axes_weights,
+            )
+        if compute_imb_final:
+            outputs["imbs_final"] = (imbs_final, ["target variable", "time lag"])
+        print(
+            "Output arrays (also accessible as attributes of the CausalGraph object):"
+        )
+        for name, (array, axes) in outputs.items():
+            print(f"- {name}: shape {array.shape} = ({', '.join(axes)})")
+        print(
+            "The axes 'target variable' and 'time lag' follow the order of 'target_variables' and 'time_lags'; "
+            + "epoch 0 corresponds to the initial weights."
+        )
+        return weights_final, imbs_training, imbs_final
+
+    def compute_adj_matrix(self, weights, threshold):
         """Compute the adjacency matrix from the optimal weights returned by optimize_present_to_future.
 
         As a preliminary step before applying the threshold, the maximum weight over the tested time lags is
@@ -518,11 +492,12 @@ class CausalGraph(DiffImbalance):
         Args:
             weights (np.ndarray(float)): array of shape (D, n_time_lags, D) containing the optimal scaling
                 weights produced by optimize_present_to_future with the option target_variables="all". If the
-                optimization was carried out with embedding_dim_present > 1, the array should have an additional
-                dimension, i.e. shape (D, n_time_lags, D, embedding_dim_present).
+                optimization was carried out with embedding_dim_present > 1 and share_embedding_weights=False, the
+                array should have an additional dimension, i.e. shape (D, n_time_lags, D, embedding_dim_present).
             threshold (float): value of the threshold used to construct the adjacency matrix. If a weight is
                 smaller than the threshold the corresponding entry in the adjacency matrix is set to 0, otherwise
-                it is set to 1.
+                it is set to 1. The threshold is applied to the absolute values of the weights, since the DII is
+                invariant under a sign change of each weight (a warning is raised if some weights are negative).
 
         Returns:
             adj_matrix (np.ndarray(float)): array of shape (D,D) defining the adjacency matrix of a directed
@@ -541,6 +516,13 @@ class CausalGraph(DiffImbalance):
             "The array of weight must have shape (D,n_time_lags,D), or (D,n_time_lags,D,embedding_dim_present), "
             + "where D is the number of variables."
         )
+        if (weights < 0).any():
+            warnings.warn(
+                "Some weights are negative: since the DII is invariant under a sign change of each weight, only "
+                + "their absolute values are considered.",
+                stacklevel=2,
+            )
+            weights = np.abs(weights)
         if len(weights.shape) == 3:
             weights_max = np.max(weights, axis=1)  # maximum over all tested time lags
         elif len(weights.shape) == 4:
@@ -664,8 +646,8 @@ class CausalGraph(DiffImbalance):
                 "community" (default) and "all-variable". If "community", a community causal graph where
                 each node represents a community is shown. If "all-variable", communities are represented
                 with different colors in a graph with all the original D variables in the time series.
-            savefig_name (str): path at which the picture of the final graph is saved in pdf format. If
-                None (default), the figure is not saved.
+            savefig_name (str): path at which the picture of the final graph is saved, in the format given by
+                the file extension. If None (default), the figure is not saved.
             variable_names (np.array(str)): array of shape (D,) containing the names of the D variables.
                 Used only if type="community", to show the variable names in the printout of each community.
             **kwargs: customizable arguments used by the networkx library. If type="all-variable", these
@@ -799,10 +781,10 @@ class CausalGraph(DiffImbalance):
             }
 
             # convert communities into names and add them to graph as nodes
+            print("Conversion labels - communities:")
             for community, key in zip(community_names, keys):
                 community_name = community_names[tuple(community)]
                 G.add_node(str(community_name))
-                print("Conversion labels - communities:")
                 if variable_names is None:
                     print(
                         f"Community {community_name} ({len(community)} variables, level {key[1]}): {community}"
@@ -821,11 +803,11 @@ class CausalGraph(DiffImbalance):
                 )
 
             # draw edges
-            for _community_effect_idx, order_idx in keys:
+            for order_idx, communities in communities_orders.items():
                 if order_idx == 0:
                     continue
                 # for each putative effect community at order >=1...
-                for community_effect in communities_orders[order_idx]:
+                for community_effect in communities:
                     community_name_effect = community_names[tuple(community_effect)]
                     # ...loop over all putative causal communities at previous orders
                     for previous_order in range(0, order_idx):
@@ -871,26 +853,25 @@ class CausalGraph(DiffImbalance):
         adj_matrix,
         community_graph,
         community_dictionary,
-        num_samples,
         time_lags,
+        num_samples=None,
         embedding_dim_present=1,
         embedding_dim_future=1,
         embedding_time=1,
         num_epochs=200,
         batches_per_epoch=1,
+        track_full_loss=False,
         l1_strength=0.0,
-        point_adapt_lambda=False,
-        k_init=1,
-        k_final=1,
+        point_adapt_lambda=True,
+        k=1,
         lambda_factor=0.1,
-        optimizer_name="sgd",
+        optimizer_name="adam",
         learning_rate=1e-2,
         learning_rate_decay=None,
-        num_points_rows=None,
+        learning_rate_final=None,
         compute_imb_final=False,
-        compute_error=False,
-        ratio_rows_columns=1,
-        discard_close_ind=None,
+        discard_close_ind=0,
+        num_epochs_average=1,
     ):
         """Implement the refinement step to distinguish direct and indirect links between nonconsecutive communities.
 
@@ -900,10 +881,8 @@ class CausalGraph(DiffImbalance):
         by the same weight. The number of previous time steps E included in the optimization is given
         by the argument 'embedding_dim_present'.
 
-        Arguments 'num_samples', 'time_lags', 'embedding_dim_present', 'embedding_dim_future' and 'embedding_time'
-        are read only when data are provided to the CausalGraph object through the argument 'time_series'.
-        Arguments 'compute_error', 'ratio_rows_columns' and 'discard_close_ind' are only read when 'compute_imb_final'
-        is set to True.
+        Argument 'num_samples' is read only when data are provided to the CausalGraph object through the argument
+        'time_series'; with 'time_series_ensemble', the samples are the N_trajs trajectories.
 
         Args:
             adj_matrix (np.ndarray(float)): binary matrix of shape (D,D) defining the links of a directed
@@ -912,86 +891,78 @@ class CausalGraph(DiffImbalance):
                 type="community".
             community_dictionary (dict): dictionary with pairs (comm_id, level) as keys, and lists containing
                 the indices of the variables in each community as values.
-            num_samples (int): number of samples harvested from the full time series, interpreted as
-                independent initial conditions of the same dynamical process.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
+            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
+                interpreted as independent initial conditions of the same dynamical process. Default is None, for
+                which all the available times are used (with a warning). Ignored if the data are provided through
+                'time_series_ensemble'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
                 space (t=0, t=-1, ...). Default is 1, which means the time-delay embeddings are not employed.
             embedding_dim_future (int): dimension of the time-delay embedding vectors built in the space of
                 the target variable (t=tau, t=tau-1, ...). Default is 1.
             embedding_time (int): lag between consecutive samples in the time-delay embedding vectors of each
                 variable.  Default is 1.
-            target_variables (str or list(int), np.array(int)): list or np.array of the target variables
-                defining the distance space in the future. Default is "all", for which the optimization is
-                iterated over all variables as target.
-            save_weights (bool): whether to save or not the weights during training, rather than only the final
-                weights. If True, weights are saved in the attribute 'weights_training' of the CausalGraph object,
-                which is an array of shape (n_target_variables, n_time_lags, num_epochs+1, num_variables).
-                Default is False.
             num_epochs (int): number of training epochs. Default is 200.
-            batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
-                carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
-                which means that the gradient is computed over all the available points (batch GD).
-            seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
-                partitions.
-            l1_strength (float): strength of the L1 regularization (LASSO) term. Default is 0.
+            batches_per_epoch (int): number of minibatches. Each weight update is carried out by computing the DII
+                gradient over n_points // batches_per_epoch points, where n_points is num_samples (or N_trajs, for
+                'time_series_ensemble'). If n_points is not a multiple of batches_per_epoch, the last
+                (n_points % batches_per_epoch) points are discarded, with a warning. Default is 1, which means that
+                the gradient is computed over all the available points (batch GD).
+            track_full_loss (bool): whether to compute the training DII on the full data set at each training epoch,
+                if minibatches are used (batches_per_epoch > 1). This can be computationally demanding for large
+                data sets, but helps monitoring the convergence of the DII, as its calculation on small minibatches
+                may be affected by large fluctuations. Default is False.
+            l1_strength (float): strength of the L1 regularization (LASSO) term, currently supported only with
+                optimizer_name='sgd' (if 'adam' is set, the optimizer is changed to 'sgd' with a warning).
+                Default is 0.
             point_adapt_lambda (bool): whether to use a global smoothing parameter lambda for the c_ij coefficients
                 in the DII (if False), or a different parameter for each point (if True). Default is True.
-            k_init (int): initial rank of neighbors used to set lambda. Ranks are defined starting from 1. If
+            k (int): distance rank of neighbors used to set lambda. Ranks are defined starting from 1. If
                 batches_per_epoch > 1, neighbors are recomputed within each mini-batch. Default is 1.
-            k_final (int): final rank of neighbors used to set lambda. If batches_per_epoch > 1, neighbors are
-                recomputed within each mini-batch. Default is 1.
             lambda_factor (float): factor defining the scale of lambda. Default is 0.1.
-            params_init (np.array(float), jnp.array(float)): array of shape (n_features_A,) containing the initial
-                values of the scaling weights to be optimized. If None, params_init is set to [0.1, 0.1, ..., 0.1].
-            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'sgd'
-                (default), 'adam' and 'adamw'. See https://optax.readthedocs.io/en/latest/api/optimizers.html for
-                additional details.
+            optimizer_name (str): name of the optimizer, calling the Optax library. Possible choices are 'adam'
+                (default) and 'sgd'. If l1_strength is not 0, only 'sgd' is supported. See
+                https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
             learning_rate (float): value of the learning rate. Default is 1e-2.
-            learning_rate_decay (str): schedule to damp the learning rate to zero starting from the value provided
-                with the attribute learning_rate. The available schedules are: cosine decay ("cos"), exponential
-                decay ("exp"; the initial learning rate is halved every 10 steps), or constant learning rate (None).
-                Default is None (constant learning rate).
-            num_points_rows (int): number of points sampled from the rows of rank and distance matrices.
-                In case of large datasets, choosing num_points_rows < n_points can significantly speed
-                up the training. The default is None, for which num_points_rows == n_points.
-            compute_imb_final (bool): whether to compute the final DII over the full data set, using the options
-                specified by 'compute_error', 'ratio_rows_columns' and 'discard_close_ind'. Default is False, for
-                which those arguments are ignored.
-            compute_error (bool): whether to compute the final DII and its error by sampling different points along
-                rows and columns of the distance matrix. If False, the final DII is computed using the same points
-                along rows and columns, which does not allow for an error estimation. Default is True.
-            ratio_rows_columns (float): only read when compute_error is True; defines the ratio between the number
-                of points along rows (nrows) and along columns (ncolumns) of distance and rank matrices, in two groups
-                randomly sampled.  In general, nrows and ncolumns are determined by solving the equations
-                    nrows / ncolumns = ratio_rows_columns,
-                    nrows + ncolumns = n_total_points.
-                Default is 1, which means that both groups have n_points / 2 elements.
-            discard_close_ind (int): given any point i, defines the "close" points (following the time ordering
-                along axis=0 of 'time_series' or 'coords_present') that are known to be significantly correlated with i.
-                If compute_error is True, "time-correlated" points are excluded by subsampling the data along axis=0
-                with stride discard_close_ind + 1. If compute_error is False, distances between each point i and points
-                within the time window [i-discard_close_ind, i+discard_close_ind] are discarded. Default is 0, for which
-                no distances between points close in the time are discarded.
+            learning_rate_decay (str): schedule to damp the learning rate to zero (or to learning_rate_final, if not
+                None) starting from the value provided with the attribute learning_rate. The available schedules are:
+                cosine decay ("cos"), or constant learning rate (None). Default is None (constant learning rate).
+            learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
+                Default is None, for which the learning rate is damped to zero. If learning_rate_decay=None, this
+                argument is ignored.
+            compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
+                'return_final_dii' of the DiffImbalance class). Default is False.
+            discard_close_ind (int): defines the "close" samples, which are known to be significantly correlated.
+                With 'time_series', it is a number of time steps of the time series (a common choice is its
+                autocorrelation time): the pairs of samples taken at times t_i and t_j with
+                |t_i - t_j| <= discard_close_ind are discarded both during the training and when computing the
+                final DII (see the argument 'discard_close_ind' of the DiffImbalance class). With
+                'time_series_ensemble', the pairs of trajectories (i, j) along axis=0 with |i - j| <= discard_close_ind
+                are discarded, and the value is usually 0 for independent trajectories. Default is 0, for which no
+                pairs are discarded.
+            num_epochs_average (int): number of final training epochs over which the (signed) weights are averaged
+                to define the final weights, so that the weights oscillating around zero at convergence are
+                suppressed (see the argument 'num_epochs_average' of the DiffImbalance class). Meaningful with a
+                constant learning rate (learning_rate_decay=None). Default is 1 (weights at the end of the training).
 
         Returns:
             weights_final (dict): dictionary containing the final optimization weights for each pair
                 of communities linked through indirect paths in the community causal graph. The keys
                 are tuples (community_name_cause, community_name_effect), while the values are
-                np.arrays of shape (n_time_lags, n_weights), where n_weights is equal to 1 + E + E
-                (1 weight for the cause community, E weights for the effect community, and E weights
-                for the mediator communities), and E=embedding_dim_present.
+                np.arrays of shape (n_time_lags, n_weights), where n_weights is equal to 1 + E + E*M
+                (1 weight for the cause community at t=0, E weights for the effect community at
+                t=tau-1, tau-1-embedding_time, ..., and E weights for each of the M mediator communities,
+                ordered by time and then by community name), and E=embedding_dim_present. Each weight is
+                shared by all the variables of a community at a given time. Since the DII is invariant under a
+                sign change of each weight, only the absolute values of the weights are meaningful.
             communities_and_lags (dict): dictionary containing as keys the tuples
-                (community_name_cause, community_name_effect), and as values a list of communities
-                and corresponding lags.
+                (community_name_cause, community_name_effect), and as values a list of two arrays of
+                shape (n_weights,), containing the community name and the time of each weight.
             imbs_training (dict): dictionary containing as keys the tuples
                 (community_name_cause, community_name_effect), and as values the DIIs during the
                 trainings.
             imbs_final (dict): dictionary containing as keys the tuples
                 (community_name_cause, community_name_effect), and as values the final DIIs.
-            errors_final (dict): dictionary containing as keys the tuples
-                (community_name_cause, community_name_effect), and as values the errors of the
-                final DIIs.
         """
 
         def find_mediators(graph, node_start, node_end):
@@ -999,13 +970,13 @@ class CausalGraph(DiffImbalance):
                 nx.all_simple_paths(graph, source=node_start, target=node_end)
             )
             if not all_paths:
-                return set()
+                return []
 
             # Get intermediates (excluding A and B) for each path
             intermediates_per_path = [set(path[1:-1]) for path in all_paths]
 
-            # Find intersection across all path intermediates
-            mediators = list(set.union(*intermediates_per_path))
+            # Find union across all path intermediates (sorted, for a reproducible order of the weights)
+            mediators = sorted(set.union(*intermediates_per_path))
             return mediators
 
         keys = list(community_dictionary.keys())
@@ -1035,19 +1006,27 @@ class CausalGraph(DiffImbalance):
                 f"- Community {community_name} ({len(community)} variables, level {key[1]}): {community}"
             )
 
+        t0s, discard_close_samples = self._select_times(
+            num_samples,
+            time_lags,
+            embedding_dim_present,
+            embedding_dim_future,
+            embedding_time,
+            discard_close_ind,
+        )
+
         # initialize output variables
         imbs_training = {}
         weights_final = {}
         imbs_final = {}
-        errors_final = {}
         communities_and_lags = {}
 
         # identify all pairs of indirectly linked communities, and mediator communities #############
-        for _community_effect_idx, order_idx in keys:
+        for order_idx, communities in communities_orders.items():
             if order_idx < 2:
                 continue
             # for each putative effect community at order >=2...
-            for community_effect in communities_orders[order_idx]:
+            for community_effect in communities:
                 community_name_effect = community_names[tuple(community_effect)]
 
                 # ...find all its ancestor communities...
@@ -1082,216 +1061,64 @@ class CausalGraph(DiffImbalance):
                     mediator_names = find_mediators(
                         community_graph, community_name_cause, community_name_effect
                     )
-                    mediator_sets = [
-                        from_names_to_communities[mediator_name]
-                        for mediator_name in mediator_names
+
+                    # groups of variables sharing the same weight in space A, in the order of the output weights:
+                    # the cause community at t=0, the effect community at t=tau-1, tau-1-embedding_time, ...,
+                    # and all the mediator communities at t=tau-1, then at t=tau-1-embedding_time, ...
+                    # Each group is a pair (community name, lag), with t=tau-lag (lag=None for t=0).
+                    lags_cond = 1 + embedding_time * np.arange(embedding_dim_present)
+                    groups_A = (
+                        [(community_name_cause, None)]
+                        + [(community_name_effect, lag) for lag in lags_cond]
+                        + [(name, lag) for lag in lags_cond for name in mediator_names]
+                    )
+                    variables_A = [
+                        list(from_names_to_communities[name]) for name, _ in groups_A
                     ]
-                    mediator_vars = list(set().union(*mediator_sets))
+                    params_groups = [len(variables) for variables in variables_A]
 
                     # initialize output variables
-                    nvars = 1 + embedding_dim_present + embedding_dim_present
                     imbs_training[community_name_cause, community_name_effect] = (
                         np.zeros((len(time_lags), num_epochs + 1))
                     )
                     weights_final[community_name_cause, community_name_effect] = (
-                        np.zeros((len(time_lags), nvars))
-                    )
-                    communities_ordered = np.concatenate(
-                        (
-                            [community_name_cause],  # don't repeat (single slice)
-                            np.tile(
-                                [community_name_effect], reps=embedding_dim_present
-                            ),  # Repeat E (=max_lag) times
-                            np.tile(
-                                mediator_names, reps=embedding_dim_present
-                            ),  # Repeat E (=max_lag) times
-                        )
-                    )
-                    lags_ordered = np.concatenate(
-                        (
-                            ["t=0"],
-                            [
-                                f"t=tau-{lag}"
-                                for lag in np.arange(1, embedding_dim_present + 1)
-                            ],
-                            [
-                                f"t=tau-{lag}"
-                                for lag in np.arange(1, embedding_dim_present + 1)
-                            ],
-                        )
+                        np.zeros((len(time_lags), len(groups_A)))
                     )
                     communities_and_lags[
                         community_name_cause, community_name_effect
-                    ] = [communities_ordered, lags_ordered]
+                    ] = [
+                        np.array([name for name, _ in groups_A]),
+                        np.array(
+                            [
+                                "t=0" if lag is None else f"t=tau-{lag}"
+                                for _, lag in groups_A
+                            ]
+                        ),
+                    ]
                     if compute_imb_final:
                         imbs_final[community_name_cause, community_name_effect] = (
                             np.zeros(len(time_lags))
                         )
-                        if compute_error:
-                            errors_final[
-                                community_name_cause, community_name_effect
-                            ] = np.zeros(len(time_lags))
-
-                    # compute DII((cause(t=0), effect(t=tau-1), ... , mediator(t=tau-1), ...) -> effect(t=tau))
-                    coords_present = None
-                    variables_t0 = community_cause
-                    if self.time_series is not None:
-                        assert num_samples <= self.time_series.shape[0] - max(
-                            time_lags
-                        ), (
-                            f"Error: cannot extract {num_samples} samples from {self.time_series.shape[0]} initial "
-                            + f"samples, if the maximum time lag is {np.max(time_lags)}.\nChoose a smaller value of "
-                            + "num_samples."
-                        )
-
-                        t0s = np.linspace(
-                            (max(embedding_dim_present, embedding_dim_future) - 1)
-                            * embedding_time,  # select times defining the ensemble of trajectories
-                            self.time_series.shape[0] - max(time_lags) - 1,
-                            num_samples,
-                            dtype=int,
-                        )
-                        indices_present = +t0s  # no embedding for causal community!
-                        coords_present = self.time_series[:, variables_t0][
-                            indices_present
-                        ]  # has shape (num_samples, n_variables_t0)
-                    elif self.coords_present is not None:
-                        if num_samples is not None:
-                            warnings.warn(
-                                "Argument 'num_samples' will be ignored, as you already provided the independent "
-                                + "initial conditions through arguments 'coords_present' and 'coords_future'.\n "
-                                + "To suppress this warning, set 'num_samples' to None.",
-                                stacklevel=2,
-                            )
-                        if time_lags is not None:
-                            warnings.warn(
-                                "Argument 'time_lags' will be ignored, as the samples at different time lags t=tau "
-                                + "are already read from the last dimension of 'coords_future'.\n "
-                                + "To suppress this warning, set 'time_lags' to None.",
-                                stacklevel=2,
-                            )
-                        num_samples = self.coords_present.shape[0]
-                        time_lags = np.arange(1, self.coords_future.shape[2] + 1)
-                        coords_present = self.coords_present[:, variables_t0]
-                    else:
-                        print(
-                            "To call this method, provide either a time series or directly the "
-                            "present and future samples while initializing the CausalGraph class."
-                        )
 
                     # LOOP OVER TAU #############
                     for j_tau, tau in enumerate(time_lags):
-                        indices_future = (  # for space B: effect(t=tau)
-                            np.array(
-                                [
-                                    t0s - embedding_time * i
-                                    for i in range(embedding_dim_future)
-                                ]
-                            )
-                            + tau
-                        )
-                        indices_cond1 = (  # for conditioning on effect(t=tau-1), effect(t=tau-2), ...
-                            np.array(
-                                [
-                                    t0s - embedding_time * i
-                                    for i in range(embedding_dim_present)
-                                ]
-                            )
-                            + tau
-                            - 1
-                        )
-                        indices_cond2 = (  # for conditioning on mediators(t=tau-1), effect(t=tau-2), ...
-                            np.array(
-                                [
-                                    t0s - embedding_time * i
-                                    for i in range(embedding_dim_present)
-                                ]
-                            )
-                            + tau
-                            - 1
-                        )
-
-                        if self.time_series is not None:
-                            coords_future = self.time_series[:, community_effect][
-                                indices_future
-                            ]  # has shape (embedding_dim_future, num_samples, n_variables_effect_community)
-                            coords_future = np.transpose(
-                                coords_future, axes=[1, 2, 0]
-                            )  # convert to shape (num_samples, n_variables_effect_community, embedding_dim_future)
-                            coords_future = coords_future.reshape(
-                                (
-                                    num_samples,
-                                    len(community_effect) * embedding_dim_future,
-                                )
-                            )
-
-                            coords_cond_effect = self.time_series[:, community_effect][
-                                indices_cond1
-                            ]  # has shape (embedding_dim_present, num_samples, n_variables_effect_community)
-                            coords_cond_effect = np.transpose(
-                                coords_cond_effect, axes=[1, 2, 0]
-                            )  # convert to shape (num_samples, n_variables_effect_community, embedding_dim_present)
-                            coords_cond_effect = coords_cond_effect.reshape(
-                                (
-                                    num_samples,
-                                    len(community_effect) * embedding_dim_present,
-                                )
-                            )
-
-                            coords_cond_mediators = self.time_series[:, mediator_vars][
-                                indices_cond2
-                            ]  # has shape (embedding_dim_present+1, num_samples, n_variables_mediators)
-                            coords_cond_mediators = np.transpose(
-                                coords_cond_mediators, axes=[1, 2, 0]
-                            )  # convert to shape (num_samples, n_variables_mediators, embedding_dim_present+1)
-                            coords_cond_mediators = coords_cond_mediators.reshape(
-                                (
-                                    num_samples,
-                                    len(mediator_vars) * (embedding_dim_present),
-                                )
-                            )
-                        else:
-                            coords_future = self.coords_future[
-                                :, community_effect, j_tau
-                            ]
-                            # TODO: this branch was unreachable due to a typo (jtau) and the
-                            # resulting array is currently unused downstream; revisit when the
-                            # else-branch path is exercised.
-                            coords_cond = self.coords_future[  # noqa: F841
-                                :, mediator_vars, j_tau - 1 : j_tau + 1
-                            ]
-
+                        # space A: cause(t=0), effect(t=tau-1), ..., mediators(t=tau-1), ... (one block per group)
                         coords_A = np.concatenate(
-                            (
-                                coords_present,
-                                coords_cond_effect,
-                                coords_cond_mediators,
-                            ),
+                            [
+                                self._extract_samples(
+                                    t0s,
+                                    np.array([0 if lag is None else tau - lag]),
+                                    variables,
+                                )
+                                for (_, lag), variables in zip(groups_A, variables_A)
+                            ],
                             axis=1,
                         )
-                        variables_A = np.concatenate(
-                            (
-                                community_cause,  # don't repeat (single slice)
-                                np.tile(
-                                    community_effect, reps=embedding_dim_present
-                                ),  # Repeat E (=max_lag) times
-                                np.tile(
-                                    mediator_vars, reps=embedding_dim_present
-                                ),  # Repeat E (=max_lag) times
-                            )
-                        )
-                        params_groups = np.concatenate(
-                            (
-                                [len(community_cause)],  # don't repeat (single slice)
-                                np.tile(
-                                    [len(community_effect)],
-                                    reps=embedding_dim_present,
-                                ),  # Repeat E (=max_lag) times
-                                np.tile(
-                                    [len(set) for set in mediator_sets],
-                                    reps=embedding_dim_present,
-                                ),  # Repeat E (=max_lag) times
-                            )
+                        # space B: effect at t=tau, tau-embedding_time, ... (time-delay embeddings)
+                        coords_future = self._extract_samples(
+                            t0s,
+                            tau - embedding_time * np.arange(embedding_dim_future),
+                            community_effect,
                         )
 
                         dii = DiffImbalance(
@@ -1300,27 +1127,32 @@ class CausalGraph(DiffImbalance):
                             periods_A=(
                                 None
                                 if self.periods is None
-                                else self.periods[variables_A]
+                                else self.periods[np.concatenate(variables_A)]
                             ),
                             periods_B=(
                                 None
                                 if self.periods is None
-                                else self.periods[community_effect]
+                                else np.repeat(
+                                    self.periods[community_effect],
+                                    embedding_dim_future,
+                                )
                             ),
                             seed=self.seed,
                             num_epochs=num_epochs,
                             batches_per_epoch=batches_per_epoch,
+                            track_full_loss=track_full_loss,
                             l1_strength=l1_strength,
                             point_adapt_lambda=point_adapt_lambda,
-                            k_init=k_init,
-                            k_final=k_final,
+                            k=k,
                             lambda_factor=lambda_factor,
                             params_init=None,
                             params_groups=params_groups,
                             optimizer_name=optimizer_name,
                             learning_rate=learning_rate,
                             learning_rate_decay=learning_rate_decay,
-                            num_points_rows=num_points_rows,
+                            learning_rate_final=learning_rate_final,
+                            discard_close_ind=discard_close_samples,
+                            num_epochs_average=num_epochs_average,
                         )
                         (
                             weights_temp,
@@ -1330,39 +1162,41 @@ class CausalGraph(DiffImbalance):
                         ) = dii.train(
                             bar_label=f"Communities {community_name_cause}->{community_name_effect}, tau={tau}"
                         )
-
-                        # compute final DII and its error
+                        # compute final DII
                         if compute_imb_final:
-                            imb, err = dii.return_final_dii(
-                                compute_error=compute_error,
-                                ratio_rows_columns=ratio_rows_columns,
-                                seed=self.seed,
-                                discard_close_ind=discard_close_ind,
-                            )
                             imbs_final[community_name_cause, community_name_effect][
                                 j_tau
-                            ] = imb
-                            if compute_error:
-                                errors_final[
-                                    community_name_cause, community_name_effect
-                                ][j_tau] = dii.error_final
+                            ] = dii.return_final_dii()
 
                         # save weights
                         weights_final[community_name_cause, community_name_effect][
                             j_tau
-                        ] = weights_temp[-1]
+                        ] = np.asarray(dii.params_final)
 
         self.weights_final_refine = weights_final
-        self.communities_and_lags = communities_and_lags
+        self.communities_and_lags_refine = communities_and_lags
         self.imbs_training_refine = imbs_training
         self.imbs_final_refine = imbs_final
-        self.errors_final_refine = errors_final
+
+        # recall the meaning of the axes of the output arrays
+        print(
+            "Output dictionaries, with keys (cause, effect) (also accessible as attributes of the CausalGraph "
+            + "object, with suffix '_refine'):\n"
+            + "- weights_final[(cause, effect)]: shape (n_time_lags, n_weights); the community and time of each "
+            + "weight are in communities_and_lags[(cause, effect)]\n"
+            + "- imbs_training[(cause, effect)]: shape (n_time_lags, num_epochs+1); epoch 0 corresponds to the "
+            + "initial weights"
+            + (
+                "\n- imbs_final[(cause, effect)]: shape (n_time_lags,)"
+                if compute_imb_final
+                else ""
+            )
+        )
         return (
             weights_final,
             communities_and_lags,
             imbs_training,
             imbs_final,
-            errors_final,
         )
 
     def community_graph_refinement(
@@ -1372,7 +1206,7 @@ class CausalGraph(DiffImbalance):
         weights_refine,
         communities_and_lags,
         variable_names,
-        threshold=1e-1,
+        threshold,
         savefig_name=None,
         **kwargs,
     ):
@@ -1388,12 +1222,12 @@ class CausalGraph(DiffImbalance):
             weights_refine (dict): output weights of method 'find_direct_links_communities'.
             communities_and_lags (dict): output communities and lags of method 'find_direct_links_communities'.
             variable_names (np.array(str)): array of shape (D,) containing the names of the D variables.
-            threshold (float): weight threshold above which a direct link between two communities is drawn.
-            savefig_name (str): path at which the picture of the final graph is saved in pdf format. If
-                None (default), the figure is not saved.
-            **kwargs: customizable arguments used by the networkx library. If type="all-variable", these
-                include: 'scale','k1' and 'k2', 'cmap', 'width' and 'arrowsize'. If type="community", the
-                possible arguments are: 'node_color', 'node_size', 'width', 'arrowstyle', 'arrowsize'.
+            threshold (float): weight threshold above which a direct link between two communities is drawn. It is
+                applied to the absolute values of the weights (a warning is raised if some weights are negative).
+            savefig_name (str): path at which the picture of the final graph is saved, in the format given by
+                the file extension. If None (default), the figure is not saved.
+            **kwargs: customizable arguments used by the networkx library. The possible arguments are:
+                'node_color', 'node_size', 'width', 'arrowstyle', 'arrowsize'.
 
         Returns:
             G (nx.diGraph object): refined community causal graph.
@@ -1430,6 +1264,13 @@ class CausalGraph(DiffImbalance):
         # extract pairs of communities tested for direct vs indirect links
         pairs_cause_effect = list(weights_refine.keys())
 
+        if any((np.asarray(w) < 0).any() for w in weights_refine.values()):
+            warnings.warn(
+                "Some weights are negative: since the DII is invariant under a sign change of each weight, only "
+                + "their absolute values are considered.",
+                stacklevel=2,
+            )
+
         # loop over such pairs and connect them when at least one weight of causal community > threshold
         for community_name_cause, community_name_effect in pairs_cause_effect:
             mask_variables_cause = (
@@ -1438,7 +1279,7 @@ class CausalGraph(DiffImbalance):
             )
 
             max_weights_refine = np.max(
-                weights_refine[community_name_cause, community_name_effect],
+                np.abs(weights_refine[community_name_cause, community_name_effect]),
                 axis=0,  # axis of lag tau
             )[mask_variables_cause]
             if (max_weights_refine > threshold).any():
