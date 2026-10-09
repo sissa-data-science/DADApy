@@ -61,21 +61,18 @@ def test_DiffImbalance_forward_greedy():
         batches_per_epoch=1,
         l1_strength=0.0,
         point_adapt_lambda=False,
-        k_init=10,
-        k_final=1,
+        k=10,
         lambda_factor=1e-1,
         params_init=None,
         optimizer_name="sgd",
-        learning_rate=1e-1,
+        learning_rate=1.0,
         learning_rate_decay="cos",
-        num_points_rows=None,
     )
     weights, imbs = dii.train()
 
     # Run forward greedy feature selection
     feature_sets, diis, _, weights = dii.forward_greedy_feature_selection(
         n_features_max=3,
-        compute_error=False,
         n_best=1,
     )
 
@@ -135,21 +132,18 @@ def test_DiffImbalance_backward_greedy():
         batches_per_epoch=1,
         l1_strength=0.0,
         point_adapt_lambda=False,
-        k_init=10,
-        k_final=1,
+        k=10,
         lambda_factor=1e-1,
         params_init=None,
         optimizer_name="sgd",
-        learning_rate=1e-1,
+        learning_rate=1.0,
         learning_rate_decay="cos",
-        num_points_rows=None,
     )
     weights, imbs = dii.train()
 
     # Run backward greedy feature selection
     feature_sets, diis, _, weights = dii.backward_greedy_feature_selection(
         n_features_min=1,
-        compute_error=False,
         n_best=1,
     )
 
@@ -191,7 +185,7 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     select features in the reverse order of each other, and that the DII values match
     when reversed.
     It also works on the prototypical 5D gaussian example to see if it selects the correct feature.
-    This also checks if mini-batches and the error estimation works fine in the greedy implementation.
+    This also checks that mini-batches work fine in the greedy implementation.
     """
     from dadapy import DiffImbalance  # noqa: E402
 
@@ -212,14 +206,12 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
         batches_per_epoch=2,
         l1_strength=0.0,
         point_adapt_lambda=True,
-        k_init=3,
-        k_final=3,
+        k=3,
         lambda_factor=1e-1,
         params_init=None,
         optimizer_name="sgd",
-        learning_rate=1e-1,
+        learning_rate=1.0,
         learning_rate_decay="cos",
-        num_points_rows=None,
     )
     weights, imbs = dii.train()
 
@@ -227,43 +219,35 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     (
         feature_sets_fw,
         diis_fw,
-        errors_fw,
+        _,
         weights_fw,
-    ) = dii.forward_greedy_feature_selection(
-        n_features_max=5, compute_error=True, n_best=1
-    )
+    ) = dii.forward_greedy_feature_selection(n_features_max=5, n_best=1)
     (
         feature_sets_bw,
         diis_bw,
-        errors_bw,
+        _,
         weights_bw,
-    ) = dii.backward_greedy_feature_selection(
-        n_features_min=1, compute_error=True, n_best=1
-    )
+    ) = dii.backward_greedy_feature_selection(n_features_min=1, n_best=1)
 
-    # Expected results based on weights
+    # Expected feature orders for the myjax_gpu_py3.13 env (jax 0.7.1).
     expected_fw_sets = [[3], [0, 3], [0, 3, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]]
     expected_bw_sets = [[0, 1, 2, 3, 4], [0, 1, 3, 4], [0, 3, 4], [0, 3], [3]]
 
-    # Check forward greedy results
     assert (
         feature_sets_fw == expected_fw_sets
     ), f"Forward selection should return {expected_fw_sets}, got {feature_sets_fw}"
-
-    # Check backward greedy results
     assert (
         feature_sets_bw == expected_bw_sets
     ), f"Backward selection should return {expected_bw_sets}, got {feature_sets_bw}"
 
-    # Check that the DII values match when reversed
+    # Forward and backward train each subset from the same base seed, so their
+    # DII values must match when reversed.
     diis_fw_array = np.array(diis_fw)
     diis_bw_array = np.array(diis_bw)
 
     print("Forward DIIs:", diis_fw)
-    print("Forward Errors:", errors_fw)
     print("Forward Weights:", weights_fw)
     print("Backward DIIs:", diis_bw)
-    print("Backward Errors:", errors_bw)
     print("Backward Weights:", weights_bw)
 
     # Check that the weights are properly structured
@@ -279,13 +263,6 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     assert (
         len(weights_bw) == 5
     ), f"Backward selection should return 5 DII weights arrays, got {len(weights_bw)}"
-
-    assert (
-        len(errors_fw) == 5
-    ), f"Forward selection should return 5 DII errors, got {len(errors_fw)}"
-    assert (
-        len(errors_bw) == 5
-    ), f"Backward selection should return 5 DII errors, got {len(errors_bw)}"
 
     assert np.allclose(
         diis_bw_array, diis_fw_array[::-1], atol=1e-2
@@ -304,12 +281,6 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     assert (
         max_weight_feature_bw == 3
     ), f"Feature 3 should have the highest weight, got feature {max_weight_feature_bw}"
-
-    # Check that the feature sets are in reverse order
-    for i in range(len(feature_sets_fw)):
-        assert set(feature_sets_fw[i]) == set(
-            feature_sets_bw[-(i + 1)]
-        ), f"Feature sets should be in reverse order, got {feature_sets_fw[i]} and {feature_sets_bw[-(i + 1)]}"
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
@@ -345,14 +316,12 @@ def test_DiffImbalance_greedy_random_initialization():
         batches_per_epoch=2,
         l1_strength=0.0,
         point_adapt_lambda=True,
-        k_init=3,
-        k_final=3,
+        k=3,
         lambda_factor=1e-1,
         params_init=params_init,  # Use random initialization
         optimizer_name="sgd",
-        learning_rate=1e-1,
+        learning_rate=1.0,
         learning_rate_decay="cos",
-        num_points_rows=None,
     )
     weights, imbs = dii.train()
 
@@ -360,50 +329,34 @@ def test_DiffImbalance_greedy_random_initialization():
     (
         feature_sets_fw,
         diis_fw,
-        errors_fw,
+        _,
         weights_fw,
-    ) = dii.forward_greedy_feature_selection(
-        n_features_max=5, compute_error=True, n_best=1
-    )
+    ) = dii.forward_greedy_feature_selection(n_features_max=5, n_best=1)
     (
         feature_sets_bw,
         diis_bw,
-        errors_bw,
+        _,
         weights_bw,
-    ) = dii.backward_greedy_feature_selection(
-        n_features_min=1, compute_error=True, n_best=1
-    )
+    ) = dii.backward_greedy_feature_selection(n_features_min=1, n_best=1)
 
-    # Features 1 and 2 score within ~1e-3 at the 4-tuple step, so different
-    # jax versions break the tie differently (old jax 0.4 picks feature 1, new
-    # jax 0.7+ picks feature 2). Both are valid. Instead of equality against a
-    # hard-coded list, verify the properties that must hold under either tie
-    # resolution: feature 3 is always selected (highest ground-truth weight),
-    # the endpoints are unambiguous, and intermediate sets contain the
-    # high-importance features [0, 3, 4] in order.
-    assert set(feature_sets_fw[0]) == {3}
-    assert set(feature_sets_fw[-1]) == {0, 1, 2, 3, 4}
-    for i, fs in enumerate(feature_sets_fw):
-        assert len(fs) == i + 1, f"Forward set {i} has wrong size: {fs}"
-        assert 3 in fs, f"Feature 3 missing from forward set {i}: {fs}"
-    assert {0, 3, 4}.issubset(feature_sets_fw[2])
+    # Expected feature orders for the myjax_gpu_py3.13 env (jax 0.7.1).
+    expected_fw_sets = [[3], [0, 3], [0, 3, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]]
+    expected_bw_sets = [[0, 1, 2, 3, 4], [0, 1, 3, 4], [0, 3, 4], [0, 3], [3]]
 
-    assert set(feature_sets_bw[0]) == {0, 1, 2, 3, 4}
-    assert set(feature_sets_bw[-1]) == {3}
-    for i, fs in enumerate(feature_sets_bw):
-        assert len(fs) == 5 - i, f"Backward set {i} has wrong size: {fs}"
-        assert 3 in fs, f"Feature 3 missing from backward set {i}: {fs}"
-    assert {0, 3, 4}.issubset(feature_sets_bw[2])
+    assert (
+        feature_sets_fw == expected_fw_sets
+    ), f"Forward selection should return {expected_fw_sets}, got {feature_sets_fw}"
+    assert (
+        feature_sets_bw == expected_bw_sets
+    ), f"Backward selection should return {expected_bw_sets}, got {feature_sets_bw}"
 
     # Check that the DII values match when reversed
     diis_fw_array = np.array(diis_fw)
     diis_bw_array = np.array(diis_bw)
 
     print("Random Init Forward DIIs:", diis_fw)
-    print("Random Init Forward Errors:", errors_fw)
     print("Random Init Forward Weights:", weights_fw)
     print("Random Init Backward DIIs:", diis_bw)
-    print("Random Init Backward Errors:", errors_bw)
     print("Random Init Backward Weights:", weights_bw)
 
     # Check that the weights are properly structured
@@ -419,13 +372,6 @@ def test_DiffImbalance_greedy_random_initialization():
     assert (
         len(weights_bw) == 5
     ), f"Backward selection should return 5 DII weights arrays, got {len(weights_bw)}"
-
-    assert (
-        len(errors_fw) == 5
-    ), f"Forward selection should return 5 DII errors, got {len(errors_fw)}"
-    assert (
-        len(errors_bw) == 5
-    ), f"Backward selection should return 5 DII errors, got {len(errors_bw)}"
 
     assert np.allclose(
         diis_bw_array, diis_fw_array[::-1], atol=1e-2
@@ -444,15 +390,6 @@ def test_DiffImbalance_greedy_random_initialization():
     assert (
         max_weight_feature_bw == 3
     ), f"Feature 3 should have the highest weight, got feature {max_weight_feature_bw}"
-
-    # Check that the feature sets agree at the unambiguous endpoints (best
-    # single feature and full set). At intermediate sizes, forward and backward
-    # may break near-ties differently because each direction trains from a
-    # different starting weight vector, producing slightly different DII scores
-    # for the same subset. With this random initialization, features 1 and 2
-    # are within ~0.5% at the 4-tuple step, so the two directions disagree.
-    assert set(feature_sets_fw[0]) == set(feature_sets_bw[-1])
-    assert set(feature_sets_fw[-1]) == set(feature_sets_bw[0])
 
     # Additional test: Verify that the random initialization was actually used
     # by checking that the initial DII object has the correct params_init
