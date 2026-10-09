@@ -16,8 +16,10 @@
 """
 The *causal_graph* module contains the *CausalGraph* class, which uses the *DiffImbalance* class to optimize the DII.
 
-The code can be runned on gpu using the command
-    jax.config.update('jax_platforms', 'gpu') # set 'cpu' or 'gpu'
+By default, JAX runs the code on GPU when one is available. A specific platform can be selected, before any
+JAX computation, with the command
+    jax.config.update('jax_platforms', 'cpu')  # set 'cpu' or 'cuda'
+or with the environment variable JAX_PLATFORMS=cpu.
 """
 
 import itertools
@@ -124,7 +126,7 @@ class CausalGraph:
                 self.time_series = self.time_series / std
             else:
                 self.time_series_ensemble = self.time_series_ensemble / std
-        elif (std != 1).any():
+        elif not np.allclose(std, 1, rtol=1e-2):  # tolerance: e.g. data standardized with ddof=0
             warnings.warn(
                 f"The {num_variables} variables of the input time series are not standardized.",
                 stacklevel=2,
@@ -138,34 +140,47 @@ class CausalGraph:
         embedding_dim_present,
         embedding_dim_future,
         embedding_time,
+        discard_close_ind,
     ):
         """Select the times t=0 at which the samples in the present space are taken.
 
-        The first selectable time is (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time,
-        so that the times before t=0 needed by the time-delay embeddings are available.
+        The first selectable time is t_first = (max(embedding_dim_present, embedding_dim_future) - 1) *
+        embedding_time, so that the times before t=0 needed by the time-delay embeddings are available. Along
+        'time_series', the num_samples times are uniformly spaced by an integer number of time steps, starting
+        from t_first; the unused times at the end of the allowed range are reported with a print.
 
         Args:
             num_samples (int): number of times selected along the time series. Ignored if the data are provided
                 through 'time_series_ensemble', where the samples are the N_trajs trajectories.
-            time_lags, embedding_dim_present, embedding_dim_future, embedding_time: see the method
-                'optimize_present_to_future'.
+            time_lags, embedding_dim_present, embedding_dim_future, embedding_time, discard_close_ind: see the
+                method 'optimize_present_to_future'.
 
         Returns:
             t0s (np.ndarray(int) or int): array of shape (num_samples,) containing the times selected along
                 'time_series' or, for 'time_series_ensemble', the single time (along axis=1) at which all the
                 trajectories are sampled.
+            discard_close_samples (int): discard_close_ind converted into a distance between sample indices,
+                as required by the DiffImbalance class (unchanged for 'time_series_ensemble').
         """
         t_first = (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time
         if self.time_series is not None:
             n_times = self.time_series.shape[0]
-            assert num_samples <= n_times - max(time_lags) - t_first, (
+            t_last = n_times - max(time_lags) - 1  # last time t=0 for which t=max(time_lags) is available
+            assert 2 <= num_samples <= t_last - t_first + 1, (
                 f"Cannot extract {num_samples} samples from a time series of length {n_times}, with maximum "
                 + f"time lag {max(time_lags)} and {t_first} initial times reserved for the time-delay "
-                + "embeddings. Choose a smaller value of num_samples."
+                + f"embeddings. Choose a value of num_samples between 2 and {t_last - t_first + 1}."
             )
-            return np.linspace(
-                t_first, n_times - max(time_lags) - 1, num_samples, dtype=int
-            )
+            step = (t_last - t_first) // (num_samples - 1)
+            t0s = t_first + step * np.arange(num_samples)
+            if t0s[-1] < t_last:
+                print(
+                    f"The {num_samples} samples are taken every {step} time steps, at t={t0s[0]}, {t0s[1]}, ..., "
+                    + f"{t0s[-1]}; the possible times range from t={t_first} to t={t_last} "
+                    + f"(N_times - max(time_lags) - 1), so the last {t_last - t0s[-1]} are not used."
+                )
+            # samples m positions apart are m * step time steps apart
+            return t0s, discard_close_ind // step
         if num_samples is not None:
             warnings.warn(
                 "Argument 'num_samples' will be ignored, as the samples are the trajectories in "
@@ -177,7 +192,7 @@ class CausalGraph:
             f"The trajectories in 'time_series_ensemble' have {n_times} times, while the maximum time lag "
             + f"({max(time_lags)}) and the time-delay embeddings require at least {t_first + max(time_lags) + 1}."
         )
-        return t_first
+        return t_first, discard_close_ind
 
     def _extract_samples(self, t0s, time_shifts, variables):
         """Extract the samples of some variables at the times t0s + time_shifts.
@@ -236,8 +251,8 @@ class CausalGraph:
         'time_series'; with 'time_series_ensemble', the samples are the N_trajs trajectories.
 
         Args:
-            num_samples (int): number of samples harvested from the full time series, interpreted as
-                independent initial conditions of the same dynamical process. Ignored (set it to None) if the
+            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
+                interpreted as independent initial conditions of the same dynamical process. Ignored (set it to None) if the
                 data are provided through 'time_series_ensemble'.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
@@ -258,9 +273,11 @@ class CausalGraph:
                 (n_target_variables, n_time_lags, num_epochs+1, D, embedding_dim_present) if embedding_dim_present > 1
                 and share_embedding_weights is False. Default is False.
             num_epochs (int): number of training epochs. Default is 200.
-            batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
-                carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
-                which means that the gradient is computed over all the available points (batch GD).
+            batches_per_epoch (int): number of minibatches. Each weight update is carried out by computing the DII
+                gradient over n_points // batches_per_epoch points, where n_points is num_samples (or N_trajs, for
+                'time_series_ensemble'). If n_points is not a multiple of batches_per_epoch, the last
+                (n_points % batches_per_epoch) points are discarded, with a warning. Default is 1, which means that
+                the gradient is computed over all the available points (batch GD).
             track_full_loss (bool): whether to compute the training DII on the full data set at each training epoch,
                 if minibatches are used (batches_per_epoch > 1). This can be computationally demanding for large
                 data sets, but helps monitoring the convergence of the DII, as its calculation on small minibatches
@@ -289,12 +306,14 @@ class CausalGraph:
                 argument is ignored.
             compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
                 'return_final_dii' of the DiffImbalance class). Default is False.
-            discard_close_ind (int): given any point i, defines the "close" points (following the order of the
-                samples: the times selected along 'time_series', or the trajectories along axis=0 of
-                'time_series_ensemble') that are known to be significantly correlated with i.
-                The pairs (i, j) with |i - j| <= discard_close_ind are discarded both during the training and when
-                computing the final DII (see the argument 'discard_close_ind' of the DiffImbalance class). Default is
-                0, for which no distances between points close in the time are discarded.
+            discard_close_ind (int): defines the "close" samples, which are known to be significantly correlated.
+                With 'time_series', it is a number of time steps of the time series (a common choice is its
+                autocorrelation time): the pairs of samples taken at times t_i and t_j with
+                |t_i - t_j| <= discard_close_ind are discarded both during the training and when computing the
+                final DII (see the argument 'discard_close_ind' of the DiffImbalance class). With
+                'time_series_ensemble', the pairs of trajectories (i, j) along axis=0 with |i - j| <= discard_close_ind
+                are discarded, and the value is usually 0 for independent trajectories. Default is 0, for which no
+                pairs are discarded.
 
         Returns:
             weights_final (np.array(float)): array of shape (n_target_variables, n_time_lags, D) containing the
@@ -308,12 +327,13 @@ class CausalGraph:
                 the end of each training computed over the full data set. If 'compute_imb_final' is False, imbs_final
                 is set to None. Also accessible as attribute of the CausalGraph object.
         """
-        t0s = self._select_times(
+        t0s, discard_close_samples = self._select_times(
             num_samples,
             time_lags,
             embedding_dim_present,
             embedding_dim_future,
             embedding_time,
+            discard_close_ind,
         )
         # present space: all variables at times t=0, -1, ... (time-delay embeddings)
         coords_present = self._extract_samples(
@@ -383,7 +403,7 @@ class CausalGraph:
                     learning_rate=learning_rate,
                     learning_rate_decay=learning_rate_decay,
                     learning_rate_final=learning_rate_final,
-                    discard_close_ind=discard_close_ind,
+                    discard_close_ind=discard_close_samples,
                 )
                 weights_temp, imbs_training[i_var, j_tau] = dii.train(
                     bar_label=f"target_var={target_var}, tau={tau}"
@@ -834,8 +854,8 @@ class CausalGraph:
                 type="community".
             community_dictionary (dict): dictionary with pairs (comm_id, level) as keys, and lists containing
                 the indices of the variables in each community as values.
-            num_samples (int): number of samples harvested from the full time series, interpreted as
-                independent initial conditions of the same dynamical process. Ignored (set it to None) if the
+            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
+                interpreted as independent initial conditions of the same dynamical process. Ignored (set it to None) if the
                 data are provided through 'time_series_ensemble'.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
@@ -845,9 +865,11 @@ class CausalGraph:
             embedding_time (int): lag between consecutive samples in the time-delay embedding vectors of each
                 variable.  Default is 1.
             num_epochs (int): number of training epochs. Default is 200.
-            batches_per_epoch (int): number of minibatches; must be a divisor of n_points. Each weight update is
-                carried out by computing the DII gradient over n_points / batches_per_epoch points. Default is 1,
-                which means that the gradient is computed over all the available points (batch GD).
+            batches_per_epoch (int): number of minibatches. Each weight update is carried out by computing the DII
+                gradient over n_points // batches_per_epoch points, where n_points is num_samples (or N_trajs, for
+                'time_series_ensemble'). If n_points is not a multiple of batches_per_epoch, the last
+                (n_points % batches_per_epoch) points are discarded, with a warning. Default is 1, which means that
+                the gradient is computed over all the available points (batch GD).
             track_full_loss (bool): whether to compute the training DII on the full data set at each training epoch,
                 if minibatches are used (batches_per_epoch > 1). This can be computationally demanding for large
                 data sets, but helps monitoring the convergence of the DII, as its calculation on small minibatches
@@ -872,12 +894,14 @@ class CausalGraph:
                 argument is ignored.
             compute_imb_final (bool): whether to compute the final DII over the full data set (see the method
                 'return_final_dii' of the DiffImbalance class). Default is False.
-            discard_close_ind (int): given any point i, defines the "close" points (following the order of the
-                samples: the times selected along 'time_series', or the trajectories along axis=0 of
-                'time_series_ensemble') that are known to be significantly correlated with i.
-                The pairs (i, j) with |i - j| <= discard_close_ind are discarded both during the training and when
-                computing the final DII (see the argument 'discard_close_ind' of the DiffImbalance class). Default is
-                0, for which no distances between points close in the time are discarded.
+            discard_close_ind (int): defines the "close" samples, which are known to be significantly correlated.
+                With 'time_series', it is a number of time steps of the time series (a common choice is its
+                autocorrelation time): the pairs of samples taken at times t_i and t_j with
+                |t_i - t_j| <= discard_close_ind are discarded both during the training and when computing the
+                final DII (see the argument 'discard_close_ind' of the DiffImbalance class). With
+                'time_series_ensemble', the pairs of trajectories (i, j) along axis=0 with |i - j| <= discard_close_ind
+                are discarded, and the value is usually 0 for independent trajectories. Default is 0, for which no
+                pairs are discarded.
 
         Returns:
             weights_final (dict): dictionary containing the final optimization weights for each pair
@@ -939,12 +963,13 @@ class CausalGraph:
                 f"- Community {community_name} ({len(community)} variables, level {key[1]}): {community}"
             )
 
-        t0s = self._select_times(
+        t0s, discard_close_samples = self._select_times(
             num_samples,
             time_lags,
             embedding_dim_present,
             embedding_dim_future,
             embedding_time,
+            discard_close_ind,
         )
 
         # initialize output variables
@@ -1083,7 +1108,7 @@ class CausalGraph:
                             learning_rate=learning_rate,
                             learning_rate_decay=learning_rate_decay,
                             learning_rate_final=learning_rate_final,
-                            discard_close_ind=discard_close_ind,
+                            discard_close_ind=discard_close_samples,
                         )
                         (
                             weights_temp,
