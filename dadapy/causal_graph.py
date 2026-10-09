@@ -252,6 +252,7 @@ class CausalGraph:
         learning_rate_final=None,
         compute_imb_final=False,
         discard_close_ind=0,
+        num_epochs_average=1,
     ):
         """Optimize the DII iteratively from the full space in the present to a target space in the future.
 
@@ -323,12 +324,17 @@ class CausalGraph:
                 'time_series_ensemble', the pairs of trajectories (i, j) along axis=0 with |i - j| <= discard_close_ind
                 are discarded, and the value is usually 0 for independent trajectories. Default is 0, for which no
                 pairs are discarded.
+            num_epochs_average (int): number of final training epochs over which the (signed) weights are averaged
+                to define the final weights, so that the weights oscillating around zero at convergence are
+                suppressed (see the argument 'num_epochs_average' of the DiffImbalance class). Meaningful with a
+                constant learning rate (learning_rate_decay=None). Default is 1 (weights at the end of the training).
 
         Returns:
             weights_final (np.array(float)): array of shape (n_target_variables, n_time_lags, D) containing the
                 D final scaling weights for each optimization, where D is the number of variables in the time series.
                 If embedding_dim_present > 1 and share_embedding_weights is False, the shape is
-                (n_target_variables, n_time_lags, D, embedding_dim_present).
+                (n_target_variables, n_time_lags, D, embedding_dim_present). Since the DII is invariant under a sign
+                change of each weight, only the absolute values of the weights are meaningful.
                 Also accessible as attribute of the CausalGraph object.
             imbs_training (np.array(float)): array of shape (n_target_variables, n_time_lags, num_epochs+1)
                 containing the DII during the trainings. Also accessible as attribute of the CausalGraph object.
@@ -413,19 +419,19 @@ class CausalGraph:
                     learning_rate_decay=learning_rate_decay,
                     learning_rate_final=learning_rate_final,
                     discard_close_ind=discard_close_samples,
+                    num_epochs_average=num_epochs_average,
                 )
                 weights_temp, imbs_training[i_var, j_tau] = dii.train(
                     bar_label=f"target_var={target_var}, tau={tau}"
                 )
-                # weights enter the distances squared, so only their absolute value is meaningful
-                weights_temp = np.abs(weights_temp)
-
                 # compute final DII
                 if compute_imb_final:
                     imbs_final[i_var, j_tau] = dii.return_final_dii()
 
                 # save weights
-                weights_final[i_var, j_tau] = weights_temp[-1].reshape(weights_shape)
+                weights_final[i_var, j_tau] = np.asarray(dii.params_final).reshape(
+                    weights_shape
+                )
                 if save_weights is True:
                     weights_training[i_var, j_tau] = weights_temp.reshape(
                         (num_epochs + 1,) + weights_shape
@@ -477,7 +483,8 @@ class CausalGraph:
                 array should have an additional dimension, i.e. shape (D, n_time_lags, D, embedding_dim_present).
             threshold (float): value of the threshold used to construct the adjacency matrix. If a weight is
                 smaller than the threshold the corresponding entry in the adjacency matrix is set to 0, otherwise
-                it is set to 1.
+                it is set to 1. The threshold is applied to the absolute values of the weights, since the DII is
+                invariant under a sign change of each weight (a warning is raised if some weights are negative).
 
         Returns:
             adj_matrix (np.ndarray(float)): array of shape (D,D) defining the adjacency matrix of a directed
@@ -496,6 +503,13 @@ class CausalGraph:
             "The array of weight must have shape (D,n_time_lags,D), or (D,n_time_lags,D,embedding_dim_present), "
             + "where D is the number of variables."
         )
+        if (weights < 0).any():
+            warnings.warn(
+                "Some weights are negative: since the DII is invariant under a sign change of each weight, only "
+                + "their absolute values are considered.",
+                stacklevel=2,
+            )
+            weights = np.abs(weights)
         if len(weights.shape) == 3:
             weights_max = np.max(weights, axis=1)  # maximum over all tested time lags
         elif len(weights.shape) == 4:
@@ -844,6 +858,7 @@ class CausalGraph:
         learning_rate_final=None,
         compute_imb_final=False,
         discard_close_ind=0,
+        num_epochs_average=1,
     ):
         """Implement the refinement step to distinguish direct and indirect links between nonconsecutive communities.
 
@@ -912,6 +927,10 @@ class CausalGraph:
                 'time_series_ensemble', the pairs of trajectories (i, j) along axis=0 with |i - j| <= discard_close_ind
                 are discarded, and the value is usually 0 for independent trajectories. Default is 0, for which no
                 pairs are discarded.
+            num_epochs_average (int): number of final training epochs over which the (signed) weights are averaged
+                to define the final weights, so that the weights oscillating around zero at convergence are
+                suppressed (see the argument 'num_epochs_average' of the DiffImbalance class). Meaningful with a
+                constant learning rate (learning_rate_decay=None). Default is 1 (weights at the end of the training).
 
         Returns:
             weights_final (dict): dictionary containing the final optimization weights for each pair
@@ -921,7 +940,8 @@ class CausalGraph:
                 (1 weight for the cause community at t=0, E weights for the effect community at
                 t=tau-1, tau-1-embedding_time, ..., and E weights for each of the M mediator communities,
                 ordered by time and then by community name), and E=embedding_dim_present. Each weight is
-                shared by all the variables of a community at a given time.
+                shared by all the variables of a community at a given time. Since the DII is invariant under a
+                sign change of each weight, only the absolute values of the weights are meaningful.
             communities_and_lags (dict): dictionary containing as keys the tuples
                 (community_name_cause, community_name_effect), and as values a list of two arrays of
                 shape (n_weights,), containing the community name and the time of each weight.
@@ -1119,6 +1139,7 @@ class CausalGraph:
                             learning_rate_decay=learning_rate_decay,
                             learning_rate_final=learning_rate_final,
                             discard_close_ind=discard_close_samples,
+                            num_epochs_average=num_epochs_average,
                         )
                         (
                             weights_temp,
@@ -1128,9 +1149,6 @@ class CausalGraph:
                         ) = dii.train(
                             bar_label=f"Communities {community_name_cause}->{community_name_effect}, tau={tau}"
                         )
-                        # weights enter the distances squared, so only their absolute value is meaningful
-                        weights_temp = np.abs(weights_temp)
-
                         # compute final DII
                         if compute_imb_final:
                             imbs_final[community_name_cause, community_name_effect][
@@ -1140,7 +1158,7 @@ class CausalGraph:
                         # save weights
                         weights_final[community_name_cause, community_name_effect][
                             j_tau
-                        ] = weights_temp[-1]
+                        ] = np.asarray(dii.params_final)
 
         self.weights_final_refine = weights_final
         self.communities_and_lags_refine = communities_and_lags
@@ -1187,7 +1205,8 @@ class CausalGraph:
             weights_refine (dict): output weights of method 'find_direct_links_communities'.
             communities_and_lags (dict): output communities and lags of method 'find_direct_links_communities'.
             variable_names (np.array(str)): array of shape (D,) containing the names of the D variables.
-            threshold (float): weight threshold above which a direct link between two communities is drawn.
+            threshold (float): weight threshold above which a direct link between two communities is drawn. It is
+                applied to the absolute values of the weights (a warning is raised if some weights are negative).
             savefig_name (str): path at which the picture of the final graph is saved, in the format given by
                 the file extension. If None (default), the figure is not saved.
             **kwargs: customizable arguments used by the networkx library. The possible arguments are:
@@ -1228,6 +1247,13 @@ class CausalGraph:
         # extract pairs of communities tested for direct vs indirect links
         pairs_cause_effect = list(weights_refine.keys())
 
+        if any((np.asarray(w) < 0).any() for w in weights_refine.values()):
+            warnings.warn(
+                "Some weights are negative: since the DII is invariant under a sign change of each weight, only "
+                + "their absolute values are considered.",
+                stacklevel=2,
+            )
+
         # loop over such pairs and connect them when at least one weight of causal community > threshold
         for community_name_cause, community_name_effect in pairs_cause_effect:
             mask_variables_cause = (
@@ -1236,7 +1262,7 @@ class CausalGraph:
             )
 
             max_weights_refine = np.max(
-                weights_refine[community_name_cause, community_name_effect],
+                np.abs(weights_refine[community_name_cause, community_name_effect]),
                 axis=0,  # axis of lag tau
             )[mask_variables_cause]
             if (max_weights_refine > threshold).any():

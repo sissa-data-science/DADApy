@@ -243,6 +243,13 @@ class DiffImbalance:
         learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
             Default is None, for which the learning rate is damped to zero. If learning_rate_decay=None, this
             argument is ignored.
+        num_epochs_average (int): number of final training epochs over which the weights are averaged to define
+            the final weights (attribute params_final), used by 'return_final_dii' and by the greedy feature
+            selections. The signed weights are averaged, so that the weights oscillating around zero at
+            convergence are suppressed, and the average is rescaled to the norm of the weights during the
+            training. The average is meaningful with a constant learning rate (learning_rate_decay=None), over
+            epochs in which the DII has converged (for instance, the last 10-20% of the epochs). Default is 1,
+            for which the final weights are the weights at the end of the training.
     """
 
     def __init__(
@@ -267,6 +274,7 @@ class DiffImbalance:
         learning_rate=1e-2,
         learning_rate_decay=None,
         learning_rate_final=None,
+        num_epochs_average=1,
     ):
         """Initialise the DiffImbalance class."""
         data_A = _check_continuous_variables(data_A, name="data_A")
@@ -377,6 +385,15 @@ class DiffImbalance:
         self.learning_rate = learning_rate
         self.learning_rate_decay = learning_rate_decay
         self.learning_rate_final = learning_rate_final
+        assert (
+            isinstance(num_epochs_average, (int, np.integer)) and num_epochs_average >= 1
+        ), f"'num_epochs_average' must be a positive integer, while it is {num_epochs_average}."
+        if num_epochs_average > num_epochs + 1:
+            raise ValueError(
+                f"'num_epochs_average' ({num_epochs_average}) cannot be larger than the number of stored training "
+                + f"steps, num_epochs + 1 = {num_epochs + 1}."
+            )
+        self.num_epochs_average = num_epochs_average
 
         self.state = None
         self._distance_A = _compute_dist2_matrix_scaling  # TODO: assign other functions if other distances d_A are chosen
@@ -856,7 +873,9 @@ class DiffImbalance:
         set, use after training the method 'return_final_dii', or initialize the DiffImbalance object
         with 'track_full_loss = True'.
         If the method is called more than once, the optimization continues from the final weights of the
-        previous call, and params_init is ignored (a warning is raised).
+        previous call, and params_init is ignored (a warning is raised). The final weights (attribute
+        params_final) are the average of the last 'num_epochs_average' elements of params_training, rescaled to
+        the norm of the weights during the training (see the attribute 'num_epochs_average').
 
         Args:
             bar_label (str): label on the tqdm training bar, useful when several trains are performed.
@@ -900,7 +919,14 @@ class DiffImbalance:
             imbs_training = imbs_training.at[epoch_idx].set(self._train_epoch(subkey))
         self.state = state_start
 
-        self.params_final = params_training[-1]
+        # final weights: average of the signed weights over the last num_epochs_average epochs (weights
+        # oscillating around zero are suppressed), rescaled to the norm of the weights during the training
+        params_final = params_training[-self.num_epochs_average :].mean(axis=0)
+        self.params_final = (
+            params_final
+            * jnp.linalg.norm(params_training[-1])
+            / jnp.linalg.norm(params_final)
+        )
         self.params_training = params_training
         self.imbs_training = imbs_training
 
@@ -983,6 +1009,7 @@ class DiffImbalance:
             learning_rate=self.learning_rate,
             learning_rate_decay=self.learning_rate_decay,
             learning_rate_final=self.learning_rate_final,
+            num_epochs_average=min(self.num_epochs_average, num_epochs + 1),
         )
 
     def forward_greedy_feature_selection(
