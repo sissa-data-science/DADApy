@@ -150,8 +150,9 @@ class CausalGraph:
         from t_first; the unused times at the end of the allowed range are reported with a print.
 
         Args:
-            num_samples (int): number of times selected along the time series. Ignored if the data are provided
-                through 'time_series_ensemble', where the samples are the N_trajs trajectories.
+            num_samples (int): number of times selected along the time series; if None, all the available times
+                are used. Ignored if the data are provided through 'time_series_ensemble', where the samples are the
+                N_trajs trajectories.
             time_lags, embedding_dim_present, embedding_dim_future, embedding_time, discard_close_ind: see the
                 method 'optimize_present_to_future'.
 
@@ -166,6 +167,13 @@ class CausalGraph:
         if self.time_series is not None:
             n_times = self.time_series.shape[0]
             t_last = n_times - max(time_lags) - 1  # last time t=0 for which t=max(time_lags) is available
+            if num_samples is None:
+                num_samples = t_last - t_first + 1
+                warnings.warn(
+                    f"You didn't set num_samples: num_samples is set automatically to {num_samples}, using all the "
+                    + f"available times (from t={t_first} to t={t_last}).",
+                    stacklevel=3,
+                )
             assert 2 <= num_samples <= t_last - t_first + 1, (
                 f"Cannot extract {num_samples} samples from a time series of length {n_times}, with maximum "
                 + f"time lag {max(time_lags)} and {t_first} initial times reserved for the time-delay "
@@ -184,7 +192,7 @@ class CausalGraph:
         if num_samples is not None:
             warnings.warn(
                 "Argument 'num_samples' will be ignored, as the samples are the trajectories in "
-                + "'time_series_ensemble'. To suppress this warning, set 'num_samples' to None.",
+                + "'time_series_ensemble'. To suppress this warning, do not set 'num_samples'.",
                 stacklevel=3,
             )
         n_times = self.time_series_ensemble.shape[1]
@@ -222,8 +230,8 @@ class CausalGraph:
 
     def optimize_present_to_future(  # noqa: C901
         self,
-        num_samples,
         time_lags,
+        num_samples=None,
         embedding_dim_present=1,
         embedding_dim_future=1,
         embedding_time=1,
@@ -251,10 +259,11 @@ class CausalGraph:
         'time_series'; with 'time_series_ensemble', the samples are the N_trajs trajectories.
 
         Args:
-            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
-                interpreted as independent initial conditions of the same dynamical process. Ignored (set it to None) if the
-                data are provided through 'time_series_ensemble'.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
+            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
+                interpreted as independent initial conditions of the same dynamical process. Default is None, for
+                which all the available times are used (with a warning). Ignored if the data are provided through
+                'time_series_ensemble'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
                 space (t=0, t=-1, ...). Default is 1, which means the time-delay embeddings are not employed.
             embedding_dim_future (int): dimension of the time-delay embedding vectors built in the space of
@@ -817,8 +826,8 @@ class CausalGraph:
         adj_matrix,
         community_graph,
         community_dictionary,
-        num_samples,
         time_lags,
+        num_samples=None,
         embedding_dim_present=1,
         embedding_dim_future=1,
         embedding_time=1,
@@ -854,10 +863,11 @@ class CausalGraph:
                 type="community".
             community_dictionary (dict): dictionary with pairs (comm_id, level) as keys, and lists containing
                 the indices of the variables in each community as values.
-            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
-                interpreted as independent initial conditions of the same dynamical process. Ignored (set it to None) if the
-                data are provided through 'time_series_ensemble'.
             time_lags (list(int), np.ndarray(int)): tested time lags between 'present' and 'future'.
+            num_samples (int): number of samples harvested from the full time series at uniformly spaced times,
+                interpreted as independent initial conditions of the same dynamical process. Default is None, for
+                which all the available times are used (with a warning). Ignored if the data are provided through
+                'time_series_ensemble'.
             embedding_dim_present (int): dimension of the time-delay embedding vectors built in the present
                 space (t=0, t=-1, ...). Default is 1, which means the time-delay embeddings are not employed.
             embedding_dim_future (int): dimension of the time-delay embedding vectors built in the space of
