@@ -126,7 +126,9 @@ class CausalGraph:
                 self.time_series = self.time_series / std
             else:
                 self.time_series_ensemble = self.time_series_ensemble / std
-        elif not np.allclose(std, 1, rtol=1e-2):  # tolerance: e.g. data standardized with ddof=0
+        elif not np.allclose(
+            std, 1, rtol=1e-2
+        ):  # tolerance: e.g. data standardized with ddof=0
             warnings.warn(
                 f"The {num_variables} variables of the input time series are not standardized.",
                 stacklevel=2,
@@ -163,10 +165,14 @@ class CausalGraph:
             discard_close_samples (int): discard_close_ind converted into a distance between sample indices,
                 as required by the DiffImbalance class (unchanged for 'time_series_ensemble').
         """
-        t_first = (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time
+        t_first = (
+            max(embedding_dim_present, embedding_dim_future) - 1
+        ) * embedding_time
         if self.time_series is not None:
             n_times = self.time_series.shape[0]
-            t_last = n_times - max(time_lags) - 1  # last time t=0 for which t=max(time_lags) is available
+            t_last = (
+                n_times - max(time_lags) - 1
+            )  # last time t=0 for which t=max(time_lags) is available
             if num_samples is None:
                 num_samples = t_last - t_first + 1
                 warnings.warn(
@@ -374,7 +380,9 @@ class CausalGraph:
         imbs_training = np.zeros(
             (len(target_variables), len(time_lags), num_epochs + 1)
         )
-        weights_final = np.zeros((len(target_variables), len(time_lags)) + weights_shape)
+        weights_final = np.zeros(
+            (len(target_variables), len(time_lags)) + weights_shape
+        )
         if save_weights is True:
             weights_training = np.zeros(
                 (len(target_variables), len(time_lags), num_epochs + 1) + weights_shape
@@ -450,7 +458,10 @@ class CausalGraph:
             else []
         )
         outputs = {
-            "weights_final": (weights_final, ["target variable", "time lag"] + axes_weights),
+            "weights_final": (
+                weights_final,
+                ["target variable", "time lag"] + axes_weights,
+            ),
             "imbs_training": (imbs_training, ["target variable", "time lag", "epoch"]),
         }
         if save_weights:
@@ -460,7 +471,9 @@ class CausalGraph:
             )
         if compute_imb_final:
             outputs["imbs_final"] = (imbs_final, ["target variable", "time lag"])
-        print("Output arrays (also accessible as attributes of the CausalGraph object):")
+        print(
+            "Output arrays (also accessible as attributes of the CausalGraph object):"
+        )
         for name, (array, axes) in outputs.items():
             print(f"- {name}: shape {array.shape} = ({', '.join(axes)})")
         print(
@@ -1173,7 +1186,11 @@ class CausalGraph:
             + "weight are in communities_and_lags[(cause, effect)]\n"
             + "- imbs_training[(cause, effect)]: shape (n_time_lags, num_epochs+1); epoch 0 corresponds to the "
             + "initial weights"
-            + ("\n- imbs_final[(cause, effect)]: shape (n_time_lags,)" if compute_imb_final else "")
+            + (
+                "\n- imbs_final[(cause, effect)]: shape (n_time_lags,)"
+                if compute_imb_final
+                else ""
+            )
         )
         return (
             weights_final,

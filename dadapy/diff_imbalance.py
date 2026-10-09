@@ -175,7 +175,7 @@ class DiffImbalance:
             k: 10
             lambda_factor=1/10
 
-    As a rule of thumb, we suggest to set k to ~1-5% of the points in the data set, if minibatches are not 
+    As a rule of thumb, we suggest to set k to ~1-5% of the points in the data set, if minibatches are not
     employed, or to ~1-5% of the points within each mini-batch, if they are employed.
 
     Attributes:
@@ -203,11 +203,11 @@ class DiffImbalance:
             may be affected by large fluctuations. Default is False.
         discard_close_ind (int): given any point i, defines the "close" points (following the labelling order
             along axis=0 of data_A and data_B) that are known to be significantly correlated with i. For example,
-            this may occur when the data set is a time series, and axis=0 is the time dimension. For each point i 
-            the pairs (i, j) with |i - j| <= discard_close_ind are discarded entirely: they are never selected as 
-            neighbors in space A, do not enter the computation of the smoothing parameter lambda, and are not 
-            counted in the ranks of space B (the remaining neighbors of i are re-ranked among themselves, and the 
-            DII of point i is normalized by their number). Default is 0, for which no distances between 
+            this may occur when the data set is a time series, and axis=0 is the time dimension. For each point i
+            the pairs (i, j) with |i - j| <= discard_close_ind are discarded entirely: they are never selected as
+            neighbors in space A, do not enter the computation of the smoothing parameter lambda, and are not
+            counted in the ranks of space B (the remaining neighbors of i are re-ranked among themselves, and the
+            DII of point i is normalized by their number). Default is 0, for which no distances between
             "time-correlated" points are discarded.
         seed (int): seed of JAX random generator, default is 0. Different seeds determine different mini-batch
             partitions.
@@ -225,7 +225,7 @@ class DiffImbalance:
             scaled by an independent optimization parameter, so n_params == n_features_A. If params_init is None,
             the initial scaling parameters are all equal, with unit norm: [1, 1, ..., 1] / sqrt(n_params). Since
             the DII only depends on the direction of the weights, their norm is kept equal to the norm of
-            params_init during the training. In the greedy feature selections, the initial weights of each subset 
+            params_init during the training. In the greedy feature selections, the initial weights of each subset
             of features are taken from params_init and rescaled to the norm of params_init.
         params_groups (np.array(int), jnp.array(int)): array of shape (n_params,) containing at position i the
             number of features that share the same weight in params_init[i], using the same order of the columns
@@ -238,7 +238,7 @@ class DiffImbalance:
             https://optax.readthedocs.io/en/latest/api/optimizers.html for additional details.
         learning_rate (float): value of the learning rate. Default is 1e-2.
         learning_rate_decay (str): schedule to damp the learning rate to zero (or to learning_rate_final, if
-            not None) starting from the value provided with the attribute learning_rate. The available schedules are: 
+            not None) starting from the value provided with the attribute learning_rate. The available schedules are:
             cosine decay ("cos"), or constant learning rate (None). Default is None (constant learning rate).
         learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
             Default is None, for which the learning rate is damped to zero. If learning_rate_decay=None, this
@@ -319,7 +319,7 @@ class DiffImbalance:
                 data_B = data_B[:n_kept]
             else:
                 distances_B = distances_B[:n_kept, :n_kept]
-        self.nparams =self.nfeatures_A if params_groups is None else len(params_groups)
+        self.nparams = self.nfeatures_A if params_groups is None else len(params_groups)
 
         # initialize jax random generator
         self.key = jax.random.PRNGKey(seed)
@@ -386,7 +386,8 @@ class DiffImbalance:
         self.learning_rate_decay = learning_rate_decay
         self.learning_rate_final = learning_rate_final
         assert (
-            isinstance(num_epochs_average, (int, np.integer)) and num_epochs_average >= 1
+            isinstance(num_epochs_average, (int, np.integer))
+            and num_epochs_average >= 1
         ), f"'num_epochs_average' must be a positive integer, while it is {num_epochs_average}."
         if num_epochs_average > num_epochs + 1:
             raise ValueError(
@@ -406,15 +407,17 @@ class DiffImbalance:
                 + "in setting the smoothing parameter lambda to zero and make the optimization "
                 + "fail. Remove the repeated values before continuing."
             )
-        assert self.k is not None, (
-            f"Provide a value of 'k' to compute lambda adaptively."
-        )
+        assert (
+            self.k is not None
+        ), f"Provide a value of 'k' to compute lambda adaptively."
         assert (
             isinstance(self.k, (int, np.integer))
             and not isinstance(self.k, bool)
             and self.k > 0
         ), f"'k' must be a positive integer, while it is {self.k}."
-        self.k = int(self.k)  # Python int, as k is a static argument of the jitted functions
+        self.k = int(
+            self.k
+        )  # Python int, as k is a static argument of the jitted functions
         # 'k' must be smaller than the number of columns of the smallest distance matrix
         # in which neighbors are looked up. With mini-batches this is nrows // batches_per_epoch
         assert self.k < self.nrows // self.batches_per_epoch, (
@@ -538,7 +541,12 @@ class DiffImbalance:
             return current_lambda
 
         def _compute_training_diff_imbalance(
-            params, batch_A_rows, batch_A_columns, batch_B_ranks, k, batch_close_mask=None
+            params,
+            batch_A_rows,
+            batch_A_columns,
+            batch_B_ranks,
+            k,
+            batch_close_mask=None,
         ):
             """Computes the Differentiable Information Imbalance (DII) at the current step of the training.
 
@@ -552,8 +560,8 @@ class DiffImbalance:
                     the pre-computed target ranks in space B.
                 k (int): neighbor order to set lambda adaptively.
                 batch_close_mask (jnp.array(bool)): matrix of shape (n_points_rows, n_points_columns), True where
-                    the pair of points is "close" along axis=0 (see 'discard_close_ind'). Such pairs are excluded 
-                    from the computation of the DII and of the smoothing parameter lambda. Default is None, for 
+                    the pair of points is "close" along axis=0 (see 'discard_close_ind'). Such pairs are excluded
+                    from the computation of the DII and of the smoothing parameter lambda. Default is None, for
                     which no pairs are discarded.
 
             Returns:
@@ -709,9 +717,7 @@ class DiffImbalance:
         self._compute_point_adapt_lambdas = jax.jit(
             _compute_point_adapt_lambdas, static_argnames="k"
         )
-        self._compute_adapt_lambda = jax.jit(
-            _compute_adapt_lambda, static_argnames="k"
-        )
+        self._compute_adapt_lambda = jax.jit(_compute_adapt_lambda, static_argnames="k")
         self._compute_training_diff_imbalance = jax.jit(
             _compute_training_diff_imbalance, static_argnames="k"
         )
@@ -780,7 +786,9 @@ class DiffImbalance:
                     .argsort(axis=1),
                     self._get_batch_close_mask(batch_indices),
                 )
-                if imb_start is None:  # DII of the starting weights over the first mini-batch
+                if (
+                    imb_start is None
+                ):  # DII of the starting weights over the first mini-batch
                     imb_start = imb
             # DON'T DELETE: Alternative method for mini-batch GD (only subsample rows)
             # for i_batch, batch_indices in enumerate(all_batch_indices):
@@ -972,7 +980,11 @@ class DiffImbalance:
                 the features in the subset and zeros elsewhere, rescaled to the norm of params_init.
         """
         params_init = jnp.where(mask, self.params_init, 0.0)
-        return params_init * jnp.linalg.norm(self.params_init) / jnp.linalg.norm(params_init)
+        return (
+            params_init
+            * jnp.linalg.norm(self.params_init)
+            / jnp.linalg.norm(params_init)
+        )
 
     def _return_greedy_copy(self, params_init, num_epochs, seed):
         """Returns a copy of the DiffImbalance object, used to train a subset of features in the greedy searches.
@@ -1113,7 +1125,7 @@ class DiffImbalance:
         best_valid_indices = np.argsort(valid_diis)[:n_best_actual]
         selected_indices = valid_indices[best_valid_indices]
 
-        # Convert indices to lists for consistent processing 
+        # Convert indices to lists for consistent processing
         selected_features = [[int(idx)] for idx in selected_indices]
 
         # Add the best single feature to results
@@ -1126,7 +1138,9 @@ class DiffImbalance:
         best_weights = np.zeros(n_features)
         best_weights[best_feature[0]] = jnp.sign(
             self.params_init[best_feature[0]]
-        ) * jnp.linalg.norm(self.params_init)  # Inherit from parent class (rescaled)
+        ) * jnp.linalg.norm(
+            self.params_init
+        )  # Inherit from parent class (rescaled)
 
         # Add to weights list
         best_weights_list.append(best_weights)
@@ -1170,7 +1184,9 @@ class DiffImbalance:
 
                         # Create a copy of the current object for training
                         dii_copy = self._return_greedy_copy(
-                            params_init=params_init, num_epochs=self.num_epochs, seed=seed
+                            params_init=params_init,
+                            num_epochs=self.num_epochs,
+                            seed=seed,
                         )
 
                         # Set initial parameters and train
@@ -1349,7 +1365,6 @@ class DiffImbalance:
                 num_epochs_now = 0
             else:
                 num_epochs_now = self.num_epochs
-
 
             # Generate candidates by removing one feature from each of the current best feature sets
             for selected_set in current_features:
