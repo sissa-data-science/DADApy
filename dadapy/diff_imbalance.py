@@ -198,7 +198,7 @@ class DiffImbalance:
             the last (n_points % batches_per_epoch) points of the data set are discarded, with a warning. Default
             is 1, which means that the gradient is computed over all the available points (batch GD).
         track_full_loss (bool): whether to compute the training DII on the full dataset at each training epoch,
-            if minibatches are used (batches_per_epoch > 1). This can be computationally demaning for large
+            if minibatches are used (batches_per_epoch > 1). This can be computationally demanding for large
             datasets but helps monitoring the convergence of the DII, as its calculation on small minibatches
             may be affected by large fluctuations. Default is False.
         discard_close_ind (int): given any point i, defines the "close" points (following the labelling order
@@ -241,7 +241,7 @@ class DiffImbalance:
             not None) starting from the value provided with the attribute learning_rate. The available schedules are: 
             cosine decay ("cos"), or constant learning rate (None). Default is None (constant learning rate).
         learning_rate_final (float): final value of the learning rate when the "cos" decay schedule is applied.
-            Default is None, for which the learning rate is dumped to zero. If learning_rate_decay=None, this
+            Default is None, for which the learning rate is damped to zero. If learning_rate_decay=None, this
             argument is ignored.
     """
 
