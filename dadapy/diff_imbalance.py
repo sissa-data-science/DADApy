@@ -24,13 +24,17 @@ or with the environment variable JAX_PLATFORMS=cpu.
 
 import warnings
 from functools import partial
+from typing import Any, NamedTuple
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
-from flax.training import train_state
 from tqdm.auto import tqdm
+
+# the DII is computed in double precision. This global JAX setting is also applied by dadapy.hamming, but its
+# import can fail silently in dadapy/__init__.py (e.g. when the GPU cannot be initialized)
+jax.config.update("jax_enable_x64", True)
 
 # OPTIMIZABLE DISTANCE FUNCTIONS
 # (here new functions may be added for purposes beyond feature selection)
@@ -146,6 +150,14 @@ def _scale_by_tangent_projection():
         return updates - (updates @ unit_params) * unit_params, state
 
     return optax.GradientTransformation(lambda params: optax.EmptyState(), update_fn)
+
+
+class _TrainState(NamedTuple):
+    """Training state: number of performed optimization steps, current weights and state of the optimizer."""
+
+    step: Any
+    params: Any
+    opt_state: Any
 
 
 # CLASS TO OPTIMIZE THE DIFFERENTIAL INFORMATION IMBALANCE
@@ -653,7 +665,7 @@ class DiffImbalance:
             """Perform a single gradient descent step in the optimization of the DII.
 
             Args:
-                state (flax.training.train_state.TrainState object): current training state.
+                state (_TrainState): current training state.
                 batch_A_rows (jnp.array(float)): matrix of shape (n_points_rows, n_features_A), containing
                     the points labelling the distance matrix rows.
                 batch_A_columns (jnp.array(float)): matrix of shape (n_points_columns, n_features_A), containing
@@ -666,7 +678,7 @@ class DiffImbalance:
                     is None, for which only the self-distances (diagonal) are discarded.
 
             Returns:
-                state_new (flax.training.train_state.TrainState object): new training state after optimizer step
+                state_new (_TrainState): new training state after optimizer step
                 imb (flat): new value of the DII after optimizer step.
             """
             loss_fn = lambda params: _compute_training_diff_imbalance(  # noqa: E731
@@ -683,16 +695,24 @@ class DiffImbalance:
             # norm of the weights, kept fixed during the training as the DII only depends on their direction
             params_norm = jnp.linalg.norm(state.params)
 
-            # learning rate of the current step, read before 'apply_gradients' increments state.step
+            # learning rate of the current step, read before the update increments state.step
             current_lr = self.lr_schedule(state.step)
 
-            # Update parameters
-            state = state.apply_gradients(grads=grads)
+            # Update parameters (new syntax required from jax 0.10.0, because flax's TrainState.apply_gradients checks
+            # whether a string is contained in the gradients, which raises an error when they are a single jax array)
+            updates, opt_state = self.optimizer.update(
+                grads, state.opt_state, state.params
+            )
+            state = state._replace(
+                step=state.step + 1,
+                params=optax.apply_updates(state.params, updates),
+                opt_state=opt_state,
+            )
 
             # Apply L1 penalty
             if self.l1_strength != 0:
                 # (GD clipping, B. Carpenter et al, 2008)
-                state = state.replace(
+                state = state._replace(
                     params=jnp.where(state.params > 0, 1.0, 0.0)
                     * jnp.maximum(0, state.params - current_lr * self.l1_strength)
                     + jnp.where(state.params < 0, 1.0, 0.0)
@@ -704,13 +724,13 @@ class DiffImbalance:
                 #    state.params
                 #    - jnp.sign(state.params) * current_lr * self.l1_strength  # noqa: E800
                 # )  # noqa: E800
-                # state = state.replace(  # noqa: E800
+                # state = state._replace(  # noqa: E800
                 #    params=state.params  # noqa: E800
                 #    * (1.0 - jnp.where(state.params * candidate_params < 0, 1.0, 0.0))
                 # )  # noqa: E800
 
             # Project the weights back onto the sphere of radius 'params_norm'
-            state = state.replace(
+            state = state._replace(
                 params=optax.projections.projection_l2_sphere(
                     state.params, scale=params_norm
                 )
@@ -868,15 +888,14 @@ class DiffImbalance:
             raise ValueError(
                 f'Unknown learning rate decay schedule "{self.learning_rate_decay}". Choose among None or "cos".'
             )
-        optimizer = optax.chain(
+        self.optimizer = optax.chain(
             opt_class(self.lr_schedule), _scale_by_tangent_projection()
         )
 
         # Initialize training state
-        self.state = train_state.TrainState.create(
-            apply_fn=self._distance_A,
-            params=self.params_init if self.state is None else self.state.params,
-            tx=optimizer,
+        params = self.params_init if self.state is None else self.state.params
+        self.state = _TrainState(
+            step=0, params=params, opt_state=self.optimizer.init(params)
         )
 
     def train(self, bar_label=None):

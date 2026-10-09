@@ -40,7 +40,7 @@ def test_DiffImbalance_train1():
     expected_imb = 0.055127
     expected_imb_final = 0.055127
 
-    # train the DII to recover ground-truth metric
+    # train the DII (only 10 epochs: the weights move towards the ground-truth metric, without reaching it)
     dii = DiffImbalance(
         data_A,  # matrix of shape (N,D_A)
         data_B,  # matrix of shape (N,D_B)
@@ -77,13 +77,13 @@ def test_DiffImbalance_train2():
 
     # generate test data
     weights_ground_truth = np.array([10, 3, 100])
-    params_init = np.array([10.0, 10.0, 10.0])
+    params_init = np.array([1.0, 1.0, 1.0])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    expected_weights = [16.898588, -3.799701, 0.0]
-    expected_imb = 0.131398
-    expected_imb_final = 0.048345
+    expected_weights = [1.403233, 0.37759, 0.942531]
+    expected_imb = 0.126147
+    expected_imb_final = 0.046506
 
     # train the DII
     dii = DiffImbalance(
@@ -103,7 +103,7 @@ def test_DiffImbalance_train2():
         params_init=params_init,
         params_groups=None,
         optimizer_name="sgd",  # the L1 regularization is supported only with SGD
-        learning_rate=300.0,  # the SGD step on the direction of the weights scales as lr / |params_init|^2
+        learning_rate=0.3,
         learning_rate_decay=None,
     )
     weights, imbs = dii.train()
@@ -173,7 +173,7 @@ def test_DiffImbalance_train4():
     expected_imb = 0.035573
     expected_imb_final = 0.035573
 
-    # train the DII to recover ground-truth metric
+    # train the DII (only 10 epochs: the weights move towards the ground-truth metric, without reaching it)
     dii = DiffImbalance(
         data_A,  # matrix of shape (N,D_A)
         data_B,  # matrix of shape (N,D_B)
@@ -214,13 +214,13 @@ def test_DiffImbalance_train5():
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
     params_init = [1, 0.1]
-    params_groups = [2, 1]
+    params_groups = [1, 2]  # feature 0 has its own weight, features 1 and 2 share one
 
-    expected_weights = [0.999981, 0.100193]
-    expected_imb = 0.046835
-    expected_imb_final = 0.046835
+    expected_weights = [0.944327, 0.34387]
+    expected_imb = 0.03577
+    expected_imb_final = 0.03577
 
-    # train the DII to recover ground-truth metric
+    # train the DII (only 10 epochs: the weights move towards the ground-truth metric, without reaching it)
     dii = DiffImbalance(
         data_A,  # matrix of shape (N,D_A)
         data_B,  # matrix of shape (N,D_B)
@@ -268,10 +268,10 @@ def test_DiffImbalance_train6():
     expected_imb = 0.035573
     expected_imb_final = 0.035573
 
-    # train the DII to recover ground-truth metric
+    # train the DII (only 10 epochs: the weights move towards the ground-truth metric, without reaching it)
     dii = DiffImbalance(
         data_A,  # matrix of shape (N,D_A)
-        data_B=None,  # matrix of shape (N,D_B)
+        data_B=None,  # space B is given through distances_B
         distances_B=distances_B,
         periods_A=None,
         periods_B=None,

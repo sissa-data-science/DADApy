@@ -30,27 +30,23 @@ filename = os.path.join(os.path.split(__file__)[0], "../3d_gauss_small_z_var.npy
 def test_DiffImbalance_forward_greedy():
     """Test forward greedy feature selection function.
 
-    The dataset is a 3D Gaussian with variances [0.961146, 1.06219351, 0.01091285],
-    where the third dimension has much lower variance. We apply weights [10, 0.1, 5]
-    to the dimensions, making dimensions 0 and 2 more important.
-
-    The forward greedy algorithm should prioritize dimension 0 first, followed by
-    dimension 1, as observed in the algorithm's behavior.
+    The dataset is a 3D Gaussian with standard deviations [0.961, 1.062, 0.011], and space B is
+    obtained by scaling its features by [1, 0.001, 5], so that the features in B have standard
+    deviations [0.961, 0.001, 0.055]. The forward greedy search should select dimension 0 first,
+    followed by dimension 2.
     """
     from dadapy import DiffImbalance  # noqa: E402
 
     # generate test data
-    # The dataset has variances [0.961146, 1.06219351, 0.01091285]
-    # Dimension 2 has much lower variance than dimensions 0 and 1
     weights_ground_truth = np.array([1, 0.001, 5])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    # Expected results based on (variance*weight)
+    # Expected results, based on the standard deviations of the features in B
     expected_first_feature = [0]
     expected_second_features = [0, 2]
 
-    # train the DII to recover ground-truth metric
+    # initialize the DII object (the greedy searches train each feature subset themselves)
     dii = DiffImbalance(
         data_A,
         data_B,
@@ -68,8 +64,6 @@ def test_DiffImbalance_forward_greedy():
         learning_rate=1.0,
         learning_rate_decay="cos",
     )
-    weights, imbs = dii.train()
-
     # Run forward greedy feature selection
     feature_sets, diis, _, weights = dii.forward_greedy_feature_selection(
         n_features_max=3,
@@ -100,28 +94,23 @@ def test_DiffImbalance_forward_greedy():
 def test_DiffImbalance_backward_greedy():
     """Test backward greedy feature selection function.
 
-    The dataset is a 3D Gaussian with variances [0.961146, 1.06219351, 0.01091285],
-    where the third dimension has much lower variance. We apply weights [10, 0.1, 5]
-    to the dimensions, making dimensions 0 and 2 more important.
-
-    The backward greedy algorithm should remove the least important features first.
-    Interestingly, it removes dimension 2 first, despite its high weight (5),
-    possibly because of its low variance in the original dataset.
+    The dataset is a 3D Gaussian with standard deviations [0.961, 1.062, 0.011], and space B is
+    obtained by scaling its features by [1, 0.001, 5], so that the features in B have standard
+    deviations [0.961, 0.001, 0.055]. The backward greedy search should remove the least important
+    feature (dimension 1) first, and then dimension 2.
     """
     from dadapy import DiffImbalance  # noqa: E402
 
     # generate test data
-    # The dataset has variances [0.961146, 1.06219351, 0.01091285]
-    # Dimension 2 has much lower variance than dimensions 0 and 1
     weights_ground_truth = np.array([1, 0.001, 5])
     data_A = np.load(filename)
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    # Expected results based on (variance*weight)
+    # Expected results, based on the standard deviations of the features in B
     expected_first_removal = 1
     expected_second_features = [0, 2]
 
-    # train the DII to recover ground-truth metric
+    # initialize the DII object (the greedy searches train each feature subset themselves)
     dii = DiffImbalance(
         data_A,
         data_B,
@@ -139,8 +128,6 @@ def test_DiffImbalance_backward_greedy():
         learning_rate=1.0,
         learning_rate_decay="cos",
     )
-    weights, imbs = dii.train()
-
     # Run backward greedy feature selection
     feature_sets, diis, _, weights = dii.backward_greedy_feature_selection(
         n_features_min=1,
@@ -195,7 +182,7 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
     data_A = np.random.normal(loc=0, scale=1.0, size=(100, 5))
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    # train the DII to recover ground-truth metric
+    # initialize the DII object (the greedy searches train each feature subset themselves)
     dii = DiffImbalance(
         data_A,
         data_B,
@@ -213,8 +200,6 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
         learning_rate=1.0,
         learning_rate_decay="cos",
     )
-    weights, imbs = dii.train()
-
     # Run forward and backward greedy feature selection
     (
         feature_sets_fw,
@@ -229,7 +214,7 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
         weights_bw,
     ) = dii.backward_greedy_feature_selection(n_features_min=1, n_best=1)
 
-    # Expected feature orders for the myjax_gpu_py3.13 env (jax 0.7.1).
+    # Expected feature orders: features sorted by ground-truth importance (3, 0, 4, 1, 2)
     expected_fw_sets = [[3], [0, 3], [0, 3, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]]
     expected_bw_sets = [[0, 1, 2, 3, 4], [0, 1, 3, 4], [0, 3, 4], [0, 3], [3]]
 
@@ -287,10 +272,9 @@ def test_DiffImbalance_greedy_symmetry_5d_gaussian():
 def test_DiffImbalance_greedy_random_initialization():
     """Test greedy feature selection with random initialization parameters.
 
-    This test verifies that the greedy feature selection methods work correctly
-    when initialized with random parameters between 0.1 and 5, ensuring that
-    the initialization values are properly inherited from the parent class
-    rather than using hardcoded values.
+    The initial weights are drawn uniformly between 0.1 and 1. The test verifies that the greedy
+    searches select the same features as with equal initial weights, and that the weights of the
+    feature subsets are initialized from params_init.
     """
     from dadapy import DiffImbalance  # noqa: E402
 
@@ -300,12 +284,12 @@ def test_DiffImbalance_greedy_random_initialization():
     data_A = np.random.normal(loc=0, scale=1.0, size=(100, 5))
     data_B = weights_ground_truth[np.newaxis, :] * data_A
 
-    # Create random initialization parameters between 0.1 and 5
+    # Create random initial weights between 0.1 and 1
     np.random.seed(42)  # Different seed for initialization
     params_init = np.random.uniform(0.1, 1.0, size=5)
     print(f"Random initialization parameters: {params_init}")
 
-    # train the DII to recover ground-truth metric with random initialization
+    # initialize the DII object with random initial weights
     dii = DiffImbalance(
         data_A,
         data_B,
@@ -323,8 +307,6 @@ def test_DiffImbalance_greedy_random_initialization():
         learning_rate=1.0,
         learning_rate_decay="cos",
     )
-    weights, imbs = dii.train()
-
     # Run forward and backward greedy feature selection
     (
         feature_sets_fw,
@@ -339,7 +321,7 @@ def test_DiffImbalance_greedy_random_initialization():
         weights_bw,
     ) = dii.backward_greedy_feature_selection(n_features_min=1, n_best=1)
 
-    # Expected feature orders for the myjax_gpu_py3.13 env (jax 0.7.1).
+    # Expected feature orders: features sorted by ground-truth importance (3, 0, 4, 1, 2)
     expected_fw_sets = [[3], [0, 3], [0, 3, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]]
     expected_bw_sets = [[0, 1, 2, 3, 4], [0, 1, 3, 4], [0, 3, 4], [0, 3], [3]]
 
@@ -391,11 +373,11 @@ def test_DiffImbalance_greedy_random_initialization():
         max_weight_feature_bw == 3
     ), f"Feature 3 should have the highest weight, got feature {max_weight_feature_bw}"
 
-    # Additional test: Verify that the random initialization was actually used
-    # by checking that the initial DII object has the correct params_init
-    assert np.allclose(
-        dii.params_init, params_init
-    ), f"DII object should have the random initialization parameters, got {dii.params_init} expected {params_init}"
+    # Check that the random initialization is used: a single feature is not trained, and its weight is the
+    # entry of params_init rescaled to the norm of params_init
+    assert weights_fw[0][3] == pytest.approx(
+        np.linalg.norm(params_init)
+    ), f"The weight of the single feature 3 should be {np.linalg.norm(params_init)}, got {weights_fw[0][3]}"
 
 
 if __name__ == "__main__":

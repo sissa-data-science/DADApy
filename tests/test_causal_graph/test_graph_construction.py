@@ -35,7 +35,7 @@ def test_CausalGraph_optimization():
     traj = np.load(filename)
 
     expected_weights = [0.4423, 0.46, 0.3371, 0.4362, 0.3505, 0.3866]
-    expected_imbs_final = [0.3189, 0.3706, 0.4485, 0.3384, 0.3644, 0.5043]
+    expected_imbs_last_epoch = [0.3189, 0.3706, 0.4485, 0.3384, 0.3644, 0.5043]
 
     # train the DII
     num_samples = 50
@@ -70,4 +70,4 @@ def test_CausalGraph_optimization():
 
     # the DII is invariant under a sign change of each weight
     assert np.abs(weights_final[:, 0, 0]) == pytest.approx(expected_weights, abs=0.01)
-    assert imbs_training[:, 0, -1] == pytest.approx(expected_imbs_final, abs=0.01)
+    assert imbs_training[:, 0, -1] == pytest.approx(expected_imbs_last_epoch, abs=0.01)
