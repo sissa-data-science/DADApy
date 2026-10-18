@@ -108,7 +108,7 @@ overlap_x2 = no.return_label_overlap(k=10)
   >
 - BID estimator
 
-  > Acevedo et al., *Nature Communications Physics* (2025)
+  > Acevedo et al., *Communications Physics* (2025)
   >
 - Density estimators
   ------------------
