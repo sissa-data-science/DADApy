@@ -1,7 +1,7 @@
 <img src="https://raw.githubusercontent.com/sissa-data-science/DADApy/master/logo/logo_1_horizontal_transparent_v2.png" width="500">
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![Code style: black](<https://img.shields.io/badge/code%20style-black-000000.svg>)](https://github.com/psf/black)
+[![Imports: isort](<https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336>)](https://pycqa.github.io/isort/)
 [![codecov](https://codecov.io/gh/sissa-data-science/DADApy/branch/main/graph/badge.svg?token=X4M0KWAPO5)](https://codecov.io/gh/sissa-data-science/DADApy)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sissa-data-science/dadapy/test.yml?label=test)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sissa-data-science/dadapy/lint.yml?label=lint)
@@ -9,8 +9,8 @@
 
 DADApy is a Python package for the characterization of manifolds in high-dimensional spaces.
 
-
 # Homepage
+
 For more details and tutorials, visit the homepage at:
 [https://dadapy.readthedocs.io/](https://dadapy.readthedocs.io/)
 
@@ -53,8 +53,8 @@ labels = np.repeat(np.arange(10), 100)
 overlap_labels = data.return_label_overlap(labels, k=10)
 ```
 
-The Data class is just container of classes. If you need to work with a specific module  
-you can equivalently import it directly. 
+The Data class is just container of classes. If you need to work with a specific module
+you can equivalently import it directly.
 
 ```python
 import numpy as np
@@ -68,7 +68,6 @@ ie = IdEstimation(X)
 
 # compute the intrinsic dimension up to the 64th nearest neighbors using Gride
 id_list, id_error_list, id_distance_list = ie.return_id_scaling_gride(range_max=64)
-
 ```
 
 This allows to work more naturally with data comparison methods.
@@ -89,71 +88,94 @@ overlap_x2 = no.return_data_overlap()
 # compute the neighborhood overlap with a set of labels
 no = NeighborhoodOverlap(X, labels = labels)
 overlap_x2 = no.return_label_overlap(k=10)
-
 ```
-
-
 
 # Currently implemented algorithms
 
 - Intrinsic dimension estimators
-     - 
-- Two-NN estimator 
+  ------------------------------
+- Two-NN estimator
+
   > Facco et al., *Scientific Reports* (2017)
+  >
 - Gride estimator
+
   > Denti et al., *Scientific Reports* (2022)
+  >
 - I3D estimator (for both continuous and discrete spaces)
+
   > Macocco et al., *Physical Review Letters* (2023)
+  >
 - BID estimator
+
   > Acevedo et al., *Nature Communications Physics* (2025)
-  
+  >
 - Density estimators
-    - 
+  ------------------
 - kNN estimator
 - k*NN estimator (kNN with an adaptive choice of k)
 - PAk estimator
+
   > Rodriguez et al., *JCTC* (2018)
+  >
 - point-adaptive mean-shift gradient estimator
+
   > Carli et al., *ArXiv* (2024)
+  >
 - BMTI estimator
+
   > Carli et al., *ArXiv* (2024)
-
+  >
 - Density peaks clustering methods
-    - 
-- Density peaks clustering 
+  --------------------------------
+- Density peaks clustering
+
   > Rodriguez and Laio, *Science* (2014)
+  >
 - Advanced density peaks clustering
+
   > d’Errico et al., *Information Sciences* (2021)
+  >
 - k-peak clustering
+
   > Sormani, Rodriguez and Laio, *JCTC* (2020)
-
+  >
 - Manifold comparison tools
-    - 
+  -------------------------
 - Neighbourhood overlap
+
   > Doimo et al., *NeurIPS* (2020)
+  >
 - Information imbalance
+
   > Glielmo et al., *PNAS Nexus* (2022)
-
+  >
 - Feature selection and weighting tool
-    - 
+  ------------------------------------
 - Differentiable Information Imbalance
-  > Wild et al., *Nature Communications* (2025)
 
+  > Wild et al., *Nature Communications* (2025)
+  >
 - Causal analysis tools
-    - 
+  ---------------------
 - Imbalance Gain
+
   > Del Tatto et al., *PNAS* (2024)
+  >
 - Community causal graph
-  > Allione et al., arXiv (2025)
+
+  > Allione et al., *Physical Review Letters* (2025)
+  >
 
 # Installation
+
 The package is compatible with the Python versions 3.10, 3.11, 3.12, 3.13, and 3.14.
 We currently only support Unix-based systems, including Linux and macOS.
 For Windows machines, we suggest using the [Windows Subsystem for Linux (WSL)](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux).
 
 The package requires `numpy`, `scipy`, `scikit-learn`, `jax`, `jaxlib`, and `matplotlib` for the visualizations.
 
-The package contains Cython-generated C extensions that are automatically compiled during installation. 
+The package contains Cython-generated C extensions that are automatically compiled during installation.
 
 The latest release is available through pip:
 
@@ -177,14 +199,13 @@ python setup.py build_ext --inplace
 pip install .
 ```
 
-The methods of the classes ```DiffImbalance``` and ```CausalGraph``` can be run on a GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
+The methods of the classes ``DiffImbalance`` and ``CausalGraph`` can be run on a GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
 
 ```sh
 pip install --upgrade "jax[cuda12_pip]==0.4.30" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
 
 For more information on the installation of the JAX library on GPUs, see the official [repository](https://github.com/google/jax?tab=readme-ov-file#installation).
-
 
 # Citing DADApy
 
