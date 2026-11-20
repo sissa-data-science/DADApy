@@ -71,3 +71,54 @@ def test_CausalGraph_optimization():
     # the DII is invariant under a sign change of each weight
     assert np.abs(weights_final[:, 0, 0]) == pytest.approx(expected_weights, abs=0.01)
     assert imbs_training[:, 0, -1] == pytest.approx(expected_imbs_last_epoch, abs=0.01)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Requires python>=3.9")
+def test_CausalGraph_periods_standardization():
+    """Test that the periods are rescaled together with the variables when these are standardized."""
+    from dadapy import CausalGraph  # noqa: E402
+
+    # two coupled phases in degrees (the second follows the first) and a nonperiodic variable
+    rng = np.random.default_rng(0)
+    n_times = 2000
+    series = np.zeros((n_times, 3))
+    for t in range(1, n_times):
+        series[t, 0] = series[t - 1, 0] + 20 + 10 * rng.standard_normal()
+        series[t, 1] = (
+            series[t - 1, 1]
+            + 20
+            + 30 * np.sin(np.deg2rad(series[t - 1, 0] - series[t - 1, 1]))
+            + 5 * rng.standard_normal()
+        )
+        series[t, 2] = 0.8 * series[t - 1, 2] + rng.standard_normal()
+    series[:, :2] = np.mod(series[:, :2], 360.0)
+    periods = np.array([360.0, 360.0, 0.0])
+    std = np.std(series, ddof=1, axis=0)
+
+    kwargs = dict(
+        time_lags=[1],
+        num_samples=200,
+        target_variables="all",
+        save_weights=False,
+        num_epochs=10,
+        k=5,
+    )
+    # variables standardized by the class: the periods must follow
+    g = CausalGraph(time_series=series, periods=periods, seed=0)
+    assert g.periods == pytest.approx(periods / std)
+    weights, imbs, _ = g.optimize_present_to_future(**kwargs)
+
+    # same variables and periods, standardized by hand
+    g_ref = CausalGraph(
+        time_series=series / std, periods=periods / std, standardize=False, seed=0
+    )
+    weights_ref, imbs_ref, _ = g_ref.optimize_present_to_future(**kwargs)
+
+    assert weights == pytest.approx(weights_ref, abs=1e-6)
+    assert imbs == pytest.approx(imbs_ref, abs=1e-6)
+
+    # the input periods are not modified, and the periods are not rescaled without standardization
+    assert periods == pytest.approx([360.0, 360.0, 0.0])
+    with pytest.warns(UserWarning):
+        g_raw = CausalGraph(time_series=series, periods=periods, standardize=False)
+    assert g_raw.periods == pytest.approx(periods)

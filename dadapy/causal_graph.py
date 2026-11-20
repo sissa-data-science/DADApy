@@ -54,9 +54,11 @@ class CausalGraph:
             all the trajectories: t=0 is the first time along axis=1 or, if time-delay embeddings are employed,
             the time (max(embedding_dim_present, embedding_dim_future) - 1) * embedding_time, so that the
             embedding times before t=0 are available.
-        periods (np.ndarray(float)): array of shape (D,) containing the periods of the dynamical variables.
-            The default is None, which means that the variables are treated as nonperiodic. If not all
-            variables are periodic, the entries of the nonperiodic ones should be set to 0.
+        periods (np.ndarray(float)): array of shape (D,) containing the periods of the dynamical variables,
+            in the units of the input time series. The default is None, which means that the variables are
+            treated as nonperiodic. If not all variables are periodic, the entries of the nonperiodic ones
+            should be set to 0. If standardize is True, the periods are divided by the standard deviations
+            together with the variables.
         standardize (bool): whether to standardize each of the D variables, dividing by its standard
             deviation along the trajectory (or over all trajectories and times, for time_series_ensemble).
             Default is True.
@@ -126,6 +128,9 @@ class CausalGraph:
                 self.time_series = self.time_series / std
             else:
                 self.time_series_ensemble = self.time_series_ensemble / std
+            # the periods are rescaled together with the variables
+            if periods is not None:
+                periods = periods / std
         elif not np.allclose(
             std, 1, rtol=1e-2
         ):  # tolerance: e.g. data standardized with ddof=0
