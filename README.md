@@ -143,6 +143,7 @@ overlap_x2 = no.return_label_overlap(k=10)
     - 
 - Imbalance Gain
   > Del Tatto et al., *PNAS* (2024)
+- Imbalance Gain with the Differentiable Information Imbalance
 - Community causal graph
   > Allione et al., *Physical Review Letters* (2025)
 
@@ -177,7 +178,7 @@ python setup.py build_ext --inplace
 pip install .
 ```
 
-The methods of the classes ```DiffImbalance``` and ```CausalGraph``` can be run on a GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
+The methods of the classes ```DiffImbalance```, ```CausalGraph``` and ```DiffImbalanceGain``` can be run on a GPU, using a suitable installation of JAX on a GPU platform. The code has been tested using JAX v0.4.30 with CUDA 12, which can be installed with:
 
 ```sh
 pip install --upgrade "jax[cuda12_pip]==0.4.30" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
