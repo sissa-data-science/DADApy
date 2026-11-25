@@ -36,9 +36,10 @@ __all__ = [
 try:
     from .causal_graph import CausalGraph
     from .diff_imbalance import DiffImbalance
+    from .diff_imbalance_gain import DiffImbalanceGain
     from .hamming import BID, Hamming
 
-    __all__ += ["CausalGraph", "DiffImbalance", "BID", "Hamming"]
+    __all__ += ["CausalGraph", "DiffImbalance", "DiffImbalanceGain", "BID", "Hamming"]
 except (ImportError, RuntimeError):
     # JAX-dependent classes unavailable (e.g., this exception is raised in
     # joblib worker subprocesses where GPU context cannot be re-initialized

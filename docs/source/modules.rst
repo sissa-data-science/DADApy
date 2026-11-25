@@ -14,6 +14,7 @@ The package contains the following modules:
    density_advanced
    diff_imbalance
    causal_graph
+   diff_imbalance_gain
    clustering
    id_discrete
    information_imbalance
