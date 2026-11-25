@@ -143,10 +143,7 @@ def test_single_weight_baseline():
 
 def test_class_against_function():
     """The DiffImbalanceGain class builds the spaces of the function, with time-delay embeddings and periods."""
-    from dadapy.diff_imbalance_gain import (
-        DiffImbalanceGain,
-        return_diff_imbalance_gain,
-    )
+    from dadapy.diff_imbalance_gain import DiffImbalanceGain, return_diff_imbalance_gain
 
     traj = np.load(filename)
     periods = [0, 0, 50.0, 0, 30.0, 0]
@@ -250,10 +247,7 @@ def test_class_periods_and_standardization():
 
 def test_class_ensemble():
     """With an ensemble of trajectories each trajectory is one sample, taken after the embedding window."""
-    from dadapy.diff_imbalance_gain import (
-        DiffImbalanceGain,
-        return_diff_imbalance_gain,
-    )
+    from dadapy.diff_imbalance_gain import DiffImbalanceGain, return_diff_imbalance_gain
 
     traj = np.load(filename)
     ensemble = np.stack(
@@ -285,10 +279,7 @@ def test_class_ensemble():
 
 def test_wrong_inputs():
     """Inconsistent inputs raise a ValueError."""
-    from dadapy.diff_imbalance_gain import (
-        DiffImbalanceGain,
-        return_diff_imbalance_gain,
-    )
+    from dadapy.diff_imbalance_gain import DiffImbalanceGain, return_diff_imbalance_gain
 
     X0, Y0, _, Ytau = _spaces(num_samples=60)
     wrong_arguments = [
